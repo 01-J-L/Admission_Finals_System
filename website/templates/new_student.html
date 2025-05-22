@@ -1,0 +1,1622 @@
+{% extends 'base.html' %}
+
+{% block style %}
+<style>
+    /* Existing styles from new_student.html */
+    :where([class^="ri-"])::before { content: "\f3c2"; } /* Ensure Remix Icon loads if used by header/nav */
+    body {
+        background-color: #f9fafb; /* Original body background */
+    }
+    html {
+      scroll-behavior: smooth; /* Consistent scroll behavior */
+    }
+    .scale-110 {
+        transform: scale(1.1);
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+    /* ... (other existing custom styles for form elements, .btns, .go-top-btn, .footer are kept) ... */
+    .custom-checkbox {
+        position: relative;
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 2px solid #cbd5e1;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    .custom-checkbox.checked {
+        background-color: #1e40af;
+        border-color: #1e40af;
+    }
+    .custom-checkbox.checked::after {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 2px;
+        width: 5px;
+        height: 9px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+    .custom-radio {
+        position: relative;
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 2px solid #cbd5e1;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+    .custom-radio.checked {
+        border-color: #1e40af;
+    }
+    .custom-radio.checked::after {
+        content: '';
+        position: absolute;
+        left: 3px;
+        top: 3px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #1e40af;
+    }
+    .btns {
+        width: 20%;
+        margin-bottom: 4rem;
+        background-color: #162938;
+        color: #fff;
+        font-weight: 600;
+        padding: 1rem 0;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .btns:hover {
+        background-color: #1e2f3c;
+    }
+    .go-top-btn {
+        position: fixed;
+        bottom: 70px;
+        right: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+        height: 50px;
+        width: 50px;
+        background: #fff;
+        border: 3px solid #333;
+        display: none; /* JS will handle display */
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .go-top-btn img {
+        width: 20px;
+        height: 20px;
+    }
+    .footer {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem;
+        text-align: center;
+        color: white;
+        overflow: hidden;
+    }
+    .footer::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat;
+        z-index: 0;
+        opacity: 0.3;
+    }
+    .footer::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(22, 41, 56, 0.442);
+        z-index: 1;
+    }
+    .footer * {
+        position: relative;
+        z-index: 2;
+    }
+    .footer-logo {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 1rem;
+    }
+    .footer-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .footer-subtitle {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-top: 0.5rem;
+    }
+    .footer-connect {
+        margin-top: 1rem;
+        font-size: 1rem;
+    }
+    .footer-socials {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        font-size: 1.25rem;
+    }
+    .footer-socials a {
+        color: white;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    .footer-socials a:hover {
+        color: #0987d0;
+    }
+    .footer-divider {
+        border-top: 1px solid white;
+        width: 25%;
+        margin: 2rem 0;
+    }
+    .footer-bottom {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        max-width: 700px;
+    }
+
+    /* Header Styles - Adapted from index.html, default to dark for this page */
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 15px 5%; /* Desktop padding */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background-color: #162938; /* Default dark background from original inline style */
+        transition: background-color 0.3s ease;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+    }
+
+    .header-left img {
+        width: 100px; /* Desktop logo size */
+        height: auto;
+    }
+
+    .header-left .logo { /* College name */
+        font-size: 1.4em; /* Desktop font size */
+        color: #fff; /* White text on dark header */
+        margin-left: 15px;
+        white-space: nowrap;
+    }
+
+    /* Desktop Navigation Styles */
+    .navigation a {
+        position: relative;
+        font-size: 1.1em;
+        color: #fff; /* White text on dark header */
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 30px;
+    }
+    .navigation a.no-underline {
+        text-decoration: none;
+    }
+
+    /* General style for buttons within nav links (e.g., "Apply Now") */
+    .navigation .btnLogin-popup {
+        background-color: #fff; /* Default: white background */
+        color: #162938;       /* Default: dark text */
+        padding: 8px 15px;
+        border-radius: 5px;
+        border: 1px solid transparent; 
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        text-align: center;
+    }
+    .navigation .btnLogin-popup:hover {
+        background-color: #f0f0f0; /* Default: Lighter grey hover */
+    }
+
+    /* Specific style for the Logout button */
+    .navigation .btnLogin-popup.btn-logout {
+        background-color: #d9534f; /* Red background */
+        color: #fff;               /* White text */
+        border-color: #d9534f;     /* Border to match */
+    }
+    .navigation .btnLogin-popup.btn-logout:hover {
+        background-color: #c9302c; /* Darker red on hover */
+        color: #fff;               /* Keep text white */
+        border-color: #c9302c;
+    }
+
+    /* CSS to remove line animation from logout link */
+    .navigation a.logout-link:hover {
+        text-decoration: none !important; 
+    }
+    .navigation a.logout-link::after,
+    .navigation a.logout-link::before {
+        display: none !important; 
+    }
+
+
+    /* Hamburger Menu Button */
+    .menu-toggle {
+        display: none;
+        flex-direction: column;
+        justify-content: space-around;
+        width: 30px;
+        height: 25px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        z-index: 1100;
+        margin-left: 20px;
+    }
+
+    .menu-toggle span {
+        display: block;
+        width: 100%;
+        height: 3px;
+        background-color: #fff; /* White lines for dark header */
+        border-radius: 3px;
+        transition: all 0.3s ease-in-out;
+    }
+
+    /* Mobile Navigation Styles */
+    @media (max-width: 992px) {
+        header {
+            padding: 10px 3%; /* Mobile padding */
+        }
+
+        .header-left img {
+            width: 70px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .header-left .logo {
+            font-size: 1em; /* Mobile font size */
+            margin-left: 10px;
+        }
+
+        .navigation {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 250px;
+            background-color: #162938;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            flex-direction: column;
+            align-items: stretch;
+            display: none;
+            z-index: 1050;
+            border-top: 1px solid #2a3f54;
+            max-height: calc(100vh - 70px); /* Approx mobile header height */
+            overflow-y: auto;
+        }
+
+        .navigation.active {
+            display: flex;
+        }
+
+        .navigation a {
+            display: block;
+            padding: 12px 20px;
+            margin-left: 0;
+            text-align: left;
+            color: #f0f0f0;
+            border-bottom: 1px solid #2a3f54;
+            text-decoration: none;
+        }
+        .navigation a:last-child {
+            border-bottom: none;
+        }
+        .navigation a:hover {
+            background-color: #22333f;
+        }
+
+        /* Layout for ALL btnLogin-popup buttons in mobile navigation */
+        .navigation a .btnLogin-popup {
+            display: block; 
+            width: auto; 
+            margin: 5px 0;
+        }
+
+        /* Make logout button fill the link area in mobile */
+        .navigation a.logout-link {
+            padding: 0; 
+        }
+        .navigation a.logout-link .btnLogin-popup.btn-logout {
+            width: 100%; 
+            margin: 0;   
+            padding: 12px 20px; 
+            border-radius: 0; 
+        }
+        
+        /* Ensure logout link in mobile also has no line animation */
+        .navigation a.logout-link.logout-link:hover { 
+             text-decoration: none !important;
+        }
+        .navigation a.logout-link.logout-link::after,
+        .navigation a.logout-link.logout-link::before {
+            display: none !important;
+        }
+
+
+        .menu-toggle {
+            display: flex;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: translateY(9px) rotate(45deg);
+        }
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .menu-toggle.active span:nth-child(3) {
+            transform: translateY(-9px) rotate(-45deg);
+        }
+    }
+
+    /* Main content area styling to account for fixed header */
+    .main-content-area {
+        /* Mobile-first defaults */
+        padding-top: 70px; /* Approx mobile header height (50px img H + 2*10px padding V) */
+    }
+
+    @media (min-width: 993px) { /* Desktop breakpoint */
+        .main-content-area {
+            padding-top: 100px; 
+        }
+    }
+</style>
+{% endblock %}
+
+{% block head %}
+<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<header>
+    <div class="header-left">
+        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Company Logo" ></a>
+        <h2 class="logo">Padre Garcia Polytechnic College</h2>
+    </div>
+
+    <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <nav class="navigation" id="main-navigation">
+        {% if student_logged_in %}
+            <a href="{{ url_for('views.application_status_page') }}">Application Status</a>
+            <!-- MODIFIED HERE: Added class="logout-link" to <a> and class="btn-logout" to <button>, removed inline style -->
+            <a href="{{ url_for('auth.logout') }}" class="logout-link">
+                <button class="btnLogin-popup btn-logout">Logout</button>
+            </a>
+        {% else %}
+            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
+                <button class="btnLogin-popup">Apply now</button>
+            </a>
+        {% endif %}
+    </nav>
+</header>
+{% endblock %}
+
+{% block body %}
+<!-- Removed inline style="margin-top: 180px;" from body tag, and the body tag itself as it's from base.html -->
+<div class="main-content-area"> <!-- This div handles the top offset for the fixed header -->
+  <div class="min-h-screen flex flex-col">
+    <main class="flex-grow container mx-auto px-4 py-8">
+      <div
+        class="max-w-5xl mx-auto bg-white rounded-lg shadow-md overflow-hidden"
+      >
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        College Admission Application Form
+                    </h2>
+                    <p class="text-gray-600 mt-1">
+                        Complete all required information to apply for admission.
+                    </p>
+                </div>
+                {% if student_logged_in %} <!-- Only show if student is logged in -->
+                <a href="{{ url_for('views.application_status_page') }}" class="text-sm text-primary hover:text-primary/80 flex items-center whitespace-nowrap ml-4 px-4 py-2 rounded-button border border-primary hover:bg-primary/10 transition-colors">
+                    <i class="ri-arrow-left-line mr-2"></i>Back to Status
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <!-- Progress Stepper -->
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center">
+            <div class="flex flex-col items-center flex-1">
+              <div
+                class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center relative z-10"
+              >
+                <i class="ri-user-line"></i>
+              </div>
+              <p class="text-sm font-medium text-primary mt-2">
+                Personal Information
+              </p>
+            </div>
+            <div class="h-1 bg-gray-200 flex-1 relative -mx-2">
+              <div
+                class="absolute inset-0 bg-primary transform origin-left transition-transform duration-300"
+                style="transform: scaleX(0)"
+              ></div>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+              <div
+                class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10"
+              >
+                <i class="ri-team-line"></i>
+              </div>
+              <p class="text-sm font-medium text-gray-500 mt-2">
+                Family Details
+              </p>
+            </div>
+            <div class="h-1 bg-gray-200 flex-1 relative -mx-2">
+              <div
+                class="absolute inset-0 bg-primary transform origin-left transition-transform duration-300"
+                style="transform: scaleX(0)"
+              ></div>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+              <div
+                class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10"
+              >
+                <i class="ri-book-open-line"></i>
+              </div>
+              <p class="text-sm font-medium text-gray-500 mt-2">
+                Educational Background
+              </p>
+            </div>
+            <div class="h-1 bg-gray-200 flex-1 relative -mx-2">
+              <div
+                class="absolute inset-0 bg-primary transform origin-left transition-transform duration-300"
+                style="transform: scaleX(0)"
+              ></div>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+              <div
+                class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10"
+              >
+                <i class="ri-check-line"></i>
+              </div>
+              <p class="text-sm font-medium text-gray-500 mt-2">
+                Review & Submit
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Form Content -->
+        <form action="{{ url_for('auth.submit_application') }}" method="POST" enctype="multipart/form-data" >
+        <div class="p-6">
+          <!-- Step 1: Personal Information -->
+          <div id="step1" class="block">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+              Personal Information
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="md:col-span-2">
+                <div class="mb-6">
+                  <label class="block text-gray-700 font-medium mb-2"
+                    >Program (Course)
+                    <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Enter your preferred program"
+                    name="program_choice"
+                    id="program"
+                    required
+                  />
+                </div>
+                <div class="mb-6">
+                  <label class="block text-gray-700 font-medium mb-2"
+                    >Full Name <span class="text-red-500">*</span></label
+                  >
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <input
+                        type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="Last Name"
+                        name="last_name" 
+                        required
+                      />
+                      <p class="text-xs text-gray-500 mt-1">Last Name</p>
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="First Name"
+                        name="first_name"
+                        required
+                      />
+                      <p class="text-xs text-gray-500 mt-1">First Name</p>
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="Middle Name"
+                        name="middle_name"
+                        required
+                      />
+                      <p class="text-xs text-gray-500 mt-1">Middle Name</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label class="block text-gray-700 font-medium mb-2"
+                      >Date of Birth
+                      <span class="text-red-500">*</span></label
+                    >
+                    <input
+                      type="date"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      name="date_of_birth"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 font-medium mb-2"
+                      >Place of Birth
+                      <span class="text-red-500">*</span></label
+                    >
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="City/Municipality"
+                      name="place_of_birth"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label class="block text-gray-700 font-medium mb-2">Sex <span class="text-red-500">*</span></label>
+<div class="flex gap-6 mt-2">
+  <div class="flex items-center">
+    <input type="radio" name="sex" value="female" required />
+    <label class="ml-2 text-gray-700">Female</label>
+  </div>
+  <div class="flex items-center">
+    <input type="radio" name="sex" value="male" required />
+    <label class="ml-2 text-gray-700">Male</label>
+  </div>
+</div>
+
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 font-medium mb-2"
+                      >Civil Status <span class="text-red-500">*</span></label
+                    >
+                    <div
+                    name="civil_status"
+                      class="flex flex-wrap gap-4 mt-2"
+                      data-radio-group="civil-status"
+                    >
+                    <div class="flex items-center">
+                      <input type="radio" name="civil_status" value="single" required />
+                      <label class="ml-2 text-gray-700">Single</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input type="radio" name="civil_status" value="married" required />
+                      <label class="ml-2 text-gray-700">Married</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input type="radio" name="civil_status" value="widower" required />
+                      <label class="ml-2 text-gray-700">Widower</label>
+                    </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label class="block text-gray-700 font-medium mb-2"
+                      >Religion</label
+                    >
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Your religion"
+                      name="religion"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 font-medium mb-2"
+                      >Citizenship <span class="text-red-500">*</span></label
+                    >
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Your citizenship"
+                      name="citizenship"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label class="block text-gray-700 font-medium mb-2"
+                      >Mobile No. <span class="text-red-500">*</span></label
+                    >
+                    <input
+                      type="tel"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Your mobile number"
+                      name="mobile_number"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 font-medium mb-2"
+                      >Email Address
+                      <span class="text-red-500">*</span></label
+                    >
+                    <input
+                      type="email"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Your email address"
+                      name="email_address"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="mb-6">
+                  <label class="block text-gray-700 font-medium mb-2"
+                    >Permanent Address
+                    <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Street, Barangay"
+                    name="permanent_address_street_barangay"
+                    required
+                  />
+                  <div class="grid grid-cols-2 gap-4 mt-2">
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="City/Municipality"
+                      name="permanent_address_city_municipality"
+                      required
+                    />
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Province"
+                      name="permanent_address_province"
+                      required
+                    />
+                  </div>
+                  <div class="mt-2">
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Postal Code"
+                      name="permanent_address_postal_code"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="mb-6">
+                  <label class="block text-gray-700 font-medium mb-2"
+                    >Are you a member of Cultural Minority Group?</label
+                  >
+                  <div class="flex gap-6 mt-2">
+                    <div class="flex items-center">
+                      <input type="radio" name="cultural_minority_group" value="No" required />
+                      <label class="ml-2 text-gray-700">No</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input type="radio" name="cultural_minority_group" value="Yes" required />
+                      <label class="ml-2 text-gray-700">Yes</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="mb-6">
+                  <label class="block text-gray-700 font-medium mb-2"
+                    >Do you have any physical disability or condition that
+                    requires special attention?</label
+                  >
+                  <div class="flex gap-6 mt-2">
+                    <div class="flex items-center">
+                      <input type="radio" name="physical_disability" value="No" required />
+                      <label class="ml-2 text-gray-700">No</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input type="radio" name="physical_disability" value="Yes" required />
+                      <label class="ml-2 text-gray-700"
+                        >Yes (Specify attached certification of
+                        disability)</label
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div
+                  class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6"
+                >
+                  <div class="flex flex-col items-center justify-center">
+                    <div
+                      id="photoPreviewContainer"
+                      class="w-32 h-32 bg-gray-200 border border-gray-300 rounded flex items-center justify-center mb-2 relative overflow-hidden"
+                    >
+                      <img
+                        id="photoPreview"
+                        class="hidden w-full h-full object-cover"
+                      />
+                      <i
+                        id="photoPlaceholder"
+                        class="ri-user-line text-gray-400 text-4xl"
+                      ></i>
+                      <div
+                        id="photoCropOverlay"
+                        class="hidden absolute inset-0 bg-black/50 flex items-center justify-center"
+                      >
+                        <button
+                          id="confirmCrop"
+                          class="bg-white text-gray-800 px-3 py-1 rounded-button text-xs whitespace-nowrap"
+                        >
+                          Confirm Crop
+                        </button>
+                      </div>
+                    </div>
+                    <p class="text-sm text-gray-700 text-center mb-2">
+                      Attach a Recent 2x2 photo with white background
+                    </p>
+                    <input
+                      type="file"
+                      id="photoInput"
+                      name="photo"
+                      accept="image/*"
+                      class="hidden"
+                      required
+                    />
+
+                    <button
+                      id="uploadPhotoBtn"
+                      class="bg-primary text-white px-4 py-2 rounded-button text-sm whitespace-nowrap"
+                    >
+                      Upload Photo
+                    </button>
+                    <div
+                      id="photoToast"
+                      class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white text-sm z-50 transform transition-transform duration-300 translate-y-full hidden"
+                    ></div>
+                  </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h4 class="font-medium text-gray-800 mb-2">
+                    Application Details
+                  </h4>
+                  
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-1"
+                      >Date of Application</label
+                    >
+                    <input
+                      type="date"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      value="2025-04-24"
+                      name="date_of_application"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 text-sm mb-1"
+                      >Academic Year</label
+                    >
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      value="2025-2026"
+                      name="academic_year"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-8 flex justify-end">
+              <button
+                id="nextToStep2"
+                class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap"
+              >
+                Next: Family Details
+              </button>
+            </div>
+          </div>
+          <!-- Step 2: Family Details -->
+          <div id="step2" class="hidden">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+              Family Details
+            </h3>
+            <div class="mb-6">
+              <label class="block text-gray-700 font-medium mb-2">Average Family Income (Monthly) <span class="text-red-500">*</span></label>
+              <select name="average_family_income" required
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                <option value="">Select your family's income</option>
+                <option value="10000_below">₱10,000 below</option>
+                <option value="10001_to_20000">₱10,001 - 20,000</option>
+                <option value="20001_to_30000">₱20,001 - 30,000</option>
+                <option value="30001_to_40000">₱30,001 - 40,000</option>
+                <option value="40001_to_50000">₱40,001 - 50,000</option>
+                <option value="50001_to_100000">₱50,001 - 100,000</option>
+                <option value="100001_above">₱100,001 above</option>
+              </select>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div>
+                <h4 class="font-medium text-gray-800 mb-4">
+                  Father's Information
+                </h4>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Father's Name</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Full name"
+                    name="father_name"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Occupation</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Occupation"
+                    name="father_occupation"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Company & Address</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Company name and address"
+                    name="father_company_address"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Contact No.</label
+                  >
+                  <input
+                    type="tel"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Mobile number"
+                    name="father_contact_number"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <h4 class="font-medium text-gray-800 mb-4">
+                  Mother's Information
+                </h4>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Mother's Maiden Name</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Full maiden name"
+                    name="mother_maiden_name"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Occupation</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Occupation"
+                    name="mother_occupation"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Company & Address</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Company name and address"
+                    name="mother_company_address"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Contact No.</label
+                  >
+                  <input
+                    type="tel"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Mobile number"
+                    name="mother_contact_number"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <h4 class="font-medium text-gray-800 mb-4">
+                  Guardian's Information
+                </h4>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Guardian's Name</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Full name"
+                    name="guardian_name"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Occupation</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Occupation"
+                    name="guardian_occupation"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Company & Address</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Company name and address"
+                    name="guardian_company_address"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Contact No.</label
+                  >
+                  <input
+                    type="tel"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Mobile number"
+                    name="guardian_contact_number"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="mt-8 flex justify-between">
+              <button
+                id="backToStep1"
+                class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap"
+              >
+                Previous: Personal Information
+              </button>
+              <button
+                id="nextToStep3"
+                class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap"
+              >
+                Next: Educational Background
+              </button>
+            </div>
+          </div>
+          <!-- Step 3: Educational Background -->
+          <div id="step3" class="hidden">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+              Educational Background
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h4 class="font-medium text-gray-800 mb-4">
+                  Senior High School
+                </h4>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >SHS Name <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="School name"
+                    name="senior_high_school"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Address (Brgy, City/Town, Province)
+                    <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="School address"
+                    name="senior_high_school_address"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Strand <span class="text-red-500">*</span></label
+                  >
+                  <select
+                    name="senior_high_school_track_strand"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary pr-8"
+                  >
+                    <option value="">Select strand</option>
+                    <option value="STEM">
+                      STEM (Science, Technology, Engineering, and Mathematics)
+                    </option>
+                    <option value="ABM">
+                      ABM (Accountancy, Business, and Management)
+                    </option>
+                    <option value="HUMSS">
+                      HUMSS (Humanities and Social Sciences)
+                    </option>
+                    <option value="GAS">GAS (General Academic Strand)</option>
+                    <option value="TVL">
+                      TVL (Technical-Vocational-Livelihood)
+                    </option>
+                    <option value="SPORTS">Sports</option>
+                    <option value="ARTS">Arts and Design</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Inclusive Dates
+                    <span class="text-red-500">*</span></label
+                  >
+                  <div class="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="From (Year)"
+                      name="senior_high_school_year_from"
+                      required
+                    />
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="To (Year)"
+                      name="senior_high_school_year_to"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h4 class="font-medium text-gray-800 mb-4">
+                  College (if any) / ALS Graduate
+                </h4>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >School Name</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="School name"
+                    name="tertiary_school"
+                    
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Address (Brgy, City/Town, Province)</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="School address"
+                    name="tertiary_school_address"
+                    
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Program</label
+                  >
+                  <input
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Program/Course"
+                    name="tertiary_course"
+                    
+                  />
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm mb-2"
+                    >Inclusive Dates</label
+                  >
+                  <div class="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="From (Year)"
+                      name="tertiary_year_from"
+                      
+                    />
+                    <input
+                      type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="To (Year)"
+                      name="tertiary_year_to"
+                      
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-8 flex justify-between">
+              <button
+                id="backToStep2"
+                class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap"
+              >
+                Previous: Family Details
+              </button>
+              <button
+                id="nextToStep4"
+                class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap"
+              >
+                Next: Review & Submit
+              </button>
+            </div>
+          </div>
+          <!-- Step 4: Review & Submit -->
+          <div id="step4" class="hidden">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+              Review & Submit
+            </h3>
+            <div
+              class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6"
+            >
+              <h4 class="font-medium text-gray-800 mb-4">
+                Consent and Declaration
+              </h4>
+              <div class="mb-6">
+                <h5 class="font-medium text-gray-700 mb-2">CONSENT</h5>
+                <p class="text-sm text-gray-600 mb-4">
+                  I am fully aware that Padre Garcia Polytechnic College is
+                  bound by the Data Privacy Act of 2012 and its Implementing
+                  Rules and Regulations (IRR) effective since September 8,
+                  2016, to protect all my personal and sensitive information
+                  that it collects, processes, and retains upon my application
+                  for admission, enrollment, and during my stay in the
+                  College. I am fully aware that PGPC may share such
+                  information to affiliated or partner organizations as part
+                  of its contractual obligations or with other Government
+                  agencies pursuant to law or legal processes. In this regard,
+                  I hereby allow PGPC to collect, process, use and share my
+                  personal data for the pursuit of its legitimate academic,
+                  research and employment purposes and/or interests as an
+                  educational institution.
+                </p>
+              </div>
+              <div>
+                <h5 class="font-medium text-gray-700 mb-2">OATH</h5>
+                <p class="text-sm text-gray-600">
+                  I hereby certify that all information supplied in this
+                  application form is complete and accurate. I also understand
+                  that any false information will disqualify me from being
+                  admitted to the College.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center mb-6">
+              <input type="checkbox" name="agreements" value="Yes" id="agreements" required>
+              <label class="ml-2 text-gray-700"
+                >I have read and agree to the terms and conditions
+                above.</label
+              >
+            </div>
+            <div class="grid grid-cols-1 gap-6 mb-6">
+              <div>
+                <label class="block text-gray-700 text-sm mb-2" for="final_submission_date_input">Final Submission Date</label>
+                <input
+                  type="date"
+                  id="final_submission_date_input"
+                  name="final_submission_date"
+                  class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  value="2025-04-24"
+                  required
+                />
+              </div>
+            </div>
+           
+            <div class="mt-8 flex justify-between">
+              <button
+                id="backToStep3"
+                class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap"
+              >
+                Previous: Educational Background
+              </button>
+              
+                <!-- Add all your form fields here -->
+                <button
+                   id="submitApplication"
+                   class="bg-gray-300 text-white px-6 py-2 rounded-button font-medium whitespace-nowrap cursor-not-allowed"
+                   type="submit"
+                    disabled
+                    >     
+                      Submit Application
+                  </button>
+              </form> 
+            </div> 
+          </div> 
+        </div> 
+      </div> 
+    </main>
+  </div> 
+
+  <footer class="footer">
+      <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
+      <h1 class="footer-title">Padre Garcia Polytechnic College</h1>
+      <h2 class="footer-subtitle">THE FUTURE BEGINS HERE.</h2>
+      <p class="footer-connect">Connect with us</p>
+      <div class="footer-socials">
+        <a href="https://www.facebook.com/PadreGarciaPolytechnicCollege"><i class="fab fa-facebook-f"></i></a>
+
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-bottom">
+        <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="{{url_for('views.home')}}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7">Brgy.Castillo, Padre Garcia, Batangas</a> | +63 (2) 8524-4611</p>
+        <p>© 2025. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home">Padre Garcia PH</a></p>
+      </div>
+  </footer>
+</div> 
+
+<button class="go-top-btn" id="goTopBtn">
+    <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="Go to top">
+</button>
+
+<script>
+    // Existing script content from new_student.html for form logic
+    document.addEventListener("DOMContentLoaded", function () {
+      const requiredFields = document.querySelectorAll(
+        "#step1 input[required], #step1 select[required], #step2 input[required], #step2 select[required], #step3 input[required], #step3 select[required], #step4 input[required], #step4 select[required]"
+      );
+      const submitButton = document.getElementById("submitApplication");
+  
+      function validateForm() {
+        let isValid = true;
+  
+        requiredFields.forEach((field) => {
+          if (field.type === 'radio' || field.type === 'checkbox') {
+            if (field.type === 'checkbox' && field.name === 'agreements') { 
+                 if (!field.checked) isValid = false;
+            } else if (field.type === 'radio') {
+                 const radioGroup = document.querySelectorAll(`input[name="${field.name}"]`);
+                 let oneChecked = false;
+                 radioGroup.forEach(radio => { if (radio.checked) oneChecked = true; });
+                 if (!oneChecked) isValid = false;
+            }
+          } else if (!field.value.trim()) {
+            isValid = false;
+          }
+        });
+  
+        if (isValid) {
+          submitButton.disabled = false;
+          submitButton.classList.remove("bg-gray-300", "cursor-not-allowed");
+          submitButton.classList.add("bg-primary");
+        } else {
+          submitButton.disabled = true;
+          submitButton.classList.add("bg-gray-300", "cursor-not-allowed");
+          submitButton.classList.remove("bg-primary");
+        }
+      }
+  
+      requiredFields.forEach((field) => {
+        field.addEventListener("input", validateForm);
+        if (field.type === 'radio' || field.type === 'checkbox') {
+            field.addEventListener("change", validateForm);
+        }
+      });
+  
+      validateForm();
+    });
+  
+    document.addEventListener("DOMContentLoaded", function () {
+      const step1 = document.getElementById("step1");
+      const step2 = document.getElementById("step2");
+      const step3 = document.getElementById("step3");
+      const step4 = document.getElementById("step4");
+      const nextToStep2 = document.getElementById("nextToStep2");
+      const backToStep1 = document.getElementById("backToStep1"); 
+      const nextToStep3 = document.getElementById("nextToStep3");
+      const backToStep2Buttons = document.querySelectorAll("#backToStep2"); 
+      const nextToStep4 = document.getElementById("nextToStep4");
+      const backToStep3Buttons = document.querySelectorAll("#backToStep3"); 
+
+      function collectFormData() {
+        const formData = {
+          program: document.querySelector('input[name="program_choice"]').value,
+          lastName: document.querySelector('input[name="last_name"]').value,
+          firstName: document.querySelector('input[name="first_name"]').value,
+          middleName: document.querySelector('input[name="middle_name"]').value,
+          dateOfBirth: document.querySelector('input[type="date"][name="date_of_birth"]').value,
+          placeOfBirth: document.querySelector('input[placeholder="City/Municipality"][name="place_of_birth"]').value,
+          sex: document.querySelector('input[name="sex"]:checked') ? document.querySelector('input[name="sex"]:checked').value : "",
+          civilStatus: document.querySelector('input[name="civil_status"]:checked') ? document.querySelector('input[name="civil_status"]:checked').value : "",
+          religion: document.querySelector('input[name="religion"]').value,
+          citizenship: document.querySelector('input[name="citizenship"]').value,
+          mobileNo: document.querySelector('input[name="mobile_number"]').value,
+          email: document.querySelector('input[name="email_address"]').value,
+          address: {
+            street: document.querySelector('input[name="permanent_address_street_barangay"]').value,
+            city: document.querySelector('input[name="permanent_address_city_municipality"]').value,
+            province: document.querySelector('input[name="permanent_address_province"]').value,
+            postalCode: document.querySelector('input[name="permanent_address_postal_code"]').value,
+          },
+          father: {
+            name: document.querySelector('input[name="father_name"]').value,
+            occupation: document.querySelector('input[name="father_occupation"]').value,
+            company: document.querySelector('input[name="father_company_address"]').value,
+            contact: document.querySelector('input[name="father_contact_number"]').value,
+          },
+          mother: {
+            name: document.querySelector('input[name="mother_maiden_name"]').value,
+            occupation: document.querySelector('input[name="mother_occupation"]').value,
+            company: document.querySelector('input[name="mother_company_address"]').value,
+            contact: document.querySelector('input[name="mother_contact_number"]').value,
+          },
+          education: {
+            shs: {
+              name: document.querySelector('input[name="senior_high_school"]').value,
+              address: document.querySelector('input[name="senior_high_school_address"]').value,
+              strand: document.querySelector('select[name="senior_high_school_track_strand"]').value,
+              yearFrom: document.querySelector('input[name="senior_high_school_year_from"]').value,
+              yearTo: document.querySelector('input[name="senior_high_school_year_to"]').value,
+            },
+          },
+        };
+        return formData;
+      }
+
+      if(nextToStep2) nextToStep2.addEventListener("click", function (e) { e.preventDefault(); step1.classList.add("hidden"); step2.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(2); });
+      if(backToStep1) backToStep1.addEventListener("click", function (e) { e.preventDefault(); step2.classList.add("hidden"); step1.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(1); });
+      if(nextToStep3) nextToStep3.addEventListener("click", function (e) { e.preventDefault(); step2.classList.add("hidden"); step3.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(3); });
+      
+      backToStep2Buttons.forEach(button => {
+          button.addEventListener("click", function (e) {
+              e.preventDefault();
+              step3.classList.add("hidden");
+              step2.classList.remove("hidden");
+              window.scrollTo(0, 0);
+              updateStepperUI(2);
+          });
+      });
+
+      if(nextToStep4) nextToStep4.addEventListener("click", function (e) {
+        e.preventDefault();
+        const formData = collectFormData();
+        const reviewContent = `
+        <div class="space-y-6">
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+        <h4 class="font-medium text-gray-800 mb-4">Personal Information</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><p class="text-sm text-gray-600">Program:</p><p class="font-medium">${formData.program || "Not specified"}</p></div>
+        <div><p class="text-sm text-gray-600">Full Name:</p><p class="font-medium">${formData.lastName}, ${formData.firstName} ${formData.middleName}</p></div>
+        <div><p class="text-sm text-gray-600">Date of Birth:</p><p class="font-medium">${formData.dateOfBirth || "Not specified"}</p></div>
+        <div><p class="text-sm text-gray-600">Place of Birth:</p><p class="font-medium">${formData.placeOfBirth || "Not specified"}</p></div>
+        <div><p class="text-sm text-gray-600">Sex:</p><p class="font-medium">${formData.sex || "Not specified"}</p></div>
+        <div><p class="text-sm text-gray-600">Civil Status:</p><p class="font-medium">${formData.civilStatus || "Not specified"}</p></div>
+        <div><p class="text-sm text-gray-600">Religion:</p><p class="font-medium">${formData.religion || "Not specified"}</p></div>
+        <div><p class="text-sm text-gray-600">Citizenship:</p><p class="font-medium">${formData.citizenship || "Not specified"}</p></div>
+        <div><p class="text-sm text-gray-600">Mobile No:</p><p class="font-medium">${formData.mobileNo || "Not specified"}</p></div>
+        <div><p class="text-sm text-gray-600">Email:</p><p class="font-medium">${formData.email || "Not specified"}</p></div>
+        </div>
+        <div class="mt-4"><p class="text-sm text-gray-600">Complete Address:</p><p class="font-medium">${formData.address.street}, ${formData.address.city}, ${formData.address.province} ${formData.address.postalCode}</p></div>
+        </div>
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+        <h4 class="font-medium text-gray-800 mb-4">Family Information</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div><h5 class="font-medium text-gray-700 mb-2">Father's Information</h5><p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.father.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Occupation: <span class="font-medium">${formData.father.occupation || "Not specified"}</span></p><p class="text-sm text-gray-600">Company & Address: <span class="font-medium">${formData.father.company || "Not specified"}</span></p><p class="text-sm text-gray-600">Contact No: <span class="font-medium">${formData.father.contact || "Not specified"}</span></p></div>
+        <div><h5 class="font-medium text-gray-700 mb-2">Mother's Information</h5><p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.mother.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Occupation: <span class="font-medium">${formData.mother.occupation || "Not specified"}</span></p><p class="text-sm text-gray-600">Company & Address: <span class="font-medium">${formData.mother.company || "Not specified"}</span></p><p class="text-sm text-gray-600">Contact No: <span class="font-medium">${formData.mother.contact || "Not specified"}</span></p></div>
+        </div>
+        </div>
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+        <h4 class="font-medium text-gray-800 mb-4">Educational Background</h4>
+        <div><h5 class="font-medium text-gray-700 mb-2">Senior High School</h5><p class="text-sm text-gray-600">School Name: <span class="font-medium">${formData.education.shs.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Address: <span class="font-medium">${formData.education.shs.address || "Not specified"}</span></p><p class="text-sm text-gray-600">Strand: <span class="font-medium">${formData.education.shs.strand || "Not specified"}</span></p><p class="text-sm text-gray-600">Year: <span class="font-medium">${formData.education.shs.yearFrom || "Not specified"} - ${formData.education.shs.yearTo || "Not specified"}</span></p></div>
+        </div>
+        </div>`;
+        
+        const consentSection = step4.querySelector(".bg-gray-50.p-6.rounded-lg.border.border-gray-200.mb-6"); 
+        
+        const existingReviewContainer = step4.querySelector("#reviewDataContainer");
+        if (existingReviewContainer) {
+            existingReviewContainer.remove();
+        }
+
+        const reviewContainer = document.createElement("div");
+        reviewContainer.id = "reviewDataContainer"; 
+        reviewContainer.innerHTML = reviewContent;
+        consentSection.parentNode.insertBefore(reviewContainer, consentSection);
+        step3.classList.add("hidden");
+        step4.classList.remove("hidden");
+        window.scrollTo(0, 0);
+        updateStepperUI(4);
+      });
+      
+      backToStep3Buttons.forEach(button => {
+          button.addEventListener("click", function(e) {
+              e.preventDefault();
+              const reviewContainer = step4.querySelector("#reviewDataContainer");
+              if (reviewContainer) {
+                  reviewContainer.remove(); 
+              }
+              step4.classList.add("hidden");
+              step3.classList.remove("hidden");
+              window.scrollTo(0, 0);
+              updateStepperUI(3);
+          });
+      });
+      
+      function updateStepperUI(activeStep) {
+        const stepperItems = document.querySelectorAll(".px-6.py-4.border-b .flex.items-center > div.flex.flex-col");
+        const progressBars = document.querySelectorAll(".px-6.py-4.border-b .h-1.bg-gray-200 > div");
+        stepperItems.forEach((item, index) => {
+          const stepNumber = index + 1;
+          const circle = item.querySelector("div.w-10.h-10");
+          const text = item.querySelector("p");
+          const icon = circle.querySelector("i");
+
+          if (stepNumber < activeStep) {
+            circle.classList.remove("bg-gray-200", "text-gray-500");
+            circle.classList.add("bg-primary", "text-white");
+            text.classList.remove("text-gray-500");
+            text.classList.add("text-primary");
+            if (progressBars[index]) progressBars[index].style.transform = "scaleX(1)";
+          } else if (stepNumber === activeStep) {
+            circle.classList.remove("bg-gray-200", "text-gray-500");
+            circle.classList.add("bg-primary", "text-white");
+            text.classList.remove("text-gray-500");
+            text.classList.add("text-primary");
+            circle.classList.add("scale-110");
+            setTimeout(() => circle.classList.remove("scale-110"), 300);
+            if (index > 0 && progressBars[index-1]) progressBars[index-1].style.transform = "scaleX(1)"; 
+
+          } else {
+            circle.classList.remove("bg-primary", "text-white", "scale-110");
+            circle.classList.add("bg-gray-200", "text-gray-500");
+            text.classList.remove("text-primary");
+            text.classList.add("text-gray-500");
+            if (progressBars[index - 1]) progressBars[index - 1].style.transform = "scaleX(0)";
+          }
+        });
+      }
+    });
+  
+    document.addEventListener("DOMContentLoaded", function () {
+        const uploadPhotoBtn = document.getElementById("uploadPhotoBtn");
+        const photoInput = document.getElementById("photoInput");
+        const photoPreview = document.getElementById("photoPreview");
+        const photoPlaceholder = document.getElementById("photoPlaceholder");
+        const photoToast = document.getElementById("photoToast");
+
+        if (uploadPhotoBtn) {
+            uploadPhotoBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if(photoInput) photoInput.click();
+            });
+        }
+
+        if (photoInput) {
+            photoInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    if (!file.type.startsWith("image/")) {
+                        showPhotoToast("⚠️ Please select an image file", "error");
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        if(photoPreview) photoPreview.src = event.target.result;
+                        if(photoPreview) photoPreview.classList.remove("hidden");
+                        if(photoPlaceholder) photoPlaceholder.classList.add("hidden");
+                    };
+                    reader.readAsDataURL(file);
+                    showPhotoToast("✅ Photo uploaded successfully", "success");
+                }
+            });
+        }
+        
+        function showPhotoToast(message, type) {
+            if (!photoToast) return;
+            photoToast.textContent = message;
+            photoToast.className = "fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white text-sm z-50 transform transition-transform duration-300";
+            if (type === "success") photoToast.classList.add("bg-green-500");
+            else if (type === "error") photoToast.classList.add("bg-red-500");
+            photoToast.classList.remove("hidden", "translate-y-full");
+            setTimeout(() => {
+                photoToast.classList.add("translate-y-full");
+                setTimeout(() => photoToast.classList.add("hidden"), 300);
+            }, 2000);
+        }
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const goTopBtn = document.getElementById('goTopBtn');
+        if(goTopBtn) {
+            window.addEventListener('scroll', () => {
+                goTopBtn.style.display = window.scrollY > 200 ? "flex" : "none";
+            });
+            goTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navigation = document.getElementById('main-navigation');
+
+        if (menuToggle && navigation) {
+            menuToggle.addEventListener('click', function() {
+                navigation.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+                const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
+                menuToggle.setAttribute('aria-expanded', !isExpanded);
+            });
+        }
+    });
+</script>
+
+
+{% endblock %}

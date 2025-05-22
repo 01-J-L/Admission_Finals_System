@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block style %}
+<style>
+    /* Ensures styles from base.html are applied, plus page-specific ones */
+    body { 
+        font-family: 'Arial', sans-serif; /* Consistent font */
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f4; /* Light background for content area */
+    }
+    
+
+    .program-hero-banner {
+        position: relative;
+        text-align: center;
+        color: white;
+        height: 40vh; /* Adjust height as needed */
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .program-hero-banner::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(22, 41, 56, 0.6); /* Dark overlay, consistent with footer */
+        z-index: 1;
+    }
+
+    .program-hero-banner h1 {
+        margin: 0;
+        font-size: 2.8rem;
+        font-weight: bold;
+        position: relative;
+        z-index: 2;
+        padding: 0 1rem; /* Add padding for smaller screens */
+    }
+
+    .program-container {
+        max-width: 1000px;
+        margin: -50px auto 2rem auto; /* Negative margin to pull content over hero */
+        padding: 2rem;
+        background-color: #fff;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        position: relative; /* For z-index stacking */
+        z-index: 3; /* Above hero overlay */
+    }
+
+    .program-section {
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .program-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .program-section h2 {
+        font-size: 1.8rem;
+        color: #162938; /* Dark blue from header */
+        margin-bottom: 1rem;
+        border-left: 4px solid #007bff; /* Accent color, change if needed */
+        padding-left: 0.75rem;
+    }
+
+    .program-section p, .program-section ul {
+        font-size: 1rem;
+        color: #555;
+        line-height: 1.7;
+    }
+
+    .program-section ul {
+        list-style: disc; /* Or use custom icons */
+        padding-left: 25px;
+    }
+
+    .program-section ul li {
+        margin-bottom: 0.6rem;
+    }
+
+    .course-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .course-card {
+        background-color: #f9f9f9;
+        padding: 1.25rem;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        transition: box-shadow 0.3s ease;
+    }
+
+    .course-card:hover {
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .course-card h3 {
+        font-size: 1.15rem;
+        color: #1f2937; /* Darker text for course titles */
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+    }
+    .course-card p {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .faculty-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+
+    .faculty-member {
+        text-align: center;
+        background-color: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .faculty-member img {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 1rem;
+        border: 3px solid #162938; /* Consistent border color */
+    }
+
+    .faculty-member h4 {
+        margin: 0.5rem 0 0.2rem 0;
+        font-size: 1.2rem;
+        color: #162938;
+    }
+
+    .faculty-member p.faculty-title {
+        font-size: 0.95rem;
+        color: #007bff; /* Accent color for title */
+        margin-bottom: 0;
+    }
+
+    .cta-section {
+        text-align: center;
+        padding: 2rem 0;
+    }
+
+    .cta-button {
+        display: inline-block;
+        background-color: #007bff; /* Primary call-to-action color */
+        color: white;
+        padding: 0.8rem 2rem;
+        text-decoration: none;
+        border-radius: 25px; /* Pill shape */
+        font-size: 1.1rem;
+        font-weight: bold;
+        text-align: center;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+    }
+
+    .cta-button:hover {
+        background-color: #0056b3; /* Darker shade on hover */
+        transform: translateY(-2px);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .program-hero-banner h1 {
+            font-size: 2.2rem;
+        }
+        .program-container {
+            margin: -30px 1rem 1rem 1rem; /* Adjust margin for smaller screens */
+            padding: 1.5rem;
+        }
+        .program-section h2 {
+            font-size: 1.6rem;
+        }
+    }
+    @media (max-width: 480px) {
+        .program-hero-banner h1 {
+            font-size: 1.8rem;
+        }
+        .course-list, .faculty-grid {
+            grid-template-columns: 1fr; /* Single column on very small screens */
+        }
+    }
+
+</style>
+{% endblock %}
+
+{% block head %}
+    {{ super() }} {# Includes head content from base.html (like the icon and navigation) #}
+    {# The 'program' object is now passed from views.py #}
+    <title>{{ program.title if program else "Program Details" }} - Padre Garcia Polytechnic College</title>
+{% endblock %}
+
+{% block body %}
+
+{# 
+  The `program` object is now passed directly from your Flask route in views.py
+  when rendering this template. The placeholder `{% set program = { ... } %}` 
+  block has been removed as it's no longer needed and was causing the syntax error.
+#}
+
+<div class="program-hero-banner" style="background-image: url('{{ program.hero_image_url }}');">
+    <h1>{{ program.title }}</h1>
+</div>
+
+<div class="program-container">
+
+    <section class="program-section">
+        <h2>Program Overview</h2>
+        <p>{{ program.description }}</p>
+    </section>
+
+    <section class="program-section">
+        <h2>Program Objectives</h2>
+        <ul>
+            {% for objective in program.objectives %}
+            <li>{{ objective }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="program-section">
+        <h2>Career Opportunities</h2>
+        <p>Graduates of this program are well-prepared for a wide range of exciting and in-demand careers in the technology sector and beyond. Some potential career paths include:</p>
+        <ul>
+            {% for career in program.career_opportunities %}
+            <li>{{ career }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="program-section">
+        <h2>Core Courses</h2>
+        <p>Our curriculum includes a comprehensive set of core courses designed to build a strong foundation and specialized knowledge. Below is a selection of key courses in this program:</p>
+        <div class="course-list">
+            {% for course in program.core_courses %}
+            <div class="course-card">
+                <h3>{{ course.code }}: {{ course.name }}</h3>
+                <p>{{ course.desc }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    
+
+    <section class="cta-section">
+        <h2>Ready to Shape Your Future?</h2>
+        <p>Join the Padre Garcia Polytechnic College and take the first step towards a rewarding career in {{ program.title }}.</p>
+        <a href="{{ program.admission_link }}" class="cta-button">Apply Now</a>
+    </section>
+
+</div>
+
+<script>
+          document.addEventListener('DOMContentLoaded', function () {
+            const goTopBtn = document.getElementById('goTopBtn');
+          
+            if(goTopBtn) { 
+                window.addEventListener('scroll', () => {
+                  if (window.scrollY > 200) {
+                    goTopBtn.style.display = "flex";
+                  } else {
+                    goTopBtn.style.display = "none";
+                  }
+                });
+              
+                goTopBtn.addEventListener('click', () => {
+                  window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                  });
+                });
+            }
+          });
+          </script>
+          
+      
+      
+      </script>
+      <style>
+      .go-top-btn {
+          position: fixed;
+          bottom: 70px; 
+          right: 35px;
+          border-radius: 50%;
+          cursor: pointer;
+          height: 50px;
+          width: 50px;
+          background: #fff;
+          border: 3px solid #333;
+          display: none; 
+          justify-content: center;
+          align-items: center;
+          z-index: 999;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .go-top-btn img {
+          width: 20px;
+          height: 20px;
+        }
+        </style>
+      
+      <button class="go-top-btn" id="goTopBtn">
+        <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="arrow up" />
+      </button>
+
+
+
+{% endblock %}

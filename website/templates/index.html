@@ -1,0 +1,895 @@
+{% extends 'base.html' %}
+
+{% block style %}
+<style>
+/* General Styles from existing block */
+.Section_top {
+    background-image: url("{{ url_for('static', filename='images/img1.jpg') }}");
+    animation: change 30s infinite ease-in-out;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* On desktop, it can start from the very top */
+}
+
+@keyframes change {
+    10% { background-image: url("{{ url_for('static', filename='images/img1.jpg') }}"); }
+    20% { background-image: url("{{ url_for('static', filename='images/img2.jpg') }}"); }
+    40% { background-image: url("{{ url_for('static', filename='images/img3.jpg') }}"); }
+    60% { background-image: url("{{ url_for('static', filename='images/img4.jpg') }}"); }
+    80% { background-image: url("{{ url_for('static', filename='images/img5.jpg') }}"); }
+    100% { background-image: url("{{ url_for('static', filename='images/img6.jpg') }}"); }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Header Styles */
+header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* Default background can be transparent or light, letting base.html define it or having a default */
+    /* background: #fff; */ /* Example light background for desktop if needed */
+    transition: background-color 0.3s ease; /* Smooth transition for background change */
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-left .logo { /* College name */
+    font-size: 1.4em;
+    /* color: #162938; */ /* Desktop logo color, could be dark if header bg is light */
+    margin-left: 15px;
+    white-space: nowrap;
+    transition: color 0.3s ease; /* Smooth transition for color change */
+}
+
+/* Desktop Navigation Styles */
+.navigation a {
+    position: relative;
+    font-size: 1.1em;
+    /* color: #162938; */ /* Desktop nav link color */
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 30px;
+}
+.navigation a.no-underline {
+    text-decoration: none;
+}
+
+.navigation .btnLogin-popup {
+    /* Desktop specific adjustments if any */
+}
+
+
+/* Hamburger Menu Button */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1100;
+    margin-left: 20px;
+}
+
+.menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: #162938; /* Default dark color for hamburger lines, will be overridden for dark header */
+    border-radius: 3px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Mobile Navigation Styles */
+@media (max-width: 992px) {
+    header {
+        padding: 10px 3%;
+        background-color: #162938; /* ADDED: Dark background for mobile header */
+    }
+
+    .header-left img {
+        width: 70px; /* Adjust if needed, ensures header height is consistent */
+        height: 50px; /* Explicit height for consistency if auto causes variance */
+                      /* Or ensure your image has an aspect ratio that works well with width:70px */
+        object-fit: contain; /* Or cover, depending on image aspect ratio */
+    }
+
+    .header-left .logo {
+        font-size: 1em;
+        margin-left: 10px;
+        color: #fff; /* CHANGED: White color for logo text on dark mobile header */
+    }
+
+    .menu-toggle span {
+        background-color: #ffffff; /* CHANGED: White hamburger lines for dark mobile header */
+    }
+
+    .navigation {
+        position: absolute;
+        top: 100%; /* Position below the header */
+        right: 0;
+        width: 250px;
+        background-color: #162938; /* Mobile dropdown panel needs a background */
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        flex-direction: column;
+        align-items: stretch;
+        display: none;
+        z-index: 1050;
+        border-top: 1px solid #2a3f54; /* Darker border for dropdown */
+        max-height: calc(100vh - 70px); /* Approx header height, adjust if header height changes */
+        overflow-y: auto;
+    }
+
+    .navigation.active {
+        display: flex;
+    }
+
+    .navigation a { /* Styling for links inside mobile dropdown */
+        display: block;
+        padding: 12px 20px;
+        margin-left: 0;
+        text-align: left;
+        color: #f0f0f0; /* Light color for links on dark dropdown */
+        border-bottom: 1px solid #2a3f54; /* Darker border for items */
+        text-decoration: none; /* Explicitly remove underline for mobile nav items */
+    }
+    .navigation a:last-child {
+        border-bottom: none;
+    }
+    .navigation a:hover {
+        background-color: #22333f; /* Slightly lighter hover for mobile items */
+    }
+
+    .navigation a .btnLogin-popup {
+        width: 100%;
+        margin: 5px 0;
+        padding: 10px 15px;
+        font-size: 1em;
+        text-align: center;
+        display: block;
+        height: auto;
+        /* Ensure button text is readable on dark background if it inherits parent 'a' color */
+        /* color: #162938; /* Example: Dark text for light buttons */
+        /* background-color: #fff; /* Example: Light background for buttons */
+    }
+     .navigation a .btnLogin-popup[style*="background-color: #d9534f;"] {
+        /* Logout button specific styles are fine, text color on it should be light already */
+    }
+
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .menu-toggle.active span:nth-child(1) {
+        transform: translateY(9px) rotate(45deg);
+    }
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+    .menu-toggle.active span:nth-child(3) {
+        transform: translateY(-9px) rotate(-45deg);
+    }
+
+    .Section_top {
+        /* The header on mobile is approx. 10px_padding + 50px_logo_height + 10px_padding = 70px */
+        margin-top: 70px;  /* ADDED: Pushes the entire section below the fixed header */
+                           /* Adjust this value if your mobile header's actual height is different */
+        padding-top: 0;    /* REMOVED/RESET: No longer needed as margin-top handles spacing */
+        height: 300px;     /* This is now the visible height of the animation rectangle */
+    }
+}
+
+</style>
+{% endblock %}
+
+
+{% block head %}
+
+    <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<header>
+    <div class="header-left">
+        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Company Logo" width="100" height="auto" ></a>
+        <h2 class="logo">Padre Garcia Polytechnic College</h2>
+    </div>
+
+    <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <nav class="navigation" id="main-navigation">
+        <a href="{{ url_for('views.home') }}">Home</a>
+        <a href="{{ url_for('views.about') }}">About</a>
+        <a href="#programs">Programs</a>
+        <a href="#news">News</a>
+        {% if student_logged_in %}
+            <a href="{{ url_for('views.application_status_page') }}">
+                <button class="btnLogin-popup">My Application</button>
+            </a>
+            <a href="{{ url_for('auth.logout') }}">
+                 <button class="btnLogin-popup" style="background-color: #d9534f;">Logout</button>
+            </a>
+        {% else %}
+            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
+              <button class="btnLogin-popup">Apply now</button>
+            </a>
+        {% endif %}
+    </nav>
+</header>
+
+{% endblock%}
+
+
+{% block body %}
+
+<div class="overlay"></div>
+
+<div class="Section_top">
+    <div class="content">
+        <!-- Content inside Section_top if any, currently empty -->
+    </div>
+</div>
+
+<div class="programs">
+  <style>
+      .programs {
+          padding: 40px 20px;
+          background-color: #e3e3e3;
+          font-family: Arial, sans-serif;
+      }
+
+      .programs h1 {
+          text-align: center;
+          font-size: 2.5rem;
+          color: #162938;
+          margin-bottom: 2rem;
+      }
+
+      .grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 20px;
+      }
+
+      .card {
+          background-color: #fff;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          transition: transform 0.3s ease;
+          display: flex;
+          flex-direction: column;
+      }
+
+      .card:hover {
+          transform: translateY(-5px);
+      }
+
+      .card img {
+          width: 100%;
+          height: 200px;
+          object-fit: cover;
+      }
+
+      .relative {
+          position: relative;
+      }
+
+      .card .overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+          color: white;
+          padding: 1rem;
+      }
+
+      .card .overlay h2 {
+          margin: 0;
+          font-size: 1.25rem;
+      }
+
+      .p-4 {
+          padding: 1rem;
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+      }
+
+      .p-4 p {
+          color: #555;
+          margin-bottom: 1rem;
+          flex-grow: 1;
+      }
+
+      .p-4 .program-button-link button {
+          background-color: #1f2937;
+          color: white;
+          padding: 0.5rem 1rem;
+          border: none;
+          border-radius: 9999px;
+          cursor: pointer;
+          width: 100%;
+          margin-top: auto;
+      }
+
+      .p-4 .program-button-link button:hover {
+          background-color: #374151;
+      }
+    </style>
+
+
+  <h1><div class="programs" id="programs">
+    PROGRAMS</div></h1>
+  <div class="grid">
+      <!-- Bachelor of Science (B.S.) in Computer Science -->
+      <div class="card">
+          <div class="relative">
+              <img src="{{ url_for('static', filename='images/bscs.jpg') }}" alt="Computer Science Program">
+              <div class="overlay">
+                  <h2>BACHELOR OF SCIENCE IN COMPUTER SCIENCE</h2>
+              </div>
+          </div>
+          <div class="p-4">
+              <p>
+                  A <b>Bachelor of Science (B.S.) in Computer Science</b> is a degree program that focuses on the study of computing, programming,...
+              </p>
+              <a href="{{ url_for('views.view_program_page', program_id='bscs') }}" class="program-button-link">
+                  <button>View Program Details</button>
+              </a>
+          </div>
+      </div>
+      <!-- College of Criminology -->
+      <div class="card">
+          <div class="relative">
+              <img src="{{ url_for('static', filename='images/criminology.jpg') }}" alt="Criminology Program">
+              <div class="overlay">
+                  <h2>BACHELOR OF SCIENCE IN CRIMINOLOGY</h2>
+              </div>
+          </div>
+          <div class="p-4">
+              <p>
+                  A <b>Criminology</b> degree is the study of crime, criminal behavior, and the criminal justice system. It is an interdisciplinary field...
+              </p>
+              <a href="{{ url_for('views.view_program_page', program_id='criminology') }}" class="program-button-link">
+                  <button>View Program Details</button>
+              </a>
+          </div>
+      </div>
+      <!-- Bachelor of Science in Management Accounting (BSMA) -->
+      <div class="card">
+          <div class="relative">
+              <img src="{{ url_for('static', filename='images/bsma.jpg') }}" alt="Management Accounting Program">
+              <div class="overlay">
+                  <h2>BACHELOR OF SCIENCE IN MANAGEMENT ACCOUNTING</h2>
+              </div>
+          </div>
+          <div class="p-4">
+              <p>
+               A <b>Bachelor of Science in Management Accounting (BSMA)</b> is a degree program that combines principles of accounting, finance, and management...
+              </p>
+              <a href="{{ url_for('views.view_program_page', program_id='bsma') }}" class="program-button-link">
+                 <button>View Program Details</button>
+              </a>
+          </div>
+      </div>
+      <!-- Bachelor of Public Administration (BPA) -->
+      <div class="card">
+          <div class="relative">
+              <img src="{{ url_for('static', filename='images/bpa.jpg') }}" alt="Public Administration Program">
+              <div class="overlay">
+                  <h2>BACHELOR OF PUBLIC ADMINISTRATION</h2>
+              </div>
+          </div>
+          <div class="p-4">
+              <p>
+                  A <b>Bachelor of Public Administration (BPA)</b> is a degree program focused on preparing students for careers in public service and governance...
+              </p>
+              <a href="{{ url_for('views.view_program_page', program_id='bpa') }}" class="program-button-link">
+                  <button>View Program Details</button>
+              </a>
+          </div>
+      </div>
+  </div>
+</div>
+
+
+<div class="news">
+<style>
+
+.container {
+max-width: 1200px;
+margin: 0 auto;
+padding: 2rem;
+}
+
+.section-title {
+font-size: 2rem;
+color: #162938;
+text-align: center;
+margin-bottom: 2rem;
+font-weight: bold;
+}
+
+.news-grid {
+display: grid;
+grid-template-columns: 1fr;
+gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+.news-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+}
+
+@media (min-width: 1024px) {
+.news-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+}
+
+.news-card {
+background-color: #fff;
+border-radius: 0.5rem;
+overflow: hidden;
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+transition: transform 0.3s ease;
+}
+
+.news-card:hover {
+transform: scale(1.03);
+}
+
+.news-image {
+width: 100%;
+height: 12rem;
+object-fit: cover;
+}
+
+.news-content {
+padding: 1rem;
+}
+
+.news-title {
+font-size: 1.25rem;
+color: #162938;
+font-weight: bold;
+margin-bottom: 0.5rem;
+}
+
+.news-date {
+font-size: 0.9rem;
+color: #6b7280;
+margin-bottom: 1rem;
+}
+
+.news-description {
+color: #374151;
+margin-bottom: 1rem;
+}
+
+.read-more {
+display: inline-block;
+color: #162938;
+font-weight: 600;
+text-decoration: none;
+}
+
+.read-more:hover {
+text-decoration: underline;
+}
+
+
+</style>
+
+<div class="container">
+  <h1 class="section-title"><div class="news" id="news">NEWS & FEATURES</div></h1>
+  <div class="news-grid">
+
+    <!-- News Item 1 -->
+    <div class="news-card">
+      <img src="{{ url_for('static', filename='images/pgpcsportfest.jpg') }}"
+           alt="Carmela Lanesca Berania Wins National Champion" class="news-image">
+      <div class="news-content">
+        <h2 class="news-title">
+          Sportsfest of Padre Garcia Polytechnic College PGPC Royal Bos, the Crown of Excellence Season 1.
+        </h2>
+        <p class="news-date">April 1, 2025</p>
+        <p class="news-description">
+          This year's Sportsfest is a celebration of athleticism, teamwork, and school spirit. Our goal is to provide a platform for every student to showcase their skills and represent their respective teams with pride.
+          Events will range from individual and team sports to fun games, and each competition is designed to highlight the importance of discipline, hard work, and sportsmanship.
+        </p>
+        <a href="https://www.facebook.com/share/v/1KZg28vVT9/" class="read-more">Watch here →</a>
+      </div>
+    </div>
+
+    <!-- News Item 2 -->
+    <div class="news-card">
+      <img src="{{ url_for('static', filename='images/cottilion.jpg') }}"
+           alt="UB Dream Schoolers Excel at BCPRISA 2025" class="news-image">
+      <div class="news-content">
+        <h2 class="news-title">PGPC First Acquaintance Party
+      </h2>
+        <p class="news-date">April 5, 2025</p>
+        <p class="news-description">
+          This event is organized to help students, faculty, and staff get to know each other and build connections at the start of the school year.
+           It’s a great opportunity to socialize and make new friends within the PGPC community. The event will feature activities such as music, dancing, games, and refreshments.
+           Whether you’re a first-year student or returning, this is your chance to meet fellow PGPCians, enjoy the festivities, and kick off the school year with fun and excitement.
+        </p>
+        <a href="https://www.facebook.com/share/v/19KJck19NG/" class="read-more">Watch here →</a>
+      </div>
+    </div>
+
+    <!-- News Item 3 -->
+    <div class="news-card">
+      <img src="{{ url_for('static', filename='images/sinag.jpg') }}"
+           alt="Urban Green Hub Launch" class="news-image">
+      <div class="news-content">
+        <h2 class="news-title">
+          PADRE GARCIA POLYTECHNIC COLLEGE (PGPC) SINAG 1 - Leadership Training and Survival Team Building 2025
+        </h2>
+        <p class="news-date">March 26, 2025</p>
+        <p class="news-description">
+          A leader is best when people barely know they exists, when their work is done, aim fulfilled, they will say: we did it ourselves.
+          Become the kind of leader that people would follow voluntarily even if you had no title or position.
+        </p>
+        <a href="https://www.facebook.com/share/v/1AJmqwNyQN/" class="read-more">Watch here →</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+<!-- News number 2 -->
+
+
+<div class="news2">
+  <style>
+
+  .news2 .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .news2 .section-title {
+    font-size: 2rem;
+    color: #162938;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: bold;
+  }
+
+  .news2 .news-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .news2 .news-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .news2 .news-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .news2 .news-card {
+    background-color: #fff;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .news2 .news-card:hover {
+    transform: scale(1.03);
+  }
+
+  .news2 .news-image {
+    width: 100%;
+    height: 12rem;
+    object-fit: cover;
+  }
+
+  .news2 .news-content {
+    padding: 1rem;
+  }
+
+  .news2 .news-title {
+    font-size: 1.25rem;
+    color: #162938;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .news2 .news-date {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+  }
+
+  .news2 .news-description {
+    color: #374151;
+    margin-bottom: 1rem;
+  }
+
+  .news2 .read-more {
+    display: inline-block;
+    color: #162938;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .news2 .read-more:hover {
+    text-decoration: underline;
+  }
+
+
+    </style>
+
+  <div class="container">
+
+      <div class="news-grid">
+
+        <!-- News Item 1 -->
+        <div class="news-card">
+          <img src="{{ url_for('static', filename='images/firedrill.jpg') }}"
+               alt="PGPC Fire and Earthquake Drill" class="news-image">
+          <div class="news-content">
+            <h2 class="news-title">
+              PGPC Fire and Earthquake Drill last March 15, 2025
+            </h2>
+            <p class="news-date">March 15, 2025</p>
+            <p class="news-description">
+              The fire and earthquake drill is in compliance with Republic Act 9514, otherwise known as the Fire Code of the Philippines of 2008, which mandates educating people on fire safety procedures and protocols.
+              With preparedness in PGPC as our priority, our PGPC Emergency Response Team actively participated in the drill to enhance response capabilities and ensure readiness in the event of an earthquake.
+              Disaster preparedness starts with awareness and action! Let’s continue to stay vigilant and proactive in building a safer and more resilient community.
+            </p>
+            <a href="https://www.facebook.com/share/v/1Hu9avf2DY/" class="read-more">Watch here →</a>
+          </div>
+        </div>
+
+        <!-- News Item 2 -->
+        <div class="news-card">
+          <img src="{{ url_for('static', filename='images/crimrites.jpg') }}"
+               alt="PGPC Criminology Reception Rites" class="news-image">
+          <div class="news-content">
+            <h2 class="news-title">PGPC CRIMINOLOGY RECEPTION RITES
+          </h2>
+            <p class="news-date">March 11, 2025</p>
+            <p class="news-description">
+              This event marks the official welcome and orientation for incoming students of the Criminology program at Padre Garcia Polytechnic College. It is designed to introduce students to the Criminology department, its faculty, and the academic expectations for the program.
+              During this event, new students will learn about the courses, activities, and resources available to them throughout their studies.
+               It is also an opportunity to connect with fellow criminology students, faculty members, and department staff. The Reception Rites aim to provide a smooth transition into the program and set the stage for their journey in the field of criminal justice and criminology.
+            </p>
+            <a href="https://www.facebook.com/share/v/1Bfe4MnCSj/" class="read-more">Watch here →</a>
+          </div>
+        </div>
+
+        <!-- News Item 3 -->
+        <div class="news-card">
+          <img src="{{ url_for('static', filename='images/gobmike.jpg') }}"
+               alt="Statement by Gob Mike" class="news-image">
+          <div class="news-content">
+            <h2 class="news-title">
+              The concrete solution to the problem in education is to establish schools.
+              Provide free education for the youth and underprivileged Batangueños, so they can have the opportunity to grow and succeed.
+            </h2>
+            <p class="news-date">March 19, 2025</p>
+            <p class="news-description">
+              "I will serve as a bridge for the Batangueño youth who dream of achieving success.
+               Through the establishment of schools (colleges) in every district of our province and the provision of FULL SCHOLARSHIPS,
+                we can better support our students in pursuing their education, reaching their dreams, and helping their respective families."-GOB MIKE-
+            </p>
+            <a href="https://www.facebook.com/share/v/14Dxmh1H6NZ/" class="read-more">Watch here →</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+
+      <style>
+        .go-top-btn {
+          position: fixed;
+          bottom: 70px;
+          right: 35px;
+          border-radius: 50%;
+          cursor: pointer;
+          height: 50px;
+          width: 50px;
+          background: #fff;
+          border: 3px solid #333;
+          display: none;
+          justify-content: center;
+          align-items: center;
+          z-index: 999;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .go-top-btn img {
+          width: 20px;
+          height: 20px;
+        }
+        </style>
+
+
+      <button class="go-top-btn" id="goTopBtn">
+        <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="arrow up" />
+      </button>
+
+
+<!-- Footer remains here -->
+<style>
+    .footer {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      text-align: center;
+      color: white;
+      overflow: hidden;
+    }
+
+    .footer::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat;
+      z-index: 0;
+      opacity: 0.3;
+    }
+
+    .footer::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(22, 41, 56, 0.442);
+      z-index: 1;
+    }
+
+    .footer * {
+      position: relative;
+      z-index: 2;
+    }
+
+    .footer-logo {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 1rem;
+    }
+
+    .footer-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .footer-subtitle {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+
+    .footer-connect {
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+
+    .footer-socials {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      font-size: 1.25rem;
+    }
+
+    .footer-socials a {
+      color: white;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-socials a:hover {
+      color: #0987d0;
+    }
+
+    .footer-divider {
+      border-top: 1px solid white;
+      width: 25%;
+      margin: 2rem 0;
+    }
+
+    .footer-bottom {
+      font-size: 0.875rem;
+      line-height: 1.6;
+      max-width: 700px;
+    }
+    </style>
+
+<footer class="footer">
+    <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
+
+    <h1 class="footer-title">Padre Garcia Polytechnic College</h1>
+    <h2 class="footer-subtitle">THE FUTURE BEGINS HERE.</h2>
+
+    <p class="footer-connect">Connect with us</p>
+
+    <div class="footer-socials">
+      <a href="https://www.facebook.com/PadreGarciaPolytechnicCollege"><i class="fab fa-facebook-f"></i></a>
+
+    </div>
+
+    <div class="footer-divider"></div>
+
+    <div class="footer-bottom">
+      <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7">Brgy.Castillo, Padre Garcia, Batangas</a> | +63 (2) 8524-4611</p>
+      <p>© 2025. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home">Padre Garcia PH</a></p>
+    </div>
+
+</div>
+</footer>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const goTopBtn = document.getElementById('goTopBtn');
+    if(goTopBtn) {
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 200) {
+            goTopBtn.style.display = "flex";
+          } else {
+            goTopBtn.style.display = "none";
+          }
+        });
+        goTopBtn.addEventListener('click', () => {
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+          });
+        });
+    }
+
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navigation = document.getElementById('main-navigation'); // Used ID selector
+
+    if (menuToggle && navigation) {
+        menuToggle.addEventListener('click', function() {
+            navigation.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+            const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
+            menuToggle.setAttribute('aria-expanded', !isExpanded);
+        });
+    }
+  });
+</script>
+
+{% endblock%}

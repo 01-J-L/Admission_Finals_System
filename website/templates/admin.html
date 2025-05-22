@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}PGPC_Admin{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f2f2f2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0; /* Ensure no default margin */
+    }
+    .login-form-container { /* Added a container for centering */
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 350px; /* Max width for the form */
+    }
+    .login-form-container h1 { /* Target h1 specifically for title */
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.5rem; /* text-2xl */
+        font-weight: bold; /* font-bold */
+        color: #374151; /* text-gray-800 */
+    }
+    .login-form-container input[type="text"],
+    .login-form-container input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 16px; /* Consistent margin */
+        margin-top: 4px; /* Space between label and input */
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box; /* Include padding and border in element's total width and height */
+    }
+    .login-form-container button {
+        width: 100%;
+        padding: 10px;
+        background: #4f46e5; /* Tailwind primary color */
+        border: none;
+        color: white;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: 500; /* font-medium */
+    }
+    .login-form-container button:hover {
+        background: #4338ca; /* primary/90 */
+    }
+    .login-form-container label { /* Style for labels */
+        display: block;
+        font-size: 0.875rem; /* text-sm */
+        font-weight: 500; /* font-medium */
+        color: #4b5563; /* text-gray-700 */
+    }
+    .flash-messages-container { /* For flashed messages */
+        margin-top: 1rem; /* mt-4 */
+    }
+    .flash-message {
+        font-size: 0.875rem; /* text-sm */
+    }
+    .flash-danger {
+        color: #dc2626; /* text-red-600 */
+    }
+    .flash-success {
+        color: #16a34a; /* text-green-600 */
+    }
+</style>
+
+<div class="login-form-container">
+    <h1>Admin Login</h1>
+    <form action="{{ url_for('auth.admin_login') }}" method="POST">
+        <div class="mb-4">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="mb-6">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages-container">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+
+<!-- Home Button (bottom-left corner) -->
+<a href="{{ url_for('views.home') }}" class="fixed bottom-4 left-4 bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 shadow-lg text-sm">
+    ← Home
+</a>
+
+{% endblock %}

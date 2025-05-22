@@ -1,0 +1,811 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - PGPC</title>
+<script src="https://cdn.tailwindcss.com/3.4.1"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4f46e5',secondary:'#6366f1'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+    tr.selected { background-color: #eff6ff !important; }
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: none; z-index: 50; }
+    .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 1.5rem; border-radius: 0.5rem; max-width: 90%; width: auto; min-width: 320px; max-height: 90vh; overflow-y: auto; display: none; z-index: 51; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1); }
+    .modal.show, .modal-backdrop.show { display: block; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
+    .custom-checkbox { position: relative; display: flex; align-items: center; cursor: pointer; }
+    .custom-checkbox input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+    .checkmark { height: 18px; width: 18px; background-color: white; border: 1.5px solid #d1d5db; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+    .custom-checkbox input:checked ~ .checkmark { background-color: #4f46e5; border-color: #4f46e5; }
+    .checkmark:after { content: ""; display: none; }
+    .custom-checkbox input:checked ~ .checkmark:after { display: block; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); margin-bottom: 2px; }
+    .dropdown-content { display: none; position: absolute; background-color: white; min-width: 144px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 50; border-radius: 8px; border: 1px solid #e5e7eb; right: 0; top: 100%; margin-top: 4px; }
+    .dropdown.active .dropdown-content { display: block; }
+    .action-status-dropdown.active { z-index: 51; }
+    .bulk-actions { display: none; }
+    .toast-notification { position: fixed; top: 20px; right: 20px; background-color: #333; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; opacity: 0; transition: opacity 0.5s ease-in-out, transform 0.3s ease-in-out; font-size: 0.875rem; transform: translateY(-20px); }
+    .toast-notification.show { opacity: 1; transform: translateY(0); }
+    .toast-notification.success { background-color: #28a745; }
+    .toast-notification.error { background-color: #dc3545; }
+    .toast-notification.info { background-color: #17a2b8; }
+    @keyframes status-flash { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+    .status-flash-animation { animation: status-flash 0.6s ease-in-out; }
+</style>
+</head>
+<body class="flex">
+
+<aside id="sidebar" class="w-64 h-screen bg-white border-r border-gray-200 flex-shrink-0 fixed left-0 transition-transform duration-300 ease-in-out transform -translate-x-full sm:translate-x-0 z-40">
+    <div class="h-16 border-b border-gray-200 flex items-center px-6">
+        <div class="text-2xl font-['Pacifico'] text-primary">PGPC Admin</div>
+    </div>
+    <nav class="p-4 space-y-1 h-[calc(100vh-4rem-1px-4rem)] overflow-y-auto custom-scrollbar">
+        <a href="#" id="sidebarDashboardMenuLink" class="flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded">
+            <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-dashboard-line"></i></div>
+            Dashboard
+        </a>
+        <div class="space-y-1">
+            <a href="#" id="applicationsMenu" class="flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded">
+                <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-file-list-line"></i></div>
+                Applications
+            </a>
+            <div class="ml-12 space-y-1">
+                 <a href="#" id="pendingFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-yellow-600 hover:bg-gray-50 rounded">
+                    <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-time-line"></i></div>
+                    Pending <span class="ml-auto bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full" id="pendingCountSide">{{ stats.pending if stats else '0' }}</span>
+                </a>
+                <a href="#" id="inReviewFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:bg-gray-50 rounded">
+                    <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-file-search-line"></i></div>
+                    In Review <span class="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full" id="inReviewCountSide">{{ stats.in_review if stats else '0' }}</span>
+                </a>
+                <a href="#" id="approvedFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-green-600 hover:bg-gray-50 rounded">
+                    <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-checkbox-circle-line"></i></div>
+                    Approved <span class="ml-auto bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full" id="approvedCountSide">{{ stats.approved if stats else '0' }}</span>
+                </a>
+                <a href="#" id="rejectedFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-red-600 hover:bg-gray-50 rounded">
+                    <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-close-circle-line"></i></div>
+                    Rejected <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full" id="rejectedCountSide">{{ stats.rejected if stats else '0' }}</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        <a href="{{ url_for('auth.logout') }}" class="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-button border border-gray-300 w-full">
+            <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-arrow-left-line"></i></div>
+           Back to Home Page
+        </a>
+    </div>
+</aside>
+<div id="sidebarBackdrop" class="fixed inset-0 bg-black/30 z-30 hidden sm:hidden"></div>
+
+
+<div class="flex-1 sm:ml-64 transition-all duration-300 ease-in-out" id="mainContentArea">
+    <header class="bg-white shadow-sm">
+        <div class="flex items-center justify-between px-4 sm:px-6 h-16 border-b border-gray-200">
+            <div class="flex items-center">
+                <button id="sidebarToggle" class="text-gray-500 hover:text-primary mr-2 sm:mr-4 p-2 -ml-2 sm:ml-0">
+                    <div class="w-6 h-6 flex items-center justify-center"><i class="ri-menu-line"></i></div>
+                </button>
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <div class="w-5 h-5 flex items-center justify-center text-gray-400"><i class="ri-search-line"></i></div>
+                    </div>
+                    <input type="text" id="searchInput" class="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded text-sm focus:ring-primary focus:border-primary" placeholder="Search applications...">
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 sm:space-x-4 ml-2 sm:ml-0">
+                 <a href="{{ url_for('auth.logout') }}" class="text-gray-500 hover:text-primary" title="Logout">
+                    <div class="w-6 h-6 flex items-center justify-center"><i class="ri-logout-box-line"></i></div>
+                </a>
+            </div>
+        </div>
+        <div class="px-4 sm:px-6 py-2 bg-white border-b border-gray-200 flex flex-wrap items-center text-sm">
+            <a href="#" id="breadcrumbAdminHomeLink" class="text-gray-500 hover:text-primary">Admin Home</a>
+            <div class="w-4 h-4 flex items-center justify-center text-gray-400 mx-1">
+                <i class="ri-arrow-right-s-line"></i>
+            </div>
+            <span id="breadcrumbCurrentPage" class="text-primary">Dashboard</span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <div class="mb-6">
+            <h1 id="pageTitleHeader" class="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+        </div>
+
+        <div id="dashboardContent">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Applications</p>
+                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsTotal">{{ stats.total_applications if stats else '0' }}</h2>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg">
+                            <i class="ri-file-list-3-line ri-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm">Pending Review</p>
+                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsPending">{{ stats.pending if stats else '0' }}</h2>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-yellow-100 text-yellow-600 rounded-lg">
+                            <i class="ri-time-line ri-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm">Approved</p>
+                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsApproved">{{ stats.approved if stats else '0' }}</h2>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-green-100 text-green-600 rounded-lg">
+                            <i class="ri-check-line ri-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm">Rejected</p>
+                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsRejected">{{ stats.rejected if stats else '0' }}</h2>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-red-100 text-red-600 rounded-lg">
+                            <i class="ri-close-line ri-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 md:col-span-2 lg:col-span-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm">In Review</p>
+                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsInReview">{{ stats.in_review if stats else '0' }}</h2>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg">
+                             <i class="ri-file-search-line ri-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Application Trends (Last 7 Months)</h3>
+                    </div>
+                    <div id="applicationChart" style="width: 100%; height: 300px;"></div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Application Status Breakdown</h3>
+                    </div>
+                    <div id="statusChart" style="width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="applicationsContent" style="display: none;" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+                <h3 id="mainPageTitle" class="text-xl font-semibold text-gray-800">Applications</h3>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded shadow-inner border border-gray-200 mb-6">
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+                    <span class="text-sm font-medium text-gray-700">Filter by Submission Date:</span>
+                    <div class="flex items-center space-x-2">
+                        <label for="startDateFilter" class="text-sm text-gray-600">From:</label>
+                        <input type="date" id="startDateFilter" name="startDateFilter" class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary w-auto">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="endDateFilter" class="text-sm text-gray-600">To:</label>
+                        <input type="date" id="endDateFilter" name="endDateFilter" class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary w-auto">
+                    </div>
+                    <button id="clearDateFilterBtn" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-medium !rounded-button hover:bg-gray-300 flex items-center">
+                        <i class="ri-filter-off-line mr-1"></i> Clear Dates
+                    </button>
+                </div>
+            </div>
+
+            <div id="bulkActions" class="bulk-actions bg-blue-50 p-3 rounded-md border border-blue-200 mb-6 flex flex-wrap items-center gap-y-2">
+                <span id="selectedCount" class="text-sm font-medium text-blue-700 mr-4">0 items selected</span>
+                <div class="flex flex-wrap gap-2">
+                    <button id="bulkApproveBtn" class="px-3 py-1.5 bg-green-100 text-green-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-green-200">
+                        <i class="ri-check-line mr-1"></i> Approve
+                    </button>
+                    <button id="bulkRejectBtn" class="px-3 py-1.5 bg-red-100 text-red-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-red-200">
+                        <i class="ri-close-line mr-1"></i> Reject
+                    </button>
+                    <button id="bulkDeleteBtn" class="px-3 py-1.5 bg-gray-100 text-red-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-gray-200">
+                        <i class="ri-delete-bin-line mr-1"></i> Delete
+                    </button>
+                </div>
+                <button id="closeBulkActions" class="ml-auto text-gray-500 hover:text-gray-700 p-1">
+                    <i class="ri-close-line ri-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modals -->
+            <div id="deleteConfirmationModal" class="modal">
+                <div class="text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                        <i class="ri-error-warning-line ri-xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mt-3" id="deleteModalTitle">Delete Application(s)</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500" id="deleteModalMessage">Are you sure you want to delete the selected application(s)? This action cannot be undone.</p>
+                    </div>
+                    <div class="items-center px-4 py-3 space-x-2">
+                        <button id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                            Delete
+                        </button>
+                        <button id="cancelDeleteBtn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="deleteModalBackdrop" class="modal-backdrop"></div>
+
+            <div id="viewApplicationModal" class="modal w-full max-w-2xl">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h3 class="text-xl font-semibold text-gray-900" id="viewModalTitle">Application Details</h3>
+                    <button id="closeViewModalIcon" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line ri-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-4 custom-scrollbar pr-2" id="viewModalContent" style="max-height: 65vh;">
+                    <p class="text-center text-gray-500">Loading details...</p>
+                </div>
+            </div>
+            <div id="viewModalBackdrop" class="modal-backdrop"></div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="min-w-full divide-y divide-gray-200" id="applicationsTable">
+                     <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <label class="custom-checkbox"><input type="checkbox" id="selectAll"><span class="checkmark"></span></label>
+                            </th>
+                            <th scope="col" class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th scope="col" class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applicant</th>
+                            <th scope="col" class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Program</th>
+                            <th scope="col" class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Submission Date</th>
+                            <th scope="col" class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-3 py-2 md:px-6 md:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% if applications %}
+                            {% for app in applications %}
+                            <tr class="hover:bg-gray-50" data-applicant-id="{{ app.applicant_id }}">
+                                <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                                    <label class="custom-checkbox"><input type="checkbox" class="row-checkbox" data-id="{{ app.applicant_id }}"><span class="checkmark"></span></label>
+                                </td>
+                                <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900">P2025{{ "%04d" | format(app.applicant_id) }}</td>
+                                <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                                            <span class="text-sm font-medium">{{ app.first_name[0] if app.first_name else 'N' }}{{ app.last_name[0] if app.last_name else 'A' }}</span>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900 applicant-name">{{ app.first_name }} {{ app.last_name }}</p>
+                                            <p class="text-xs sm:text-sm text-gray-500 applicant-email">{{ app.student_account_email or app.email_address or 'N/A' }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 applicant-program hidden sm:table-cell">{{ app.program_choice or 'N/A' }}</td>
+                                <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 submission-date-cell hidden md:table-cell">
+                                    {{ app.submitted_at.strftime('%b %d, %Y %I:%M %p') if app.submitted_at else (app.date_of_application.strftime('%b %d, %Y') if app.date_of_application else 'N/A') }}
+                                </td>
+                                <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap status-cell">
+                                    {% set status_class = 'bg-gray-100 text-gray-800' %}
+                                    {% set current_status = app.application_status | lower | replace(' ', '_') %}
+                                    {% if current_status == 'approved' %}{% set status_class = 'bg-green-100 text-green-800' %}
+                                    {% elif current_status == 'rejected' %}{% set status_class = 'bg-red-100 text-red-800' %}
+                                    {% elif current_status == 'in_review' %}{% set status_class = 'bg-blue-100 text-blue-800' %}
+                                    {% elif current_status == 'pending' %}{% set status_class = 'bg-yellow-100 text-yellow-800' %}{% endif %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge {{ status_class }}">{{ app.application_status or 'N/A' }}</span>
+                                </td>
+                                <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                                    <div class="flex space-x-1 justify-end items-center">
+                                        <button class="text-gray-500 hover:text-primary p-1 action-view" title="View Details" data-id="{{ app.applicant_id }}"><i class="ri-eye-line ri-lg"></i></button>
+                                        <div class="dropdown relative action-status-dropdown">
+                                            <button class="text-gray-500 hover:text-primary p-1" title="Change Status">
+                                                 <i class="ri-arrow-down-s-fill ri-lg"></i>
+                                            </button>
+                                            <div class="dropdown-content w-36 text-left">
+                                                <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Approved">Approve</a>
+                                                <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Rejected">Reject</a>
+                                                <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="In Review">Set In Review</a>
+                                                <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Pending">Set Pending</a>
+                                            </div>
+                                        </div>
+                                        <button class="text-gray-500 hover:text-red-500 p-1 action-delete-single" title="Delete Application" data-id="{{ app.applicant_id }}"><i class="ri-delete-bin-line ri-lg"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No applications found.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="toast-container" class="fixed top-5 right-5 z-[1000] w-auto max-w-xs space-y-2"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rawApplicationsData = {{ applications | tojson | safe if applications else [] | tojson | safe }};
+
+    const dashboardContentDiv = document.getElementById('dashboardContent');
+    const applicationsContentDiv = document.getElementById('applicationsContent');
+    const pageTitleHeaderElement = document.getElementById('pageTitleHeader');
+    const breadcrumbCurrentPageElement = document.getElementById('breadcrumbCurrentPage');
+    const breadcrumbAdminHomeLink = document.getElementById('breadcrumbAdminHomeLink');
+
+    const sidebarDashboardMenuLink = document.getElementById('sidebarDashboardMenuLink');
+    const sidebarApplicationsMenuLink = document.getElementById('applicationsMenu');
+    const sidebarFilterLinks = {
+        pending: document.getElementById('pendingFilterLink'),
+        inReview: document.getElementById('inReviewFilterLink'),
+        approved: document.getElementById('approvedFilterLink'),
+        rejected: document.getElementById('rejectedFilterLink'),
+    };
+
+    const applicationsTable = document.getElementById('applicationsTable');
+    const tableBody = applicationsTable?.querySelector('tbody');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const bulkActionsBar = document.getElementById('bulkActions');
+    const selectedCountElement = document.getElementById('selectedCount');
+
+    const deleteConfirmationModal = document.getElementById('deleteConfirmationModal');
+    const deleteModalBackdrop = document.getElementById('deleteModalBackdrop');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const deleteModalMessage = document.getElementById('deleteModalMessage');
+    const deleteModalTitle = document.getElementById('deleteModalTitle');
+
+    const viewApplicationModal = document.getElementById('viewApplicationModal');
+    const viewModalBackdrop = document.getElementById('viewModalBackdrop');
+    const viewModalTitleJS = document.getElementById('viewModalTitle');
+    const viewModalContent = document.getElementById('viewModalContent');
+    const closeViewModalIcon = document.getElementById('closeViewModalIcon');
+
+    let itemToDelete = null;
+    let currentViewingApplicantId = null;
+    let activeStatusFilter = 'All';
+
+    const startDateInput = document.getElementById('startDateFilter');
+    const endDateInput = document.getElementById('endDateFilter');
+    const clearDateFilterBtn = document.getElementById('clearDateFilterBtn');
+
+    // Sidebar Elements (defined here for broader scope within DOMContentLoaded)
+    const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const mainContentArea = document.getElementById('mainContentArea');
+    const sidebarToggleBtn = document.getElementById('sidebarToggle');
+
+
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+        setTimeout(() => { toast.classList.add('show'); }, 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => { toast.remove(); }, 500);
+        }, 3000);
+    }
+
+    function toggleDropdown(dropdownElement, forceShow = null) {
+        if (forceShow === true) {
+            dropdownElement.classList.add('active');
+        } else if (forceShow === false) {
+            dropdownElement.classList.remove('active');
+        } else {
+            dropdownElement.classList.toggle('active');
+        }
+    }
+
+    document.querySelectorAll('.action-status-dropdown > button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.stopPropagation();
+            const dropdown = this.closest('.action-status-dropdown');
+            document.querySelectorAll('.action-status-dropdown.active').forEach(od => {
+                if (od !== dropdown) toggleDropdown(od, false);
+            });
+            toggleDropdown(dropdown);
+        });
+    });
+
+    document.addEventListener('click', function(event) {
+        document.querySelectorAll('.action-status-dropdown.active').forEach(dropdown => {
+            if (!dropdown.contains(event.target)) {
+                toggleDropdown(dropdown, false);
+            }
+        });
+        document.querySelectorAll('.dropdown.active').forEach(dropdown => {
+            if (!dropdown.contains(event.target) && !dropdown.classList.contains('action-status-dropdown') ) {
+                dropdown.classList.remove('active');
+            }
+        });
+    });
+
+    function updateStatusBadge(row, newStatus) {
+        const badge = row.querySelector('.status-badge');
+        if (!badge) return;
+
+        badge.textContent = newStatus;
+        let statusClass = 'bg-gray-100 text-gray-800';
+        if (newStatus === 'Approved') statusClass = 'bg-green-100 text-green-800';
+        else if (newStatus === 'Rejected') statusClass = 'bg-red-100 text-red-800';
+        else if (newStatus === 'In Review') statusClass = 'bg-blue-100 text-blue-800';
+        else if (newStatus === 'Pending') statusClass = 'bg-yellow-100 text-yellow-800';
+
+        badge.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge ${statusClass} status-flash-animation`;
+        setTimeout(() => badge.classList.remove('status-flash-animation'), 600);
+        updateGlobalStatsOnStatusChange();
+    }
+
+    async function handleUpdateStatus(applicantId, newStatus, rowElement) {
+        try {
+            const formData = new FormData();
+            formData.append('status', newStatus);
+            const response = await fetch(`/admin/application/${applicantId}/status`, {
+                method: 'POST',
+                body: formData,
+            });
+            const result = await response.json();
+            if (result.success) {
+                showToast(result.message, 'success');
+                const appInRawData = rawApplicationsData.find(app => app.applicant_id == applicantId);
+                if (appInRawData) appInRawData.application_status = newStatus;
+                if (rowElement) updateStatusBadge(rowElement, newStatus);
+                else {
+                    const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${applicantId}"]`);
+                    if(rowToUpdate) updateStatusBadge(rowToUpdate, newStatus);
+                }
+                filterTableRows();
+            } else {
+                showToast(result.message || 'Failed to update status.', 'error');
+            }
+        } catch (error) {
+            showToast('An error occurred: ' + error.toString(), 'error');
+            console.error("Error updating status:", error);
+        }
+    }
+
+    async function executeDelete(ids) {
+        const idArray = Array.isArray(ids) ? ids : [ids];
+        if (idArray.length === 0) return;
+        let successCount = 0;
+        for (const id of idArray) {
+            try {
+                const response = await fetch(`/admin/application/${id}/delete`, { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    successCount++;
+                    const rowToRemove = tableBody?.querySelector(`tr[data-applicant-id="${id}"]`);
+                    if (rowToRemove) rowToRemove.remove();
+                    const indexToRemove = rawApplicationsData.findIndex(app => app.applicant_id == id);
+                    if (indexToRemove > -1) rawApplicationsData.splice(indexToRemove, 1);
+                } else {
+                    showToast(result.message || `Failed to delete P2025${String(id).padStart(4, '0')}.`, 'error');
+                }
+            } catch (error) {
+                showToast(`Error deleting P2025${String(id).padStart(4, '0')}: ${error.toString()}`, 'error');
+                console.error("Error deleting:", error);
+            }
+        }
+        if (successCount > 0) showToast(`${successCount} application(s) deleted successfully.`, 'success');
+        closeModal(deleteConfirmationModal, deleteModalBackdrop);
+        updateBulkActionsVisibility();
+        updateSelectAllCheckboxState();
+        updateGlobalStatsOnDelete(idArray.length);
+        filterTableRows();
+    }
+
+    if (tableBody) {
+        tableBody.addEventListener('click', async function(event) {
+            const target = event.target;
+            const actionView = target.closest('.action-view');
+            const actionUpdateStatus = target.closest('.action-update-status');
+            const actionDeleteSingle = target.closest('.action-delete-single');
+
+            if (actionView) {
+                event.preventDefault();
+                currentViewingApplicantId = actionView.dataset.id;
+                openModal(viewApplicationModal, viewModalBackdrop);
+                viewModalContent.innerHTML = '<p class="text-center text-gray-500">Loading details...</p>';
+                try {
+                    const response = await fetch(`/admin/application/${currentViewingApplicantId}/details`);
+                    const result = await response.json();
+                    if (result.success && result.data) populateViewModal(result.data);
+                    else viewModalContent.innerHTML = `<p class="text-red-500 text-center">Error: ${result.message || 'Could not load details.'}</p>`;
+                } catch (error) {
+                    viewModalContent.innerHTML = `<p class="text-red-500 text-center">Error: ${error.toString()}</p>`;
+                    console.error("Error fetching details:", error);
+                }
+            } else if (actionUpdateStatus) {
+                event.preventDefault();
+                handleUpdateStatus(actionUpdateStatus.dataset.id, actionUpdateStatus.dataset.status, actionUpdateStatus.closest('tr'));
+                toggleDropdown(actionUpdateStatus.closest('.action-status-dropdown'), false);
+            } else if (actionDeleteSingle) {
+                event.preventDefault();
+                itemToDelete = parseInt(actionDeleteSingle.dataset.id);
+                deleteModalTitle.textContent = "Delete Application";
+                deleteModalMessage.textContent = `Are you sure you want to delete application P2025${String(itemToDelete).padStart(4, '0')}? This action cannot be undone.`;
+                openModal(deleteConfirmationModal, deleteModalBackdrop);
+            }
+        });
+    }
+
+    function populateViewModal(data) {
+        if (viewModalTitleJS) viewModalTitleJS.textContent = `Application Details: P2025${String(data.applicant_id).padStart(4, '0')}`;
+        let contentHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">`;
+        const fieldOrder = [
+            'applicant_id', 'student_account_email', 'first_name', 'last_name', 'middle_name', 'email_address', 'mobile_number', 'program_choice', 'application_status', 'submitted_at', 'date_of_application', 'date_of_birth', 'place_of_birth', 'sex', 'civil_status', 'religion', 'citizenship', 'permanent_address_street_barangay', 'permanent_address_city_municipality', 'permanent_address_province', 'permanent_address_postal_code', 'cultural_minority_group', 'physical_disability', 'academic_year', 'average_family_income', 'father_name', 'father_occupation', 'father_company_address', 'father_contact_number', 'mother_maiden_name', 'mother_occupation', 'mother_company_address', 'mother_contact_number', 'guardian_name', 'guardian_occupation', 'guardian_company_address', 'guardian_contact_number', 'senior_high_school', 'senior_high_school_address', 'senior_high_school_track_strand', 'senior_high_school_year_from', 'senior_high_school_year_to', 'tertiary_school', 'tertiary_school_address', 'tertiary_course', 'tertiary_year_from', 'tertiary_year_to', 'agreements', 'final_submission_date', 'decision_date', 'last_updated_at'
+        ];
+        for (const key of fieldOrder) {
+            if (data.hasOwnProperty(key) && key !== 'photo' && key !== 'admin_notes' && !key.startsWith('permit_') && key !== 'control_number') {
+                 let value = data[key] === null || data[key] === undefined || data[key] === '' ? 'N/A' : data[key];
+                 if ((key.includes('date') || key.includes('_at')) && value !== 'N/A' && !(value instanceof Date)) { try { value = new Date(value).toLocaleString(); } catch (e) { /* keep original */ }} else if (value instanceof Date) { value = value.toLocaleString(); }
+                 let displayName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                 if (key === 'applicant_id') displayName = 'Application ID (System)'; if (key === 'student_account_email') displayName = 'Student Account Email'; if (key === 'final_submission_date') displayName = 'Final Submission Date (Student)';
+                 contentHtml += `<div><strong>${displayName}:</strong> <span class="text-gray-700">${value}</span></div>`;
+            }
+        }
+        contentHtml += `</div>`;
+        if (data.photo) contentHtml += `<div class="mt-4"><strong>Photo:</strong><br><img src="${data.photo}" alt="Applicant Photo" class="max-w-xs max-h-64 border rounded mt-1"></div>`;
+        else contentHtml += `<div class="mt-4"><strong>Photo:</strong> <span class="text-gray-700">Not provided</span></div>`;
+        contentHtml += `<div class="mt-6 pt-4 border-t"><label for="adminNotesTextarea" class="block text-sm font-medium text-gray-700">Admin Notes:</label><textarea id="adminNotesTextarea" name="admin_notes" rows="3" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-primary focus:border-primary p-2">${data.admin_notes || ''}</textarea><button id="saveAdminNotesBtn" class="mt-2 px-3 py-1.5 bg-primary text-white rounded text-sm font-medium !rounded-button hover:bg-primary/90">Save Notes</button></div>`;
+        contentHtml += `<div class="mt-6 pt-4 border-t"><label for="adminControlNumberInput" class="block text-sm font-medium text-gray-700">Application Control Number (Admin Input):</label><input type="text" id="adminControlNumberInput" value="${data.control_number || ''}" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"><button id="saveControlNumberBtn" class="mt-2 px-3 py-1.5 bg-indigo-600 text-white rounded text-sm font-medium !rounded-button hover:bg-indigo-700">Save Control No.</button></div>`;
+        contentHtml += `<div class="mt-6 pt-4 border-t"><h4 class="text-md font-semibold text-gray-800 mb-3">College Admission Test Permit Stub (Admin Input)</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"><div><label for="permitControlNo" class="block text-xs font-medium text-gray-700">Permit Control No.</label><input type="text" id="permitControlNo" value="${data.permit_control_no || ''}" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div><div><label for="permitExamDate" class="block text-xs font-medium text-gray-700">Date of Examination</label><input type="date" id="permitExamDate" value="${data.permit_exam_date ? data.permit_exam_date.split('T')[0] : ''}" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div><div><label for="permitExamTime" class="block text-xs font-medium text-gray-700">Time</label><input type="text" id="permitExamTime" value="${data.permit_exam_time || ''}" placeholder="e.g., 09:00 AM" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div><div><label for="permitTestingRoom" class="block text-xs font-medium text-gray-700">Testing Room</label><input type="text" id="permitTestingRoom" value="${data.permit_testing_room || ''}" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div></div><button id="savePermitDetailsBtn" class="mt-3 px-3 py-1.5 bg-secondary text-white rounded text-sm font-medium !rounded-button hover:bg-secondary/90">Save Permit Details</button></div>`;
+        viewModalContent.innerHTML = contentHtml;
+        document.getElementById('saveAdminNotesBtn')?.addEventListener('click', saveAdminNotes);
+        document.getElementById('savePermitDetailsBtn')?.addEventListener('click', savePermitDetails);
+        document.getElementById('saveControlNumberBtn')?.addEventListener('click', saveControlNumber);
+    }
+
+    async function saveAdminNotes() {
+        if (!currentViewingApplicantId) return; const notesTextarea = document.getElementById('adminNotesTextarea'); if (!notesTextarea) return;
+        const formData = new FormData(); formData.append('notes', notesTextarea.value);
+        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/notes`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) showToast(result.message, 'success'); else showToast(result.message || 'Failed to save notes.', 'error'); } catch (error) { showToast('An error occurred while saving notes: ' + error.toString(), 'error'); console.error("Error saving notes:", error); }
+    }
+    async function saveControlNumber() {
+        if (!currentViewingApplicantId) return; const controlNumberInput = document.getElementById('adminControlNumberInput'); if (!controlNumberInput) return;
+        const formData = new FormData(); formData.append('control_number', controlNumberInput.value);
+        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/control-number`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) showToast(result.message, 'success'); else showToast(result.message || 'Failed to save control number.', 'error'); } catch (error) { showToast('An error occurred while saving control number: ' + error.toString(), 'error'); console.error("Error saving control number:", error); }
+    }
+    async function savePermitDetails() {
+        if (!currentViewingApplicantId) return;
+        const formData = new FormData(); formData.append('permit_control_no', document.getElementById('permitControlNo').value); formData.append('permit_exam_date', document.getElementById('permitExamDate').value); formData.append('permit_exam_time', document.getElementById('permitExamTime').value); formData.append('permit_testing_room', document.getElementById('permitTestingRoom').value);
+        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/permit-details`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) showToast(result.message, 'success'); else showToast(result.message || 'Failed to save permit details.', 'error'); } catch (error) { showToast('An error occurred while saving permit details: ' + error.toString(), 'error'); console.error("Error saving permit details:", error); }
+    }
+
+    function openModal(modal, backdrop) { modal.classList.add('show'); backdrop.classList.add('show'); document.body.style.overflow = 'hidden'; }
+    function closeModal(modal, backdrop) { modal.classList.remove('show'); backdrop.classList.remove('show'); document.body.style.overflow = ''; itemToDelete = null; currentViewingApplicantId = null; }
+    if (closeViewModalIcon) closeViewModalIcon.addEventListener('click', () => closeModal(viewApplicationModal, viewModalBackdrop));
+    if (viewModalBackdrop) viewModalBackdrop.addEventListener('click', () => closeModal(viewApplicationModal, viewModalBackdrop));
+    if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => closeModal(deleteConfirmationModal, deleteModalBackdrop));
+    if (deleteModalBackdrop) deleteModalBackdrop.addEventListener('click', (e) => { if (e.target === deleteModalBackdrop) closeModal(deleteConfirmationModal, deleteModalBackdrop); });
+    if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', () => { if (itemToDelete) executeDelete(itemToDelete); });
+
+    function getSelectedIds() { if (!tableBody) return []; return Array.from(tableBody.querySelectorAll('.row-checkbox:checked')).map(cb => parseInt(cb.dataset.id)); }
+    function updateBulkActionsVisibility() {
+        if (!bulkActionsBar || !selectedCountElement) return; const selectedIds = getSelectedIds();
+        if (selectedIds.length > 0) { bulkActionsBar.style.display = 'flex'; selectedCountElement.textContent = `${selectedIds.length} item(s) selected`; } else { bulkActionsBar.style.display = 'none'; }
+    }
+    function updateSelectAllCheckboxState() {
+        if (!tableBody || !selectAllCheckbox) return; const rowCheckboxes = tableBody.querySelectorAll('.row-checkbox'); const checkedRowCheckboxes = tableBody.querySelectorAll('.row-checkbox:checked');
+        let visibleRowsCount = 0; rowCheckboxes.forEach(cb => { if (cb.closest('tr').style.display !== 'none') visibleRowsCount++; });
+        selectAllCheckbox.checked = (visibleRowsCount > 0 && visibleRowsCount === checkedRowCheckboxes.length);
+    }
+    if (selectAllCheckbox && tableBody) { selectAllCheckbox.addEventListener('change', function() { tableBody.querySelectorAll('.row-checkbox').forEach(checkbox => { const row = checkbox.closest('tr'); if (row.style.display !== 'none') { checkbox.checked = this.checked; if (this.checked) row.classList.add('selected'); else row.classList.remove('selected'); }}); updateBulkActionsVisibility(); }); }
+    if (tableBody) { tableBody.addEventListener('change', function(event) { if (event.target.classList.contains('row-checkbox')) { const row = event.target.closest('tr'); if (event.target.checked) row.classList.add('selected'); else row.classList.remove('selected'); updateBulkActionsVisibility(); updateSelectAllCheckboxState(); }}); }
+    document.getElementById('bulkApproveBtn')?.addEventListener('click', () => handleBulkAction('Approved'));
+    document.getElementById('bulkRejectBtn')?.addEventListener('click', () => handleBulkAction('Rejected'));
+    document.getElementById('bulkDeleteBtn')?.addEventListener('click', () => { const selectedIds = getSelectedIds(); if (selectedIds.length > 0) { itemToDelete = selectedIds; deleteModalTitle.textContent = `Delete ${selectedIds.length} Application(s)`; deleteModalMessage.textContent = `Are you sure you want to delete ${selectedIds.length} selected application(s)? This action cannot be undone.`; openModal(deleteConfirmationModal, deleteModalBackdrop); } else { showToast('No applications selected for deletion.', 'info'); }});
+    document.getElementById('closeBulkActions')?.addEventListener('click', () => { if (!bulkActionsBar || !tableBody || !selectAllCheckbox) return; bulkActionsBar.style.display = 'none'; selectAllCheckbox.checked = false; tableBody.querySelectorAll('.row-checkbox:checked').forEach(cb => { cb.checked = false; cb.closest('tr').classList.remove('selected'); }); });
+
+    async function handleBulkAction(actionStatus) {
+        const selectedIds = getSelectedIds(); if (selectedIds.length === 0) { showToast(`No applications selected to ${actionStatus.toLowerCase()}.`, 'info'); return; }
+        let successCount = 0, failCount = 0;
+        for (const id of selectedIds) {
+            try { const formData = new FormData(); formData.append('status', actionStatus); const response = await fetch(`/admin/application/${id}/status`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) { successCount++; const appInRawData = rawApplicationsData.find(app => app.applicant_id == id); if (appInRawData) appInRawData.application_status = actionStatus; const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${id}"]`); if(rowToUpdate) updateStatusBadge(rowToUpdate, actionStatus); } else { failCount++; }} catch (error) { failCount++; console.error(`Error updating P2025${id} to ${actionStatus}:`, error); }
+        }
+        if (successCount > 0) showToast(`${successCount} application(s) set to ${actionStatus}.`, 'success'); if (failCount > 0) showToast(`${failCount} application(s) failed to update.`, 'error');
+        document.getElementById('closeBulkActions')?.click(); filterTableRows();
+    }
+
+    const mainPageTitleElement = document.getElementById('mainPageTitle');
+    const searchInput = document.getElementById('searchInput');
+    const allTableRows = () => Array.from(tableBody?.querySelectorAll('tr[data-applicant-id]') || []);
+    function updateApplicationPageTitles() {
+        if (applicationsContentDiv.style.display === 'none') return; const startDateVal = startDateInput?.value; const endDateVal = endDateInput?.value;
+        let title = activeStatusFilter === 'All' ? 'All Applications' : `${activeStatusFilter} Applications`; if (startDateVal || endDateVal) title += " (filtered by submission date)";
+        if (pageTitleHeaderElement && applicationsContentDiv.style.display !== 'none') pageTitleHeaderElement.textContent = title; if (mainPageTitleElement) mainPageTitleElement.textContent = title;
+    }
+    function filterTableRows() {
+        if (!tableBody) return; const searchTerm = searchInput.value.toLowerCase().trim(); const startDateString = startDateInput?.value; const endDateString = endDateInput?.value;
+        let filterByDate = false, startDateObj = null, endDateObj = null;
+        if (startDateString) { startDateObj = new Date(startDateString); startDateObj.setHours(0, 0, 0, 0); filterByDate = true; } if (endDateString) { endDateObj = new Date(endDateString); endDateObj.setHours(23, 59, 59, 999); filterByDate = true; }
+        allTableRows().forEach(row => {
+            const name = row.querySelector('.applicant-name')?.textContent.toLowerCase() || ''; const email = row.querySelector('.applicant-email')?.textContent.toLowerCase() || ''; const program = row.querySelector('.applicant-program')?.textContent.toLowerCase() || ''; const appIdText = `P2025${String(row.dataset.applicantId).padStart(4,'0')}`; const statusBadgeText = row.querySelector('.status-badge')?.textContent.trim() || '';
+            const submissionDateCell = row.querySelector('.submission-date-cell'); const submissionDateText = submissionDateCell?.textContent.trim(); let submissionDate = null;
+            if (submissionDateText && submissionDateText !== 'N/A') { try { submissionDate = new Date(submissionDateText); if (isNaN(submissionDate.getTime())) submissionDate = null; } catch (e) { submissionDate = null; }}
+            const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || program.includes(searchTerm) || appIdText.includes(searchTerm);
+            let matchesDate = true; if (filterByDate) { if (submissionDate) { if (startDateObj && endDateObj) matchesDate = submissionDate >= startDateObj && submissionDate <= endDateObj; else if (startDateObj) matchesDate = submissionDate >= startDateObj; else if (endDateObj) matchesDate = submissionDate <= endDateObj; } else matchesDate = false; }
+            const matchesStatus = (activeStatusFilter === 'All' || statusBadgeText === activeStatusFilter);
+            row.style.display = (matchesSearch && matchesDate && matchesStatus) ? '' : 'none';
+        });
+        updateSelectAllCheckboxState(); updateBulkActionsVisibility(); updateApplicationPageTitles();
+    }
+    searchInput?.addEventListener('input', filterTableRows); startDateInput?.addEventListener('change', filterTableRows); endDateInput?.addEventListener('change', filterTableRows);
+    clearDateFilterBtn?.addEventListener('click', () => { if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; filterTableRows(); });
+
+    const flaskStats = JSON.parse('{{ stats | tojson | safe }}');
+    let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, in_review:0}));
+    function getApplicationTrends(applicationsInputData, numMonths = 7) {
+        const trends = { labels: [], totals: new Array(numMonths).fill(0), approved: new Array(numMonths).fill(0) };
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]; const now = new Date();
+        for (let i = 0; i < numMonths; i++) {
+            const dateForLabel = new Date(now.getFullYear(), now.getMonth() - (numMonths - 1 - i), 1); trends.labels.push(`${monthNames[dateForLabel.getMonth()]} '${String(dateForLabel.getFullYear()).slice(2)}`);
+            const targetYear = dateForLabel.getFullYear(); const targetMonth = dateForLabel.getMonth();
+            applicationsInputData.forEach(app => { let submissionDateStr = app.submitted_at || app.date_of_application; if (submissionDateStr) { const appDate = new Date(submissionDateStr); if (!isNaN(appDate.getTime())) { const appYear = appDate.getFullYear(); const appMonth = appDate.getMonth(); if (appYear === targetYear && appMonth === targetMonth) { trends.totals[i]++; if (app.application_status === 'Approved') trends.approved[i]++; }}}});
+        } return trends;
+    }
+    function updateGlobalStatsDisplay() {
+        document.getElementById('statsTotal').textContent = currentJsStats.total_applications || 0; document.getElementById('statsPending').textContent = currentJsStats.pending || 0; document.getElementById('statsApproved').textContent = currentJsStats.approved || 0; document.getElementById('statsRejected').textContent = currentJsStats.rejected || 0; document.getElementById('statsInReview').textContent = currentJsStats.in_review || 0;
+        document.getElementById('pendingCountSide').textContent = currentJsStats.pending || 0; document.getElementById('approvedCountSide').textContent = currentJsStats.approved || 0; document.getElementById('rejectedCountSide').textContent = currentJsStats.rejected || 0; document.getElementById('inReviewCountSide').textContent = currentJsStats.in_review || 0;
+        if (window.applicationChartInstance) { const trendData = getApplicationTrends(rawApplicationsData, 7); window.applicationChartInstance.setOption({ xAxis: { data: trendData.labels }, series: [{ name: 'Total Applications', data: trendData.totals }, { name: 'Approved', data: trendData.approved }] }); }
+        if (window.statusChartInstance) { window.statusChartInstance.setOption({ series: [{ data: [{ value: currentJsStats.approved || 0, name: 'Approved' }, { value: currentJsStats.rejected || 0, name: 'Rejected' }, { value: currentJsStats.pending || 0, name: 'Pending' }, { value: currentJsStats.in_review || 0, name: 'In Review' }].filter(item => item.value > 0) }] }); }
+    }
+    function updateGlobalStatsOnStatusChange() {
+        currentJsStats.pending = 0; currentJsStats.in_review = 0; currentJsStats.approved = 0; currentJsStats.rejected = 0;
+        (rawApplicationsData || []).forEach(app => { const status = app.application_status; if (status === 'Pending') currentJsStats.pending++; else if (status === 'In Review') currentJsStats.in_review++; else if (status === 'Approved') currentJsStats.approved++; else if (status === 'Rejected') currentJsStats.rejected++; });
+        currentJsStats.total_applications = (rawApplicationsData || []).length; updateGlobalStatsDisplay();
+    }
+    function updateGlobalStatsOnDelete(count) { updateGlobalStatsOnStatusChange(); }
+
+
+    // --- Refined Sidebar Logic ---
+    function initializeSidebarState() {
+        if (!sidebar || !mainContentArea) return;
+
+        // JS takes over management of translate-x classes, sm:translate-x-0 is for no-JS fallback
+        sidebar.classList.remove('sm:translate-x-0');
+
+        if (window.innerWidth >= 640) { // Tailwind 'sm' breakpoint (640px) for desktop
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0'); // Explicitly open by JS
+            mainContentArea.classList.add('sm:ml-64');
+        } else { // Mobile
+            sidebar.classList.remove('translate-x-0');
+            sidebar.classList.add('-translate-x-full'); // Explicitly closed by JS
+            mainContentArea.classList.remove('sm:ml-64');
+        }
+    }
+
+    if (sidebarToggleBtn && sidebar && mainContentArea && sidebarBackdrop) {
+        const openSidebar = () => {
+            if (!sidebar) return;
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+
+            if (mainContentArea) mainContentArea.classList.add('sm:ml-64');
+
+            if (sidebarBackdrop && window.innerWidth < 640) {
+                sidebarBackdrop.classList.remove('hidden');
+            }
+
+            setTimeout(() => {
+                if (dashboardContentDiv.style.display !== 'none') {
+                    window.applicationChartInstance?.resize();
+                    window.statusChartInstance?.resize();
+                }
+            }, 350);
+        };
+
+        const closeSidebar = () => {
+            if (!sidebar) return;
+            sidebar.classList.remove('translate-x-0');
+            sidebar.classList.add('-translate-x-full');
+
+            if (mainContentArea) mainContentArea.classList.remove('sm:ml-64');
+
+            if (sidebarBackdrop) sidebarBackdrop.classList.add('hidden');
+
+            setTimeout(() => {
+                if (dashboardContentDiv.style.display !== 'none') {
+                    window.applicationChartInstance?.resize();
+                    window.statusChartInstance?.resize();
+                }
+            }, 350);
+        };
+
+        sidebarToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sidebar.classList.contains('translate-x-0')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        sidebarBackdrop.addEventListener('click', closeSidebar);
+
+        const mainSidebarLinks = [
+            sidebarDashboardMenuLink, sidebarApplicationsMenuLink,
+            sidebarFilterLinks.pending, sidebarFilterLinks.inReview,
+            sidebarFilterLinks.approved, sidebarFilterLinks.rejected
+        ].filter(link => link);
+
+        mainSidebarLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 640 && sidebar.classList.contains('translate-x-0')) {
+                    closeSidebar();
+                }
+            });
+        });
+    }
+    // --- End of Refined Sidebar Logic ---
+
+
+    function updateSidebarActiveState(activeView, activeStatus = null) {
+        const allNavLinks = [ sidebarDashboardMenuLink, sidebarApplicationsMenuLink, ...Object.values(sidebarFilterLinks).filter(link => link)];
+        allNavLinks.forEach(link => { if (link) { link.classList.remove('text-primary', 'bg-primary/5'); if (link === sidebarFilterLinks.pending) link.classList.add('text-yellow-600'); else if (link === sidebarFilterLinks.inReview) link.classList.add('text-blue-600'); else if (link === sidebarFilterLinks.approved) link.classList.add('text-green-600'); else if (link === sidebarFilterLinks.rejected) link.classList.add('text-red-600'); else link.classList.add('text-gray-600'); link.classList.add('hover:bg-gray-50'); }});
+        const setActiveStyles = (link) => { if (!link) return; link.classList.add('text-primary', 'bg-primary/5'); link.classList.remove('text-gray-600', 'text-yellow-600', 'text-blue-600', 'text-green-600', 'text-red-600', 'hover:bg-gray-50'); };
+        if (activeView === 'dashboard') setActiveStyles(sidebarDashboardMenuLink);
+        else if (activeView === 'applications') { if (activeStatus === 'All' || !activeStatus) setActiveStyles(sidebarApplicationsMenuLink); else { setActiveStyles(sidebarApplicationsMenuLink); let targetFilterLink; switch(activeStatus.toLowerCase()) { case 'pending': targetFilterLink = sidebarFilterLinks.pending; break; case 'in review': targetFilterLink = sidebarFilterLinks.inReview; break; case 'approved': targetFilterLink = sidebarFilterLinks.approved; break; case 'rejected': targetFilterLink = sidebarFilterLinks.rejected; break; } setActiveStyles(targetFilterLink); }}
+    }
+    function showView(viewName, statusForSidebarHighlight = null) {
+        dashboardContentDiv.style.display = 'none'; applicationsContentDiv.style.display = 'none';
+        if (viewName === 'dashboard') {
+            dashboardContentDiv.style.display = 'block'; if (pageTitleHeaderElement) pageTitleHeaderElement.textContent = 'Dashboard Overview'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Dashboard'; updateSidebarActiveState('dashboard'); activeStatusFilter = 'All'; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = '';
+            updateGlobalStatsDisplay(); if (window.applicationChartInstance) window.applicationChartInstance.resize(); if (window.statusChartInstance) window.statusChartInstance.resize();
+        } else if (viewName === 'applications') {
+            applicationsContentDiv.style.display = 'block'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Applications'; updateSidebarActiveState('applications', statusForSidebarHighlight); updateApplicationPageTitles();
+            const applicationsContentElement = document.getElementById('applicationsContent'); if (applicationsContentElement) applicationsContentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    sidebarDashboardMenuLink?.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
+    breadcrumbAdminHomeLink?.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
+    const setupSidebarFilterClickHandler = (linkElement, statusValueToSet) => { linkElement?.addEventListener('click', (e) => { e.preventDefault(); activeStatusFilter = statusValueToSet; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; showView('applications', statusValueToSet); filterTableRows(); }); };
+    setupSidebarFilterClickHandler(sidebarApplicationsMenuLink, 'All');
+    Object.entries(sidebarFilterLinks).forEach(([statusKey, linkElement]) => { let statusValue = statusKey.charAt(0).toUpperCase() + statusKey.slice(1); if (statusKey === 'inReview') statusValue = 'In Review'; setupSidebarFilterClickHandler(linkElement, statusValue); });
+
+    const applicationChartDom = document.getElementById('applicationChart');
+    if (applicationChartDom && typeof echarts !== 'undefined') { window.applicationChartInstance = echarts.init(applicationChartDom); const applicationOption = { tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, legend: { data: ['Total Applications', 'Approved'], top: '5%' }, grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true }, xAxis: { type: 'category', data: [] }, yAxis: { type: 'value' }, series: [ { name: 'Total Applications', type: 'bar', barWidth: '30%', color: '#4f46e5', data: [] }, { name: 'Approved', type: 'bar', barWidth: '30%', color: '#16a34a', data: [] } ]}; window.applicationChartInstance.setOption(applicationOption); window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.applicationChartInstance) window.applicationChartInstance.resize(); }); }
+    const statusChartDom = document.getElementById('statusChart');
+    if (statusChartDom && typeof echarts !== 'undefined') { window.statusChartInstance = echarts.init(statusChartDom); const statusOption = { tooltip: { trigger: 'item' }, legend: { top: 'bottom', left: 'center' }, series: [{ name: 'Application Status', type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'], avoidLabelOverlap: false, itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 }, label: { show: false, position: 'center' }, emphasis: { label: { show: true, fontSize: '14', fontWeight: 'bold' } }, labelLine: { show: false }, data: [ { value: currentJsStats.approved || 0, name: 'Approved', itemStyle: { color: '#16a34a' } }, { value: currentJsStats.rejected || 0, name: 'Rejected', itemStyle: { color: '#dc2626' } }, { value: currentJsStats.pending || 0, name: 'Pending', itemStyle: { color: '#ca8a04' } }, { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } } ].filter(item => item.value > 0) }]}; window.statusChartInstance.setOption(statusOption); window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.statusChartInstance) window.statusChartInstance.resize(); }); }
+
+    // Initial Setup Calls
+    initializeSidebarState(); // Initialize sidebar based on screen size
+    updateGlobalStatsOnStatusChange();
+    showView('dashboard');
+    filterTableRows();
+});
+</script>
+</body>
+</html>

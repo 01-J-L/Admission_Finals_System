@@ -1,0 +1,565 @@
+
+
+{% extends 'base.html' %}
+
+{% block title %}Application Status{% endblock %}
+
+{% block style %}
+<style>
+    .status-icon-lg { font-size: 2.5rem; line-height: 1; }
+    .status-pending-color { color: #f59e0b; } /* Amber 500 */
+    .status-approved-color { color: #10b981; } /* Emerald 500 */
+    .status-rejected-color { color: #ef4444; } /* Red 500 */
+    .status-in-review-color { color: #3b82f6; } /* Blue 500 */
+
+    .border-pending { border-left-color: #f59e0b; }
+    .bg-pending-light { background-color: #fffbeb; } /* Amber 50 */
+    .text-pending-dark { color: #b45309; } /* Amber 700 */
+    
+    .border-approved { border-left-color: #10b981; }
+    .bg-approved-light { background-color: #ecfdf5; } /* Emerald 50 */
+    .text-approved-dark { color: #065f46; } /* Emerald 800 */
+
+    .border-rejected { border-left-color: #ef4444; }
+    .bg-rejected-light { background-color: #fef2f2; } /* Red 50 */
+    .text-rejected-dark { color: #b91c1c; } /* Red 700 */
+
+    .border-in-review { border-left-color: #3b82f6; }
+    .bg-in-review-light { background-color: #eff6ff; } /* Blue 50 */
+    .text-in-review-dark { color: #1d4ed8; } /* Blue 700 */
+
+    .permit-stub-value {
+        display: block;
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db; /* Tailwind gray-300 */
+        border-radius: 0.375rem; /* Tailwind rounded-md */
+        background-color: #f9fafb; /* Tailwind gray-50 */
+        font-size: 0.875rem; /* Tailwind text-sm */
+        color: #374151; /* Tailwind gray-700 */
+        min-height: 38px; /* Ensure consistent height like input */
+        line-height: 1.5;
+    }
+
+    /* Styles for mobile sidebar positioning */
+    @media (max-width: 767px) { /* md breakpoint in Tailwind by default */
+        #fullSidebarContent.mobile-sidebar-visible {
+            display: block !important; /* Override 'hidden' */
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 280px; /* Or your desired width */
+            z-index: 40; /* Below overlay, above other content */
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(0);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        #fullSidebarContent { /* Initially hidden off-screen due to transform */
+            /* Tailwind 'hidden' class is also applied in HTML for initial non-JS state */
+            transition: transform 0.3s ease-in-out; /* Ensure transition applies on close too */
+            transform: translateX(-100%);
+        }
+        #sidebarOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 30; /* Below sidebar, above page content */
+            transition: opacity 0.3s ease-in-out; /* Optional: fade overlay */
+            opacity: 1;
+        }
+        #sidebarOverlay.hidden {
+            opacity: 0;
+            pointer-events: none; /* Allow clicks through when hidden */
+        }
+    }
+
+    /* Styles for the sticky right sidebar wrapper on desktop */
+    @media (min-width: 768px) { /* md breakpoint */
+        #rightSidebarStickyWrapper {
+            /* top-28 is 7rem. We want some space at the bottom too, e.g., 1rem. */
+            /* So, max-height = viewport height - top offset - bottom gap */
+            max-height: calc(100vh - 7rem - 1rem); /* Adjust 1rem bottom gap as needed */
+            overflow-y: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<body class="min-h-screen bg-gray-50" style="margin-top: 100px;"> 
+    <!-- Sidebar Overlay for mobile -->
+    <div id="sidebarOverlay" class="hidden md:hidden"></div>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row gap-6 lg:gap-8">
+            
+            <!-- Left Sidebar -->
+            <div class="w-full md:w-64 lg:w-72 shrink-0" id="fullSidebarContainer"> 
+                
+                <!-- Full Sidebar Content (Profile + Navigation) -->
+                <div id="fullSidebarContent" 
+                     class="bg-white rounded-r-lg md:rounded-lg shadow-lg md:shadow-sm p-4 
+                            md:sticky md:top-28 
+                            hidden <!-- Initially hidden by Tailwind, JS/CSS manage mobile visibility -->
+                            ">
+                    <div class="flex items-center mb-4 p-2"> 
+                        <div class="w-12 h-12 flex items-center justify-center overflow-hidden rounded-full bg-gray-100 mr-3 shrink-0">
+                            {% if application and application.photo %}
+                                <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}" alt="Applicant Photo" class="w-full h-full object-cover">
+                            {% elif application and application.first_name and application.last_name %}
+                                <span class="text-xl font-medium text-primary">{{ application.first_name[0] | upper }}{{ application.last_name[0] | upper }}</span>
+                            {% else %}
+                                <i class="ri-user-line text-2xl text-gray-400"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-800 truncate" title="{{ (application.first_name + ' ' + application.last_name) if application else session.get('student_email', 'Student') }}">
+                                {{ application.first_name if application else 'Student' }}
+                            </p>
+                            <p class="text-xs text-gray-500">Applicant</p>
+                        </div>
+                        <button id="closeSidebarBtn" type="button" class="md:hidden ml-auto p-2 text-gray-500 hover:text-primary rounded-md" aria-label="Close sidebar">
+                            <i class="ri-close-line text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <nav class="space-y-1">
+                        <a href="{{ url_for('views.application_status_page') }}" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-md {% if request.endpoint == 'views.application_status_page' %}bg-primary bg-opacity-10 text-primary{% else %}text-gray-700 hover:bg-gray-100 hover:text-primary{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-dashboard-line"></i></div>
+                            Application Status
+                        </a>
+                         
+                        {% if application and (application.application_status == 'Pending' or application.application_status == 'In Review') %}
+                        <a href="{{ url_for('auth.edit_application_page', applicant_id=application.applicant_id) }}" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-md {% if request.endpoint == 'auth.edit_application_page' %}bg-primary bg-opacity-10 text-primary{% else %}text-gray-700 hover:bg-gray-100 hover:text-primary{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-edit-2-line"></i></div>
+                            Edit Application
+                        </a>
+                        {% elif not application or application.application_status == 'Rejected' %}
+                        <a href="{{ url_for('views.new_student') }}" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-md {% if request.endpoint == 'views.new_student' %}bg-primary bg-opacity-10 text-primary{% else %}text-gray-700 hover:bg-gray-100 hover:text-primary{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-file-add-line"></i></div>
+                            New Application
+                        </a>
+                        {% endif %}
+
+                        <a href="{{ url_for('auth.change_password_page') }}" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-md {% if request.endpoint == 'auth.change_password_page' %}bg-primary bg-opacity-10 text-primary{% else %}text-gray-700 hover:bg-gray-100 hover:text-primary{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-lock-password-line"></i></div>
+                            Change Password
+                        </a>
+
+                         <a href="{{ url_for('auth.logout') }}" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 hover:text-primary mt-4 border-t pt-4">
+                            <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-logout-box-r-line"></i></div>
+                            Logout
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="flex-1 min-w-0">
+                <div id="dashboardSection">
+                    
+                    
+
+                    <div class="mb-6 flex items-center gap-3">
+                        <button id="inlineMenuToggleBtn" type="button" aria-expanded="false" aria-controls="fullSidebarContent"
+                                class="md:hidden p-2 -ml-2 text-gray-500 hover:text-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary rounded-md">
+                            <span class="sr-only">Open sidebar</span>
+                            <i id="inlineMenuIcon" class="ri-menu-line text-2xl"></i>
+                        </button>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">My Application Status</h1>
+                    </div>
+                    <p class="text-gray-600 mt-1 md:mt-0">Track the progress of your admission application.</p>
+
+
+                    {% if application %}
+                        {% set status = application.application_status %}
+                        {% set status_icon_class = 'ri-loader-4-line status-icon-lg' %}
+                        {% set status_text_class = 'text-gray-700' %}
+                        {% set status_border_class = 'border-gray-300' %}
+                        {% set status_bg_light_class = 'bg-gray-100' %}
+                        {% set status_main_color_class = 'text-gray-800' %}
+                        {% set status_message_detail = "Your application is being processed." %}
+
+                        {% if status == 'Pending' %}
+                            {% set status_icon_class = 'ri-time-line status-icon-lg status-pending-color' %}
+                            {% set status_text_class = 'text-amber-600 font-semibold' %}
+                            {% set status_border_class = 'border-pending' %}
+                            {% set status_bg_light_class = 'bg-pending-light' %}
+                            {% set status_main_color_class = 'text-pending-dark' %}
+                            {% set status_title = "Application Submitted!" %}
+                            {% set status_message = "Your application is currently <strong class='" + status_text_class + "'>Pending Review</strong>." %}
+                            {% set status_message_detail = "You will be notified via email (" + (application.email_address or 'your registered email') + ") once there is an update. You can also check back here. If you need to make changes, you can edit your application." %}
+                        {% elif status == 'In Review' %}
+                            {% set status_icon_class = 'ri-file-search-line status-icon-lg status-in-review-color' %}
+                            {% set status_text_class = 'text-blue-600 font-semibold' %}
+                            {% set status_border_class = 'border-in-review' %}
+                            {% set status_bg_light_class = 'bg-in-review-light' %}
+                            {% set status_main_color_class = 'text-in-review-dark' %}
+                            {% set status_title = "Application In Review" %}
+                            {% set status_message = "Your application is currently <strong class='" + status_text_class + "'>In Review</strong> by our admissions team." %}
+                            {% set status_message_detail = "We appreciate your patience. Updates will be sent to " + (application.email_address or 'your registered email') + " and reflected here. Minor edits might still be possible." %}
+                        {% elif status == 'Approved' %}
+                            {% set status_icon_class = 'ri-checkbox-circle-line status-icon-lg status-approved-color' %}
+                            {% set status_text_class = 'text-emerald-600 font-semibold' %}
+                            {% set status_border_class = 'border-approved' %}
+                            {% set status_bg_light_class = 'bg-approved-light' %}
+                            {% set status_main_color_class = 'text-approved-dark' %}
+                            {% set status_title = "Congratulations! Application Approved" %}
+                            {% set status_message = "Your application has been <strong class='" + status_text_class + "'>Approved</strong>!" %}
+                            {% set status_message_detail = "Further instructions regarding enrollment and next steps have been sent to " + (application.email_address or 'your registered email') + ". Please check your inbox (and spam folder)." %}
+                        {% elif status == 'Rejected' %}
+                            {% set status_icon_class = 'ri-close-circle-line status-icon-lg status-rejected-color' %}
+                            {% set status_text_class = 'text-red-600 font-semibold' %}
+                            {% set status_border_class = 'border-rejected' %}
+                            {% set status_bg_light_class = 'bg-rejected-light' %}
+                            {% set status_main_color_class = 'text-rejected-dark' %}
+                            {% set status_title = "Application Update" %}
+                            {% set status_message = "After careful consideration, your application has been <strong class='" + status_text_class + "'>Rejected</strong>." %}
+                            {% set status_message_detail = "We receive many qualified applications, and the selection process is highly competitive. We wish you the best in your future academic endeavors. If you have questions, please contact the admissions office." %}
+                        {% else %}
+                             {% set status_icon_class = 'ri-error-warning-line status-icon-lg text-gray-500' %}
+                             {% set status_title = "Application Status: " + status %}
+                             {% set status_message = "Your application has a status of <strong class='" + status_text_class + "'>" + status + "</strong>." %}
+                             {% set status_message_detail = "Please check your email or contact admissions for more details." %}
+                        {% endif %}
+
+                        <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 {{ status_border_class }}">
+                            <div class="flex items-start sm:items-center flex-col sm:flex-row">
+                                <div class="w-12 h-12 flex items-center justify-center {{ status_bg_light_class }} rounded-full mr-0 sm:mr-4 mb-3 sm:mb-0 shrink-0">
+                                    <i class="{{ status_icon_class }}"></i>
+                                </div>
+                                <div class="flex-grow">
+                                    <h2 class="text-xl font-semibold {{ status_main_color_class }}">{{ status_title }}</h2>
+                                    <p class="text-gray-700 mt-1">
+                                        Hello, <strong class="text-primary">{{ application.first_name }} {{ application.last_name }}</strong>. {{ status_message | safe }}
+                                    </p>
+                                </div>
+                                {% if application.application_status == 'Pending' or application.application_status == 'In Review' %}
+                                <a href="{{ url_for('auth.edit_application_page', applicant_id=application.applicant_id) }}"
+                                   class="mt-3 sm:mt-0 ml-0 sm:ml-auto bg-secondary text-white px-4 py-2 rounded-button whitespace-nowrap flex items-center text-sm hover:bg-secondary/90 transition-colors">
+                                    <i class="ri-edit-2-line mr-2"></i>Edit Application
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">Application ID</p>
+                                    <p class="font-medium text-gray-800">APP-{{ "%04d" | format(application.applicant_id) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Program Choice</p>
+                                    <p class="font-medium text-gray-800">{{ application.program_choice }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Submitted On</p>
+                                    <p class="font-medium text-gray-800">{{ application.submitted_at.strftime('%B %d, %Y at %I:%M %p') if application.submitted_at else 'N/A' }}</p>
+                                </div>
+                                {% if status == 'Approved' or status == 'Rejected' %}
+                                <div>
+                                    <p class="text-gray-500">Decision Date</p>
+                                    <p class="font-medium text-gray-800">{{ application.decision_date.strftime('%B %d, %Y') if application.decision_date else 'N/A' }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                             <p class="mt-4 text-sm text-gray-600 leading-relaxed">{{ status_message_detail | safe }}</p>
+                            
+                            {% if status == 'Approved' %}
+                            <div class="mt-6 flex flex-wrap gap-3">
+                                <button class="bg-primary text-white px-4 py-2 rounded-button whitespace-nowrap flex items-center text-sm hover:bg-primary/90 transition-colors">
+                                    <i class="ri-arrow-right-line mr-2"></i>Begin Enrollment
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if application.admin_notes %}
+                        <div class="bg-blue-50 rounded-lg shadow-sm p-6 mt-6 border-l-4 border-blue-400">
+                            <div class="flex items-start">
+                                <div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full mr-3 shrink-0">
+                                    <i class="ri-information-line text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-md font-semibold text-blue-700">A Note from the Admissions Office:</h3>
+                                    <p class="mt-1 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ application.admin_notes }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="bg-white rounded-lg shadow-sm mb-6 mt-6">
+                            <div class="p-4 border-b flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors" id="applicationDetailsHeader" aria-expanded="false" aria-controls="applicationDetailsContent">
+                                <h3 class="text-lg font-semibold text-gray-900">View Submitted Application Summary</h3>
+                                <div class="w-5 h-5 flex items-center justify-center text-gray-500 transition-transform duration-300" id="applicationDetailsIconContainer">
+                                    <i class="ri-arrow-down-s-line text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="p-6 hidden" id="applicationDetailsContent" aria-hidden="true">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                                    <div>
+                                        <h4 class="font-medium text-gray-700 mb-2">Personal Information</h4>
+                                        <p><strong class="text-gray-600">Full Name:</strong> 
+                                            {{ application.first_name }}
+                                            {% if application.middle_name and application.middle_name|trim and application.middle_name|trim|lower != 'n/a' %}
+                                                {{ application.middle_name|trim }}
+                                            {% endif %}
+                                            {{ application.last_name }}
+                                        </p>
+                                        <p><strong class="text-gray-600">Email:</strong> {{ application.email_address }}</p>
+                                        <p><strong class="text-gray-600">Mobile:</strong> {{ application.mobile_number }}</p>
+                                        <p><strong class="text-gray-600">Birth Date:</strong> {{ application.date_of_birth.strftime('%B %d, %Y') if application.date_of_birth else 'N/A' }}</p>
+                                        <p><strong class="text-gray-600">Place of Birth:</strong> {{ application.place_of_birth or 'N/A' }}</p>
+                                        <p><strong class="text-gray-600">Sex:</strong> {{ application.sex or 'N/A' }}</p>
+                                        <p><strong class="text-gray-600">Civil Status:</strong> {{ application.civil_status or 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-700 mb-2">Program & Academics</h4>
+                                        <p><strong class="text-gray-600">Program Choice:</strong> {{ application.program_choice }}</p>
+                                        <p><strong class="text-gray-600">Academic Year:</strong> {{ application.academic_year }}</p>
+                                        <p><strong class="text-gray-600">SHS Name:</strong> {{ application.senior_high_school or 'N/A' }}</p>
+                                        <p><strong class="text-gray-600">SHS Strand:</strong> {{ application.senior_high_school_track_strand or 'N/A' }}</p>
+                                        <p><strong class="text-gray-600">SHS Year Graduated:</strong> {{ application.senior_high_school_year_to or 'N/A' }}</p>
+                                    </div>
+                                </div>
+                                <p class="mt-4 text-xs text-gray-500">This is a summary. For full details or corrections, please edit your application (if available) or contact admissions.</p>
+                            
+                                <div class="mt-6 pt-6 border-t">
+                                    <h4 class="font-medium text-gray-700 mb-3 text-md">College Admission Test Permit Stub</h4>
+                                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        <div class="lg:col-span-2">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Control No.</label>
+                                                    <span class="permit-stub-value">{{ application.permit_control_no or 'To be filled by admin' }}</span>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Date of Examination</label>
+                                                    <span class="permit-stub-value">{{ application.permit_exam_date.strftime('%B %d, %Y') if application.permit_exam_date else 'To be filled by admin' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Time</label>
+                                                    <span class="permit-stub-value">{{ application.permit_exam_time or 'To be filled by admin' }}</span>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Testing Room</label>
+                                                    <span class="permit-stub-value">{{ application.permit_testing_room or 'To be filled by admin' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-center lg:justify-start mt-4 lg:mt-0">
+                                            {% if application.photo %}
+                                            <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}" alt="Applicant Photo" class="w-28 h-28 object-cover border rounded-md shadow-sm">
+                                            {% else %}
+                                            <div class="w-28 h-28 bg-gray-100 border rounded-md flex flex-col items-center justify-center text-gray-400">
+                                                <i class="ri-image-line text-3xl"></i>
+                                                <span class="text-xs mt-1">No Photo</span>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if status == 'Rejected' %}
+                         <p class="mt-6 text-xs text-center text-gray-500">
+                            You may submit a new application for a different program or the next admission cycle if applicable.
+                        </p>
+                        {% endif %}
+
+                    {% else %} {# No application found #}
+                        <div class="bg-white rounded-lg shadow-sm p-8 mb-6 border-l-4 border-blue-500 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 flex items-center justify-center bg-blue-100 rounded-full mb-5">
+                                    <i class="ri-folder-search-line text-4xl text-blue-600"></i>
+                                </div>
+                                <h2 class="text-xl font-bold text-gray-900">No Application Found</h2>
+                                <p class="mt-2 text-gray-600 max-w-md mx-auto">We could not find an active application associated with your account. Please start a new application if you wish to apply.</p>
+                                <div class="mt-6">
+                                     <a href="{{ url_for('views.new_student') }}"
+                                       class="bg-primary text-white px-6 py-2.5 rounded-button font-medium whitespace-nowrap flex items-center text-sm hover:bg-primary/90 transition-colors">
+                                        <i class="ri-file-add-line mr-2"></i>Start New Application
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div> 
+            </div> 
+
+            <!-- Right Sidebar -->
+            <div class="w-full md:w-80 lg:w-96 shrink-0">
+                <!-- New wrapper for sticky behavior and scrolling -->
+                <div id="rightSidebarStickyWrapper" class="md:sticky md:top-28">
+                    <div class="bg-white rounded-lg shadow-sm p-5 mb-6"> <!-- Removed md:sticky, md:top-28 -->
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Important Information</h3>
+                        <div class="space-y-4 text-sm"> <!-- Removed .important-info-content-scrollable -->
+                            <div class="flex items-start">
+                                <i class="ri-information-line text-primary mr-3 mt-1 shrink-0 text-lg"></i>
+                                <p class="text-gray-600 leading-relaxed">Application status updates will be sent to your registered email address. Please check your inbox regularly (including spam/junk folders).</p>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="ri-calendar-todo-line text-primary mr-3 mt-1 shrink-0 text-lg"></i>
+                                <p class="text-gray-600 leading-relaxed">Ensure all submitted information is accurate. Contact admissions for any corrections if editing is not available.</p>
+                            </div>
+                             <div class="flex items-start">
+                                <i class="ri-shield-check-line text-primary mr-3 mt-1 shrink-0 text-lg"></i>
+                                <p class="text-gray-600 leading-relaxed">Your data is kept secure and used only for application processing purposes. Review our privacy policy for more details.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm p-5"> <!-- Removed md:sticky and complex md:top -->
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact Admissions</h3>
+                        <div class="space-y-4 text-sm">
+                            <div class="flex items-start">
+                                <i class="ri-phone-line text-gray-500 mr-3 mt-1 shrink-0 text-lg"></i>
+                                <div>
+                                    <p class="font-medium text-gray-700">Phone Support</p>
+                                    <p class="text-gray-600 hover:text-primary transition-colors">+63 (2) 8524-4611</p>
+                                </div>
+                            </div>
+                             <div class="flex items-start">
+                                <i class="ri-mail-line text-gray-500 mr-3 mt-1 shrink-0 text-lg"></i>
+                                <div>
+                                    <p class="font-medium text-gray-700">Email Support</p>
+                                    <a href="mailto:admissions@pgpc.example.edu.ph" class="text-primary hover:underline">admissions@pgpc.edu.ph</a>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="ri-map-pin-line text-gray-500 mr-3 mt-1 shrink-0 text-lg"></i>
+                                <div>
+                                    <p class="font-medium text-gray-700">Office Hours</p>
+                                    <p class="text-gray-600">Monday - Friday, 7:00 AM - 5:00 PM</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Collapsible Application Details Section
+    const applicationDetailsHeader = document.getElementById('applicationDetailsHeader');
+    const applicationDetailsContent = document.getElementById('applicationDetailsContent');
+    const applicationDetailsIconContainer = document.getElementById('applicationDetailsIconContainer');
+
+    if (applicationDetailsHeader && applicationDetailsContent && applicationDetailsIconContainer) {
+        applicationDetailsHeader.addEventListener('click', function() {
+            const isHidden = applicationDetailsContent.classList.toggle('hidden');
+            const iconElement = applicationDetailsIconContainer.querySelector('i');
+            if (iconElement) {
+                 iconElement.classList.toggle('rotate-180', !isHidden);
+            }
+            applicationDetailsHeader.setAttribute('aria-expanded', String(!isHidden));
+            applicationDetailsContent.setAttribute('aria-hidden', String(isHidden));
+        });
+        
+        const isInitiallyHidden = applicationDetailsContent.classList.contains('hidden');
+        applicationDetailsHeader.setAttribute('aria-expanded', String(!isInitiallyHidden));
+        applicationDetailsContent.setAttribute('aria-hidden', String(isInitiallyHidden));
+        if (!isInitiallyHidden) {
+             const iconElement = applicationDetailsIconContainer.querySelector('i');
+             if (iconElement) iconElement.classList.add('rotate-180');
+        }
+    }
+
+    // Mobile Sidebar Toggling Logic (Single Inline Toggle)
+    const inlineMenuToggleBtn = document.getElementById('inlineMenuToggleBtn'); 
+    const inlineMenuIcon = document.getElementById('inlineMenuIcon'); 
+    const fullSidebarContent = document.getElementById('fullSidebarContent');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+    function openMobileSidebar() {
+        if (!fullSidebarContent || !inlineMenuToggleBtn || !inlineMenuIcon || !sidebarOverlay) return;
+
+        fullSidebarContent.classList.add('mobile-sidebar-visible');
+        // Ensure 'hidden' is removed if present, so 'display: block !important' from CSS can take effect
+        fullSidebarContent.classList.remove('hidden'); 
+        sidebarOverlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; 
+
+        inlineMenuToggleBtn.setAttribute('aria-expanded', 'true');
+        inlineMenuIcon.classList.remove('ri-menu-line');
+        inlineMenuIcon.classList.add('ri-close-line');
+    }
+
+    function closeMobileSidebar() {
+        if (!fullSidebarContent || !inlineMenuToggleBtn || !inlineMenuIcon || !sidebarOverlay) return;
+
+        fullSidebarContent.classList.remove('mobile-sidebar-visible');
+        // On mobile, after closing, it should revert to being 'hidden' by Tailwind if not for md:
+        // The CSS transform will keep it off-screen. Adding 'hidden' is a good safety.
+        if (window.innerWidth < 768) {
+            fullSidebarContent.classList.add('hidden');
+        }
+        
+        sidebarOverlay.classList.add('hidden');
+        document.body.style.overflow = '';
+
+        inlineMenuToggleBtn.setAttribute('aria-expanded', 'false');
+        inlineMenuIcon.classList.remove('ri-close-line');
+        inlineMenuIcon.classList.add('ri-menu-line');
+    }
+    
+    if (inlineMenuToggleBtn) {
+        inlineMenuToggleBtn.addEventListener('click', function() {
+            if (fullSidebarContent && fullSidebarContent.classList.contains('mobile-sidebar-visible')) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeMobileSidebar);
+    }
+    if (closeSidebarBtn) {
+        closeSidebarBtn.addEventListener('click', closeMobileSidebar);
+    }
+
+    // Ensure sidebar is correctly hidden/shown on resize
+    function handleResize() {
+        if (!fullSidebarContent) return;
+
+        if (window.innerWidth >= 768) { // Desktop
+            if (fullSidebarContent.classList.contains('mobile-sidebar-visible')) {
+                closeMobileSidebar(); 
+            }
+            fullSidebarContent.classList.remove('mobile-sidebar-visible'); // Ensure no mobile styles apply
+            fullSidebarContent.classList.remove('hidden'); // Allow md:sticky to show it
+            if(sidebarOverlay) sidebarOverlay.classList.add('hidden'); // Ensure overlay is hidden
+            document.body.style.overflow = ''; // Ensure body scroll is enabled
+        } else { // Mobile
+            // If it's not already set up for mobile view (i.e. mobile-sidebar-visible is not there),
+            // ensure it's hidden by default.
+            if (!fullSidebarContent.classList.contains('mobile-sidebar-visible')) {
+                fullSidebarContent.classList.add('hidden');
+            }
+        }
+    }
+
+    window.addEventListener('resize', handleResize);
+    
+    // Initial setup on load
+    if (fullSidebarContent) {
+        if (window.innerWidth < 768) {
+            fullSidebarContent.classList.add('hidden');
+        } else {
+            fullSidebarContent.classList.remove('hidden'); // For desktop, ensure it's not hidden by default
+        }
+    }
+});
+</script>
+</body>
+{% endblock %}
