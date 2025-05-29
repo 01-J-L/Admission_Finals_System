@@ -201,6 +201,7 @@ header {
         <a href="{{ url_for('views.about') }}">About</a>
         <a href="{{ url_for('views.home') }}#programs">Programs</a>
         <a href="{{ url_for('views.home') }}#news">News</a>
+        <a href="{{ url_for('views.contact_page') }}">Contact</a>
         {% if student_logged_in %}
             <a href="{{ url_for('views.application_status_page') }}">
                 <button class="btnLogin-popup">My Application</button>

@@ -288,7 +288,8 @@ def application_status_page():
                     admin_notes, decision_date,
                     permit_control_no, permit_exam_date, permit_exam_time, permit_testing_room,
                     photo, middle_name, date_of_birth, place_of_birth, sex, civil_status,
-                    academic_year, senior_high_school, senior_high_school_track_strand, senior_high_school_year_to
+                    academic_year, senior_high_school, senior_high_school_track_strand, senior_high_school_year_to,
+                    exam_status 
                 FROM applicants 
                 WHERE student_user_id = %s 
                 ORDER BY submitted_at DESC 
@@ -331,4 +332,9 @@ def new_student():
         flash("⚠️ Please log in to access the application form.", "warning")
         return redirect(url_for('auth.student_login_page'))
     
-    return render_template('new_student.html', student_logged_in='student_id' in session)
+    today_date_str = datetime.date.today().strftime('%Y-%m-%d')
+    return render_template(
+        'new_student.html', 
+        student_logged_in='student_id' in session,
+        today_date_for_form=today_date_str
+    )

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your PGPC Student Account</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border: 1px solid #ddd; border-radius: 5px; }
+        .header { background-color: #4f46e5; color: white; padding: 10px; text-align: center; border-radius: 5px 5px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { padding: 20px; }
+        .content p { margin-bottom: 15px; }
+        .credentials { background-color: #f9f9f9; border: 1px solid #eee; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .credentials strong { display: inline-block; width: 150px; }
+        .button-container { text-align: center; margin-top: 20px; }
+        .button { background-color: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; }
+        .footer { text-align: center; margin-top: 20px; font-size: 0.9em; color: #777; }
+        .footer p { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ sender_name }}</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ user_full_name }},</p>
+            <p>An admissions application has been created for you by the PGPC Admin, and a student portal account has been set up.</p>
+            <p>You can log in to the PGPC Student Portal using the following credentials:</p>
+            
+            <div class="credentials">
+                <p><strong>Email (Username):</strong> {{ user_email }}</p>
+                <p><strong>Temporary Password:</strong> <code>{{ temporary_password }}</code></p>
+            </div>
+            
+            <p><strong>Important:</strong> For your security, please change this temporary password immediately after your first login.</p>
+            
+            <div class="button-container">
+                <a href="{{ login_url }}" class="button">Login to Student Portal</a>
+            </div>
+            
+            <p>If you have any questions, please contact the admissions office or reply to this email.</p>
+            <p>Sincerely,</p>
+            <p>The {{ sender_name }} Team</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ now.year }} {{ sender_name }}. All rights reserved.</p>
+            <p><small>This is an automated message. Please do not reply directly to this email address if it is a no-reply address. Contact support if needed.</small></p>
+            <p><small>Email sent on: {{ now.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+        </div>
+    </div>
+</body>
+</html>

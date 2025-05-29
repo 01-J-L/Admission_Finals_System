@@ -491,6 +491,7 @@ header {
         <a href="{{ url_for('views.about') }}">About</a>
         <a href="{{ url_for('views.home') }}#programs">Programs</a>
         <a href="{{ url_for('views.home') }}#news">News</a>
+        <a href="{{ url_for('views.contact_page') }}">Contact</a>
         {% if student_logged_in %}
             <a href="{{ url_for('views.application_status_page') }}">
                 <button class="btnLogin-popup">My Application</button>
@@ -517,7 +518,7 @@ header {
 <section class="about-section">
   <div class="about-container">
     <div class="about-sidebar">
-      <div class="box-title">Vision, Mission, Core Values, & Philosophy</div>
+      <div class="box-title">Vision, Mission, & Core Values</div>
       <div class="image-box">
         <img src="{{ url_for('static', filename='images/about.jpg') }}" alt="Padre Garcia Polytechnic College campus detail"/>
       </div>

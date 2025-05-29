@@ -2,10 +2,10 @@
 
 {% block style %}
 <style>
-    /* Styles from new_student.html, adopted for edit_application.html */
+    /* Styles from new_student.html/edit_application.html, adopted for admin_edit_application.html */
     :where([class^="ri-"])::before { content: "\f3c2"; } 
     body {
-        background-color: #f9fafb;
+        background-color: #f9fafb; /* Light gray background */
     }
     html {
       scroll-behavior: smooth;
@@ -21,184 +21,79 @@
     input[type="number"] {
         -moz-appearance: textfield;
     }
-    .custom-checkbox {
-        position: relative; display: inline-block; width: 18px; height: 18px;
-        border: 2px solid #cbd5e1; border-radius: 4px; transition: all 0.2s ease;
-    }
-    .custom-checkbox.checked { background-color: #1e40af; border-color: #1e40af; }
-    .custom-checkbox.checked::after {
-        content: ''; position: absolute; left: 5px; top: 2px; width: 5px; height: 9px;
-        border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
-    }
-    .custom-radio {
-        position: relative; display: inline-block; width: 18px; height: 18px;
-        border: 2px solid #cbd5e1; border-radius: 50%; transition: all 0.2s ease;
-    }
-    .custom-radio.checked { border-color: #1e40af; }
-    .custom-radio.checked::after {
-        content: ''; position: absolute; left: 3px; top: 3px; width: 8px; height: 8px;
-        border-radius: 50%; background-color: #1e40af;
-    }
-    .btns {
-        width: 20%; margin-bottom: 4rem; background-color: #162938; color: #fff;
-        font-weight: 600; padding: 1rem 0; border: none; border-radius: 0.5rem;
-        cursor: pointer; transition: background-color 0.3s;
-    }
-    .btns:hover { background-color: #1e2f3c; }
+    /* Simplified custom checkbox/radio for brevity, assuming Tailwind handles most of it */
     .go-top-btn {
-        position: fixed; bottom: 70px; right: 35px; border-radius: 50%; cursor: pointer;
-        height: 50px; width: 50px; background: #fff; border: 3px solid #333;
+        position: fixed; bottom: 20px; right: 20px; border-radius: 50%; cursor: pointer;
+        height: 50px; width: 50px; background: #162938; color: white; border: none; /* Primary color */
         display: none; justify-content: center; align-items: center; z-index: 999;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
-    .go-top-btn img { width: 20px; height: 20px; }
-    .footer {
-        position: relative; display: flex; flex-direction: column; align-items: center;
-        padding: 2rem 1rem; text-align: center; color: white; overflow: hidden;
-    }
-    .footer::before {
-        content: ""; position: absolute; inset: 0;
-        background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat;
-        z-index: 0; opacity: 0.3;
-    }
-    .footer::after {
-        content: ""; position: absolute; inset: 0;
-        background: rgba(22, 41, 56, 0.442); z-index: 1;
-    }
-    .footer * { position: relative; z-index: 2; }
-    .footer-logo { width: 100px; height: 100px; margin-bottom: 1rem; }
-    .footer-title { font-size: 1.5rem; font-weight: bold; }
-    .footer-subtitle { font-size: 1.25rem; font-weight: bold; margin-top: 0.5rem; }
-    .footer-connect { margin-top: 1rem; font-size: 1rem; }
-    .footer-socials { display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 1.25rem; }
-    .footer-socials a { color: white; text-decoration: none; transition: color 0.3s ease; }
-    .footer-socials a:hover { color: #0987d0; }
-    .footer-divider { border-top: 1px solid white; width: 25%; margin: 2rem 0; }
-    .footer-bottom { font-size: 0.875rem; line-height: 1.6; max-width: 700px; }
-
-    header {
-        position: fixed; top: 0; left: 0; width: 100%; padding: 15px 5%;
-        display: flex; justify-content: space-between; align-items: center;
-        z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        background-color: #162938; transition: background-color 0.3s ease;
-    }
-    .header-left { display: flex; align-items: center; }
-    .header-left img { width: 100px; height: auto; }
-    .header-left .logo { font-size: 1.4em; color: #fff; margin-left: 15px; white-space: nowrap; }
-    .navigation a {
-        position: relative; font-size: 1.1em; color: #fff; text-decoration: none;
-        font-weight: 500; margin-left: 30px;
-    }
-    .navigation a.no-underline { text-decoration: none; }
-    .navigation .btnLogin-popup {
-        background-color: #fff; color: #162938; padding: 8px 15px; border-radius: 5px;
-        border: 1px solid transparent; cursor: pointer; font-weight: 500;
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s; text-align: center;
-    }
-    .navigation .btnLogin-popup:hover { background-color: #f0f0f0; }
-    .navigation .btnLogin-popup.btn-logout {
-        background-color: #d9534f; color: #fff; border-color: #d9534f;
-    }
-    .navigation .btnLogin-popup.btn-logout:hover {
-        background-color: #c9302c; color: #fff; border-color: #c9302c;
-    }
-    .navigation a.logout-link:hover { text-decoration: none !important; }
-    .navigation a.logout-link::after, .navigation a.logout-link::before { display: none !important; }
-    .menu-toggle {
-        display: none; flex-direction: column; justify-content: space-around;
-        width: 30px; height: 25px; background: transparent; border: none;
-        cursor: pointer; padding: 0; z-index: 1100; margin-left: 20px;
-    }
-    .menu-toggle span {
-        display: block; width: 100%; height: 3px; background-color: #fff;
-        border-radius: 3px; transition: all 0.3s ease-in-out;
-    }
-    @media (max-width: 992px) {
-        header { padding: 10px 3%; }
-        .header-left img { width: 70px; height: 50px; object-fit: contain; }
-        .header-left .logo { font-size: 1em; margin-left: 10px; }
-        .navigation {
-            position: absolute; top: 100%; right: 0; width: 250px; background-color: #162938;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15); flex-direction: column; align-items: stretch;
-            display: none; z-index: 1050; border-top: 1px solid #2a3f54;
-            max-height: calc(100vh - 70px); overflow-y: auto;
-        }
-        .navigation.active { display: flex; }
-        .navigation a {
-            display: block; padding: 12px 20px; margin-left: 0; text-align: left;
-            color: #f0f0f0; border-bottom: 1px solid #2a3f54; text-decoration: none;
-        }
-        .navigation a:last-child { border-bottom: none; }
-        .navigation a:hover { background-color: #22333f; }
-        .navigation a .btnLogin-popup { display: block; width: auto; margin: 5px 0; }
-        .navigation a.logout-link { padding: 0; }
-        .navigation a.logout-link .btnLogin-popup.btn-logout {
-            width: 100%; margin: 0; padding: 12px 20px; border-radius: 0;
-        }
-        .navigation a.logout-link.logout-link:hover { text-decoration: none !important; }
-        .navigation a.logout-link.logout-link::after,
-        .navigation a.logout-link.logout-link::before { display: none !important; }
-        .menu-toggle { display: flex; }
-        .menu-toggle.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
-        .menu-toggle.active span:nth-child(2) { opacity: 0; }
-        .menu-toggle.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
-    }
-    .main-content-area { padding-top: 70px; }
-    @media (min-width: 993px) { .main-content-area { padding-top: 100px; } }
+    .go-top-btn i { font-size: 24px; } /* Using Remixicon */
+    
+    /* Primary color from Tailwind config in admin_dashboard.html: primary:'#4f46e5' */
+    .bg-primary { background-color: #4f46e5; }
+    .text-primary { color: #4f46e5; }
+    .border-primary { border-color: #4f46e5; }
+    .hover\:bg-primary\/80:hover { background-color: rgba(79, 70, 229, 0.8); }
+    .focus\:ring-primary\/50:focus { ring-color: rgba(79, 70, 229, 0.5); }
+    .rounded-button { border-radius: 8px; } /* From Tailwind config */
 
     .file-download-link {
-        color: #1e40af; 
+        color: #4f46e5; /* primary color */
         text-decoration: underline;
         font-weight: 500;
     }
     .file-download-link:hover {
-        color: #1c3baa; 
+        color: #4338ca; /* darker primary */
     }
 </style>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
 {% endblock %}
 
 {% block head %}
 <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
-<header>
-    <div class="header-left">
-        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Company Logo" ></a>
-        <h2 class="logo">Padre Garcia Polytechnic College</h2>
-    </div>
-    <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-navigation">
-        <span></span><span></span><span></span>
-    </button>
-    <nav class="navigation" id="main-navigation">
-        {% if student_logged_in %}
-            <a href="{{ url_for('views.application_status_page') }}">Application Status</a>
-            <a href="{{ url_for('auth.logout') }}" class="logout-link">
-                <button class="btnLogin-popup btn-logout">Logout</button>
-            </a>
-        {% else %}
-            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
-                <button class="btnLogin-popup">Apply now</button>
-            </a>
+<header class="bg-primary text-white py-3 px-6 shadow-md fixed top-0 left-0 w-full z-[1001]">
+    <div class="container mx-auto flex justify-between items-center">
+        <h1 class="text-xl font-semibold">Admin: Edit Application P2025{{ "%04d" | format(application.applicant_id) }}</h1>
+        {% if admin_logged_in %}
+        <a href="{{ url_for('auth.admin_dashboard') }}" class="text-sm bg-gray-100 text-primary hover:bg-gray-200 px-4 py-2 rounded-button transition-colors">Back to Dashboard</a>
         {% endif %}
-    </nav>
+    </div>
 </header>
 {% endblock %}
 
 {% block body %}
-<div class="main-content-area">
+<div class="main-content-area pt-20"> <!-- Adjusted padding top for fixed header -->
   <div class="min-h-screen flex flex-col">
     <main class="flex-grow container mx-auto px-4 py-8">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div class="mb-4 p-4 rounded-md text-sm
+            {% if category == 'danger' %} bg-red-100 text-red-700 border border-red-200
+            {% elif category == 'success' %} bg-green-100 text-green-700 border border-green-200
+            {% elif category == 'warning' %} bg-yellow-100 text-yellow-700 border border-yellow-200
+            {% else %} bg-blue-100 text-blue-700 border border-blue-200 {% endif %}"
+            role="alert">
+            {{ message }}
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
       <div class="max-w-5xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-6 border-b border-gray-200">
             <div class="flex justify-between items-start">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800">
-                        Edit College Admission Application
+                        Edit Application Data (Admin)
                     </h2>
                     <p class="text-gray-600 mt-1">
-                        Update your application information below. Fields marked with <span class="text-red-500">*</span> are required.
+                        Modify the applicant's information below. Fields marked with <span class="text-red-500">*</span> are generally required.
                     </p>
                 </div>
-                <a href="{{ url_for('views.application_status_page') }}" class="text-sm text-primary hover:text-primary/80 flex items-center whitespace-nowrap ml-4 px-4 py-2 rounded-button border border-primary hover:bg-primary/10 transition-colors">
-                    <i class="ri-arrow-left-line mr-2"></i>Back to Status
+                <a href="{{ url_for('auth.admin_dashboard') }}" class="text-sm text-primary hover:text-primary/80 flex items-center whitespace-nowrap ml-4 px-4 py-2 rounded-button border border-primary hover:bg-primary/10 transition-colors">
+                    <i class="ri-arrow-left-line mr-2"></i>Back to Dashboard
                 </a>
             </div>
         </div>
@@ -215,7 +110,7 @@
           </div>
         </div>
         
-        <form action="{{ url_for('auth.update_application_action', applicant_id=application.applicant_id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ url_for('auth.admin_update_application_action', applicant_id=application.applicant_id) }}" method="POST" enctype="multipart/form-data">
         <div class="p-6">
           <div id="step1" class="block">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
@@ -266,12 +161,12 @@
                   </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div><label class="block text-gray-700 font-medium mb-2">Religion <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Your religion" name="religion" value="{{ application.religion | e }}" required /></div>
-                  <div><label class="block text-gray-700 font-medium mb-2">Citizenship <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Your citizenship" name="citizenship" value="{{ application.citizenship | e }}" required /></div>
+                  <div><label class="block text-gray-700 font-medium mb-2">Religion <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Applicant's religion" name="religion" value="{{ application.religion | e }}" required /></div>
+                  <div><label class="block text-gray-700 font-medium mb-2">Citizenship <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Applicant's citizenship" name="citizenship" value="{{ application.citizenship | e }}" required /></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div><label class="block text-gray-700 font-medium mb-2">Mobile No. <span class="text-red-500">*</span></label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Your mobile number" name="mobile_number" value="{{ application.mobile_number | e }}" required /></div>
-                  <div><label class="block text-gray-700 font-medium mb-2">Email Address <span class="text-red-500">*</span></label><input type="email" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Your email address" name="email_address" value="{{ application.email_address | e }}" required /></div>
+                  <div><label class="block text-gray-700 font-medium mb-2">Mobile No. <span class="text-red-500">*</span></label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Applicant's mobile number" name="mobile_number" value="{{ application.mobile_number | e }}" required /></div>
+                  <div><label class="block text-gray-700 font-medium mb-2">Email Address <span class="text-red-500">*</span></label><input type="email" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Applicant's email address" name="email_address" value="{{ application.email_address | e }}" required /></div>
                 </div>
                 <div class="mb-6">
                   <label class="block text-gray-700 font-medium mb-2">Permanent Address <span class="text-red-500">*</span></label>
@@ -283,14 +178,14 @@
                   <div class="mt-2"><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Postal Code" name="permanent_address_postal_code" value="{{ application.permanent_address_postal_code | e }}" required /></div>
                 </div>
                 <div class="mb-6">
-                  <label class="block text-gray-700 font-medium mb-2">Are you a member of Cultural Minority Group? <span class="text-red-500">*</span></label>
+                  <label class="block text-gray-700 font-medium mb-2">Member of Cultural Minority Group? <span class="text-red-500">*</span></label>
                   <div class="flex gap-6 mt-2">
                     <div class="flex items-center"><input type="radio" name="cultural_minority_group" value="No" {% if application.cultural_minority_group == 'No' %}checked{% endif %} required /><label class="ml-2 text-gray-700">No</label></div>
                     <div class="flex items-center"><input type="radio" name="cultural_minority_group" value="Yes" {% if application.cultural_minority_group == 'Yes' %}checked{% endif %} required /><label class="ml-2 text-gray-700">Yes</label></div>
                   </div>
                 </div>
                 <div class="mb-6">
-                  <label class="block text-gray-700 font-medium mb-2">Do you have any physical disability or condition that requires special attention? <span class="text-red-500">*</span></label>
+                  <label class="block text-gray-700 font-medium mb-2">Physical disability or condition? <span class="text-red-500">*</span></label>
                   <div class="flex gap-6 mt-2">
                     <div class="flex items-center"><input type="radio" name="physical_disability" value="No" {% if application.physical_disability == 'No' %}checked{% endif %} required /><label class="ml-2 text-gray-700">No</label></div>
                     <div class="flex items-center"><input type="radio" name="physical_disability" value="Yes" {% if application.physical_disability == 'Yes' %}checked{% endif %} required /><label class="ml-2 text-gray-700">Yes (Specify attached certification)</label></div>
@@ -464,30 +359,30 @@
           </div>
 
           <div id="step4" class="hidden">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Review & Update</h3>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Review & Update Applicant Data</h3>
             
             <div id="reviewDataContainer" class="mb-6">
                 <!-- JS will insert review content here -->
             </div>
 
             <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
-              <h4 class="font-medium text-gray-800 mb-4">Consent and Declaration</h4>
-              <div class="mb-6"><h5 class="font-medium text-gray-700 mb-2">CONSENT</h5><p class="text-sm text-gray-600 mb-4">I am fully aware that Padre Garcia Polytechnic College is bound by the Data Privacy Act of 2012... (content as in new_student.html)</p></div>
-              <div><h5 class="font-medium text-gray-700 mb-2">OATH</h5><p class="text-sm text-gray-600">I hereby certify that all information supplied... (content as in new_student.html)</p></div>
+              <h4 class="font-medium text-gray-800 mb-4">Consent and Declaration (as submitted by applicant)</h4>
+              <div class="mb-6"><h5 class="font-medium text-gray-700 mb-2">CONSENT</h5><p class="text-sm text-gray-600 mb-4">The applicant was made aware that Padre Garcia Polytechnic College is bound by the Data Privacy Act of 2012. Information, including personal data and documents, collected through this application will be treated as confidential and used solely for admission processing, academic, and statistical purposes by the College. It will not be shared with external parties without explicit consent, unless required by law. By submitting the application, the applicant consented to the collection and processing of their data under these terms.</p></div>
+              <div><h5 class="font-medium text-gray-700 mb-2">OATH</h5><p class="text-sm text-gray-600">The applicant certified that all information supplied in the application is true, complete, and accurate. Any misinformation or withholding of information will automatically disqualify the applicant or be grounds for dismissal if already admitted. The applicant understood that all documents submitted become part of the College's records and cannot be withdrawn.</p></div>
             </div>
             <div class="flex items-center mb-6">
-              <input type="checkbox" name="agreements" value="Yes" id="agreements" {% if application.agreements == 'Yes' %}checked{% endif %} required />
-              <label class="ml-2 text-gray-700">I have read and agree to the terms and conditions above. <span class="text-red-500">*</span></label>
+              <input type="checkbox" name="agreements" value="Yes" id="agreements" {% if application.agreements == 'Yes' %}checked{% endif %} /> <!-- NOT required for admin edit to proceed -->
+              <label class="ml-2 text-gray-700">Applicant's Agreement (View/modify if necessary. Original student agreement should be preserved unless there's a specific reason to change).</label>
             </div>
             <div class="grid grid-cols-1 gap-6 mb-6">
               <div>
-                <label class="block text-gray-700 text-sm mb-2" for="final_submission_date_input">Final Submission Date <span class="text-red-500">*</span></label>
+                <label class="block text-gray-700 text-sm mb-2" for="final_submission_date_input">Final Submission Date (as set by applicant or admin) <span class="text-red-500">*</span></label>
                 <input type="date" id="final_submission_date_input" name="final_submission_date" class="w-full px-4 py-2 border border-gray-300 rounded" value="{{ application.final_submission_date }}" required />
               </div>
             </div>
             <div class="mt-8 flex justify-between">
               <button type="button" id="backToStep3From4" class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap">Previous: Educational Background</button>
-              <button id="submitApplication" class="bg-gray-300 text-white px-6 py-2 rounded-button font-medium whitespace-nowrap cursor-not-allowed" type="submit" disabled>Update Application</button>
+              <button id="submitApplicationAdminBtn" class="bg-gray-300 text-white px-6 py-2 rounded-button font-medium whitespace-nowrap cursor-not-allowed" type="submit" disabled>Update Application (Admin)</button>
             </div>
           </div>
         </div>
@@ -495,20 +390,8 @@
       </div>
     </main>
   </div>
-  <footer class="footer">
-    <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
-    <h1 class="footer-title">Padre Garcia Polytechnic College</h1>
-    <h2 class="footer-subtitle">THE FUTURE BEGINS HERE.</h2>
-    <p class="footer-connect">Connect with us</p>
-    <div class="footer-socials"><a href="https://www.facebook.com/PadreGarciaPolytechnicCollege"><i class="fab fa-facebook-f"></i></a></div>
-    <div class="footer-divider"></div>
-    <div class="footer-bottom">
-      <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="{{url_for('views.home')}}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7">Brgy.Castillo, Padre Garcia, Batangas</a> | +63 (2) 8524-4611</p>
-      <p>© 2025. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home">Padre Garcia PH</a></p>
-    </div>
-  </footer>
 </div>
-<button class="go-top-btn" id="goTopBtn"><img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="Go to top"></button>
+<button class="go-top-btn" id="goTopBtn" title="Go to top"><i class="ri-arrow-up-s-line"></i></button>
 
 <script>
     const initialApplicationFilenames = {
@@ -519,20 +402,17 @@
     };
     const applicantIdForLinks = "{{ application.applicant_id }}";
 
-
     document.addEventListener("DOMContentLoaded", function () {
       const requiredFields = document.querySelectorAll(
-        "form input[required]:not([type='file']), form select[required], form textarea[required], form input[type='checkbox'][required]"
+        "form input[required]:not([type='file']), form select[required], form textarea[required]"
       ); 
-      const submitButton = document.getElementById("submitApplication");
+      const submitButton = document.getElementById("submitApplicationAdminBtn");
   
       function validateForm() {
         let isValid = true;
         requiredFields.forEach((field) => {
           if (field.type === 'radio' || field.type === 'checkbox') {
-            if (field.type === 'checkbox' && field.name === 'agreements') { 
-                 if (!field.checked) isValid = false;
-            } else if (field.type === 'radio') { 
+            if (field.type === 'radio') { 
                  const radioGroup = document.querySelectorAll(`input[name="${field.name}"][required]`);
                  if (radioGroup.length > 0) { 
                     let oneChecked = false;
@@ -540,16 +420,11 @@
                     if (!oneChecked) isValid = false;
                  }
             }
-          } else if (field.required && (!field.value || !field.value.trim())) { 
+          } else if (field.required && (!field.value || (typeof field.value === 'string' && !field.value.trim()))) { 
             isValid = false;
           }
         });
         
-        const agreementCheckbox = document.getElementById('agreements');
-        if (agreementCheckbox && !agreementCheckbox.checked) {
-            isValid = false;
-        }
-  
         if(submitButton){ 
             if (isValid) {
               submitButton.disabled = false;
@@ -590,66 +465,68 @@
 
       function collectFormDataForReview() {
         return {
-          program: document.querySelector('select[name="program_choice"]').value,
-          lastName: document.querySelector('input[name="last_name"]').value,
-          firstName: document.querySelector('input[name="first_name"]').value,
-          middleName: document.querySelector('input[name="middle_name"]').value,
-          dateOfBirth: document.querySelector('input[name="date_of_birth"]').value,
-          placeOfBirth: document.querySelector('input[name="place_of_birth"]').value,
-          sex: document.querySelector('input[name="sex"]:checked') ? document.querySelector('input[name="sex"]:checked').value : "",
-          civilStatus: document.querySelector('input[name="civil_status"]:checked') ? document.querySelector('input[name="civil_status"]:checked').value : "",
-          religion: document.querySelector('input[name="religion"]').value,
-          citizenship: document.querySelector('input[name="citizenship"]').value,
-          mobileNo: document.querySelector('input[name="mobile_number"]').value,
-          email: document.querySelector('input[name="email_address"]').value,
-          address: {
-            street: document.querySelector('input[name="permanent_address_street_barangay"]').value,
-            city: document.querySelector('input[name="permanent_address_city_municipality"]').value,
-            province: document.querySelector('input[name="permanent_address_province"]').value,
-            postalCode: document.querySelector('input[name="permanent_address_postal_code"]').value,
-          },
-          culturalMinority: document.querySelector('input[name="cultural_minority_group"]:checked') ? document.querySelector('input[name="cultural_minority_group"]:checked').value : "",
-          physicalDisability: document.querySelector('input[name="physical_disability"]:checked') ? document.querySelector('input[name="physical_disability"]:checked').value : "",
-          
-          applicationDate: document.querySelector('input[name="date_of_application"]').value,
-          academicYear: document.querySelector('input[name="academic_year"]').value,
-          
-          familyIncome: document.querySelector('select[name="average_family_income"]').value,
-          
-          father: {
-            name: document.querySelector('input[name="father_name"]').value,
-            occupation: document.querySelector('input[name="father_occupation"]').value,
-            company: document.querySelector('input[name="father_company_address"]').value,
-            contact: document.querySelector('input[name="father_contact_number"]').value,
-          },
-          mother: {
-            name: document.querySelector('input[name="mother_maiden_name"]').value,
-            occupation: document.querySelector('input[name="mother_occupation"]').value,
-            company: document.querySelector('input[name="mother_company_address"]').value,
-            contact: document.querySelector('input[name="mother_contact_number"]').value,
-          },
-          guardian: {
-            name: document.querySelector('input[name="guardian_name"]').value,
-            occupation: document.querySelector('input[name="guardian_occupation"]').value,
-            company: document.querySelector('input[name="guardian_company_address"]').value,
-            contact: document.querySelector('input[name="guardian_contact_number"]').value,
-          },
-          education: {
-            shs: {
-              name: document.querySelector('input[name="senior_high_school"]').value,
-              address: document.querySelector('input[name="senior_high_school_address"]').value,
-              strand: document.querySelector('select[name="senior_high_school_track_strand"]').value,
-              yearFrom: document.querySelector('input[name="senior_high_school_year_from"]').value,
-              yearTo: document.querySelector('input[name="senior_high_school_year_to"]').value,
+            // Step 1: Personal Information
+            program: document.querySelector('select[name="program_choice"]').value,
+            lastName: document.querySelector('input[name="last_name"]').value,
+            firstName: document.querySelector('input[name="first_name"]').value,
+            middleName: document.querySelector('input[name="middle_name"]').value,
+            dateOfBirth: document.querySelector('input[name="date_of_birth"]').value,
+            placeOfBirth: document.querySelector('input[name="place_of_birth"]').value,
+            sex: document.querySelector('input[name="sex"]:checked') ? document.querySelector('input[name="sex"]:checked').value : "",
+            civilStatus: document.querySelector('input[name="civil_status"]:checked') ? document.querySelector('input[name="civil_status"]:checked').value : "",
+            religion: document.querySelector('input[name="religion"]').value,
+            citizenship: document.querySelector('input[name="citizenship"]').value,
+            mobileNo: document.querySelector('input[name="mobile_number"]').value,
+            email: document.querySelector('input[name="email_address"]').value,
+            address: {
+                street: document.querySelector('input[name="permanent_address_street_barangay"]').value,
+                city: document.querySelector('input[name="permanent_address_city_municipality"]').value,
+                province: document.querySelector('input[name="permanent_address_province"]').value,
+                postalCode: document.querySelector('input[name="permanent_address_postal_code"]').value,
             },
-            tertiary: {
-              name: document.querySelector('input[name="tertiary_school"]').value,
-              address: document.querySelector('input[name="tertiary_school_address"]').value,
-              course: document.querySelector('input[name="tertiary_course"]').value,
-              yearFrom: document.querySelector('input[name="tertiary_year_from"]').value,
-              yearTo: document.querySelector('input[name="tertiary_year_to"]').value,
+            culturalMinority: document.querySelector('input[name="cultural_minority_group"]:checked') ? document.querySelector('input[name="cultural_minority_group"]:checked').value : "",
+            physicalDisability: document.querySelector('input[name="physical_disability"]:checked') ? document.querySelector('input[name="physical_disability"]:checked').value : "",
+            dateOfApplication: document.querySelector('input[name="date_of_application"]').value,
+            academicYear: document.querySelector('input[name="academic_year"]').value,
+
+            // Step 2: Family Details
+            averageFamilyIncome: document.querySelector('select[name="average_family_income"]').value,
+            father: {
+                name: document.querySelector('input[name="father_name"]').value,
+                occupation: document.querySelector('input[name="father_occupation"]').value,
+                company: document.querySelector('input[name="father_company_address"]').value,
+                contact: document.querySelector('input[name="father_contact_number"]').value,
             },
-          },
+            mother: {
+                name: document.querySelector('input[name="mother_maiden_name"]').value,
+                occupation: document.querySelector('input[name="mother_occupation"]').value,
+                company: document.querySelector('input[name="mother_company_address"]').value,
+                contact: document.querySelector('input[name="mother_contact_number"]').value,
+            },
+            guardian: {
+                name: document.querySelector('input[name="guardian_name"]').value,
+                occupation: document.querySelector('input[name="guardian_occupation"]').value,
+                company: document.querySelector('input[name="guardian_company_address"]').value,
+                contact: document.querySelector('input[name="guardian_contact_number"]').value,
+            },
+
+            // Step 3: Educational Background
+            education: {
+                shs: {
+                    name: document.querySelector('input[name="senior_high_school"]').value,
+                    address: document.querySelector('input[name="senior_high_school_address"]').value,
+                    strand: document.querySelector('select[name="senior_high_school_track_strand"]').value,
+                    yearFrom: document.querySelector('input[name="senior_high_school_year_from"]').value,
+                    yearTo: document.querySelector('input[name="senior_high_school_year_to"]').value,
+                },
+                tertiary: {
+                    name: document.querySelector('input[name="tertiary_school"]').value,
+                    address: document.querySelector('input[name="tertiary_school_address"]').value,
+                    course: document.querySelector('input[name="tertiary_course"]').value,
+                    yearFrom: document.querySelector('input[name="tertiary_year_from"]').value,
+                    yearTo: document.querySelector('input[name="tertiary_year_to"]').value,
+                }
+            }
         };
       }
 
@@ -667,45 +544,21 @@
         const newCardFile = document.getElementById('shs_card_file_input').files[0];
         const newBirthCertFile = document.getElementById('birth_certificate_file_input').files[0];
 
-        let photoReviewHTML = newPhotoFile 
-            ? `New Photo: <span class="font-medium">${newPhotoFile.name}</span>` 
-            : (initialApplicationFilenames.photo 
-                ? `Current Photo: <span class="font-medium">Retained (view in form)</span>` 
-                : '<span class="font-medium">No photo on file</span>');
-
-        let diplomaReviewHTML = newDiplomaFile 
-            ? `New SHS Diploma: <span class="font-medium">${newDiplomaFile.name}</span>` 
-            : (initialApplicationFilenames.shs_diploma_filename 
-                ? `Current SHS Diploma: <a href="/applicant-document/${applicantIdForLinks}/diploma" target="_blank" class="file-download-link">${initialApplicationFilenames.shs_diploma_filename}</a> <span class="font-medium">(Retained)</span>` 
-                : '<span class="font-medium">No SHS Diploma on file</span>');
+        let photoReview = newPhotoFile ? `New Photo Uploaded: ${newPhotoFile.name}` : (initialApplicationFilenames.photo ? 'Current photo retained' : 'No photo on file');
+        let diplomaReview = newDiplomaFile ? `New SHS Diploma Uploaded: ${newDiplomaFile.name}` : (initialApplicationFilenames.shs_diploma_filename ? `Current SHS Diploma retained (<a href="/applicant-document/${applicantIdForLinks}/diploma" target="_blank" class="file-download-link">${initialApplicationFilenames.shs_diploma_filename}</a>)` : 'No SHS Diploma on file');
+        let cardReview = newCardFile ? `New SHS Card Uploaded: ${newCardFile.name}` : (initialApplicationFilenames.shs_card_filename ? `Current SHS Card retained (<a href="/applicant-document/${applicantIdForLinks}/card" target="_blank" class="file-download-link">${initialApplicationFilenames.shs_card_filename}</a>)` : 'No SHS Card on file');
+        let birthCertReview = newBirthCertFile ? `New Birth Certificate Uploaded: ${newBirthCertFile.name}` : (initialApplicationFilenames.birth_certificate_filename ? `Current Birth Certificate retained (<a href="/applicant-document/${applicantIdForLinks}/birth_cert" target="_blank" class="file-download-link">${initialApplicationFilenames.birth_certificate_filename}</a>)` : 'No Birth Certificate on file');
         
-        let cardReviewHTML = newCardFile 
-            ? `New SHS Card: <span class="font-medium">${newCardFile.name}</span>` 
-            : (initialApplicationFilenames.shs_card_filename 
-                ? `Current SHS Card: <a href="/applicant-document/${applicantIdForLinks}/card" target="_blank" class="file-download-link">${initialApplicationFilenames.shs_card_filename}</a> <span class="font-medium">(Retained)</span>` 
-                : '<span class="font-medium">No SHS Card on file</span>');
+        const incomeText = formData.averageFamilyIncome ? formData.averageFamilyIncome.replace(/_/g, ' ').replace('to', '-').replace('above', ' above').replace('below', ' below') : "Not specified";
 
-        let birthCertReviewHTML = newBirthCertFile 
-            ? `New Birth Certificate: <span class="font-medium">${newBirthCertFile.name}</span>` 
-            : (initialApplicationFilenames.birth_certificate_filename 
-                ? `Current Birth Certificate: <a href="/applicant-document/${applicantIdForLinks}/birth_cert" target="_blank" class="file-download-link">${initialApplicationFilenames.birth_certificate_filename}</a> <span class="font-medium">(Retained)</span>` 
-                : '<span class="font-medium">No Birth Certificate on file</span>');
-        
-        const incomeOptions = {
-            "10000_below": "₱10,000 below", "10001_to_20000": "₱10,001 - 20,000",
-            "20001_to_30000": "₱20,001 - 30,000", "30001_to_40000": "₱30,001 - 40,000",
-            "40001_to_50000": "₱40,001 - 50,000", "50001_to_100000": "₱50,001 - 100,000",
-            "100001_above": "₱100,001 above"
-        };
-        const familyIncomeText = incomeOptions[formData.familyIncome] || formData.familyIncome || "Not specified";
 
         const reviewContent = `
         <div class="space-y-6">
             <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <h4 class="font-medium text-gray-800 mb-4">Personal Information</h4>
+                <h4 class="text-md font-semibold text-gray-700 mb-4">Personal Information</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><p class="text-sm text-gray-600">Program:</p><p class="font-medium">${formData.program || "Not specified"}</p></div>
-                    <div><p class="text-sm text-gray-600">Full Name:</p><p class="font-medium">${formData.lastName}, ${formData.firstName} ${formData.middleName || ''}</p></div>
+                    <div><p class="text-sm text-gray-600">Full Name:</p><p class="font-medium">${formData.lastName || ""}, ${formData.firstName || ""} ${formData.middleName || ''}</p></div>
                     <div><p class="text-sm text-gray-600">Date of Birth:</p><p class="font-medium">${formData.dateOfBirth || "Not specified"}</p></div>
                     <div><p class="text-sm text-gray-600">Place of Birth:</p><p class="font-medium">${formData.placeOfBirth || "Not specified"}</p></div>
                     <div><p class="text-sm text-gray-600">Sex:</p><p class="font-medium">${formData.sex || "Not specified"}</p></div>
@@ -714,23 +567,18 @@
                     <div><p class="text-sm text-gray-600">Citizenship:</p><p class="font-medium">${formData.citizenship || "Not specified"}</p></div>
                     <div><p class="text-sm text-gray-600">Mobile No:</p><p class="font-medium">${formData.mobileNo || "Not specified"}</p></div>
                     <div><p class="text-sm text-gray-600">Email:</p><p class="font-medium">${formData.email || "Not specified"}</p></div>
-                    <div><p class="text-sm text-gray-600">Cultural Minority:</p><p class="font-medium">${formData.culturalMinority || "Not specified"}</p></div>
+                    <div class="sm:col-span-2"><p class="text-sm text-gray-600">Permanent Address:</p><p class="font-medium">${formData.address.street || ""}, ${formData.address.city || ""}, ${formData.address.province || ""} ${formData.address.postalCode || ""}</p></div>
+                    <div><p class="text-sm text-gray-600">Cultural Minority Group:</p><p class="font-medium">${formData.culturalMinority || "Not specified"}</p></div>
                     <div><p class="text-sm text-gray-600">Physical Disability:</p><p class="font-medium">${formData.physicalDisability || "Not specified"}</p></div>
-                </div>
-                <div class="mt-4"><p class="text-sm text-gray-600">Complete Address:</p><p class="font-medium">${formData.address.street}, ${formData.address.city}, ${formData.address.province} ${formData.address.postalCode}</p></div>
-                <div class="mt-4">
-                    <h5 class="font-medium text-gray-700 mb-2">Application Details</h5>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div><p class="text-sm text-gray-600">Date of Application:</p><p class="font-medium">${formData.applicationDate || "Not specified"}</p></div>
-                        <div><p class="text-sm text-gray-600">Academic Year:</p><p class="font-medium">${formData.academicYear || "Not specified"}</p></div>
-                    </div>
+                    <div><p class="text-sm text-gray-600">Date of Application:</p><p class="font-medium">${formData.dateOfApplication || "Not specified"}</p></div>
+                    <div><p class="text-sm text-gray-600">Academic Year:</p><p class="font-medium">${formData.academicYear || "Not specified"}</p></div>
                 </div>
             </div>
 
             <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <h4 class="font-medium text-gray-800 mb-4">Family Information</h4>
-                <div><p class="text-sm text-gray-600">Average Family Income:</p><p class="font-medium">${familyIncomeText}</p></div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                <h4 class="text-md font-semibold text-gray-700 mb-4">Family Details</h4>
+                 <div><p class="text-sm text-gray-600">Average Family Income (Monthly):</p><p class="font-medium">${incomeText}</p></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
                     <div>
                         <h5 class="font-medium text-gray-700 mb-2">Father's Information</h5>
                         <p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.father.name || "Not specified"}</span></p>
@@ -740,24 +588,23 @@
                     </div>
                     <div>
                         <h5 class="font-medium text-gray-700 mb-2">Mother's Information</h5>
-                        <p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.mother.name || "Not specified"}</span></p>
+                        <p class="text-sm text-gray-600">Maiden Name: <span class="font-medium">${formData.mother.name || "Not specified"}</span></p>
                         <p class="text-sm text-gray-600">Occupation: <span class="font-medium">${formData.mother.occupation || "Not specified"}</span></p>
                         <p class="text-sm text-gray-600">Company & Address: <span class="font-medium">${formData.mother.company || "Not specified"}</span></p>
                         <p class="text-sm text-gray-600">Contact No: <span class="font-medium">${formData.mother.contact || "Not specified"}</span></p>
                     </div>
-                    ${ (formData.guardian.name || formData.guardian.occupation || formData.guardian.company || formData.guardian.contact) ? `
                     <div>
-                        <h5 class="font-medium text-gray-700 mb-2">Guardian's Information</h5>
-                        <p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.guardian.name || "N/A"}</span></p>
-                        <p class="text-sm text-gray-600">Occupation: <span class="font-medium">${formData.guardian.occupation || "N/A"}</span></p>
-                        <p class="text-sm text-gray-600">Company & Address: <span class="font-medium">${formData.guardian.company || "N/A"}</span></p>
-                        <p class="text-sm text-gray-600">Contact No: <span class="font-medium">${formData.guardian.contact || "N/A"}</span></p>
-                    </div>` : '' }
+                        <h5 class="font-medium text-gray-700 mb-2">Guardian's Information (Optional)</h5>
+                        <p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.guardian.name || "Not specified"}</span></p>
+                        <p class="text-sm text-gray-600">Occupation: <span class="font-medium">${formData.guardian.occupation || "Not specified"}</span></p>
+                        <p class="text-sm text-gray-600">Company & Address: <span class="font-medium">${formData.guardian.company || "Not specified"}</span></p>
+                        <p class="text-sm text-gray-600">Contact No: <span class="font-medium">${formData.guardian.contact || "Not specified"}</span></p>
+                    </div>
                 </div>
             </div>
 
             <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <h4 class="font-medium text-gray-800 mb-4">Educational Background</h4>
+                <h4 class="text-md font-semibold text-gray-700 mb-4">Educational Background</h4>
                 <div>
                     <h5 class="font-medium text-gray-700 mb-2">Senior High School</h5>
                     <p class="text-sm text-gray-600">School Name: <span class="font-medium">${formData.education.shs.name || "Not specified"}</span></p>
@@ -765,21 +612,21 @@
                     <p class="text-sm text-gray-600">Strand: <span class="font-medium">${formData.education.shs.strand || "Not specified"}</span></p>
                     <p class="text-sm text-gray-600">Year: <span class="font-medium">${formData.education.shs.yearFrom || "N/A"} - ${formData.education.shs.yearTo || "N/A"}</span></p>
                 </div>
-                ${ (formData.education.tertiary.name || formData.education.tertiary.course) ? `
                 <div class="mt-4">
-                    <h5 class="font-medium text-gray-700 mb-2">College / ALS</h5>
-                    <p class="text-sm text-gray-600">School Name: <span class="font-medium">${formData.education.tertiary.name || "N/A"}</span></p>
-                    <p class="text-sm text-gray-600">Address: <span class="font-medium">${formData.education.tertiary.address || "N/A"}</span></p>
-                    <p class="text-sm text-gray-600">Program: <span class="font-medium">${formData.education.tertiary.course || "N/A"}</span></p>
+                    <h5 class="font-medium text-gray-700 mb-2">College (if any) / ALS Graduate (Optional)</h5>
+                    <p class="text-sm text-gray-600">School Name: <span class="font-medium">${formData.education.tertiary.name || "Not specified"}</span></p>
+                    <p class="text-sm text-gray-600">Address: <span class="font-medium">${formData.education.tertiary.address || "Not specified"}</span></p>
+                    <p class="text-sm text-gray-600">Program: <span class="font-medium">${formData.education.tertiary.course || "Not specified"}</span></p>
                     <p class="text-sm text-gray-600">Year: <span class="font-medium">${formData.education.tertiary.yearFrom || "N/A"} - ${formData.education.tertiary.yearTo || "N/A"}</span></p>
-                </div>` : '' }
-                <div class="mt-4">
-                    <h5 class="font-medium text-gray-700 mb-2">Document Updates</h5>
-                    <p class="text-sm text-gray-600">${photoReviewHTML}</p>
-                    <p class="text-sm text-gray-600">${diplomaReviewHTML}</p>
-                    <p class="text-sm text-gray-600">${cardReviewHTML}</p>
-                    <p class="text-sm text-gray-600">${birthCertReviewHTML}</p>
                 </div>
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h4 class="text-md font-semibold text-gray-700 mb-3">Document Updates:</h4>
+                <p class="text-xs">${photoReview}</p>
+                <p class="text-xs">${diplomaReview}</p>
+                <p class="text-xs">${cardReview}</p>
+                <p class="text-xs">${birthCertReview}</p>
             </div>
         </div>`;
         
@@ -877,8 +724,10 @@
                 if (file) {
                     const MAX_DOC_SIZE = 5 * 1024 * 1024; 
                     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    const isAllowedExtension = ['pdf', 'jpg', 'jpeg', 'png'].includes(fileExtension);
                     
-                    if (!allowedTypes.includes(file.type) && !allowedTypes.find(type => file.name.toLowerCase().endsWith(type.split('/')[1]))) {
+                    if (!allowedTypes.includes(file.type) && !isAllowedExtension) {
                         showToast(`⚠️ Invalid file type for ${labelText}. Allowed: PDF, JPG, PNG.`, "error");
                         input.value = ""; return;
                     }
@@ -896,15 +745,6 @@
         if(goTopBtn){
             window.addEventListener('scroll', () => { goTopBtn.style.display = window.scrollY > 200 ? "flex" : "none"; });
             goTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: "smooth" }); });
-        }
-        const menuToggle = document.querySelector('.menu-toggle');
-        const navigation = document.getElementById('main-navigation');
-        if (menuToggle && navigation) {
-            menuToggle.addEventListener('click', function() {
-                navigation.classList.toggle('active'); menuToggle.classList.toggle('active');
-                const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
-                menuToggle.setAttribute('aria-expanded', !isExpanded);
-            });
         }
     });
 </script>

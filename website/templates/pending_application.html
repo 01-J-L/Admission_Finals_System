@@ -1,5 +1,3 @@
-
-
 {% extends 'base.html' %}
 
 {% block title %}Application Status{% endblock %}
@@ -11,6 +9,9 @@
     .status-approved-color { color: #10b981; } /* Emerald 500 */
     .status-rejected-color { color: #ef4444; } /* Red 500 */
     .status-in-review-color { color: #3b82f6; } /* Blue 500 */
+    .status-passed-color { color: #0d9488; } /* Teal 600 from Tailwind config */
+    .status-failed-color { color: #ea580c; } /* Orange 600 from Tailwind config */
+
 
     .border-pending { border-left-color: #f59e0b; }
     .bg-pending-light { background-color: #fffbeb; } /* Amber 50 */
@@ -27,6 +28,14 @@
     .border-in-review { border-left-color: #3b82f6; }
     .bg-in-review-light { background-color: #eff6ff; } /* Blue 50 */
     .text-in-review-dark { color: #1d4ed8; } /* Blue 700 */
+
+    .border-passed { border-left-color: #0d9488; } /* Teal 600 */
+    .bg-passed-light { background-color: #ccfbf1; } /* Teal 100 */
+    .text-passed-dark { color: #115e59; } /* Teal 800 */
+
+    .border-failed { border-left-color: #ea580c; } /* Orange 600 */
+    .bg-failed-light { background-color: #ffedd5; } /* Orange 100 */
+    .text-failed-dark { color: #9a3412; } /* Orange 800 */
 
     .permit-stub-value {
         display: block;
@@ -81,12 +90,24 @@
     /* Styles for the sticky right sidebar wrapper on desktop */
     @media (min-width: 768px) { /* md breakpoint */
         #rightSidebarStickyWrapper {
-            /* top-28 is 7rem. We want some space at the bottom too, e.g., 1rem. */
-            /* So, max-height = viewport height - top offset - bottom gap */
-            max-height: calc(100vh - 7rem - 1rem); /* Adjust 1rem bottom gap as needed */
+            max-height: calc(100vh - 7rem - 1rem); 
             overflow-y: auto;
         }
     }
+    .exam-status-passed {
+        border-left-color: #10b981; /* Emerald 500 */
+        background-color: #ecfdf5; /* Emerald 50 */
+    }
+    .exam-status-passed-icon { color: #059669; } /* Emerald 600 */
+    .exam-status-passed-text { color: #047857; } /* Emerald 700 */
+
+    .exam-status-failed {
+        border-left-color: #ef4444; /* Red 500 */
+        background-color: #fef2f2; /* Red 50 */
+    }
+    .exam-status-failed-icon { color: #dc2626; } /* Red 600 */
+    .exam-status-failed-text { color: #b91c1c; } /* Red 700 */
+
 </style>
 {% endblock %}
 
@@ -101,12 +122,10 @@
             <!-- Left Sidebar -->
             <div class="w-full md:w-64 lg:w-72 shrink-0" id="fullSidebarContainer"> 
                 
-                <!-- Full Sidebar Content (Profile + Navigation) -->
                 <div id="fullSidebarContent" 
                      class="bg-white rounded-r-lg md:rounded-lg shadow-lg md:shadow-sm p-4 
                             md:sticky md:top-28 
-                            hidden <!-- Initially hidden by Tailwind, JS/CSS manage mobile visibility -->
-                            ">
+                            hidden">
                     <div class="flex items-center mb-4 p-2"> 
                         <div class="w-12 h-12 flex items-center justify-center overflow-hidden rounded-full bg-gray-100 mr-3 shrink-0">
                             {% if application and application.photo %}
@@ -134,12 +153,13 @@
                             Application Status
                         </a>
                          
-                        {% if application and (application.application_status == 'Pending' or application.application_status == 'In Review') %}
+                        {# MODIFIED: Logic for showing Edit/New application links #}
+                        {% if application and application.application_status in ['Pending', 'In Review'] %}
                         <a href="{{ url_for('auth.edit_application_page', applicant_id=application.applicant_id) }}" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-md {% if request.endpoint == 'auth.edit_application_page' %}bg-primary bg-opacity-10 text-primary{% else %}text-gray-700 hover:bg-gray-100 hover:text-primary{% endif %}">
                             <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-edit-2-line"></i></div>
                             Edit Application
                         </a>
-                        {% elif not application or application.application_status == 'Rejected' %}
+                        {% elif not application or application.application_status in ['Rejected', 'Failed'] %} {# Allow new application if Rejected or Failed #}
                         <a href="{{ url_for('views.new_student') }}" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-md {% if request.endpoint == 'views.new_student' %}bg-primary bg-opacity-10 text-primary{% else %}text-gray-700 hover:bg-gray-100 hover:text-primary{% endif %}">
                             <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-file-add-line"></i></div>
                             New Application
@@ -162,9 +182,6 @@
             <!-- Main Content Area -->
             <div class="flex-1 min-w-0">
                 <div id="dashboardSection">
-                    
-                    
-
                     <div class="mb-6 flex items-center gap-3">
                         <button id="inlineMenuToggleBtn" type="button" aria-expanded="false" aria-controls="fullSidebarContent"
                                 class="md:hidden p-2 -ml-2 text-gray-500 hover:text-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary rounded-md">
@@ -175,15 +192,23 @@
                     </div>
                     <p class="text-gray-600 mt-1 md:mt-0">Track the progress of your admission application.</p>
 
-
                     {% if application %}
                         {% set status = application.application_status %}
+                        {% set exam_status = application.exam_status %}
+
+                        {# Default values #}
                         {% set status_icon_class = 'ri-loader-4-line status-icon-lg' %}
                         {% set status_text_class = 'text-gray-700' %}
                         {% set status_border_class = 'border-gray-300' %}
                         {% set status_bg_light_class = 'bg-gray-100' %}
                         {% set status_main_color_class = 'text-gray-800' %}
-                        {% set status_message_detail = "Your application is being processed." %}
+                        {% set status_title = "Application Status: " + status %}
+                        {% set status_message = "Your application is being processed." %}
+                        {% set status_message_detail = "Please check your email or contact admissions for more details." %}
+                        {% set show_edit_button = false %}
+                        {% set show_enroll_button = false %}
+                        {% set show_new_app_advice = false %}
+
 
                         {% if status == 'Pending' %}
                             {% set status_icon_class = 'ri-time-line status-icon-lg status-pending-color' %}
@@ -194,6 +219,7 @@
                             {% set status_title = "Application Submitted!" %}
                             {% set status_message = "Your application is currently <strong class='" + status_text_class + "'>Pending Review</strong>." %}
                             {% set status_message_detail = "You will be notified via email (" + (application.email_address or 'your registered email') + ") once there is an update. You can also check back here. If you need to make changes, you can edit your application." %}
+                            {% set show_edit_button = true %}
                         {% elif status == 'In Review' %}
                             {% set status_icon_class = 'ri-file-search-line status-icon-lg status-in-review-color' %}
                             {% set status_text_class = 'text-blue-600 font-semibold' %}
@@ -203,6 +229,7 @@
                             {% set status_title = "Application In Review" %}
                             {% set status_message = "Your application is currently <strong class='" + status_text_class + "'>In Review</strong> by our admissions team." %}
                             {% set status_message_detail = "We appreciate your patience. Updates will be sent to " + (application.email_address or 'your registered email') + " and reflected here. Minor edits might still be possible." %}
+                            {% set show_edit_button = true %}
                         {% elif status == 'Approved' %}
                             {% set status_icon_class = 'ri-checkbox-circle-line status-icon-lg status-approved-color' %}
                             {% set status_text_class = 'text-emerald-600 font-semibold' %}
@@ -211,7 +238,8 @@
                             {% set status_main_color_class = 'text-approved-dark' %}
                             {% set status_title = "Congratulations! Application Approved" %}
                             {% set status_message = "Your application has been <strong class='" + status_text_class + "'>Approved</strong>!" %}
-                            {% set status_message_detail = "Further instructions regarding enrollment and next steps have been sent to " + (application.email_address or 'your registered email') + ". Please check your inbox (and spam folder)." %}
+                            {% set status_message_detail = "Further instructions regarding enrollment and next steps have been sent to " + (application.email_address or 'your registered email') + ". Please check your inbox (and spam folder). You can view your permit details by clicking the 'Proceed to Enrollment' button." %}
+                            {% set show_enroll_button = true %}
                         {% elif status == 'Rejected' %}
                             {% set status_icon_class = 'ri-close-circle-line status-icon-lg status-rejected-color' %}
                             {% set status_text_class = 'text-red-600 font-semibold' %}
@@ -221,11 +249,30 @@
                             {% set status_title = "Application Update" %}
                             {% set status_message = "After careful consideration, your application has been <strong class='" + status_text_class + "'>Rejected</strong>." %}
                             {% set status_message_detail = "We receive many qualified applications, and the selection process is highly competitive. We wish you the best in your future academic endeavors. If you have questions, please contact the admissions office." %}
+                            {% set show_new_app_advice = true %}
+                        {% elif status == 'Passed' %}
+                            {% set status_icon_class = 'ri-shield-check-line status-icon-lg status-passed-color' %}
+                            {% set status_text_class = 'text-teal-600 font-semibold' %}
+                            {% set status_border_class = 'border-passed' %}
+                            {% set status_bg_light_class = 'bg-passed-light' %}
+                            {% set status_main_color_class = 'text-passed-dark' %}
+                            {% set status_title = "Application Processed: Passed" %}
+                            {% set status_message = "Congratulations! Your application has <strong class='" + status_text_class + "'>Passed</strong> this stage." %}
+                            {% set status_message_detail = "Please await further instructions regarding the next steps or admission test results, which will be sent to " + (application.email_address or 'your registered email') + " and reflected here." %}
+                        {% elif status == 'Failed' %}
+                            {% set status_icon_class = 'ri-shield-cross-line status-icon-lg status-failed-color' %}
+                            {% set status_text_class = 'text-orange-600 font-semibold' %}
+                            {% set status_border_class = 'border-failed' %}
+                            {% set status_bg_light_class = 'bg-failed-light' %}
+                            {% set status_main_color_class = 'text-failed-dark' %}
+                            {% set status_title = "Application Processed: Failed" %}
+                            {% set status_message = "We regret to inform you that your application has <strong class='" + status_text_class + "'>Failed</strong> this stage." %}
+                            {% set status_message_detail = "This may be due to various reasons, including exam results or document verification. Please contact the admissions office if you have further questions." %}
+                            {% set show_new_app_advice = true %}
                         {% else %}
                              {% set status_icon_class = 'ri-error-warning-line status-icon-lg text-gray-500' %}
                              {% set status_title = "Application Status: " + status %}
                              {% set status_message = "Your application has a status of <strong class='" + status_text_class + "'>" + status + "</strong>." %}
-                             {% set status_message_detail = "Please check your email or contact admissions for more details." %}
                         {% endif %}
 
                         <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 {{ status_border_class }}">
@@ -239,7 +286,7 @@
                                         Hello, <strong class="text-primary">{{ application.first_name }} {{ application.last_name }}</strong>. {{ status_message | safe }}
                                     </p>
                                 </div>
-                                {% if application.application_status == 'Pending' or application.application_status == 'In Review' %}
+                                {% if show_edit_button %}
                                 <a href="{{ url_for('auth.edit_application_page', applicant_id=application.applicant_id) }}"
                                    class="mt-3 sm:mt-0 ml-0 sm:ml-auto bg-secondary text-white px-4 py-2 rounded-button whitespace-nowrap flex items-center text-sm hover:bg-secondary/90 transition-colors">
                                     <i class="ri-edit-2-line mr-2"></i>Edit Application
@@ -249,7 +296,7 @@
                             <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
                                 <div>
                                     <p class="text-gray-500">Application ID</p>
-                                    <p class="font-medium text-gray-800">APP-{{ "%04d" | format(application.applicant_id) }}</p>
+                                    <p class="font-medium text-gray-800">P2025{{ "%04d" | format(application.applicant_id) }}</p>
                                 </div>
                                 <div>
                                     <p class="text-gray-500">Program Choice</p>
@@ -259,24 +306,30 @@
                                     <p class="text-gray-500">Submitted On</p>
                                     <p class="font-medium text-gray-800">{{ application.submitted_at.strftime('%B %d, %Y at %I:%M %p') if application.submitted_at else 'N/A' }}</p>
                                 </div>
-                                {% if status == 'Approved' or status == 'Rejected' %}
+                                {# MODIFIED: Show decision date for Passed and Failed as well #}
+                                {% if status in ['Approved', 'Rejected', 'Passed', 'Failed'] and application.decision_date %}
                                 <div>
                                     <p class="text-gray-500">Decision Date</p>
-                                    <p class="font-medium text-gray-800">{{ application.decision_date.strftime('%B %d, %Y') if application.decision_date else 'N/A' }}</p>
+                                    <p class="font-medium text-gray-800">{{ application.decision_date.strftime('%B %d, %Y') }}</p>
                                 </div>
                                 {% endif %}
                             </div>
                              <p class="mt-4 text-sm text-gray-600 leading-relaxed">{{ status_message_detail | safe }}</p>
                             
-                            {% if status == 'Approved' %}
+                            {% if show_enroll_button %}
                             <div class="mt-6 flex flex-wrap gap-3">
-                                <button class="bg-primary text-white px-4 py-2 rounded-button whitespace-nowrap flex items-center text-sm hover:bg-primary/90 transition-colors">
-                                    <i class="ri-arrow-right-line mr-2"></i>Begin Enrollment
+                                <button id="proceedToEnrollmentBtn" type="button" class="bg-primary text-white px-4 py-2 rounded-button whitespace-nowrap flex items-center text-sm hover:bg-primary/90 transition-colors">
+                                    <i class="ri-arrow-right-line mr-2"></i> View Permit
                                 </button>
                             </div>
                             {% endif %}
                         </div>
                         
+                        <!-- Exam Status Section -->
+                       
+                        <!-- End Exam Status Section -->
+
+
                         {% if application.admin_notes %}
                         <div class="bg-blue-50 rounded-lg shadow-sm p-6 mt-6 border-l-4 border-blue-400">
                             <div class="flex items-start">
@@ -327,7 +380,9 @@
                                 </div>
                                 <p class="mt-4 text-xs text-gray-500">This is a summary. For full details or corrections, please edit your application (if available) or contact admissions.</p>
                             
-                                <div class="mt-6 pt-6 border-t">
+                                {# MODIFIED: Conditionally show Permit Stub here #}
+                                {% if status not in ['Approved', 'Passed', 'Failed'] %}
+                                <div class="mt-6 pt-6 border-t" id="permitStubContainerOriginal">
                                     <h4 class="font-medium text-gray-700 mb-3 text-md">College Admission Test Permit Stub</h4>
                                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                         <div class="lg:col-span-2">
@@ -363,11 +418,26 @@
                                             {% endif %}
                                         </div>
                                     </div>
+                                    {% if exam_status %}
+                                    <div class="mt-4 pt-4 border-t">
+                                        <label class="block text-xs text-gray-500 mb-1">Admission Exam Result</label>
+                                        {% if exam_status == 'Passed' %}
+                                        <span class="permit-stub-value text-green-700 font-semibold bg-green-50 border-green-300">PASSED</span>
+                                        {% elif exam_status == 'Failed' %}
+                                        <span class="permit-stub-value text-red-700 font-semibold bg-red-50 border-red-300">FAILED</span>
+                                        {% elif exam_status == 'Not Taken' %}
+                                        <span class="permit-stub-value text-gray-600 bg-gray-100">NOT YET TAKEN / RECORDED</span>
+                                        {% else %}
+                                        <span class="permit-stub-value text-gray-600 bg-gray-100">{{ exam_status }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
                                 </div>
+                                {% endif %} {# End of conditional Permit Stub in summary #}
                             </div>
                         </div>
                         
-                        {% if status == 'Rejected' %}
+                        {% if show_new_app_advice %}
                          <p class="mt-6 text-xs text-center text-gray-500">
                             You may submit a new application for a different program or the next admission cycle if applicable.
                         </p>
@@ -395,11 +465,10 @@
 
             <!-- Right Sidebar -->
             <div class="w-full md:w-80 lg:w-96 shrink-0">
-                <!-- New wrapper for sticky behavior and scrolling -->
                 <div id="rightSidebarStickyWrapper" class="md:sticky md:top-28">
-                    <div class="bg-white rounded-lg shadow-sm p-5 mb-6"> <!-- Removed md:sticky, md:top-28 -->
+                    <div class="bg-white rounded-lg shadow-sm p-5 mb-6"> 
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Important Information</h3>
-                        <div class="space-y-4 text-sm"> <!-- Removed .important-info-content-scrollable -->
+                        <div class="space-y-4 text-sm"> 
                             <div class="flex items-start">
                                 <i class="ri-information-line text-primary mr-3 mt-1 shrink-0 text-lg"></i>
                                 <p class="text-gray-600 leading-relaxed">Application status updates will be sent to your registered email address. Please check your inbox regularly (including spam/junk folders).</p>
@@ -414,7 +483,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow-sm p-5"> <!-- Removed md:sticky and complex md:top -->
+                    <div class="bg-white rounded-lg shadow-sm p-5"> 
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact Admissions</h3>
                         <div class="space-y-4 text-sm">
                             <div class="flex items-start">
@@ -428,7 +497,7 @@
                                 <i class="ri-mail-line text-gray-500 mr-3 mt-1 shrink-0 text-lg"></i>
                                 <div>
                                     <p class="font-medium text-gray-700">Email Support</p>
-                                    <a href="mailto:admissions@pgpc.example.edu.ph" class="text-primary hover:underline">admissions@pgpc.edu.ph</a>
+                                    admissions@pgpc.edu.ph
                                 </div>
                             </div>
                             <div class="flex items-start">
@@ -444,6 +513,84 @@
             </div>
         </div>
     </main>
+
+    <!-- MODAL FOR PERMIT STUB -->
+    <div id="permitStubModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
+        <div class="relative p-6 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3 border-b mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">College Admission Test Permit</h3>
+                <button id="closePermitStubModalBtn" type="button" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
+            </div>
+            <div id="modalPermitStubContentPrintable">
+                {% if application and status == 'Approved' %}
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Control No.</label>
+                                <span class="permit-stub-value">{{ application.permit_control_no or 'To be filled by admin' }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Date of Examination</label>
+                                <span class="permit-stub-value">{{ application.permit_exam_date.strftime('%B %d, %Y') if application.permit_exam_date else 'To be filled by admin' }}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Time</label>
+                                <span class="permit-stub-value">{{ application.permit_exam_time or 'To be filled by admin' }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Testing Room</label>
+                                <span class="permit-stub-value">{{ application.permit_testing_room or 'To be filled by admin' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center lg:justify-start mt-4 lg:mt-0">
+                        {% if application.photo %}
+                        <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}" alt="Applicant Photo" class="w-28 h-28 object-cover border rounded-md shadow-sm">
+                        {% else %}
+                        <div class="w-28 h-28 bg-gray-100 border rounded-md flex flex-col items-center justify-center text-gray-400">
+                            <i class="ri-image-line text-3xl"></i>
+                            <span class="text-xs mt-1">No Photo</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if exam_status %} {# Show exam status if available, relevant for approved status too #}
+                <div class="mt-4 pt-4 border-t">
+                    <label class="block text-xs text-gray-500 mb-1">Admission Exam Result</label>
+                    {% if exam_status == 'Passed' %}
+                    <span class="permit-stub-value text-green-700 font-semibold bg-green-50 border-green-300">PASSED</span>
+                    {% elif exam_status == 'Failed' %}
+                    <span class="permit-stub-value text-red-700 font-semibold bg-red-50 border-red-300">FAILED</span>
+                    {% elif exam_status == 'Not Taken' %}
+                    <span class="permit-stub-value text-gray-600 bg-gray-100">NOT YET TAKEN / RECORDED</span>
+                    {% else %}
+                    <span class="permit-stub-value text-gray-600 bg-gray-100">{{ exam_status }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-6">Note: This permit stub is for your reference. Official instructions for enrollment and other next steps will be provided by the admissions office.</p>
+                {% else %}
+                <p class="text-gray-600">Permit details are not applicable or available for this application status.</p>
+                {% endif %}
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="closePermitStubModalBtnSecondary" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-button focus:outline-none">
+                    Close
+                </button>
+                {% if application and status == 'Approved' %}
+                <button id="printPermitStubBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-button flex items-center focus:outline-none">
+                    <i class="ri-printer-line mr-2"></i>Print Permit
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- END MODAL -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -472,7 +619,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Mobile Sidebar Toggling Logic (Single Inline Toggle)
+    // Mobile Sidebar Toggling Logic
     const inlineMenuToggleBtn = document.getElementById('inlineMenuToggleBtn'); 
     const inlineMenuIcon = document.getElementById('inlineMenuIcon'); 
     const fullSidebarContent = document.getElementById('fullSidebarContent');
@@ -481,13 +628,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function openMobileSidebar() {
         if (!fullSidebarContent || !inlineMenuToggleBtn || !inlineMenuIcon || !sidebarOverlay) return;
-
         fullSidebarContent.classList.add('mobile-sidebar-visible');
-        // Ensure 'hidden' is removed if present, so 'display: block !important' from CSS can take effect
         fullSidebarContent.classList.remove('hidden'); 
         sidebarOverlay.classList.remove('hidden');
         document.body.style.overflow = 'hidden'; 
-
         inlineMenuToggleBtn.setAttribute('aria-expanded', 'true');
         inlineMenuIcon.classList.remove('ri-menu-line');
         inlineMenuIcon.classList.add('ri-close-line');
@@ -495,17 +639,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function closeMobileSidebar() {
         if (!fullSidebarContent || !inlineMenuToggleBtn || !inlineMenuIcon || !sidebarOverlay) return;
-
         fullSidebarContent.classList.remove('mobile-sidebar-visible');
-        // On mobile, after closing, it should revert to being 'hidden' by Tailwind if not for md:
-        // The CSS transform will keep it off-screen. Adding 'hidden' is a good safety.
-        if (window.innerWidth < 768) {
+        if (window.innerWidth < 768) { // md breakpoint
             fullSidebarContent.classList.add('hidden');
         }
-        
         sidebarOverlay.classList.add('hidden');
         document.body.style.overflow = '';
-
         inlineMenuToggleBtn.setAttribute('aria-expanded', 'false');
         inlineMenuIcon.classList.remove('ri-close-line');
         inlineMenuIcon.classList.add('ri-menu-line');
@@ -520,44 +659,143 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileSidebar);
+    if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeMobileSidebar);
 
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', closeMobileSidebar);
-    }
-    if (closeSidebarBtn) {
-        closeSidebarBtn.addEventListener('click', closeMobileSidebar);
-    }
-
-    // Ensure sidebar is correctly hidden/shown on resize
     function handleResize() {
         if (!fullSidebarContent) return;
-
-        if (window.innerWidth >= 768) { // Desktop
-            if (fullSidebarContent.classList.contains('mobile-sidebar-visible')) {
-                closeMobileSidebar(); 
-            }
-            fullSidebarContent.classList.remove('mobile-sidebar-visible'); // Ensure no mobile styles apply
-            fullSidebarContent.classList.remove('hidden'); // Allow md:sticky to show it
-            if(sidebarOverlay) sidebarOverlay.classList.add('hidden'); // Ensure overlay is hidden
-            document.body.style.overflow = ''; // Ensure body scroll is enabled
-        } else { // Mobile
-            // If it's not already set up for mobile view (i.e. mobile-sidebar-visible is not there),
-            // ensure it's hidden by default.
+        if (window.innerWidth >= 768) { // md breakpoint
+            if (fullSidebarContent.classList.contains('mobile-sidebar-visible')) closeMobileSidebar(); 
+            fullSidebarContent.classList.remove('mobile-sidebar-visible', 'hidden');
+            if(sidebarOverlay) sidebarOverlay.classList.add('hidden');
+            document.body.style.overflow = ''; 
+        } else { 
             if (!fullSidebarContent.classList.contains('mobile-sidebar-visible')) {
                 fullSidebarContent.classList.add('hidden');
             }
         }
     }
-
     window.addEventListener('resize', handleResize);
     
-    // Initial setup on load
     if (fullSidebarContent) {
-        if (window.innerWidth < 768) {
-            fullSidebarContent.classList.add('hidden');
-        } else {
-            fullSidebarContent.classList.remove('hidden'); // For desktop, ensure it's not hidden by default
+        if (window.innerWidth < 768) fullSidebarContent.classList.add('hidden');
+        else fullSidebarContent.classList.remove('hidden');
+    }
+
+    // Permit Stub Modal Logic
+    const proceedToEnrollmentBtn = document.getElementById('proceedToEnrollmentBtn');
+    const permitStubModal = document.getElementById('permitStubModal');
+    const closePermitStubModalBtn = document.getElementById('closePermitStubModalBtn');
+    const closePermitStubModalBtnSecondary = document.getElementById('closePermitStubModalBtnSecondary');
+    const printPermitStubBtn = document.getElementById('printPermitStubBtn');
+
+    function openPermitModal() {
+        if (permitStubModal) {
+            permitStubModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; 
         }
+    }
+
+    function closePermitModal() {
+        if (permitStubModal) {
+            permitStubModal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+
+    if (proceedToEnrollmentBtn) {
+        proceedToEnrollmentBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            // The button visibility is already controlled by Jinja based on 'Approved' status
+            openPermitModal();
+        });
+    }
+
+    if (closePermitStubModalBtn) {
+        closePermitStubModalBtn.addEventListener('click', closePermitModal);
+    }
+    if (closePermitStubModalBtnSecondary) {
+        closePermitStubModalBtnSecondary.addEventListener('click', closePermitModal);
+    }
+
+    if (permitStubModal) { // Close modal if clicking on the overlay
+        permitStubModal.addEventListener('click', function(event) {
+            if (event.target === permitStubModal) {
+                closePermitModal();
+            }
+        });
+    }
+    
+    // Keyboard accessibility for modal
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && permitStubModal && !permitStubModal.classList.contains('hidden')) {
+            closePermitModal();
+        }
+    });
+
+
+    if (printPermitStubBtn) {
+        printPermitStubBtn.addEventListener('click', function() {
+            const printableArea = document.getElementById('modalPermitStubContentPrintable');
+            if (printableArea) {
+                const printWindow = window.open('', '_blank', 'height=600,width=800');
+                printWindow.document.write('<html><head><title>Print Permit</title>');
+                printWindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">'); // Optional: Include Tailwind for basic print styling
+                printWindow.document.write('<style>');
+                printWindow.document.write(`
+                    @media print {
+                        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 20px !important; }
+                        .permit-stub-value {
+                            display: block !important; width: 100% !important; padding: 0.5rem 0.75rem !important;
+                            border: 1px solid #d1d5db !important; border-radius: 0.375rem !important;
+                            background-color: #f9fafb !important; font-size: 0.875rem !important;
+                            color: #374151 !important; min-height: 38px !important; line-height: 1.5 !important;
+                            margin-bottom: 0.5rem !important;
+                        }
+                        label.block { font-size: 0.75rem !important; color: #6b7280 !important; margin-bottom: 0.25rem !important; display: block !important;}
+                        .grid { display: grid !important; }
+                        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+                        .sm\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+                        .lg\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+                        .lg\\:col-span-2 { grid-column: span 2 / span 2 !important; }
+                        .gap-4 { gap: 1rem !important; } .gap-6 { gap: 1.5rem !important; }
+                        .mb-4 { margin-bottom: 1rem !important; } .mt-4 { margin-top: 1rem !important; } .pt-4 { padding-top: 1rem !important; }
+                        .border-t { border-top: 1px solid #e5e7eb !important; }
+                        img { max-width: 112px !important; max-height: 112px !important; border: 1px solid #e5e7eb !important; object-fit: cover !important; border-radius: 0.375rem !important; }
+                        .text-green-700 { color: #047857 !important; } .font-semibold { font-weight: 600 !important; }
+                        .bg-green-50 { background-color: #ecfdf5 !important; } .border-green-300 { border-color: #6ee7b7 !important; }
+                        .text-red-700 { color: #b91c1c !important; } .bg-red-50 { background-color: #fef2f2 !important; } .border-red-300 { border-color: #fca5a5 !important; }
+                        .text-gray-600 { color: #4b5563 !important; } .bg-gray-100 { background-color: #f3f4f6 !important; }
+                        .text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
+                        .mt-6 { margin-top: 1.5rem !important; }
+                        .flex { display: flex !important; } .items-center { align-items: center !important; } .justify-center { justify-content: center !important; }
+                        .lg\\:justify-start { justify-content: flex-start !important; }
+                        .flex-col { flex-direction: column !important; }
+                        .text-3xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
+                         h4 { font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
+                        /* Hide buttons in print view */
+                        #closePermitStubModalBtn, #closePermitStubModalBtnSecondary, #printPermitStubBtn, .no-print { display: none !important; }
+                    }
+                `);
+                printWindow.document.write('</style></head><body class="p-4">'); // Added p-4 for some margin
+                printWindow.document.write('<div class="container mx-auto">');
+                printWindow.document.write('<h3 class="text-xl font-semibold text-gray-900 mb-4">College Admission Test Permit</h3>');
+                printWindow.document.write(printableArea.innerHTML);
+                printWindow.document.write('</div>');
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                
+                // Timeout to ensure content is loaded before printing, especially for images
+                setTimeout(function() {
+                    printWindow.focus(); // Gaining focus for some browsers
+                    printWindow.print();
+                    // printWindow.close(); // Optional: close after printing
+                }, 500); // Adjust timeout as needed
+
+            } else {
+                alert("Could not find printable content.");
+            }
+        });
     }
 });
 </script>

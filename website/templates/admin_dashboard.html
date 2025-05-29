@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard - PGPC</title>
 <script src="https://cdn.tailwindcss.com/3.4.1"></script>
-<script>tailwind.config={theme:{extend:{colors:{primary:'#4f46e5',secondary:'#6366f1'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4f46e5',secondary:'#6366f1', teal: { 100: '#ccfbf1', 600: '#0d9488', 800: '#115e59' }, orange: { 100: '#ffedd5', 600: '#ea580c', 800: '#9a3412' } },borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,6 +40,69 @@
     .toast-notification.info { background-color: #17a2b8; }
     @keyframes status-flash { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
     .status-flash-animation { animation: status-flash 0.6s ease-in-out; }
+    .document-link {
+        color: #4f46e5; /* primary color */
+        text-decoration: underline;
+    }
+    .document-link:hover {
+        color: #4338ca; /* darker primary */
+    }
+    /* Styles for radio buttons in admin add form */
+    #addApplicationContent input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #d1d5db; /* gray-300 */
+        border-radius: 50%;
+        outline: none;
+        cursor: pointer;
+        margin-right: 0.25rem; /* Tailwind's mr-1 */
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+    #addApplicationContent input[type="radio"]:checked {
+        background-color: #4f46e5; /* primary */
+        border-color: #4f46e5; /* primary */
+    }
+    #addApplicationContent input[type="radio"]:checked::before {
+        content: '';
+        display: block;
+        width: 8px;
+        height: 8px;
+        margin: 2px; /* Adjust to center the dot */
+        background-color: white;
+        border-radius: 50%;
+    }
+     /* Styles for checkbox in admin add form */
+    #addApplicationContent input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #d1d5db; /* gray-300 */
+        border-radius: 4px; /* sm */
+        outline: none;
+        cursor: pointer;
+        margin-right: 0.25rem; /* Tailwind's mr-1 */
+        display: inline-block;
+        vertical-align: middle;
+        position: relative;
+    }
+    #addApplicationContent input[type="checkbox"]:checked {
+        background-color: #4f46e5; /* primary */
+        border-color: #4f46e5; /* primary */
+    }
+    #addApplicationContent input[type="checkbox"]:checked::before {
+        content: "✓";
+        font-size: 12px;
+        color: white;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        line-height: 1;
+    }
+
 </style>
 </head>
 <body class="flex">
@@ -76,8 +138,20 @@
                     <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-close-circle-line"></i></div>
                     Rejected <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full" id="rejectedCountSide">{{ stats.rejected if stats else '0' }}</span>
                 </a>
+                <a href="#" id="passedFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-teal-600 hover:bg-gray-50 rounded">
+                    <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-shield-check-line"></i></div>
+                    Passed <span class="ml-auto bg-teal-100 text-teal-800 text-xs font-medium px-2 py-0.5 rounded-full" id="passedCountSide">{{ stats.passed if stats else '0' }}</span>
+                </a>
+                <a href="#" id="failedFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-orange-600 hover:bg-gray-50 rounded">
+                    <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-shield-cross-line"></i></div>
+                    Failed <span class="ml-auto bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded-full" id="failedCountSide">{{ stats.failed if stats else '0' }}</span>
+                </a>
             </div>
         </div>
+         <a href="#" id="sidebarAddApplicationMenuLink" class="flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded">
+            <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-user-add-line"></i></div>
+            Add New Application
+        </a>
     </nav>
     <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
         <a href="{{ url_for('auth.logout') }}" class="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-button border border-gray-300 w-full">
@@ -124,7 +198,7 @@
         </div>
 
         <div id="dashboardContent">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
@@ -169,7 +243,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 md:col-span-2 lg:col-span-1">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-500 text-sm">In Review</p>
@@ -177,6 +251,28 @@
                         </div>
                         <div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg">
                              <i class="ri-file-search-line ri-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm">Passed</p>
+                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsPassed">{{ stats.passed if stats else '0' }}</h2>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-teal-100 text-teal-600 rounded-lg">
+                            <i class="ri-shield-check-line ri-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm">Failed</p>
+                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsFailed">{{ stats.failed if stats else '0' }}</h2>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-orange-100 text-orange-600 rounded-lg">
+                            <i class="ri-shield-cross-line ri-lg"></i>
                         </div>
                     </div>
                 </div>
@@ -201,6 +297,9 @@
         <div id="applicationsContent" style="display: none;" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
                 <h3 id="mainPageTitle" class="text-xl font-semibold text-gray-800">Applications</h3>
+                <button id="printReportBtn" class="px-4 py-2 bg-primary text-white rounded text-sm font-medium !rounded-button flex items-center hover:bg-primary/90">
+                    <i class="ri-printer-line mr-2"></i>Print Report
+                </button>
             </div>
 
             <div class="bg-gray-50 p-4 rounded shadow-inner border border-gray-200 mb-6">
@@ -228,6 +327,12 @@
                     </button>
                     <button id="bulkRejectBtn" class="px-3 py-1.5 bg-red-100 text-red-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-red-200">
                         <i class="ri-close-line mr-1"></i> Reject
+                    </button>
+                    <button id="bulkPassBtn" class="px-3 py-1.5 bg-teal-100 text-teal-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-teal-200">
+                        <i class="ri-shield-check-line mr-1"></i> Pass
+                    </button>
+                    <button id="bulkFailBtn" class="px-3 py-1.5 bg-orange-100 text-orange-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-orange-200">
+                        <i class="ri-shield-cross-line mr-1"></i> Fail
                     </button>
                     <button id="bulkDeleteBtn" class="px-3 py-1.5 bg-gray-100 text-red-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-gray-200">
                         <i class="ri-delete-bin-line mr-1"></i> Delete
@@ -273,6 +378,81 @@
             </div>
             <div id="viewModalBackdrop" class="modal-backdrop"></div>
 
+            <!-- Admin Notes Modal -->
+            <div id="adminNotesModal" class="modal w-full max-w-lg">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h3 class="text-xl font-semibold text-gray-900" id="adminNotesModalTitle">Admin Notes</h3>
+                    <button id="closeAdminNotesModalIcon" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line ri-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <label for="adminNotesTextareaModal" class="block text-sm font-medium text-gray-700">Notes for Application <span id="adminNotesAppId" class="font-semibold"></span>:</label>
+                    <textarea id="adminNotesTextareaModal" name="admin_notes_modal" rows="4" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-primary focus:border-primary p-2"></textarea>
+                </div>
+                <div class="mt-4 flex justify-end space-x-2">
+                    <button id="cancelAdminNotesBtn" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300">Cancel</button>
+                    <button id="saveAdminNotesModalBtn" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90">Save Notes</button>
+                </div>
+            </div>
+            <div id="adminNotesModalBackdrop" class="modal-backdrop"></div>
+
+            <!-- Control Number Modal -->
+            <div id="adminControlNumberModal" class="modal w-full max-w-md">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h3 class="text-xl font-semibold text-gray-900" id="adminControlNumberModalTitle">Application Control Number</h3>
+                    <button id="closeAdminControlNumberModalIcon" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line ri-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <label for="adminControlNumberInputModal" class="block text-sm font-medium text-gray-700">Control Number for Application <span id="adminControlNumberAppId" class="font-semibold"></span>:</label>
+                    <input type="text" id="adminControlNumberInputModal" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                </div>
+                <div class="mt-4 flex justify-end space-x-2">
+                     <button id="cancelAdminControlNumberBtn" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300">Cancel</button>
+                    <button id="saveAdminControlNumberModalBtn" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90">Save Control No.</button>
+                </div>
+            </div>
+            <div id="adminControlNumberModalBackdrop" class="modal-backdrop"></div>
+
+            <!-- Permit Details Modal -->
+            <div id="adminPermitDetailsModal" class="modal w-full max-w-xl">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h3 class="text-xl font-semibold text-gray-900" id="adminPermitDetailsModalTitle">Admission Test Permit Details</h3>
+                    <button id="closeAdminPermitDetailsModalIcon" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line ri-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-4 space-y-4">
+                     <p class="text-sm text-gray-600">For Application <span id="adminPermitAppId" class="font-semibold"></span>:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <label for="permitControlNoModal" class="block text-xs font-medium text-gray-700">Permit Control No.</label>
+                            <input type="text" id="permitControlNoModal" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        </div>
+                        <div>
+                            <label for="permitExamDateModal" class="block text-xs font-medium text-gray-700">Date of Examination</label>
+                            <input type="date" id="permitExamDateModal" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        </div>
+                        <div>
+                            <label for="permitExamTimeModal" class="block text-xs font-medium text-gray-700">Time</label>
+                            <input type="text" id="permitExamTimeModal" placeholder="e.g., 09:00 AM" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        </div>
+                        <div>
+                            <label for="permitTestingRoomModal" class="block text-xs font-medium text-gray-700">Testing Room</label>
+                            <input type="text" id="permitTestingRoomModal" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button id="cancelAdminPermitDetailsBtn" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300">Cancel</button>
+                    <button id="saveAdminPermitDetailsModalBtn" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90">Save Permit Details</button>
+                </div>
+            </div>
+            <div id="adminPermitDetailsModalBackdrop" class="modal-backdrop"></div>
+
+
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="min-w-full divide-y divide-gray-200" id="applicationsTable">
                      <thead class="bg-gray-50">
@@ -317,12 +497,27 @@
                                     {% if current_status == 'approved' %}{% set status_class = 'bg-green-100 text-green-800' %}
                                     {% elif current_status == 'rejected' %}{% set status_class = 'bg-red-100 text-red-800' %}
                                     {% elif current_status == 'in_review' %}{% set status_class = 'bg-blue-100 text-blue-800' %}
-                                    {% elif current_status == 'pending' %}{% set status_class = 'bg-yellow-100 text-yellow-800' %}{% endif %}
+                                    {% elif current_status == 'pending' %}{% set status_class = 'bg-yellow-100 text-yellow-800' %}
+                                    {% elif current_status == 'passed' %}{% set status_class = 'bg-teal-100 text-teal-800' %}
+                                    {% elif current_status == 'failed' %}{% set status_class = 'bg-orange-100 text-orange-800' %}
+                                    {% endif %}
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge {{ status_class }}">{{ app.application_status or 'N/A' }}</span>
                                 </td>
                                 <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                                     <div class="flex space-x-1 justify-end items-center">
                                         <button class="text-gray-500 hover:text-primary p-1 action-view" title="View Details" data-id="{{ app.applicant_id }}"><i class="ri-eye-line ri-lg"></i></button>
+                                        
+                                        <a href="{{ url_for('auth.admin_edit_application_page', applicant_id=app.applicant_id) }}" class="text-gray-500 hover:text-blue-500 p-1 action-edit-admin" title="Edit Application" data-id="{{ app.applicant_id }}">
+                                            <i class="ri-pencil-line ri-lg"></i>
+                                        </a>
+                                        
+                                        <a href="{{ url_for('auth.admin_print_application_form', applicant_id=app.applicant_id) }}" target="_blank" class="text-gray-500 hover:text-green-500 p-1 action-print" title="Print Application Form">
+                                            <i class="ri-printer-line ri-lg"></i>
+                                        </a>
+
+                                        <button class="text-gray-500 hover:text-yellow-600 p-1 action-admin-notes" title="Admin Notes" data-id="{{ app.applicant_id }}"><i class="ri-sticky-note-line ri-lg"></i></button>
+                                        <button class="text-gray-500 hover:text-purple-600 p-1 action-control-number" title="Control Number" data-id="{{ app.applicant_id }}"><i class="ri-fingerprint-line ri-lg"></i></button>
+                                        <button class="text-gray-500 hover:text-teal-600 p-1 action-permit-details" title="Permit Details" data-id="{{ app.applicant_id }}"><i class="ri-ticket-line ri-lg"></i></button>
                                         <div class="dropdown relative action-status-dropdown">
                                             <button class="text-gray-500 hover:text-primary p-1" title="Change Status">
                                                  <i class="ri-arrow-down-s-fill ri-lg"></i>
@@ -332,6 +527,8 @@
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Rejected">Reject</a>
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="In Review">Set In Review</a>
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Pending">Set Pending</a>
+                                                <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Passed">Set Passed</a>
+                                                <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Failed">Set Failed</a>
                                             </div>
                                         </div>
                                         <button class="text-gray-500 hover:text-red-500 p-1 action-delete-single" title="Delete Application" data-id="{{ app.applicant_id }}"><i class="ri-delete-bin-line ri-lg"></i></button>
@@ -346,28 +543,277 @@
                 </table>
             </div>
         </div>
+
+        <!-- Add New Application Form Section -->
+        <div id="addApplicationContent" style="display: none;" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6">Add New Student Application</h3>
+            <form id="adminAddApplicationForm" enctype="multipart/form-data">
+                <!-- Personal Information Section -->
+                <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+                    <legend class="text-lg font-semibold text-gray-700 px-2">Personal Information</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                        <div class="md:col-span-2">
+                            <div class="mb-6">
+                                <label class="block text-gray-700 font-medium mb-2">Program (Course) <span class="text-red-500">*</span></label>
+                                <select name="program_choice" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" required>
+                                    <option value="">Select a Program</option>
+                                    <option value="Bachelor of Science in Computer Science">Bachelor of Science in Computer Science</option>
+                                    <option value="Bachelor of Science in Management Accounting">Bachelor of Science in Management Accounting</option>
+                                    <option value="Bachelor of Public Administration">Bachelor of Public Administration</option>
+                                    <option value="Bachelor of Science in Criminology">Bachelor of Science in Criminology</option>
+                                </select>
+                            </div>
+                            <div class="mb-6">
+                                <label class="block text-gray-700 font-medium mb-2">Full Name <span class="text-red-500">*</span></label>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Last Name" name="last_name" required><p class="text-xs text-gray-500 mt-1">Last Name</p></div>
+                                    <div><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="First Name" name="first_name" required><p class="text-xs text-gray-500 mt-1">First Name</p></div>
+                                    <div><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Middle Name" name="middle_name"><p class="text-xs text-gray-500 mt-1">Middle Name (Optional)</p></div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div><label class="block text-gray-700 font-medium mb-2">Date of Birth <span class="text-red-500">*</span></label><input type="date" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="date_of_birth" required></div>
+                                <div><label class="block text-gray-700 font-medium mb-2">Place of Birth <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="City/Municipality" name="place_of_birth" required></div>
+                            </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Sex <span class="text-red-500">*</span></label>
+                                    <div class="flex gap-6 mt-2">
+                                        <div class="flex items-center"><input type="radio" name="sex" value="Female" required><label class="ml-2 text-gray-700">Female</label></div>
+                                        <div class="flex items-center"><input type="radio" name="sex" value="Male" required><label class="ml-2 text-gray-700">Male</label></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Civil Status <span class="text-red-500">*</span></label>
+                                    <div class="flex flex-wrap gap-4 mt-2">
+                                        <div class="flex items-center"><input type="radio" name="civil_status" value="Single" required><label class="ml-2 text-gray-700">Single</label></div>
+                                        <div class="flex items-center"><input type="radio" name="civil_status" value="Married" required><label class="ml-2 text-gray-700">Married</label></div>
+                                        <div class="flex items-center"><input type="radio" name="civil_status" value="Widower" required><label class="ml-2 text-gray-700">Widower</label></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div><label class="block text-gray-700 font-medium mb-2">Religion <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Your religion" name="religion" required></div>
+                                <div><label class="block text-gray-700 font-medium mb-2">Citizenship <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Your citizenship" name="citizenship" required></div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div><label class="block text-gray-700 font-medium mb-2">Mobile No. <span class="text-red-500">*</span></label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Applicant's mobile number" name="mobile_number" required></div>
+                                <div><label class="block text-gray-700 font-medium mb-2">Email Address <span class="text-red-500">*</span></label><input type="email" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Applicant's email address" name="email_address" required></div>
+                            </div>
+                            <div class="mb-6">
+                                <label class="block text-gray-700 font-medium mb-2">Permanent Address <span class="text-red-500">*</span></label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Street, Barangay" name="permanent_address_street_barangay" required>
+                                <div class="grid grid-cols-2 gap-4 mt-2">
+                                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="City/Municipality" name="permanent_address_city_municipality" required>
+                                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Province" name="permanent_address_province" required>
+                                </div>
+                                <div class="mt-2"><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Postal Code" name="permanent_address_postal_code" required></div>
+                            </div>
+                             <div class="mb-6">
+                                <label class="block text-gray-700 font-medium mb-2">Are you a member of Cultural Minority Group? <span class="text-red-500">*</span></label>
+                                <div class="flex gap-6 mt-2">
+                                    <div class="flex items-center"><input type="radio" name="cultural_minority_group" value="No" required><label class="ml-2 text-gray-700">No</label></div>
+                                    <div class="flex items-center"><input type="radio" name="cultural_minority_group" value="Yes" required><label class="ml-2 text-gray-700">Yes</label></div>
+                                </div>
+                            </div>
+                            <div class="mb-6">
+                                <label class="block text-gray-700 font-medium mb-2">Do you have any physical disability or condition that requires special attention? <span class="text-red-500">*</span></label>
+                                <div class="flex gap-6 mt-2">
+                                    <div class="flex items-center"><input type="radio" name="physical_disability" value="No" required><label class="ml-2 text-gray-700">No</label></div>
+                                    <div class="flex items-center"><input type="radio" name="physical_disability" value="Yes" required><label class="ml-2 text-gray-700">Yes</label></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div id="adminPhotoPreviewContainer" class="w-32 h-32 bg-gray-200 border border-gray-300 rounded flex items-center justify-center mb-2 relative overflow-hidden">
+                                        <img id="adminPhotoPreview" class="hidden w-full h-full object-cover"/>
+                                        <i id="adminPhotoPlaceholder" class="ri-user-line text-gray-400 text-4xl"></i>
+                                    </div>
+                                    <p class="text-sm text-gray-700 text-center mb-2">Attach Recent 2x2 Photo (Optional for Admin)</p>
+                                    <input type="file" id="adminPhotoInput" name="photo" accept="image/*" class="hidden"/>
+                                    <button type="button" id="adminUploadPhotoBtn" class="bg-primary text-white px-4 py-2 rounded-button text-sm whitespace-nowrap">Upload Photo</button>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h4 class="font-medium text-gray-800 mb-2">Application Details</h4>
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm mb-1">Date of Application <span class="text-red-500">*</span></label>
+                                    <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="date_of_application" id="adminDateOfApplication" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-1">Academic Year <span class="text-red-500">*</span></label>
+                                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="2025-2026" name="academic_year" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Family Details Section -->
+                <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+                    <legend class="text-lg font-semibold text-gray-700 px-2">Family Details</legend>
+                     <div class="mb-6 mt-4">
+                        <label class="block text-gray-700 font-medium mb-2">Average Family Income (Monthly) <span class="text-red-500">*</span></label>
+                        <select name="average_family_income" required class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                            <option value="">Select family income</option>
+                            <option value="10000_below">₱10,000 below</option>
+                            <option value="10001_to_20000">₱10,001 - 20,000</option>
+                            <option value="20001_to_30000">₱20,001 - 30,000</option>
+                            <option value="30001_to_40000">₱30,001 - 40,000</option>
+                            <option value="40001_to_50000">₱40,001 - 50,000</option>
+                            <option value="50001_to_100000">₱50,001 - 100,000</option>
+                            <option value="100001_above">₱100,001 above</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-4">Father's Information</h4>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Father's Name <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Full name" name="father_name" required></div>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Occupation" name="father_occupation" required></div>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Company name and address" name="father_company_address" required></div>
+                            <div><label class="block text-gray-700 text-sm mb-2">Contact No. <span class="text-red-500">*</span></label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Mobile number" name="father_contact_number" required></div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-4">Mother's Information</h4>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Mother's Maiden Name <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Full maiden name" name="mother_maiden_name" required></div>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Occupation" name="mother_occupation" required></div>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Company name and address" name="mother_company_address" required></div>
+                            <div><label class="block text-gray-700 text-sm mb-2">Contact No. <span class="text-red-500">*</span></label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Mobile number" name="mother_contact_number" required></div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-4">Guardian's Information (Optional)</h4>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Guardian's Name</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Full name" name="guardian_name"></div>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Occupation" name="guardian_occupation"></div>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Company name and address" name="guardian_company_address"></div>
+                            <div><label class="block text-gray-700 text-sm mb-2">Contact No.</label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Mobile number" name="guardian_contact_number"></div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Educational Background Section -->
+                <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+                    <legend class="text-lg font-semibold text-gray-700 px-2">Educational Background</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-4">
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-4">Senior High School</h4>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">SHS Name <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="School name" name="senior_high_school" required></div>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Address (Brgy, City/Town, Province) <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="School address" name="senior_high_school_address" required></div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm mb-2">Strand <span class="text-red-500">*</span></label>
+                                <select name="senior_high_school_track_strand" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary pr-8" required>
+                                    <option value="">Select strand</option>
+                                    <option value="STEM">STEM (Science, Technology, Engineering, and Mathematics)</option>
+                                    <option value="ABM">ABM (Accountancy, Business, and Management)</option>
+                                    <option value="HUMSS">HUMSS (Humanities and Social Sciences)</option>
+                                    <option value="GAS">GAS (General Academic Strand)</option>
+                                    <option value="TVL">TVL (Technical-Vocational-Livelihood)</option>
+                                    <option value="SPORTS">Sports</option>
+                                    <option value="ARTS">Arts and Design</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm mb-2">Inclusive Dates (Year) <span class="text-red-500">*</span></label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="From (YYYY)" name="senior_high_school_year_from" pattern="\d{4}" title="Enter a 4-digit year" required>
+                                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="To (YYYY)" name="senior_high_school_year_to" pattern="\d{4}" title="Enter a 4-digit year" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-4">College (if any) / ALS Graduate (Optional)</h4>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">School Name</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="School name" name="tertiary_school"></div>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Address (Brgy, City/Town, Province)</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="School address" name="tertiary_school_address"></div>
+                            <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Program</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Program/Course" name="tertiary_course"></div>
+                            <div>
+                                <label class="block text-gray-700 text-sm mb-2">Inclusive Dates (Year)</label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="From (YYYY)" name="tertiary_year_from" pattern="\d{4}" title="Enter a 4-digit year">
+                                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="To (YYYY)" name="tertiary_year_to" pattern="\d{4}" title="Enter a 4-digit year">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Required Documents Section -->
+                <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+                    <legend class="text-lg font-semibold text-gray-700 px-2">Required Documents (Optional for Admin)</legend>
+                    <p class="text-sm text-gray-600 my-4">Upload clear copies. Max 5MB per file. Accepted formats: PDF, JPG, PNG.</p>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="admin_shs_diploma_file_input">1. Certified True Copy of Senior High School Diploma</label>
+                        <input type="file" id="admin_shs_diploma_file_input" name="shs_diploma_file_input" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="admin_shs_card_file_input">2. Original Senior High School Report Card (Form 138)</label>
+                        <input type="file" id="admin_shs_card_file_input" name="shs_card_file_input" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="admin_birth_certificate_file_input">3. Photocopy of PSA/NSO Birth Certificate</label>
+                        <input type="file" id="admin_birth_certificate_file_input" name="birth_certificate_file_input" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </fieldset>
+
+                 <!-- Final Submission Date & Agreements -->
+                <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+                    <legend class="text-lg font-semibold text-gray-700 px-2">Submission Details</legend>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                         <div>
+                            <label class="block text-gray-700 text-sm mb-2" for="admin_final_submission_date_input">Final Submission Date (Student) <span class="text-red-500">*</span></label>
+                            <input type="date" id="admin_final_submission_date_input" name="final_submission_date" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-2">Agreements (Student Declaration) <span class="text-red-500">*</span></label>
+                            <div class="flex items-center mt-1">
+                                <input type="checkbox" name="agreements" value="Yes" id="admin_agreements_checkbox" required>
+                                <label for="admin_agreements_checkbox" class="ml-2 text-gray-700">Student agreed to terms & conditions.</label>
+                            </div>
+                             <p class="text-xs text-gray-500 mt-1">Admin confirms student's agreement.</p>
+                        </div>
+                    </div>
+                </fieldset>
+
+
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" id="adminSubmitNewApplicationBtn" class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap hover:bg-primary/90">
+                        Submit New Application
+                    </button>
+                </div>
+            </form>
+        </div>
+
+
     </main>
 </div>
 
 <div id="toast-container" class="fixed top-5 right-5 z-[1000] w-auto max-w-xs space-y-2"></div>
 
 <script>
+// Make logo URLs available to JavaScript
+const PGPC_LOGO_URL_JS = "{{ url_for('static', filename='logopgpc.png') }}";
+const BAYAN_LOGO_URL_JS = "{{ url_for('static', filename='images/bayan_padre_garcia_logo.png') }}"; // Assumed filename, adjust if needed
+
 document.addEventListener('DOMContentLoaded', function() {
     const rawApplicationsData = {{ applications | tojson | safe if applications else [] | tojson | safe }};
 
     const dashboardContentDiv = document.getElementById('dashboardContent');
     const applicationsContentDiv = document.getElementById('applicationsContent');
+    const addApplicationContentDiv = document.getElementById('addApplicationContent'); // New content div
     const pageTitleHeaderElement = document.getElementById('pageTitleHeader');
     const breadcrumbCurrentPageElement = document.getElementById('breadcrumbCurrentPage');
     const breadcrumbAdminHomeLink = document.getElementById('breadcrumbAdminHomeLink');
 
     const sidebarDashboardMenuLink = document.getElementById('sidebarDashboardMenuLink');
     const sidebarApplicationsMenuLink = document.getElementById('applicationsMenu');
+    const sidebarAddApplicationMenuLink = document.getElementById('sidebarAddApplicationMenuLink'); // New sidebar link
     const sidebarFilterLinks = {
         pending: document.getElementById('pendingFilterLink'),
         inReview: document.getElementById('inReviewFilterLink'),
         approved: document.getElementById('approvedFilterLink'),
         rejected: document.getElementById('rejectedFilterLink'),
+        passed: document.getElementById('passedFilterLink'),
+        failed: document.getElementById('failedFilterLink'),
     };
 
     const applicationsTable = document.getElementById('applicationsTable');
@@ -376,6 +822,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const bulkActionsBar = document.getElementById('bulkActions');
     const selectedCountElement = document.getElementById('selectedCount');
 
+    // Main View Modal
+    const viewApplicationModal = document.getElementById('viewApplicationModal');
+    const viewModalBackdrop = document.getElementById('viewModalBackdrop');
+    const viewModalTitleJS = document.getElementById('viewModalTitle');
+    const viewModalContent = document.getElementById('viewModalContent');
+    const closeViewModalIcon = document.getElementById('closeViewModalIcon');
+
+    // Delete Modal
     const deleteConfirmationModal = document.getElementById('deleteConfirmationModal');
     const deleteModalBackdrop = document.getElementById('deleteModalBackdrop');
     const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
@@ -383,11 +837,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteModalMessage = document.getElementById('deleteModalMessage');
     const deleteModalTitle = document.getElementById('deleteModalTitle');
 
-    const viewApplicationModal = document.getElementById('viewApplicationModal');
-    const viewModalBackdrop = document.getElementById('viewModalBackdrop');
-    const viewModalTitleJS = document.getElementById('viewModalTitle');
-    const viewModalContent = document.getElementById('viewModalContent');
-    const closeViewModalIcon = document.getElementById('closeViewModalIcon');
+    // Admin Notes Modal
+    const adminNotesModal = document.getElementById('adminNotesModal');
+    const adminNotesModalBackdrop = document.getElementById('adminNotesModalBackdrop');
+    const adminNotesModalTitle = document.getElementById('adminNotesModalTitle');
+    const adminNotesAppIdSpan = document.getElementById('adminNotesAppId');
+    const adminNotesTextareaModal = document.getElementById('adminNotesTextareaModal');
+    const closeAdminNotesModalIcon = document.getElementById('closeAdminNotesModalIcon');
+    const cancelAdminNotesBtn = document.getElementById('cancelAdminNotesBtn');
+    const saveAdminNotesModalBtn = document.getElementById('saveAdminNotesModalBtn');
+
+    // Control Number Modal
+    const adminControlNumberModal = document.getElementById('adminControlNumberModal');
+    const adminControlNumberModalBackdrop = document.getElementById('adminControlNumberModalBackdrop');
+    const adminControlNumberModalTitle = document.getElementById('adminControlNumberModalTitle');
+    const adminControlNumberAppIdSpan = document.getElementById('adminControlNumberAppId');
+    const adminControlNumberInputModal = document.getElementById('adminControlNumberInputModal');
+    const closeAdminControlNumberModalIcon = document.getElementById('closeAdminControlNumberModalIcon');
+    const cancelAdminControlNumberBtn = document.getElementById('cancelAdminControlNumberBtn');
+    const saveAdminControlNumberModalBtn = document.getElementById('saveAdminControlNumberModalBtn');
+
+    // Permit Details Modal
+    const adminPermitDetailsModal = document.getElementById('adminPermitDetailsModal');
+    const adminPermitDetailsModalBackdrop = document.getElementById('adminPermitDetailsModalBackdrop');
+    const adminPermitDetailsModalTitle = document.getElementById('adminPermitDetailsModalTitle');
+    const adminPermitAppIdSpan = document.getElementById('adminPermitAppId');
+    const permitControlNoModalInput = document.getElementById('permitControlNoModal');
+    const permitExamDateModalInput = document.getElementById('permitExamDateModal');
+    const permitExamTimeModalInput = document.getElementById('permitExamTimeModal');
+    const permitTestingRoomModalInput = document.getElementById('permitTestingRoomModal');
+    const closeAdminPermitDetailsModalIcon = document.getElementById('closeAdminPermitDetailsModalIcon');
+    const cancelAdminPermitDetailsBtn = document.getElementById('cancelAdminPermitDetailsBtn');
+    const saveAdminPermitDetailsModalBtn = document.getElementById('saveAdminPermitDetailsModalBtn');
+
+    // Admin Add Application Form Elements
+    const adminAddApplicationForm = document.getElementById('adminAddApplicationForm');
+    const adminUploadPhotoBtn = document.getElementById('adminUploadPhotoBtn');
+    const adminPhotoInput = document.getElementById('adminPhotoInput');
+    const adminPhotoPreview = document.getElementById('adminPhotoPreview');
+    const adminPhotoPlaceholder = document.getElementById('adminPhotoPlaceholder');
+    const adminDateOfApplicationInput = document.getElementById('adminDateOfApplication');
+    const adminFinalSubmissionDateInput = document.getElementById('admin_final_submission_date_input');
+
 
     let itemToDelete = null;
     let currentViewingApplicantId = null;
@@ -396,8 +887,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const startDateInput = document.getElementById('startDateFilter');
     const endDateInput = document.getElementById('endDateFilter');
     const clearDateFilterBtn = document.getElementById('clearDateFilterBtn');
+    const printReportBtn = document.getElementById('printReportBtn');
 
-    // Sidebar Elements (defined here for broader scope within DOMContentLoaded)
     const sidebar = document.getElementById('sidebar');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
     const mainContentArea = document.getElementById('mainContentArea');
@@ -461,6 +952,9 @@ document.addEventListener('DOMContentLoaded', function() {
         else if (newStatus === 'Rejected') statusClass = 'bg-red-100 text-red-800';
         else if (newStatus === 'In Review') statusClass = 'bg-blue-100 text-blue-800';
         else if (newStatus === 'Pending') statusClass = 'bg-yellow-100 text-yellow-800';
+        else if (newStatus === 'Passed') statusClass = 'bg-teal-100 text-teal-800';
+        else if (newStatus === 'Failed') statusClass = 'bg-orange-100 text-orange-800';
+
 
         badge.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge ${statusClass} status-flash-animation`;
         setTimeout(() => badge.classList.remove('status-flash-animation'), 600);
@@ -531,6 +1025,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const actionView = target.closest('.action-view');
             const actionUpdateStatus = target.closest('.action-update-status');
             const actionDeleteSingle = target.closest('.action-delete-single');
+            const actionAdminNotes = target.closest('.action-admin-notes');
+            const actionControlNumber = target.closest('.action-control-number');
+            const actionPermitDetails = target.closest('.action-permit-details');
+            const actionEditAdmin = target.closest('.action-edit-admin'); 
+            const actionPrint = target.closest('.action-print'); 
+
 
             if (actionView) {
                 event.preventDefault();
@@ -546,6 +1046,45 @@ document.addEventListener('DOMContentLoaded', function() {
                     viewModalContent.innerHTML = `<p class="text-red-500 text-center">Error: ${error.toString()}</p>`;
                     console.error("Error fetching details:", error);
                 }
+            } else if (actionAdminNotes) {
+                event.preventDefault();
+                currentViewingApplicantId = actionAdminNotes.dataset.id;
+                try {
+                    const response = await fetch(`/admin/application/${currentViewingApplicantId}/details`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        adminNotesAppIdSpan.textContent = `P2025${String(result.data.applicant_id).padStart(4, '0')}`;
+                        adminNotesTextareaModal.value = result.data.admin_notes || '';
+                        openModal(adminNotesModal, adminNotesModalBackdrop);
+                    } else { showToast('Could not load notes data.', 'error'); }
+                } catch (error) { showToast('Error fetching notes data.', 'error'); }
+            } else if (actionControlNumber) {
+                event.preventDefault();
+                currentViewingApplicantId = actionControlNumber.dataset.id;
+                try {
+                    const response = await fetch(`/admin/application/${currentViewingApplicantId}/details`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        adminControlNumberAppIdSpan.textContent = `P2025${String(result.data.applicant_id).padStart(4, '0')}`;
+                        adminControlNumberInputModal.value = result.data.control_number || '';
+                        openModal(adminControlNumberModal, adminControlNumberModalBackdrop);
+                    } else { showToast('Could not load control number data.', 'error'); }
+                } catch (error) { showToast('Error fetching control number data.', 'error'); }
+            } else if (actionPermitDetails) {
+                event.preventDefault();
+                currentViewingApplicantId = actionPermitDetails.dataset.id;
+                 try {
+                    const response = await fetch(`/admin/application/${currentViewingApplicantId}/details`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        adminPermitAppIdSpan.textContent = `P2025${String(result.data.applicant_id).padStart(4, '0')}`;
+                        permitControlNoModalInput.value = result.data.permit_control_no || '';
+                        permitExamDateModalInput.value = result.data.permit_exam_date ? result.data.permit_exam_date.split('T')[0] : '';
+                        permitExamTimeModalInput.value = result.data.permit_exam_time || '';
+                        permitTestingRoomModalInput.value = result.data.permit_testing_room || '';
+                        openModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop);
+                    } else { showToast('Could not load permit data.', 'error'); }
+                } catch (error) { showToast('Error fetching permit data.', 'error'); }
             } else if (actionUpdateStatus) {
                 event.preventDefault();
                 handleUpdateStatus(actionUpdateStatus.dataset.id, actionUpdateStatus.dataset.status, actionUpdateStatus.closest('tr'));
@@ -556,6 +1095,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 deleteModalTitle.textContent = "Delete Application";
                 deleteModalMessage.textContent = `Are you sure you want to delete application P2025${String(itemToDelete).padStart(4, '0')}? This action cannot be undone.`;
                 openModal(deleteConfirmationModal, deleteModalBackdrop);
+            } else if (actionEditAdmin || actionPrint) {
+                // Default link behavior
             }
         });
     }
@@ -567,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'applicant_id', 'student_account_email', 'first_name', 'last_name', 'middle_name', 'email_address', 'mobile_number', 'program_choice', 'application_status', 'submitted_at', 'date_of_application', 'date_of_birth', 'place_of_birth', 'sex', 'civil_status', 'religion', 'citizenship', 'permanent_address_street_barangay', 'permanent_address_city_municipality', 'permanent_address_province', 'permanent_address_postal_code', 'cultural_minority_group', 'physical_disability', 'academic_year', 'average_family_income', 'father_name', 'father_occupation', 'father_company_address', 'father_contact_number', 'mother_maiden_name', 'mother_occupation', 'mother_company_address', 'mother_contact_number', 'guardian_name', 'guardian_occupation', 'guardian_company_address', 'guardian_contact_number', 'senior_high_school', 'senior_high_school_address', 'senior_high_school_track_strand', 'senior_high_school_year_from', 'senior_high_school_year_to', 'tertiary_school', 'tertiary_school_address', 'tertiary_course', 'tertiary_year_from', 'tertiary_year_to', 'agreements', 'final_submission_date', 'decision_date', 'last_updated_at'
         ];
         for (const key of fieldOrder) {
-            if (data.hasOwnProperty(key) && key !== 'photo' && key !== 'admin_notes' && !key.startsWith('permit_') && key !== 'control_number') {
+            if (data.hasOwnProperty(key) && key !== 'photo' && key !== 'admin_notes' && !key.startsWith('permit_') && key !== 'control_number' && !key.endsWith('_file') && !key.endsWith('_filename') && !key.endsWith('_mimetype')) {
                  let value = data[key] === null || data[key] === undefined || data[key] === '' ? 'N/A' : data[key];
                  if ((key.includes('date') || key.includes('_at')) && value !== 'N/A' && !(value instanceof Date)) { try { value = new Date(value).toLocaleString(); } catch (e) { /* keep original */ }} else if (value instanceof Date) { value = value.toLocaleString(); }
                  let displayName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -576,37 +1117,62 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         contentHtml += `</div>`;
-        if (data.photo) contentHtml += `<div class="mt-4"><strong>Photo:</strong><br><img src="${data.photo}" alt="Applicant Photo" class="max-w-xs max-h-64 border rounded mt-1"></div>`;
-        else contentHtml += `<div class="mt-4"><strong>Photo:</strong> <span class="text-gray-700">Not provided</span></div>`;
-        contentHtml += `<div class="mt-6 pt-4 border-t"><label for="adminNotesTextarea" class="block text-sm font-medium text-gray-700">Admin Notes:</label><textarea id="adminNotesTextarea" name="admin_notes" rows="3" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-primary focus:border-primary p-2">${data.admin_notes || ''}</textarea><button id="saveAdminNotesBtn" class="mt-2 px-3 py-1.5 bg-primary text-white rounded text-sm font-medium !rounded-button hover:bg-primary/90">Save Notes</button></div>`;
-        contentHtml += `<div class="mt-6 pt-4 border-t"><label for="adminControlNumberInput" class="block text-sm font-medium text-gray-700">Application Control Number (Admin Input):</label><input type="text" id="adminControlNumberInput" value="${data.control_number || ''}" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"><button id="saveControlNumberBtn" class="mt-2 px-3 py-1.5 bg-indigo-600 text-white rounded text-sm font-medium !rounded-button hover:bg-indigo-700">Save Control No.</button></div>`;
-        contentHtml += `<div class="mt-6 pt-4 border-t"><h4 class="text-md font-semibold text-gray-800 mb-3">College Admission Test Permit Stub (Admin Input)</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"><div><label for="permitControlNo" class="block text-xs font-medium text-gray-700">Permit Control No.</label><input type="text" id="permitControlNo" value="${data.permit_control_no || ''}" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div><div><label for="permitExamDate" class="block text-xs font-medium text-gray-700">Date of Examination</label><input type="date" id="permitExamDate" value="${data.permit_exam_date ? data.permit_exam_date.split('T')[0] : ''}" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div><div><label for="permitExamTime" class="block text-xs font-medium text-gray-700">Time</label><input type="text" id="permitExamTime" value="${data.permit_exam_time || ''}" placeholder="e.g., 09:00 AM" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div><div><label for="permitTestingRoom" class="block text-xs font-medium text-gray-700">Testing Room</label><input type="text" id="permitTestingRoom" value="${data.permit_testing_room || ''}" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div></div><button id="savePermitDetailsBtn" class="mt-3 px-3 py-1.5 bg-secondary text-white rounded text-sm font-medium !rounded-button hover:bg-secondary/90">Save Permit Details</button></div>`;
+
+        if (data.photo) contentHtml += `<div class="mt-4"><strong>2x2 Photo:</strong><br><img src="${data.photo}" alt="Applicant Photo" class="max-w-xs max-h-64 border rounded mt-1"></div>`;
+        else contentHtml += `<div class="mt-4"><strong>2x2 Photo:</strong> <span class="text-gray-700">Not provided</span></div>`;
+
+        contentHtml += `<div class="mt-6 pt-4 border-t">`;
+        contentHtml += `<h4 class="text-md font-semibold text-gray-800 mb-3">Uploaded Requirements</h4>`;
+        contentHtml += `<div class="space-y-2 text-sm">`;
+        if (data.shs_diploma_filename) { contentHtml += `<div><strong>SHS Diploma:</strong> <a href="/applicant-document/${data.applicant_id}/diploma" target="_blank" class="document-link">${data.shs_diploma_filename} (View/Download)</a></div>`; } else { contentHtml += `<div><strong>SHS Diploma:</strong> <span class="text-gray-500">Not provided</span></div>`; }
+        if (data.shs_card_filename) { contentHtml += `<div><strong>SHS Card (Form 138):</strong> <a href="/applicant-document/${data.applicant_id}/card" target="_blank" class="document-link">${data.shs_card_filename} (View/Download)</a></div>`; } else { contentHtml += `<div><strong>SHS Card (Form 138):</strong> <span class="text-gray-500">Not provided</span></div>`; }
+        if (data.birth_certificate_filename) { contentHtml += `<div><strong>Birth Certificate:</strong> <a href="/applicant-document/${data.applicant_id}/birth_cert" target="_blank" class="document-link">${data.birth_certificate_filename} (View/Download)</a></div>`; } else { contentHtml += `<div><strong>Birth Certificate:</strong> <span class="text-gray-500">Not provided</span></div>`; }
+        contentHtml += `</div></div>`;
+
         viewModalContent.innerHTML = contentHtml;
-        document.getElementById('saveAdminNotesBtn')?.addEventListener('click', saveAdminNotes);
-        document.getElementById('savePermitDetailsBtn')?.addEventListener('click', savePermitDetails);
-        document.getElementById('saveControlNumberBtn')?.addEventListener('click', saveControlNumber);
     }
 
     async function saveAdminNotes() {
-        if (!currentViewingApplicantId) return; const notesTextarea = document.getElementById('adminNotesTextarea'); if (!notesTextarea) return;
-        const formData = new FormData(); formData.append('notes', notesTextarea.value);
-        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/notes`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) showToast(result.message, 'success'); else showToast(result.message || 'Failed to save notes.', 'error'); } catch (error) { showToast('An error occurred while saving notes: ' + error.toString(), 'error'); console.error("Error saving notes:", error); }
+        if (!currentViewingApplicantId || !adminNotesTextareaModal) return;
+        const formData = new FormData(); formData.append('notes', adminNotesTextareaModal.value);
+        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/notes`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) { showToast(result.message, 'success'); closeModal(adminNotesModal, adminNotesModalBackdrop); const appInRaw = rawApplicationsData.find(app => app.applicant_id == currentViewingApplicantId); if(appInRaw) appInRaw.admin_notes = adminNotesTextareaModal.value;} else showToast(result.message || 'Failed to save notes.', 'error'); } catch (error) { showToast('An error occurred while saving notes: ' + error.toString(), 'error'); console.error("Error saving notes:", error); }
     }
     async function saveControlNumber() {
-        if (!currentViewingApplicantId) return; const controlNumberInput = document.getElementById('adminControlNumberInput'); if (!controlNumberInput) return;
-        const formData = new FormData(); formData.append('control_number', controlNumberInput.value);
-        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/control-number`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) showToast(result.message, 'success'); else showToast(result.message || 'Failed to save control number.', 'error'); } catch (error) { showToast('An error occurred while saving control number: ' + error.toString(), 'error'); console.error("Error saving control number:", error); }
+        if (!currentViewingApplicantId || !adminControlNumberInputModal) return;
+        const formData = new FormData(); formData.append('control_number', adminControlNumberInputModal.value);
+        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/control-number`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) { showToast(result.message, 'success'); closeModal(adminControlNumberModal, adminControlNumberModalBackdrop); const appInRaw = rawApplicationsData.find(app => app.applicant_id == currentViewingApplicantId); if(appInRaw) appInRaw.control_number = adminControlNumberInputModal.value;} else showToast(result.message || 'Failed to save control number.', 'error'); } catch (error) { showToast('An error occurred while saving control number: ' + error.toString(), 'error'); console.error("Error saving control number:", error); }
     }
     async function savePermitDetails() {
         if (!currentViewingApplicantId) return;
-        const formData = new FormData(); formData.append('permit_control_no', document.getElementById('permitControlNo').value); formData.append('permit_exam_date', document.getElementById('permitExamDate').value); formData.append('permit_exam_time', document.getElementById('permitExamTime').value); formData.append('permit_testing_room', document.getElementById('permitTestingRoom').value);
-        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/permit-details`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) showToast(result.message, 'success'); else showToast(result.message || 'Failed to save permit details.', 'error'); } catch (error) { showToast('An error occurred while saving permit details: ' + error.toString(), 'error'); console.error("Error saving permit details:", error); }
+        const formData = new FormData();
+        formData.append('permit_control_no', permitControlNoModalInput.value);
+        formData.append('permit_exam_date', permitExamDateModalInput.value);
+        formData.append('permit_exam_time', permitExamTimeModalInput.value);
+        formData.append('permit_testing_room', permitTestingRoomModalInput.value);
+        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/permit-details`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) { showToast(result.message, 'success'); closeModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop); const appInRaw = rawApplicationsData.find(app => app.applicant_id == currentViewingApplicantId); if(appInRaw) { appInRaw.permit_control_no = permitControlNoModalInput.value; appInRaw.permit_exam_date = permitExamDateModalInput.value; appInRaw.permit_exam_time = permitExamTimeModalInput.value; appInRaw.permit_testing_room = permitTestingRoomModalInput.value;}} else showToast(result.message || 'Failed to save permit details.', 'error'); } catch (error) { showToast('An error occurred while saving permit details: ' + error.toString(), 'error'); console.error("Error saving permit details:", error); }
     }
+
+    if(saveAdminNotesModalBtn) saveAdminNotesModalBtn.addEventListener('click', saveAdminNotes);
+    if(saveAdminControlNumberModalBtn) saveAdminControlNumberModalBtn.addEventListener('click', saveControlNumber);
+    if(saveAdminPermitDetailsModalBtn) saveAdminPermitDetailsModalBtn.addEventListener('click', savePermitDetails);
+
+    if(closeAdminNotesModalIcon) closeAdminNotesModalIcon.addEventListener('click', () => closeModal(adminNotesModal, adminNotesModalBackdrop));
+    if(adminNotesModalBackdrop) adminNotesModalBackdrop.addEventListener('click', (e) => { if(e.target === adminNotesModalBackdrop) closeModal(adminNotesModal, adminNotesModalBackdrop);});
+    if(cancelAdminNotesBtn) cancelAdminNotesBtn.addEventListener('click', () => closeModal(adminNotesModal, adminNotesModalBackdrop));
+
+    if(closeAdminControlNumberModalIcon) closeAdminControlNumberModalIcon.addEventListener('click', () => closeModal(adminControlNumberModal, adminControlNumberModalBackdrop));
+    if(adminControlNumberModalBackdrop) adminControlNumberModalBackdrop.addEventListener('click', (e) => { if(e.target === adminControlNumberModalBackdrop) closeModal(adminControlNumberModal, adminControlNumberModalBackdrop);});
+    if(cancelAdminControlNumberBtn) cancelAdminControlNumberBtn.addEventListener('click', () => closeModal(adminControlNumberModal, adminControlNumberModalBackdrop));
+
+    if(closeAdminPermitDetailsModalIcon) closeAdminPermitDetailsModalIcon.addEventListener('click', () => closeModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop));
+    if(adminPermitDetailsModalBackdrop) adminPermitDetailsModalBackdrop.addEventListener('click', (e) => { if(e.target === adminPermitDetailsModalBackdrop) closeModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop);});
+    if(cancelAdminPermitDetailsBtn) cancelAdminPermitDetailsBtn.addEventListener('click', () => closeModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop));
+
 
     function openModal(modal, backdrop) { modal.classList.add('show'); backdrop.classList.add('show'); document.body.style.overflow = 'hidden'; }
     function closeModal(modal, backdrop) { modal.classList.remove('show'); backdrop.classList.remove('show'); document.body.style.overflow = ''; itemToDelete = null; currentViewingApplicantId = null; }
     if (closeViewModalIcon) closeViewModalIcon.addEventListener('click', () => closeModal(viewApplicationModal, viewModalBackdrop));
-    if (viewModalBackdrop) viewModalBackdrop.addEventListener('click', () => closeModal(viewApplicationModal, viewModalBackdrop));
+    if (viewModalBackdrop) viewModalBackdrop.addEventListener('click', (e) => { if (e.target === viewModalBackdrop) closeModal(viewApplicationModal, viewModalBackdrop); });
     if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => closeModal(deleteConfirmationModal, deleteModalBackdrop));
     if (deleteModalBackdrop) deleteModalBackdrop.addEventListener('click', (e) => { if (e.target === deleteModalBackdrop) closeModal(deleteConfirmationModal, deleteModalBackdrop); });
     if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', () => { if (itemToDelete) executeDelete(itemToDelete); });
@@ -625,6 +1191,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tableBody) { tableBody.addEventListener('change', function(event) { if (event.target.classList.contains('row-checkbox')) { const row = event.target.closest('tr'); if (event.target.checked) row.classList.add('selected'); else row.classList.remove('selected'); updateBulkActionsVisibility(); updateSelectAllCheckboxState(); }}); }
     document.getElementById('bulkApproveBtn')?.addEventListener('click', () => handleBulkAction('Approved'));
     document.getElementById('bulkRejectBtn')?.addEventListener('click', () => handleBulkAction('Rejected'));
+    document.getElementById('bulkPassBtn')?.addEventListener('click', () => handleBulkAction('Passed'));
+    document.getElementById('bulkFailBtn')?.addEventListener('click', () => handleBulkAction('Failed'));
     document.getElementById('bulkDeleteBtn')?.addEventListener('click', () => { const selectedIds = getSelectedIds(); if (selectedIds.length > 0) { itemToDelete = selectedIds; deleteModalTitle.textContent = `Delete ${selectedIds.length} Application(s)`; deleteModalMessage.textContent = `Are you sure you want to delete ${selectedIds.length} selected application(s)? This action cannot be undone.`; openModal(deleteConfirmationModal, deleteModalBackdrop); } else { showToast('No applications selected for deletion.', 'info'); }});
     document.getElementById('closeBulkActions')?.addEventListener('click', () => { if (!bulkActionsBar || !tableBody || !selectAllCheckbox) return; bulkActionsBar.style.display = 'none'; selectAllCheckbox.checked = false; tableBody.querySelectorAll('.row-checkbox:checked').forEach(cb => { cb.checked = false; cb.closest('tr').classList.remove('selected'); }); });
 
@@ -665,131 +1233,119 @@ document.addEventListener('DOMContentLoaded', function() {
     clearDateFilterBtn?.addEventListener('click', () => { if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; filterTableRows(); });
 
     const flaskStats = JSON.parse('{{ stats | tojson | safe }}');
-    let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, in_review:0}));
+    let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, in_review:0, passed:0, failed:0 }));
+    
     function getApplicationTrends(applicationsInputData, numMonths = 7) {
         const trends = { labels: [], totals: new Array(numMonths).fill(0), approved: new Array(numMonths).fill(0) };
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]; const now = new Date();
+        const now = new Date();
         for (let i = 0; i < numMonths; i++) {
-            const dateForLabel = new Date(now.getFullYear(), now.getMonth() - (numMonths - 1 - i), 1); trends.labels.push(`${monthNames[dateForLabel.getMonth()]} '${String(dateForLabel.getFullYear()).slice(2)}`);
-            const targetYear = dateForLabel.getFullYear(); const targetMonth = dateForLabel.getMonth();
-            applicationsInputData.forEach(app => { let submissionDateStr = app.submitted_at || app.date_of_application; if (submissionDateStr) { const appDate = new Date(submissionDateStr); if (!isNaN(appDate.getTime())) { const appYear = appDate.getFullYear(); const appMonth = appDate.getMonth(); if (appYear === targetYear && appMonth === targetMonth) { trends.totals[i]++; if (app.application_status === 'Approved') trends.approved[i]++; }}}});
-        } return trends;
+            const dateForLabel = new Date(now.getFullYear(), now.getMonth() - (numMonths - 1 - i), 1);
+            trends.labels.push(dateForLabel.toLocaleString('default', { month: 'long' })); // Display full month name
+
+            const targetYear = dateForLabel.getFullYear();
+            const targetMonth = dateForLabel.getMonth();
+            applicationsInputData.forEach(app => {
+                let submissionDateStr = app.submitted_at || app.date_of_application;
+                if (submissionDateStr) {
+                    const appDate = new Date(submissionDateStr);
+                    if (!isNaN(appDate.getTime())) {
+                        const appYear = appDate.getFullYear();
+                        const appMonth = appDate.getMonth();
+                        if (appYear === targetYear && appMonth === targetMonth) {
+                            trends.totals[i]++;
+                            if (app.application_status === 'Approved') trends.approved[i]++;
+                        }
+                    }
+                }
+            });
+        }
+        return trends;
     }
+
     function updateGlobalStatsDisplay() {
         document.getElementById('statsTotal').textContent = currentJsStats.total_applications || 0; document.getElementById('statsPending').textContent = currentJsStats.pending || 0; document.getElementById('statsApproved').textContent = currentJsStats.approved || 0; document.getElementById('statsRejected').textContent = currentJsStats.rejected || 0; document.getElementById('statsInReview').textContent = currentJsStats.in_review || 0;
+        document.getElementById('statsPassed').textContent = currentJsStats.passed || 0;
+        document.getElementById('statsFailed').textContent = currentJsStats.failed || 0;
+
         document.getElementById('pendingCountSide').textContent = currentJsStats.pending || 0; document.getElementById('approvedCountSide').textContent = currentJsStats.approved || 0; document.getElementById('rejectedCountSide').textContent = currentJsStats.rejected || 0; document.getElementById('inReviewCountSide').textContent = currentJsStats.in_review || 0;
+        document.getElementById('passedCountSide').textContent = currentJsStats.passed || 0;
+        document.getElementById('failedCountSide').textContent = currentJsStats.failed || 0;
+
         if (window.applicationChartInstance) { const trendData = getApplicationTrends(rawApplicationsData, 7); window.applicationChartInstance.setOption({ xAxis: { data: trendData.labels }, series: [{ name: 'Total Applications', data: trendData.totals }, { name: 'Approved', data: trendData.approved }] }); }
-        if (window.statusChartInstance) { window.statusChartInstance.setOption({ series: [{ data: [{ value: currentJsStats.approved || 0, name: 'Approved' }, { value: currentJsStats.rejected || 0, name: 'Rejected' }, { value: currentJsStats.pending || 0, name: 'Pending' }, { value: currentJsStats.in_review || 0, name: 'In Review' }].filter(item => item.value > 0) }] }); }
+        if (window.statusChartInstance) { window.statusChartInstance.setOption({ series: [{ data: [
+            { value: currentJsStats.approved || 0, name: 'Approved', itemStyle: { color: '#16a34a' } },
+            { value: currentJsStats.rejected || 0, name: 'Rejected', itemStyle: { color: '#dc2626' } },
+            { value: currentJsStats.pending || 0, name: 'Pending', itemStyle: { color: '#ca8a04' } },
+            { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } },
+            { value: currentJsStats.passed || 0, name: 'Passed', itemStyle: { color: '#0d9488' } },
+            { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } }
+        ].filter(item => item.value > 0) }] }); }
     }
     function updateGlobalStatsOnStatusChange() {
         currentJsStats.pending = 0; currentJsStats.in_review = 0; currentJsStats.approved = 0; currentJsStats.rejected = 0;
-        (rawApplicationsData || []).forEach(app => { const status = app.application_status; if (status === 'Pending') currentJsStats.pending++; else if (status === 'In Review') currentJsStats.in_review++; else if (status === 'Approved') currentJsStats.approved++; else if (status === 'Rejected') currentJsStats.rejected++; });
+        currentJsStats.passed = 0; currentJsStats.failed = 0;
+        (rawApplicationsData || []).forEach(app => { const status = app.application_status; if (status === 'Pending') currentJsStats.pending++; else if (status === 'In Review') currentJsStats.in_review++; else if (status === 'Approved') currentJsStats.approved++; else if (status === 'Rejected') currentJsStats.rejected++; else if (status === 'Passed') currentJsStats.passed++; else if (status === 'Failed') currentJsStats.failed++; });
         currentJsStats.total_applications = (rawApplicationsData || []).length; updateGlobalStatsDisplay();
     }
     function updateGlobalStatsOnDelete(count) { updateGlobalStatsOnStatusChange(); }
 
 
-    // --- Refined Sidebar Logic ---
     function initializeSidebarState() {
         if (!sidebar || !mainContentArea) return;
-
-        // JS takes over management of translate-x classes, sm:translate-x-0 is for no-JS fallback
         sidebar.classList.remove('sm:translate-x-0');
-
-        if (window.innerWidth >= 640) { // Tailwind 'sm' breakpoint (640px) for desktop
-            sidebar.classList.remove('-translate-x-full');
-            sidebar.classList.add('translate-x-0'); // Explicitly open by JS
+        if (window.innerWidth >= 640) {
+            sidebar.classList.remove('-translate-x-full'); sidebar.classList.add('translate-x-0');
             mainContentArea.classList.add('sm:ml-64');
-        } else { // Mobile
-            sidebar.classList.remove('translate-x-0');
-            sidebar.classList.add('-translate-x-full'); // Explicitly closed by JS
+        } else {
+            sidebar.classList.remove('translate-x-0'); sidebar.classList.add('-translate-x-full');
             mainContentArea.classList.remove('sm:ml-64');
         }
     }
 
     if (sidebarToggleBtn && sidebar && mainContentArea && sidebarBackdrop) {
         const openSidebar = () => {
-            if (!sidebar) return;
-            sidebar.classList.remove('-translate-x-full');
-            sidebar.classList.add('translate-x-0');
-
+            if (!sidebar) return; sidebar.classList.remove('-translate-x-full'); sidebar.classList.add('translate-x-0');
             if (mainContentArea) mainContentArea.classList.add('sm:ml-64');
-
-            if (sidebarBackdrop && window.innerWidth < 640) {
-                sidebarBackdrop.classList.remove('hidden');
-            }
-
-            setTimeout(() => {
-                if (dashboardContentDiv.style.display !== 'none') {
-                    window.applicationChartInstance?.resize();
-                    window.statusChartInstance?.resize();
-                }
-            }, 350);
+            if (sidebarBackdrop && window.innerWidth < 640) sidebarBackdrop.classList.remove('hidden');
+            setTimeout(() => { if (dashboardContentDiv.style.display !== 'none') { window.applicationChartInstance?.resize(); window.statusChartInstance?.resize();}}, 350);
         };
-
         const closeSidebar = () => {
-            if (!sidebar) return;
-            sidebar.classList.remove('translate-x-0');
-            sidebar.classList.add('-translate-x-full');
-
+            if (!sidebar) return; sidebar.classList.remove('translate-x-0'); sidebar.classList.add('-translate-x-full');
             if (mainContentArea) mainContentArea.classList.remove('sm:ml-64');
-
             if (sidebarBackdrop) sidebarBackdrop.classList.add('hidden');
-
-            setTimeout(() => {
-                if (dashboardContentDiv.style.display !== 'none') {
-                    window.applicationChartInstance?.resize();
-                    window.statusChartInstance?.resize();
-                }
-            }, 350);
+            setTimeout(() => { if (dashboardContentDiv.style.display !== 'none') { window.applicationChartInstance?.resize(); window.statusChartInstance?.resize();}}, 350);
         };
-
-        sidebarToggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (sidebar.classList.contains('translate-x-0')) {
-                closeSidebar();
-            } else {
-                openSidebar();
-            }
-        });
-
+        sidebarToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); if (sidebar.classList.contains('translate-x-0')) closeSidebar(); else openSidebar(); });
         sidebarBackdrop.addEventListener('click', closeSidebar);
-
-        const mainSidebarLinks = [
-            sidebarDashboardMenuLink, sidebarApplicationsMenuLink,
-            sidebarFilterLinks.pending, sidebarFilterLinks.inReview,
-            sidebarFilterLinks.approved, sidebarFilterLinks.rejected
-        ].filter(link => link);
-
-        mainSidebarLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                if (window.innerWidth < 640 && sidebar.classList.contains('translate-x-0')) {
-                    closeSidebar();
-                }
-            });
-        });
+        const mainSidebarLinks = [ sidebarDashboardMenuLink, sidebarApplicationsMenuLink, sidebarAddApplicationMenuLink, ...Object.values(sidebarFilterLinks).filter(link => link) ].filter(link => link);
+        mainSidebarLinks.forEach(link => { link.addEventListener('click', () => { if (window.innerWidth < 640 && sidebar.classList.contains('translate-x-0')) closeSidebar(); }); });
     }
-    // --- End of Refined Sidebar Logic ---
-
 
     function updateSidebarActiveState(activeView, activeStatus = null) {
-        const allNavLinks = [ sidebarDashboardMenuLink, sidebarApplicationsMenuLink, ...Object.values(sidebarFilterLinks).filter(link => link)];
-        allNavLinks.forEach(link => { if (link) { link.classList.remove('text-primary', 'bg-primary/5'); if (link === sidebarFilterLinks.pending) link.classList.add('text-yellow-600'); else if (link === sidebarFilterLinks.inReview) link.classList.add('text-blue-600'); else if (link === sidebarFilterLinks.approved) link.classList.add('text-green-600'); else if (link === sidebarFilterLinks.rejected) link.classList.add('text-red-600'); else link.classList.add('text-gray-600'); link.classList.add('hover:bg-gray-50'); }});
-        const setActiveStyles = (link) => { if (!link) return; link.classList.add('text-primary', 'bg-primary/5'); link.classList.remove('text-gray-600', 'text-yellow-600', 'text-blue-600', 'text-green-600', 'text-red-600', 'hover:bg-gray-50'); };
+        const allNavLinks = [ sidebarDashboardMenuLink, sidebarApplicationsMenuLink, sidebarAddApplicationMenuLink, ...Object.values(sidebarFilterLinks).filter(link => link)];
+        allNavLinks.forEach(link => { if (link) { link.classList.remove('text-primary', 'bg-primary/5'); if (link === sidebarFilterLinks.pending) link.classList.add('text-yellow-600'); else if (link === sidebarFilterLinks.inReview) link.classList.add('text-blue-600'); else if (link === sidebarFilterLinks.approved) link.classList.add('text-green-600'); else if (link === sidebarFilterLinks.rejected) link.classList.add('text-red-600'); else if (link === sidebarFilterLinks.passed) link.classList.add('text-teal-600'); else if (link === sidebarFilterLinks.failed) link.classList.add('text-orange-600'); else link.classList.add('text-gray-600'); link.classList.add('hover:bg-gray-50'); }});
+        const setActiveStyles = (link) => { if (!link) return; link.classList.add('text-primary', 'bg-primary/5'); link.classList.remove('text-gray-600', 'text-yellow-600', 'text-blue-600', 'text-green-600', 'text-red-600', 'text-teal-600', 'text-orange-600', 'hover:bg-gray-50'); };
         if (activeView === 'dashboard') setActiveStyles(sidebarDashboardMenuLink);
-        else if (activeView === 'applications') { if (activeStatus === 'All' || !activeStatus) setActiveStyles(sidebarApplicationsMenuLink); else { setActiveStyles(sidebarApplicationsMenuLink); let targetFilterLink; switch(activeStatus.toLowerCase()) { case 'pending': targetFilterLink = sidebarFilterLinks.pending; break; case 'in review': targetFilterLink = sidebarFilterLinks.inReview; break; case 'approved': targetFilterLink = sidebarFilterLinks.approved; break; case 'rejected': targetFilterLink = sidebarFilterLinks.rejected; break; } setActiveStyles(targetFilterLink); }}
+        else if (activeView === 'addApplication') setActiveStyles(sidebarAddApplicationMenuLink);
+        else if (activeView === 'applications') { if (activeStatus === 'All' || !activeStatus) setActiveStyles(sidebarApplicationsMenuLink); else { setActiveStyles(sidebarApplicationsMenuLink); let targetFilterLink; switch(activeStatus.toLowerCase()) { case 'pending': targetFilterLink = sidebarFilterLinks.pending; break; case 'in review': targetFilterLink = sidebarFilterLinks.inReview; break; case 'approved': targetFilterLink = sidebarFilterLinks.approved; break; case 'rejected': targetFilterLink = sidebarFilterLinks.rejected; break; case 'passed': targetFilterLink = sidebarFilterLinks.passed; break; case 'failed': targetFilterLink = sidebarFilterLinks.failed; break; } setActiveStyles(targetFilterLink); }}
     }
     function showView(viewName, statusForSidebarHighlight = null) {
-        dashboardContentDiv.style.display = 'none'; applicationsContentDiv.style.display = 'none';
+        dashboardContentDiv.style.display = 'none'; applicationsContentDiv.style.display = 'none'; addApplicationContentDiv.style.display = 'none';
         if (viewName === 'dashboard') {
             dashboardContentDiv.style.display = 'block'; if (pageTitleHeaderElement) pageTitleHeaderElement.textContent = 'Dashboard Overview'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Dashboard'; updateSidebarActiveState('dashboard'); activeStatusFilter = 'All'; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = '';
             updateGlobalStatsDisplay(); if (window.applicationChartInstance) window.applicationChartInstance.resize(); if (window.statusChartInstance) window.statusChartInstance.resize();
         } else if (viewName === 'applications') {
             applicationsContentDiv.style.display = 'block'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Applications'; updateSidebarActiveState('applications', statusForSidebarHighlight); updateApplicationPageTitles();
             const applicationsContentElement = document.getElementById('applicationsContent'); if (applicationsContentElement) applicationsContentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (viewName === 'addApplication') {
+            addApplicationContentDiv.style.display = 'block'; if (pageTitleHeaderElement) pageTitleHeaderElement.textContent = 'Add New Application'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Add New Application'; updateSidebarActiveState('addApplication');
+             const today = new Date().toISOString().split('T')[0];
+             if(adminDateOfApplicationInput) adminDateOfApplicationInput.value = today;
+             if(adminFinalSubmissionDateInput) adminFinalSubmissionDateInput.value = today;
         }
     }
     sidebarDashboardMenuLink?.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
+    sidebarAddApplicationMenuLink?.addEventListener('click', (e) => { e.preventDefault(); showView('addApplication'); });
     breadcrumbAdminHomeLink?.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
     const setupSidebarFilterClickHandler = (linkElement, statusValueToSet) => { linkElement?.addEventListener('click', (e) => { e.preventDefault(); activeStatusFilter = statusValueToSet; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; showView('applications', statusValueToSet); filterTableRows(); }); };
     setupSidebarFilterClickHandler(sidebarApplicationsMenuLink, 'All');
@@ -798,10 +1354,280 @@ document.addEventListener('DOMContentLoaded', function() {
     const applicationChartDom = document.getElementById('applicationChart');
     if (applicationChartDom && typeof echarts !== 'undefined') { window.applicationChartInstance = echarts.init(applicationChartDom); const applicationOption = { tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, legend: { data: ['Total Applications', 'Approved'], top: '5%' }, grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true }, xAxis: { type: 'category', data: [] }, yAxis: { type: 'value' }, series: [ { name: 'Total Applications', type: 'bar', barWidth: '30%', color: '#4f46e5', data: [] }, { name: 'Approved', type: 'bar', barWidth: '30%', color: '#16a34a', data: [] } ]}; window.applicationChartInstance.setOption(applicationOption); window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.applicationChartInstance) window.applicationChartInstance.resize(); }); }
     const statusChartDom = document.getElementById('statusChart');
-    if (statusChartDom && typeof echarts !== 'undefined') { window.statusChartInstance = echarts.init(statusChartDom); const statusOption = { tooltip: { trigger: 'item' }, legend: { top: 'bottom', left: 'center' }, series: [{ name: 'Application Status', type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'], avoidLabelOverlap: false, itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 }, label: { show: false, position: 'center' }, emphasis: { label: { show: true, fontSize: '14', fontWeight: 'bold' } }, labelLine: { show: false }, data: [ { value: currentJsStats.approved || 0, name: 'Approved', itemStyle: { color: '#16a34a' } }, { value: currentJsStats.rejected || 0, name: 'Rejected', itemStyle: { color: '#dc2626' } }, { value: currentJsStats.pending || 0, name: 'Pending', itemStyle: { color: '#ca8a04' } }, { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } } ].filter(item => item.value > 0) }]}; window.statusChartInstance.setOption(statusOption); window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.statusChartInstance) window.statusChartInstance.resize(); }); }
+    if (statusChartDom && typeof echarts !== 'undefined') { window.statusChartInstance = echarts.init(statusChartDom); const statusOption = { tooltip: { trigger: 'item' }, legend: { top: 'bottom', left: 'center' }, series: [{ name: 'Application Status', type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'], avoidLabelOverlap: false, itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 }, label: { show: false, position: 'center' }, emphasis: { label: { show: true, fontSize: '14', fontWeight: 'bold' } }, labelLine: { show: false }, data: [
+        { value: currentJsStats.approved || 0, name: 'Approved', itemStyle: { color: '#16a34a' } },
+        { value: currentJsStats.rejected || 0, name: 'Rejected', itemStyle: { color: '#dc2626' } },
+        { value: currentJsStats.pending || 0, name: 'Pending', itemStyle: { color: '#ca8a04' } },
+        { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } },
+        { value: currentJsStats.passed || 0, name: 'Passed', itemStyle: { color: '#0d9488' } },
+        { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } }
+    ].filter(item => item.value > 0) }]}; window.statusChartInstance.setOption(statusOption); window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.statusChartInstance) window.statusChartInstance.resize(); }); }
 
-    // Initial Setup Calls
-    initializeSidebarState(); // Initialize sidebar based on screen size
+    function generateAndPrintReport() {
+        const visibleRows = allTableRows().filter(row => row.style.display !== 'none');
+        if (visibleRows.length === 0) {
+            showToast('No applications to print in the current view.', 'info');
+            return;
+        }
+
+        let reportTitleText = activeStatusFilter === 'All' ? 'ALL APPLICATIONS' : `${activeStatusFilter.toUpperCase()} APPLICATIONS`;
+        
+        let reportSubtitleHTML = '';
+        const startDateVal = startDateInput?.value;
+        const endDateVal = endDateInput?.value;
+        if (startDateVal || endDateVal) {
+            let dateFilterText = "Filtered by Submission Date: ";
+            if (startDateVal && endDateVal) {
+                dateFilterText += `From ${new Date(startDateVal).toLocaleDateString()} to ${new Date(endDateVal).toLocaleDateString()}`;
+            } else if (startDateVal) {
+                dateFilterText += `From ${new Date(startDateVal).toLocaleDateString()} onwards`;
+            } else if (endDateVal) {
+                dateFilterText += `Up to ${new Date(endDateVal).toLocaleDateString()}`;
+            }
+            reportSubtitleHTML = `<p class="report-subtitle">${dateFilterText}</p>`;
+        }
+
+
+        let tableContentHTML = `
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Applicant</th>
+                    <th>Program</th>
+                    <th>Submission Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        `;
+
+        visibleRows.forEach(row => {
+            const appId = row.cells[1]?.textContent.trim() || 'N/A';
+            const applicantName = row.querySelector('.applicant-name')?.textContent.trim() || 'N/A';
+            const program = row.querySelector('.applicant-program')?.textContent.trim() || 'N/A';
+            const submissionDate = row.querySelector('.submission-date-cell')?.textContent.trim() || 'N/A';
+            const status = row.querySelector('.status-badge')?.textContent.trim() || 'N/A';
+
+            tableContentHTML += `
+                <tr>
+                    <td>${appId}</td>
+                    <td>${applicantName}</td>
+                    <td>${program}</td>
+                    <td>${submissionDate}</td>
+                    <td>${status}</td>
+                </tr>
+            `;
+        });
+        tableContentHTML += `</tbody>`;
+
+        const reportHtml = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="utf-8">
+                <title>Application Report</title> 
+                <style>
+                    body.print-popup-body { 
+                        font-family: 'Times New Roman', Times, serif;
+                        margin: 20mm 15mm 15mm 20mm; 
+                        color: #000000; 
+                        background-color: #ffffff !important; 
+                        font-size: 11pt; 
+                        line-height: 1.4;
+                        -webkit-print-color-adjust: exact; 
+                        print-color-adjust: exact;
+                    }
+                    .print-page-container { width: 100%; max-width: 100%; margin: 0 auto; }
+                    .print-header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000000; padding-bottom: 10px; page-break-inside: avoid; }
+                    .print-header-top-logos { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; }
+                    .print-header .logo { max-height: 50px; width: auto; object-fit: contain; }
+                    .print-header .header-text-block { margin-bottom: 5px; }
+                    .print-header .republic { font-size: 9pt; margin-bottom: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
+                    .print-header .school-name { font-size: 13pt; font-weight: bold; margin-bottom: 1px; text-transform: uppercase; }
+                    .print-header .address-line { font-size: 8pt; margin-bottom: 1px; }
+                    .print-header .contact-line { font-size: 8pt; margin-bottom: 0; }
+                    .report-title-section { text-align: center; margin-top: 15px; margin-bottom: 15px; page-break-inside: avoid; page-break-after: avoid; } 
+                    .report-title { font-size: 14pt; margin-top: 0; margin-bottom: 3px; font-weight: bold; color: #000000; text-transform: uppercase; }
+                    .report-subtitle { font-size: 10pt; color: #333333; margin-top: 0; margin-bottom: 10px; }
+                    .print-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 20px; page-break-inside: auto; }
+                    .print-table th, .print-table td { border: 1px solid #333333; padding: 5px 7px; text-align: left; word-break: break-word; vertical-align: top; }
+                    .print-table th { background-color: #f0f0f0 !important; font-weight: bold; color: #000000 !important; text-align: center; }
+                    .print-table thead { display:table-header-group; } 
+                    .print-table tr { page-break-inside:avoid; page-break-after:auto; }
+                    .print-table td a { color: #000000; text-decoration: none; }
+                    .prepared-by-section { margin-top: 35px; font-size: 10pt; page-break-inside: avoid; line-height: 1.5; }
+                    .prepared-by-section p { margin-bottom: 2px; }
+                    .prepared-by-section .signature-line { border-bottom: 1px solid #000000; width: 250px; margin-top: 20px; margin-bottom: 2px; }
+                    .prepared-by-section .name-title { font-weight: bold; text-transform: uppercase; }
+                    .print-footer { text-align: center; margin-top: 20px; padding-top: 8px; border-top: 1px solid #cccccc; font-size: 8pt; font-style: italic; page-break-inside: avoid; color: #555555; }
+                    .no-print-in-iframe, .site-header, .main-navigation, .page-title-bar, .messages-container, .site-footer, .action-buttons-cell, th.no-print, td.no-print, form.delete-form, .btn, .btn-primary, .btn-secondary, .btn-info, .btn-danger, .btn-action, .btn-link { display: none !important; }
+                </style>
+            </head>
+            <body class="print-popup-body">
+                <div class="print-page-container">
+                    <div class="print-header">
+                        <div class="print-header-top-logos">
+                            <img src="${PGPC_LOGO_URL_JS}" alt="PGPC Logo" class="logo">
+                            <img src="${BAYAN_LOGO_URL_JS}" alt="Bayan ng Padre Garcia Logo" class="logo">
+                        </div>
+                        <div class="header-text-block">
+                            <p class="republic">Republic of the Philippines</p>
+                            <p class="school-name">PADRE GARCIA POLYTECHNIC COLLEGE (PGPC)</p>
+                            <p class="address-line">Padre Garcia, Batangas, Philippines 4224</p>
+                            <p class="contact-line">padregarciapolytechniccollege@gmail.com     (043) 515-9207</p>
+                        </div>
+                    </div>
+                    <div class="report-title-section">
+                        <h1 class="report-title">${reportTitleText}</h1>
+                        ${reportSubtitleHTML}
+                    </div>
+                    <table class="print-table">${tableContentHTML}</table>
+                    <div class="prepared-by-section">
+                        <p>Date Printed: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <br><br><p>Prepared by:</p>
+                        <div class="signature-line"></div>
+                        <p class="name-title">[ MRS. JENNIFER BUYA ]</p> 
+                        <p>Guidance Counselor</p>
+                         <br><br><p>Noted by:</p>
+                        <div class="signature-line"></div>
+                        <p class="name-title">[ MR. LEO P. LARESMA ]</p> 
+                        <p>Office of Student Affairs</p>
+                    </div>
+                    <div class="print-footer">
+                        <p class="tagline">“GARCIANO AKO, DISIPLINADO, MABUTING TAO.”</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.open();
+        printWindow.document.write(reportHtml);
+        printWindow.document.close();
+        printWindow.onload = function() {
+            printWindow.focus(); 
+            printWindow.print();
+        };
+    }
+
+    if (printReportBtn) {
+        printReportBtn.addEventListener('click', generateAndPrintReport);
+    }
+
+    // Admin Add Application Form Photo Preview
+    if (adminUploadPhotoBtn) {
+        adminUploadPhotoBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if(adminPhotoInput) adminPhotoInput.click();
+        });
+    }
+    if (adminPhotoInput) {
+        adminPhotoInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.type.startsWith("image/")) {
+                    showToast("⚠️ Please select an image file for the photo.", "error");
+                    adminPhotoInput.value = ""; 
+                    return;
+                }
+                const MAX_SIZE = 5 * 1024 * 1024; 
+                if (file.size > MAX_SIZE) {
+                    showToast("⚠️ Photo is too large (max 5MB).", "error");
+                    adminPhotoInput.value = ""; 
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if(adminPhotoPreview) adminPhotoPreview.src = event.target.result;
+                    if(adminPhotoPreview) adminPhotoPreview.classList.remove("hidden");
+                    if(adminPhotoPlaceholder) adminPhotoPlaceholder.classList.add("hidden");
+                };
+                reader.readAsDataURL(file);
+                showToast("✅ Photo selected: " + file.name, "success");
+            }
+        });
+    }
+    // Admin Add Application Form: File input feedback (excluding photo)
+    const adminFileInputs = addApplicationContentDiv.querySelectorAll('input[type="file"]:not(#adminPhotoInput)');
+    adminFileInputs.forEach(input => {
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const labelText = this.labels && this.labels.length > 0 ? this.labels[0].textContent.split('*')[0].trim().replace(/\d+\.\s*/, '') : "Document";
+            if (file) {
+                const MAX_DOC_SIZE = 5 * 1024 * 1024; 
+                const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                const isAllowedType = allowedTypes.includes(file.type) || allowedTypes.map(t => t.split('/')[1]).includes(fileExt);
+
+                if (!isAllowedType) {
+                    showToast(`⚠️ Invalid file type for ${labelText}. Allowed: PDF, JPG, PNG.`, "error");
+                    input.value = ""; 
+                    return;
+                }
+                if (file.size > MAX_DOC_SIZE) {
+                    showToast(`⚠️ ${labelText} is too large (max 5MB).`, "error");
+                    input.value = ""; 
+                    return;
+                }
+                showToast(`✅ File selected for ${labelText}: ${file.name}`, "success");
+            }
+        });
+    });
+
+
+    // Admin Add Application Form Submission
+    if (adminAddApplicationForm) {
+        adminAddApplicationForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const submitButton = document.getElementById('adminSubmitNewApplicationBtn');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const formData = new FormData(adminAddApplicationForm);
+            try {
+                const response = await fetch("{{ url_for('auth.admin_add_application_by_admin_action') }}", {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    adminAddApplicationForm.reset(); // Clear the form
+                    if(adminPhotoPreview) adminPhotoPreview.src = "";
+                    if(adminPhotoPreview) adminPhotoPreview.classList.add("hidden");
+                    if(adminPhotoPlaceholder) adminPhotoPlaceholder.classList.remove("hidden");
+                    // Optionally, navigate to applications list or refresh stats
+                    // To refresh the applications list (if visible) and stats, we need to fetch new data or add the new app to rawApplicationsData
+                    // For simplicity, let's just update stats and switch view
+                    // A more robust solution would involve fetching the new app's data and adding it to rawApplicationsData if needed by charts/table immediately.
+                    // For now, we rely on a full page reload or navigating back to the dashboard for the stats to fully reflect the new entry if it was complexly calculated.
+                    // However, simple count updates can be done.
+                    
+                    // Example: Optimistically add to rawApplicationsData if we had all details from form
+                    // const newAppForRawData = { applicant_id: result.new_applicant_id (if returned), ...formDataToObject(formData), submitted_at: new Date().toISOString(), application_status: 'Pending' };
+                    // rawApplicationsData.push(newAppForRawData); 
+                    // Then call updateGlobalStatsOnStatusChange() and filterTableRows() if on applications view.
+
+                    updateGlobalStatsOnStatusChange(); // Recalculate stats based on current rawApplicationsData (will be off by 1 until reload/refetch)
+                    showView('applications', 'All'); // Switch to applications view; it will show old data until refresh
+                } else {
+                    showToast(result.message || 'Failed to add application.', 'error');
+                }
+            } catch (error) {
+                showToast('An error occurred: ' + error.toString(), 'error');
+                console.error("Error submitting new application by admin:", error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit New Application';
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+    }
+
+
+    initializeSidebarState();
     updateGlobalStatsOnStatusChange();
     showView('dashboard');
     filterTableRows();

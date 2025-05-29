@@ -4,28 +4,23 @@
 
 {% block style %}
 <style>
-    /* Preserved original body style */
     body {
-        background-color: #f9fafb; /* bg-gray-50 from original create_account.html */
+        background-color: #ffffff; /* New vibrant blue background */
     }
 
     html {
-      scroll-behavior: smooth; /* Optional, from index.html */
+      scroll-behavior: smooth;
     }
 
-    /* Header Styles - Adapted from index.html, default to dark for create_account.html */
     header {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        padding: 15px 5%; /* Desktop padding */
+        position: relative; /* MODIFIED: Was absolute, now in normal flow */
+        padding: 15px 5%;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        z-index: 1000;
+        z-index: 1000; /* Kept for mobile nav dropdown */
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        background-color: #162938; /* Default dark background for this page */
+        background-color: #162938;
         transition: background-color 0.3s ease;
     }
 
@@ -35,24 +30,21 @@
     }
 
     .header-left img {
-        width: 100px; /* Desktop logo size */
+        width: 100px;
         height: auto;
-        /* Mobile size will be handled in @media query */
     }
 
-    .header-left .logo { /* College name */
-        font-size: 1.4em; /* Desktop font size */
-        color: #fff; /* White text on dark header */
+    .header-left .logo {
+        font-size: 1.4em;
+        color: #fff;
         margin-left: 15px;
         white-space: nowrap;
-        /* Mobile font size will be handled in @media query */
     }
 
-    /* Desktop Navigation Styles */
     .navigation a {
         position: relative;
         font-size: 1.1em;
-        color: #fff; /* White text on dark header */
+        color: #fff;
         text-decoration: none;
         font-weight: 500;
         margin-left: 30px;
@@ -61,13 +53,8 @@
         text-decoration: none;
     }
 
-    /* Assuming btnLogin-popup gets its primary styling from base.html or Tailwind utilities */
-    /* .navigation .btnLogin-popup {} */
-
-
-    /* Hamburger Menu Button */
     .menu-toggle {
-        display: none; /* Hidden by default, shown on mobile */
+        display: none;
         flex-direction: column;
         justify-content: space-around;
         width: 30px;
@@ -77,94 +64,84 @@
         cursor: pointer;
         padding: 0;
         z-index: 1100;
-        margin-left: 20px; /* Spacing from logo or other nav items */
+        margin-left: 20px;
     }
 
     .menu-toggle span {
         display: block;
         width: 100%;
         height: 3px;
-        background-color: #fff; /* White lines for dark header */
+        background-color: #fff;
         border-radius: 3px;
         transition: all 0.3s ease-in-out;
     }
 
-    /* Mobile Navigation Styles */
     @media (max-width: 992px) {
         header {
-            padding: 10px 3%; /* Mobile padding */
-            /* background-color: #162938; /* Already set as default, but explicit here is fine */
+            padding: 10px 3%;
         }
 
         .header-left img {
-            width: 70px; /* Mobile logo size from index.html */
-            height: 50px; /* Mobile logo size from index.html */
+            width: 70px;
+            height: 50px;
             object-fit: contain;
         }
 
         .header-left .logo {
-            font-size: 1em; /* Mobile font size */
+            font-size: 1em;
             margin-left: 10px;
-            /* color: #fff; /* Already set as default */
         }
 
-        /* .menu-toggle span { /* Already white by default */
-            /* background-color: #ffffff; */
-        /* } */
-
         .navigation {
-            position: absolute;
+            position: absolute; /* Relative to header */
             top: 100%; /* Position below the header */
-            right: 0;
-            width: 250px; /* Width of the dropdown */
-            background-color: #162938; /* Mobile dropdown panel background */
+            right: 0; /* Align to the right of the header */
+            width: 250px;
+            background-color: #162938;
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             flex-direction: column;
-            align-items: stretch; /* Make items take full width */
-            display: none; /* Hidden by default */
-            z-index: 1050;
-            border-top: 1px solid #2a3f54; /* Separator from header */
-            max-height: calc(100vh - 70px); /* Approx mobile header height (50px img + 2*10px padding) */
+            align-items: stretch;
+            display: none;
+            z-index: 1050; /* Above content that follows */
+            border-top: 1px solid #2a3f54;
+            max-height: calc(100vh - 70px);
             overflow-y: auto;
         }
 
         .navigation.active {
-            display: flex; /* Show when active */
+            display: flex;
         }
 
-        .navigation a { /* Styling for links inside mobile dropdown */
+        .navigation a {
             display: block;
             padding: 12px 20px;
-            margin-left: 0; /* Reset desktop margin */
+            margin-left: 0;
             text-align: left;
-            color: #f0f0f0; /* Light color for links on dark dropdown */
-            border-bottom: 1px solid #2a3f54; /* Separator for items */
+            color: #f0f0f0;
+            border-bottom: 1px solid #2a3f54;
             text-decoration: none;
         }
         .navigation a:last-child {
             border-bottom: none;
         }
         .navigation a:hover {
-            background-color: #22333f; /* Hover effect for mobile items */
+            background-color: #22333f;
         }
 
         .navigation a .btnLogin-popup {
-            width: 100%; /* Make button take full width */
-            margin: 5px 0; /* Adjust margin as needed */
+            width: 100%;
+            margin: 5px 0;
             padding: 10px 15px;
             font-size: 1em;
             text-align: center;
-            display: block; /* Ensures it takes full width if it's a button inside an <a> */
+            display: block;
             height: auto;
-            /* Button color/background should be handled by .btnLogin-popup's own styles */
-            /* e.g., if it's a light button on dark nav, it should already be styled for contrast */
         }
 
         .menu-toggle {
-            display: flex; /* Show hamburger on mobile */
+            display: flex;
         }
 
-        /* Hamburger animation to X */
         .menu-toggle.active span:nth-child(1) {
             transform: translateY(9px) rotate(45deg);
         }
@@ -176,33 +153,27 @@
         }
     }
 
-    /* Main content area styling to account for fixed header and footer spacing */
     .main-content-area {
-        /* Mobile-first defaults */
-        padding-top: 70px; /* Approx mobile header height (50px img H + 2*10px padding V) */
-        padding-bottom: 50px; /* Original margin-bottom */
-        padding-left: 1rem;  /* Corresponds to Tailwind px-4 */
-        padding-right: 1rem; /* Corresponds to Tailwind px-4 */
+        /* MODIFIED: Removed padding-top previously used for fixed/absolute header offset */
+        padding-bottom: 2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 
-    @media (min-width: 640px) { /* sm breakpoint from Tailwind */
+    @media (min-width: 640px) {
         .main-content-area {
-            padding-left: 1.5rem; /* sm:px-6 */
-            padding-right: 1.5rem; /* sm:px-6 */
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
         }
     }
 
-    @media (min-width: 993px) { /* Desktop breakpoint (when mobile nav switches to desktop) */
-        .main-content-area {
-            /* Desktop header: 100px img W, auto H (let's assume auto H is around 60-70px) + 2*15px padding V = ~90-100px */
-            padding-top: 100px; /* Original margin-top value, seems appropriate for desktop header */
-        }
-    }
+    /* Desktop breakpoint specific padding-top is no longer needed for .main-content-area */
+    /* @media (min-width: 993px) { ... } */
 
-    @media (min-width: 1024px) { /* lg breakpoint from Tailwind */
+    @media (min-width: 1024px) {
         .main-content-area {
-            padding-left: 2rem; /* lg:px-8 */
-            padding-right: 2rem; /* lg:px-8 */
+            padding-left: 2rem;
+            padding-right: 2rem;
         }
     }
 
@@ -228,6 +199,7 @@
         <a href="{{ url_for('views.about') }}">About</a>
         <a href="{{ url_for('views.home') }}#programs">Programs</a>
         <a href="{{ url_for('views.home') }}#news">News</a>
+        <a href="{{ url_for('views.contact_page') }}">Contact</a>
         <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
             <button class="btnLogin-popup">Apply now</button>
         </a>
@@ -237,66 +209,81 @@
 
 
 {% block body %}
-<!-- Added .main-content-area class for padding, and Tailwind flex utilities for centering -->
-<div class="main-content-area min-h-screen flex flex-col items-center justify-center">
-    <!-- Removed original py-12, px-4, sm:px-6, lg:px-8 as .main-content-area now handles padding -->
-    <!-- The .max-w-md handles the form's width and internal padding (p-10) -->
-    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
-        <div>
-            <img class="mx-auto h-20 w-auto" src="{{ url_for('static', filename='logopgpc.png') }}" alt="PGPC Logo">
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Create your Student Account
-            </h2>
-        </div>
-        <form class="mt-8 space-y-6" action="{{ url_for('auth.create_student_account_action') }}" method="POST">
-            <input type="hidden" name="remember" value="true">
-            <div class="rounded-md shadow-sm -space-y-px">
-                <div>
-                    <label for="email-address" class="sr-only">Email address</label>
-                    <input id="email-address" name="email" type="email" autocomplete="email" required
-                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                           placeholder="Email address">
-                </div>
-                <div>
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password" name="password" type="password" autocomplete="new-password" required
-                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                           placeholder="Password (min. 8 characters)">
-                </div>
-                <div>
-                    <label for="confirm-password" class="sr-only">Confirm Password</label>
-                    <input id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" required
-                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                           placeholder="Confirm Password">
+<div class="main-content-area min-h-screen flex items-center justify-center py-6 md:py-10">
+    <div class="w-full max-w-4xl mx-auto">
+        <div class="flex flex-col md:flex-row bg-white rounded-xl shadow-2xl overflow-hidden">
+            <!-- Left Welcome Panel -->
+            <div class="w-full md:w-2/5 bg-blue-700 text-white p-8 sm:p-10 md:p-12 flex flex-col justify-center relative">
+                <div class="absolute -bottom-12 -left-12 w-36 h-36 md:w-48 md:h-48 bg-blue-600/50 rounded-full opacity-70"></div>
+                <div class="absolute -top-12 -right-12 w-32 h-32 md:w-40 md:h-40 bg-blue-600/50 rounded-full opacity-70"></div>
+                <div class="relative z-10">
+                    <h1 class="text-3xl lg:text-4xl font-bold mb-2 sm:mb-3">JOIN US</h1>
+                    <p class="text-lg lg:text-xl font-medium mb-4 sm:mb-6">Padre Garcia Polytechnic College</p>
+                    <p class="text-sm sm:text-base leading-relaxed">
+                        Embark on your educational journey. Create an account to start your application.
+                    </p>
                 </div>
             </div>
 
-            <div>
-                <button type="submit"
-                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                    Create Account
-                </button>
+            <!-- Right Form Panel -->
+            <div class="w-full md:w-3/5 p-8 sm:p-10 md:p-12">
+                <div class="text-center md:text-left mb-6 md:mb-8">
+                    <img class="mx-auto md:mx-0 h-16 sm:h-20 w-auto mb-4" src="{{ url_for('static', filename='logopgpc.png') }}" alt="PGPC Logo">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">
+                        Create your Student Account
+                    </h2>
+                    <p class="text-gray-600 text-sm sm:text-base">
+                        Fill in the details below.
+                    </p>
+                </div>
+                <form class="space-y-6" action="{{ url_for('auth.create_student_account_page') }}" method="POST">
+                    <input type="hidden" name="remember" value="true">
+                    <div>
+                        <label for="email-address" class="block text-sm font-medium text-gray-700 mb-1 sr-only">Email address</label>
+                        <input id="email-address" name="email" type="email" autocomplete="email" required
+                               class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
+                               placeholder="Email address">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1 sr-only">Password</label>
+                        <input id="password" name="password" type="password" autocomplete="new-password" required
+                               class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
+                               placeholder="Password (min. 8 characters)">
+                    </div>
+                    <div>
+                        <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-1 sr-only">Confirm Password</label>
+                        <input id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" required
+                               class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
+                               placeholder="Confirm Password">
+                    </div>
+
+                    <div>
+                        <button type="submit"
+                                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+                <p class="mt-6 text-center text-sm text-gray-600">
+                    Already have an account?
+                    <a href="{{ url_for('auth.student_login_page') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                        Sign in
+                    </a>
+                </p>
             </div>
-        </form>
-        <p class="mt-2 text-center text-sm text-gray-600">
-            Already have an account?
-            <a href="{{ url_for('auth.student_login_page') }}" class="font-medium text-primary hover:text-primary/80">
-                Sign in
-            </a>
-        </p>
+        </div>
     </div>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const menuToggle = document.querySelector('.menu-toggle');
-    const navigation = document.getElementById('main-navigation'); // Use ID for reliability
+    const navigation = document.getElementById('main-navigation');
 
     if (menuToggle && navigation) {
         menuToggle.addEventListener('click', function() {
             navigation.classList.toggle('active');
             menuToggle.classList.toggle('active');
-            // Toggle ARIA attributes for accessibility
             const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
             menuToggle.setAttribute('aria-expanded', !isExpanded);
         });

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Printable Application Form - P{{ application.academic_year[:4] if application.academic_year else '2025' }}{{ "%04d" | format(application.applicant_id if application.applicant_id else 0) }}</title>
+<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<style>
+    body { font-family: Arial, sans-serif; font-size: 10pt; margin: 0; padding: 0; color: #000; background-color: #fff; }
+    .page { width: 210mm; min-height: 297mm; padding: 10mm; margin: 10mm auto; border: 1px solid #d3d3d3; background: white; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); position: relative; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+    td, th { border: 1px solid black; padding: 3px; vertical-align: top; font-size: 9pt; }
+    .no-border td, .no-border th { border: none; }
+    .header-table td { vertical-align: middle; text-align: center; }
+    .header-table img { max-height: 60px; vertical-align: middle; }
+    .main-title { text-align: center; font-size: 14pt; font-weight: bold; margin-top: 5px; margin-bottom: 5px; }
+    .sub-title { text-align: center; font-size: 11pt; font-weight: bold; margin-bottom: 10px; }
+    .field-label { font-weight: bold; font-size: 8pt; }
+    .value-box { min-height: 16px; padding-left: 2px; display:inline-block; }
+    .checkbox-option { margin-right: 10px; font-size: 9pt; white-space: nowrap; }
+    .checkbox { font-family: "DejaVu Sans", Arial, sans-serif; margin-left: 2px; } /* For Unicode box, margin-left to space from label */
+    .photo-placeholder { width: 90px; height: 90px; border: 1px solid black; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8pt; float: right; margin-left: 10px; overflow: hidden; }
+    .photo-placeholder img { max-width: 100%; max-height: 100%; object-fit: cover; }
+    .section-header { font-weight: bold; margin-top: 8px; margin-bottom: 3px; font-size: 9pt; }
+    .consent-oath { font-size: 8pt; text-align: justify; margin-top:10px; margin-bottom: 10px; padding: 5px; border: 1px solid black;}
+    .signature-area { margin-top: 15px; display: flex; justify-content: space-between; }
+    .signature-box { width: 45%; text-align: center; font-size: 9pt;}
+    .signature-line { border-bottom: 1px solid black; margin-top: 25px; margin-bottom: 3px; }
+    .permit-stub { border: 2px dashed black; padding: 10px; margin-top: 15px; }
+    .permit-stub h3 { text-align: center; margin-top: 0; margin-bottom: 10px; font-size: 11pt; font-weight: bold; }
+    .form-code { position: absolute; top: 10mm; right:10mm; font-size:8pt; }
+    .control-no-top { position: absolute; top: 30mm; right: 12mm; font-size: 9pt; border: 1px solid black; padding: 1px 4px;}
+
+
+    @media print {
+        body { margin: 0; padding: 0; font-size: 9pt; }
+        td, th {padding: 2px; font-size: 8.5pt;}
+        .page { border: none; box-shadow: none; margin: 0; width: auto; min-height: auto; page-break-after: always; padding: 5mm; }
+        .no-print { display: none; }
+        .control-no-top { top: 12mm; right: 5mm; }
+        .form-code { top: 5mm; right: 5mm; }
+        .photo-placeholder { width: 70px; height: 70px; }
+        .main-title { font-size: 12pt; }
+        .sub-title { font-size: 10pt; }
+        .field-label { font-size: 7.5pt; }
+        .checkbox-option { font-size: 8.5pt; margin-right: 5px; white-space: nowrap;}
+        .consent-oath { font-size: 7.5pt; }
+        .permit-stub h3 { font-size: 10pt; }
+        .signature-box { font-size: 8.5pt;}
+        .signature-line { margin-top: 20px; }
+        .permit-stub { margin-top:10px; padding: 5px;}
+    }
+</style>
+</head>
+<body>
+<div class="page">
+    <div class="form-code">PGPC-24-0002</div>
+    <table class="no-border header-table" style="width:100%; margin-bottom: 2px;">
+        <tr>
+            <td style="width:15%; text-align:left; padding:0; vertical-align: middle;">
+                <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="PGPC Logo" style="max-height:55px; display: block;">
+            </td>
+            <td style="text-align:center; padding:0; vertical-align: middle;"> <!-- Middle cell takes remaining width -->
+                <div style="font-size:9pt;">Republic of the Philippines</div>
+                <div style="font-weight:bold; font-size:11pt;">PADRE GARCIA POLYTECHNIC COLLEGE (PGPC)</div>
+                <div style="font-size:9pt;">Brgy. Castillo, Padre Garcia, Batangas 4224</div>
+                <div style="font-size:9pt;">padregarciapolytechniccollege@gmail.com</div>
+                <div style="font-size:9pt;">(043) 233-2055</div>
+            </td>
+            <td style="width:15%; padding:0; vertical-align: middle;">
+                <!-- Empty cell for balance, making the middle cell centered -->
+                 
+            </td>
+        </tr>
+    </table>
+
+    <div class="main-title">COLLEGE ADMISSION APPLICATION FORM</div>
+    <div class="sub-title">A.Y. {{ application.academic_year | default('2025-2026') }}</div>
+
+    <div class="control-no-top">Control No: <span style="font-weight:normal;">{{ application.control_number | default('__________') }}</span></div>
+
+    <div style="font-size: 8pt; margin-bottom: 3px;">TO THE APPLICANT: PRINT legibly all information required. Put a check (<span class="checkbox">✓</span>) mark in the appropriate box. Only correctly and completely filled-out form will be accepted for processing.</div>
+
+    <div class="photo-placeholder">
+        {% if application.photo_base64 %}
+            <img src="{{ application.photo_base64 }}" alt="Applicant Photo">
+        {% else %}
+            Attach a Recent 2x2 photo with white background
+        {% endif %}
+    </div>
+
+    <table>
+        <tr>
+            <td colspan="2"><span class="field-label">PROGRAM (COURSE):</span> <span class="value-box">{{ application.program_choice }}</span></td>
+            <td colspan="2"><span class="field-label">DATE OF APPLICATION:</span> <span class="value-box">{{ application.date_of_application_formatted }}</span></td>
+        </tr>
+        <tr>
+            <td colspan="4" style="padding-bottom: 1px; padding-top:1px;">
+                <span class="field-label">NAME OF APPLICANT:</span> <span style="font-size:8pt;">Print or type your full name in the following sequence: (LAST NAME, FIRST NAME, and MIDDLE NAME. Place one letter in each box. Leave one box blank between names.)</span>
+                <div><span class="field-label">LAST NAME:</span> <span class="value-box" style="font-size:10pt; font-weight:bold;">{{ application.last_name }}</span></div>
+                <div><span class="field-label">FIRST NAME:</span> <span class="value-box" style="font-size:10pt; font-weight:bold;">{{ application.first_name }}</span></div>
+                <div><span class="field-label">MIDDLE NAME:</span> <span class="value-box" style="font-size:10pt; font-weight:bold;">{{ application.middle_name }}</span></div>
+            </td>
+        </tr>
+        <tr>
+            <td><span class="field-label">3. Date of Birth:</span><br><span class="value-box">{{ application.date_of_birth_formatted }}</span></td>
+            <td colspan="3"><span class="field-label">5. Place of Birth:</span><br><span class="value-box">{{ application.place_of_birth }}</span></td>
+        </tr>
+        <tr>
+            <td><span class="field-label">6. Sex:</span><br>
+                <span class="checkbox-option">Female <span class="checkbox">{% if application.sex|lower == 'female' %}☑{% else %}☐{% endif %}</span></span>
+                <span class="checkbox-option">Male <span class="checkbox">{% if application.sex|lower == 'male' %}☑{% else %}☐{% endif %}</span></span>
+            </td>
+            <td><span class="field-label">7. Civil Status:</span><br>
+                <span class="checkbox-option">Single <span class="checkbox">{% if application.civil_status|lower == 'single' %}☑{% else %}☐{% endif %}</span></span>
+                <span class="checkbox-option">Married <span class="checkbox">{% if application.civil_status|lower == 'married' %}☑{% else %}☐{% endif %}</span></span><br>
+                <span class="checkbox-option">Widower <span class="checkbox">{% if application.civil_status|lower == 'widower' %}☑{% else %}☐{% endif %}</span></span>
+                <span class="checkbox-option">Separated <span class="checkbox">{% if application.civil_status|lower == 'separated' %}☑{% else %}☐{% endif %}</span></span>
+            </td>
+            <td><span class="field-label">8. Religion:</span><br><span class="value-box">{{ application.religion }}</span></td>
+            <td><span class="field-label">9. Citizenship:</span><br><span class="value-box">{{ application.citizenship }}</span></td>
+        </tr>
+        <tr>
+            <td><span class="field-label">10. Mobile No.:</span><br><span class="value-box">{{ application.mobile_number }}</span></td>
+            <td colspan="3"><span class="field-label">11. Email Address:</span><br><span class="value-box">{{ application.email_address }}</span></td>
+        </tr>
+        <tr>
+            <td colspan="3"><span class="field-label">12. Permanent Address:</span><br><span class="value-box">{{ application.permanent_address_street_barangay }}{% if application.permanent_address_city_municipality %}, {{ application.permanent_address_city_municipality }}{% endif %}{% if application.permanent_address_province %}, {{ application.permanent_address_province }}{% endif %}</span></td>
+            <td><span class="field-label">Postal Code:</span><br><span class="value-box">{{ application.permanent_address_postal_code }}</span></td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <td style="width:33%;">
+                <span class="field-label">13. Father's Name:</span> <span class="value-box">{{ application.father_name }}</span><br>
+                <span class="field-label">Occupation:</span> <span class="value-box">{{ application.father_occupation }}</span><br>
+                <span class="field-label">Company & Address:</span> <span class="value-box">{{ application.father_company_address }}</span><br>
+                <span class="field-label">Contact no./s:</span> <span class="value-box">{{ application.father_contact_number }}</span>
+            </td>
+            <td style="width:34%;">
+                <span class="field-label">14. Mother's Maiden Name:</span> <span class="value-box">{{ application.mother_maiden_name }}</span><br>
+                <span class="field-label">Occupation:</span> <span class="value-box">{{ application.mother_occupation }}</span><br>
+                <span class="field-label">Company & Address:</span> <span class="value-box">{{ application.mother_company_address }}</span><br>
+                <span class="field-label">Contact no./s:</span> <span class="value-box">{{ application.mother_contact_number }}</span>
+            </td>
+            <td style="width:33%;">
+                <span class="field-label">15. Guardian:</span> <span class="value-box">{{ application.guardian_name }}</span><br>
+                <span class="field-label">Occupation:</span> <span class="value-box">{{ application.guardian_occupation }}</span><br>
+                <span class="field-label">Company & Address:</span> <span class="value-box">{{ application.guardian_company_address }}</span><br>
+                <span class="field-label">Contact no./s:</span> <span class="value-box">{{ application.guardian_contact_number }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <td colspan="4"><span class="field-label">16. Average Family Income (Monthly) Please check one:</span><br>
+                {% set income_options_list = [
+                    {"value": "10000_below", "display": "₱10,000 below"},
+                    {"value": "10001_to_20000", "display": "₱10,001 - ₱20,000"},
+                    {"value": "20001_to_30000", "display": "₱20,001 – ₱30,000"},
+                    {"value": "30001_to_40000", "display": "₱30,001 – ₱40,000"},
+                    {"value": "40001_to_50000", "display": "₱40,001 – ₱50,000"},
+                    {"value": "50001_to_100000", "display": "₱50,001 – ₱100,000"},
+                    {"value": "100001_above", "display": "₱100,001 above"}
+                ] %}
+                {% for option_item in income_options_list %}
+                {# Ensure consistent spacing for alignment if possible, though nowrap helps #}
+                <span class="checkbox-option" style="display: inline-block; min-width: 120px;">{{ option_item.display }} <span class="checkbox">{% if application.average_family_income == option_item.value %}☑{% else %}☐{% endif %}</span></span>
+                {% if loop.index == 2 or loop.index == 4 or loop.index == 6 %}<br>{% endif %} {# Simple line break for better layout #}
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <td style="width:50%;" colspan="2">
+                <span class="field-label">17. Senior High School strand:</span><br><span class="value-box">{{ application.senior_high_school_track_strand }}</span><br>
+                <span class="field-label">SHS Name:</span> <span class="value-box">{{ application.senior_high_school }}</span><br>
+                <span class="field-label">Address (Brgy. City Town, Province):</span> <span class="value-box">{{ application.senior_high_school_address }}</span><br>
+                <span class="field-label">Inclusive Dates:</span> <span class="value-box">{{ application.senior_high_school_year_from }} - {{ application.senior_high_school_year_to }}</span>
+            </td>
+            <td style="width:50%;" colspan="2">
+                <span class="field-label">18. College (if any): / ALS GRADUATE</span><br>
+                <span class="field-label">School Name:</span> <span class="value-box">{{ application.tertiary_school }}</span><br>
+                <span class="field-label">Address (Brgy. City Town, Province):</span> <span class="value-box">{{ application.tertiary_school_address }}</span><br>
+                <span class="field-label">Inclusive Dates:</span> <span class="value-box">{{ application.tertiary_year_from }} - {{ application.tertiary_year_to }}</span><br>
+                <span class="field-label">Program:</span> <span class="value-box">{{ application.tertiary_course }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <span class="field-label">19. Member of Cultural Minority Group?</span><br>
+                <span class="checkbox-option">Yes <span class="checkbox">{% if application.cultural_minority_group and application.cultural_minority_group|lower not in ['no', 'none', ''] %}☑{% else %}☐{% endif %}</span></span>
+                <span class="checkbox-option">No <span class="checkbox">{% if not application.cultural_minority_group or application.cultural_minority_group|lower in ['no', 'none', ''] %}☑{% else %}☐{% endif %}</span></span><br>
+                {% if application.cultural_minority_group and application.cultural_minority_group|lower not in ['no', 'none', '', 'yes'] %}
+                <span class="value-box">(Specify: {{ application.cultural_minority_group }})</span>
+                {% elif application.cultural_minority_group|lower == 'yes' %}
+                <span class="value-box">(Specified as "Yes")</span>
+                {% endif %}
+            </td>
+            <td colspan="2">
+                <span class="field-label">Do you have any physical disability or condition that requires special attention?</span><br>
+                <span class="checkbox-option">Yes <span class="checkbox">{% if application.physical_disability and application.physical_disability|lower not in ['no', 'none', ''] %}☑{% else %}☐{% endif %}</span></span>
+                <span class="checkbox-option">No <span class="checkbox">{% if not application.physical_disability or application.physical_disability|lower in ['no', 'none', ''] %}☑{% else %}☐{% endif %}</span></span><br>
+                {% if application.physical_disability and application.physical_disability|lower not in ['no', 'none', '', 'yes'] %}
+                <span class="value-box">(Specify attached certification of disability: {{ application.physical_disability }})</span>
+                {% elif application.physical_disability|lower == 'yes' %}
+                <span class="value-box">(Specified as "Yes" - certification should be attached)</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <div class="consent-oath">
+        <div style="font-weight:bold; text-align:center; font-size:9pt;">CONSENT</div>
+        I am fully aware that Padre Garcia Polytechnic College is obligated under the Data Privacy Act of 2012 and its Implementing Rules and Regulations (IRR) effective
+        since September 8, 2016, to protect all my personal and sensitive information that it collects, processes, and retains upon my application for admission, enrolment,
+        and during my stay in the College. Likewise, I am fully aware that PGPC may share such information to affiliated or partner organizations as part of its contractual
+        obligations, or with government agencies pursuant to law or legal processes. In this regard, I hereby allow PGPC to collect, process, use and share my personal data
+        in the pursuit of its legitimate academic, research and employment purposes and/or interests as an educational institution.
+        {% if application.agreements == 'Yes' %}<strong>[AGREED BY APPLICANT DIGITALLY]</strong>{% endif %}
+        <div style="font-weight:bold; text-align:center; font-size:9pt; margin-top:5px;">OATH</div>
+        I hereby certify that all information supplied in this application form is complete and accurate. I also understand that any false information will disqualify me from
+        being admitted to the College.
+    </div>
+
+    <table class="no-border" style="margin-top:10px; margin-bottom:0px;">
+        <tr>
+            <td style="width:60%; text-align:center; padding:0;">
+                <div class="signature-line" style="margin: 20px auto 3px auto; width:80%;"></div>
+                Signature of Applicant
+            </td>
+            <td style="width:40%; text-align:left; padding:0; font-size:8pt;">
+                Date: {{ application.final_submission_date_formatted if application.final_submission_date else '____________________' }}
+            </td>
+        </tr>
+        <tr>
+            <td style="width:60%; text-align:center; padding:0;">
+                <div class="signature-line" style="margin: 20px auto 3px auto; width:80%;"></div>
+                Signature of Parent/Guardian
+            </td>
+            <td style="width:40%; text-align:left; padding:0; font-size:8pt;">
+                 Date: ____________________
+            </td>
+        </tr>
+    </table>
+
+
+    <div class="permit-stub">
+        <h3>COLLEGE ADMISSION TEST PERMIT STUB</h3>
+        <div style="float: right; width: 80px; height: 80px; border: 1px solid black; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 7pt; margin-left: 5px; overflow:hidden;">
+            {% if application.photo_base64 %}
+                <img src="{{ application.photo_base64 }}" alt="Applicant Photo" style="max-width:100%; max-height:100%; object-fit:cover;">
+            {% else %}
+                Attach a Recent 2x2 photo with white background
+            {% endif %}
+        </div>
+        <table>
+            <tr>
+                <td><span class="field-label">Control No:</span><br><span class="value-box">{{ application.permit_control_no | default(application.control_number) }}</span></td>
+                <td><span class="field-label">Date of Examination:</span><br><span class="value-box">{{ application.permit_exam_date_formatted if application.permit_exam_date else '' }}</span></td>
+            </tr>
+            <tr>
+                <td><span class="field-label">Time:</span><br><span class="value-box">{{ application.permit_exam_time }}</span></td>
+                <td><span class="field-label">Testing Rm:</span><br><span class="value-box">{{ application.permit_testing_room }}</span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="padding:2px;">
+                    <span class="field-label">LAST NAME:</span> <span class="value-box" style="font-weight:bold;">{{ application.last_name }}</span><br>
+                    <span class="field-label">FIRST NAME:</span> <span class="value-box" style="font-weight:bold;">{{ application.first_name }}</span><br>
+                    <span class="field-label">MIDDLE NAME:</span> <span class="value-box" style="font-weight:bold;">{{ application.middle_name }}</span>
+                </td>
+            </tr>
+        </table>
+        <div style="margin-top: 20px; text-align: right;">
+            <div style="display: inline-block; width: 200px; border-top: 1px solid black; text-align: center; font-size:9pt; padding-top:2px;">Admission and Testing Officer</div>
+        </div>
+    </div>
+    <div style="text-align:center; font-weight:bold; font-style:italic; margin-top:10px; font-size:9pt;">
+        "TAGA-PGPC AKO: MATALINO, DISIPLINADO, MABUTING TAO, IPINAGMAMALAKI KO!"
+    </div>
+    <div class="no-print" style="text-align:center; margin-top:20px;">
+        <button onclick="window.print()">Print Form</button>
+    </div>
+</div>
+</body>
+</html>

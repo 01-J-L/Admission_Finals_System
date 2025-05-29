@@ -1,90 +1,185 @@
 {% extends "base.html" %}
 
-{% block title %}PGPC_Admin{% endblock %}
+{% block title %}PGPC_Admin Panel{% endblock %}
 
 {% block content %}
 <style>
+    :root {
+        --page-bg: #0F172A; /* Darker Slate Blue */
+        --panel-bg: #1E293B; /* Slate Blue */
+        --accent-color: #2DD4BF; /* Teal */
+        --text-color: #E2E8F0; /* Light Gray */
+        --label-color: #94A3B8; /* Muted Slate Gray */
+        --danger-color: #F43F5E; /* Rose Red for errors */
+        --success-color: var(--accent-color);
+        --input-border-focus-color: #5EEAD4; /* Lighter Teal for focus */
+    }
+
     body {
-        font-family: Arial, sans-serif;
-        background: #f2f2f2;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--page-bg);
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
-        margin: 0; /* Ensure no default margin */
+        min-height: 100vh;
+        margin: 0;
+        color: var(--text-color);
+        padding: 20px; /* Add some padding for smaller screens */
+        box-sizing: border-box;
     }
-    .login-form-container { /* Added a container for centering */
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+
+    .admin-panel-container {
+        background-color: var(--panel-bg);
+        padding: 30px 40px 40px 40px;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         width: 100%;
-        max-width: 350px; /* Max width for the form */
+        max-width: 400px; /* Max width for the form */
+        text-align: center; /* Center icon and title */
     }
-    .login-form-container h1 { /* Target h1 specifically for title */
-        text-align: center;
-        margin-bottom: 20px;
-        font-size: 1.5rem; /* text-2xl */
-        font-weight: bold; /* font-bold */
-        color: #374151; /* text-gray-800 */
+
+    .pgpc-logo-admin {
+        width: 60px; /* Adjust size as needed for your logo */
+        height: auto; /* Maintain aspect ratio */
+        margin-bottom: 20px; /* Space below the logo */
+        display: block; /* Needed for margin auto to work for horizontal centering */
+        margin-left: auto;
+        margin-right: auto;
     }
-    .login-form-container input[type="text"],
-    .login-form-container input[type="password"] {
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 16px; /* Consistent margin */
-        margin-top: 4px; /* Space between label and input */
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        box-sizing: border-box; /* Include padding and border in element's total width and height */
+
+    .admin-panel-container h1 {
+        margin-bottom: 30px;
+        font-size: 1.75rem; /* Slightly larger title */
+        font-weight: 600;
+        color: var(--text-color);
+        letter-spacing: 0.1em; /* Letter spacing for ADMIN PANEL */
+        text-transform: uppercase;
     }
-    .login-form-container button {
-        width: 100%;
-        padding: 10px;
-        background: #4f46e5; /* Tailwind primary color */
-        border: none;
-        color: white;
-        border-radius: 5px;
-        font-size: 16px;
-        cursor: pointer;
-        font-weight: 500; /* font-medium */
+
+    .input-group {
+        margin-bottom: 25px;
+        text-align: left; /* Align labels and inputs left */
     }
-    .login-form-container button:hover {
-        background: #4338ca; /* primary/90 */
-    }
-    .login-form-container label { /* Style for labels */
+
+    .input-group label {
         display: block;
-        font-size: 0.875rem; /* text-sm */
-        font-weight: 500; /* font-medium */
-        color: #4b5563; /* text-gray-700 */
+        font-size: 0.75rem; /* Small label */
+        font-weight: 500;
+        color: var(--label-color);
+        text-transform: uppercase;
+        margin-bottom: 8px; /* Space between label and input */
+        letter-spacing: 0.05em;
     }
-    .flash-messages-container { /* For flashed messages */
-        margin-top: 1rem; /* mt-4 */
+
+    .input-group input[type="text"],
+    .input-group input[type="password"] {
+        width: 100%;
+        padding: 10px 2px; /* Padding for text, minimal side padding */
+        background-color: transparent;
+        border: none;
+        border-bottom: 2px solid var(--label-color); /* Initial subtle border */
+        color: var(--text-color);
+        font-size: 1rem;
+        box-sizing: border-box;
+        transition: border-color 0.3s ease;
+    }
+
+    .input-group input[type="text"]:focus,
+    .input-group input[type="password"]:focus {
+        outline: none;
+        border-bottom-color: var(--accent-color); /* Accent color on focus */
+    }
+
+    .button-wrapper {
+        display: flex;
+        justify-content: flex-end; /* Aligns button to the right */
+        margin-top: 30px;
+    }
+
+    .admin-panel-container button[type="submit"] {
+        background-color: transparent;
+        border: 2px solid var(--accent-color);
+        color: var(--accent-color);
+        padding: 10px 25px;
+        border-radius: 5px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .admin-panel-container button[type="submit"]:hover {
+        background-color: var(--accent-color);
+        color: var(--panel-bg); /* Dark text on hover */
+    }
+
+    .flash-messages-container {
+        margin-top: 20px;
+        width: 100%;
     }
     .flash-message {
-        font-size: 0.875rem; /* text-sm */
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        text-align: center;
+        border: 1px solid transparent;
     }
     .flash-danger {
-        color: #dc2626; /* text-red-600 */
+        background-color: rgba(244, 63, 94, 0.1); /* Light red background */
+        color: var(--danger-color);
+        border-color: var(--danger-color);
     }
     .flash-success {
-        color: #16a34a; /* text-green-600 */
+        background-color: rgba(45, 212, 191, 0.1); /* Light teal background */
+        color: var(--success-color);
+        border-color: var(--success-color);
     }
+    /* Add other categories if needed e.g. .flash-info */
+
+    .home-button-admin { /* Unique class for admin page home button */
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background-color: var(--panel-bg);
+        color: var(--accent-color);
+        padding: 8px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1px solid var(--accent-color);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .home-button-admin:hover {
+        background-color: var(--accent-color);
+        color: var(--panel-bg);
+    }
+
 </style>
 
-<div class="login-form-container">
-    <h1>Admin Login</h1>
+<div class="admin-panel-container">
+    <!-- PGPC Logo -->
+    <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="PGPC Logo" class="pgpc-logo-admin">
+
+    <h1>Admin Panel</h1>
     <form action="{{ url_for('auth.admin_login') }}" method="POST">
-        <div class="mb-4">
+        <div class="input-group">
             <label for="username">Username</label>
             <input type="text" id="username" name="username" required>
         </div>
-        <div class="mb-6">
+        <div class="input-group">
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required>
         </div>
-        <button type="submit">Login</button>
+        <div class="button-wrapper">
+            <button type="submit">Login</button>
+        </div>
     </form>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-messages-container">
@@ -97,7 +192,7 @@
 </div>
 
 <!-- Home Button (bottom-left corner) -->
-<a href="{{ url_for('views.home') }}" class="fixed bottom-4 left-4 bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 shadow-lg text-sm">
+<a href="{{ url_for('views.home') }}" class="home-button-admin">
     ← Home
 </a>
 

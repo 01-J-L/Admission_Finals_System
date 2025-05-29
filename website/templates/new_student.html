@@ -410,7 +410,6 @@
     <nav class="navigation" id="main-navigation">
         {% if student_logged_in %}
             <a href="{{ url_for('views.application_status_page') }}">Application Status</a>
-            <!-- MODIFIED HERE: Added class="logout-link" to <a> and class="btn-logout" to <button>, removed inline style -->
             <a href="{{ url_for('auth.logout') }}" class="logout-link">
                 <button class="btnLogin-popup btn-logout">Logout</button>
             </a>
@@ -424,8 +423,7 @@
 {% endblock %}
 
 {% block body %}
-<!-- Removed inline style="margin-top: 180px;" from body tag, and the body tag itself as it's from base.html -->
-<div class="main-content-area"> <!-- This div handles the top offset for the fixed header -->
+<div class="main-content-area">
   <div class="min-h-screen flex flex-col">
     <main class="flex-grow container mx-auto px-4 py-8">
       <div
@@ -441,14 +439,13 @@
                         Complete all required information to apply for admission.
                     </p>
                 </div>
-                {% if student_logged_in %} <!-- Only show if student is logged in -->
+                {% if student_logged_in %}
                 <a href="{{ url_for('views.application_status_page') }}" class="text-sm text-primary hover:text-primary/80 flex items-center whitespace-nowrap ml-4 px-4 py-2 rounded-button border border-primary hover:bg-primary/10 transition-colors">
                     <i class="ri-arrow-left-line mr-2"></i>Back to Status
                 </a>
                 {% endif %}
             </div>
         </div>
-        <!-- Progress Stepper -->
         <div class="px-6 py-4 border-b border-gray-200">
           <div class="flex items-center">
             <div class="flex flex-col items-center flex-1">
@@ -511,10 +508,8 @@
             </div>
           </div>
         </div>
-        <!-- Form Content -->
         <form action="{{ url_for('auth.submit_application') }}" method="POST" enctype="multipart/form-data" >
         <div class="p-6">
-          <!-- Step 1: Personal Information -->
           <div id="step1" class="block">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">
               Personal Information
@@ -526,14 +521,19 @@
                     >Program (Course)
                     <span class="text-red-500">*</span></label
                   >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Enter your preferred program"
+                  <!-- MODIFIED: Changed input to select -->
+                  <select
                     name="program_choice"
                     id="program"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     required
-                  />
+                  >
+                    <option value="">Select a Program</option>
+                    <option value="Bachelor of Science in Computer Science">Bachelor of Science in Computer Science</option>
+                    <option value="Bachelor of Science in Management Accounting">Bachelor of Science in Management Accounting</option>
+                    <option value="Bachelor of Public Administration">Bachelor of Public Administration</option>
+                    <option value="Bachelor of Science in Criminology">Bachelor of Science in Criminology</option>
+                  </select>
                 </div>
                 <div class="mb-6">
                   <label class="block text-gray-700 font-medium mb-2"
@@ -566,9 +566,8 @@
                         class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                         placeholder="Middle Name"
                         name="middle_name"
-                        required
                       />
-                      <p class="text-xs text-gray-500 mt-1">Middle Name</p>
+                      <p class="text-xs text-gray-500 mt-1">Middle Name (Optional)</p>
                     </div>
                   </div>
                 </div>
@@ -602,46 +601,41 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <label class="block text-gray-700 font-medium mb-2">Sex <span class="text-red-500">*</span></label>
-<div class="flex gap-6 mt-2">
-  <div class="flex items-center">
-    <input type="radio" name="sex" value="female" required />
-    <label class="ml-2 text-gray-700">Female</label>
-  </div>
-  <div class="flex items-center">
-    <input type="radio" name="sex" value="male" required />
-    <label class="ml-2 text-gray-700">Male</label>
-  </div>
-</div>
-
+                    <div class="flex gap-6 mt-2">
+                      <div class="flex items-center">
+                        <input type="radio" name="sex" value="female" required />
+                        <label class="ml-2 text-gray-700">Female</label>
+                      </div>
+                      <div class="flex items-center">
+                        <input type="radio" name="sex" value="male" required />
+                        <label class="ml-2 text-gray-700">Male</label>
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label class="block text-gray-700 font-medium mb-2"
                       >Civil Status <span class="text-red-500">*</span></label
                     >
-                    <div
-                    name="civil_status"
-                      class="flex flex-wrap gap-4 mt-2"
-                      data-radio-group="civil-status"
-                    >
-                    <div class="flex items-center">
-                      <input type="radio" name="civil_status" value="single" required />
-                      <label class="ml-2 text-gray-700">Single</label>
-                    </div>
-                    <div class="flex items-center">
-                      <input type="radio" name="civil_status" value="married" required />
-                      <label class="ml-2 text-gray-700">Married</label>
-                    </div>
-                    <div class="flex items-center">
-                      <input type="radio" name="civil_status" value="widower" required />
-                      <label class="ml-2 text-gray-700">Widower</label>
-                    </div>
+                    <div class="flex flex-wrap gap-4 mt-2">
+                      <div class="flex items-center">
+                        <input type="radio" name="civil_status" value="single" required />
+                        <label class="ml-2 text-gray-700">Single</label>
+                      </div>
+                      <div class="flex items-center">
+                        <input type="radio" name="civil_status" value="married" required />
+                        <label class="ml-2 text-gray-700">Married</label>
+                      </div>
+                      <div class="flex items-center">
+                        <input type="radio" name="civil_status" value="widower" required />
+                        <label class="ml-2 text-gray-700">Widower</label>
+                      </div>
                     </div>
                   </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <label class="block text-gray-700 font-medium mb-2"
-                      >Religion</label
+                      >Religion <span class="text-red-500">*</span></label
                     >
                     <input
                       type="text"
@@ -731,7 +725,7 @@
                 </div>
                 <div class="mb-6">
                   <label class="block text-gray-700 font-medium mb-2"
-                    >Are you a member of Cultural Minority Group?</label
+                    >Are you a member of Cultural Minority Group? <span class="text-red-500">*</span></label
                   >
                   <div class="flex gap-6 mt-2">
                     <div class="flex items-center">
@@ -747,7 +741,7 @@
                 <div class="mb-6">
                   <label class="block text-gray-700 font-medium mb-2"
                     >Do you have any physical disability or condition that
-                    requires special attention?</label
+                    requires special attention? <span class="text-red-500">*</span></label
                   >
                   <div class="flex gap-6 mt-2">
                     <div class="flex items-center">
@@ -794,7 +788,7 @@
                       </div>
                     </div>
                     <p class="text-sm text-gray-700 text-center mb-2">
-                      Attach a Recent 2x2 photo with white background
+                      Attach a Recent 2x2 photo with white background <span class="text-red-500">*</span>
                     </p>
                     <input
                       type="file"
@@ -806,6 +800,7 @@
                     />
 
                     <button
+                      type="button"
                       id="uploadPhotoBtn"
                       class="bg-primary text-white px-4 py-2 rounded-button text-sm whitespace-nowrap"
                     >
@@ -824,24 +819,24 @@
                   
                   <div class="mb-4">
                     <label class="block text-gray-700 text-sm mb-1"
-                      >Date of Application</label
+                      >Date of Application <span class="text-red-500">*</span></label
                     >
                     <input
                       type="date"
                       class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      value="2025-04-24"
+                      value="{{ today_date_for_form }}" {# MODIFIED #}
                       name="date_of_application"
                       required
                     />
                   </div>
                   <div>
                     <label class="block text-gray-700 text-sm mb-1"
-                      >Academic Year</label
+                      >Academic Year <span class="text-red-500">*</span></label
                     >
                     <input
                       type="text"
                       class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      value="2025-2026"
+                      value="2025-2026" {# Default or make dynamic #}
                       name="academic_year"
                       required
                     />
@@ -851,6 +846,7 @@
             </div>
             <div class="mt-8 flex justify-end">
               <button
+                type="button"
                 id="nextToStep2"
                 class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap"
               >
@@ -885,7 +881,7 @@
                 </h4>
                 <div class="mb-4">
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Father's Name</label
+                    >Father's Name <span class="text-red-500">*</span></label
                   >
                   <input
                     type="text"
@@ -897,7 +893,7 @@
                 </div>
                 <div class="mb-4">
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Occupation</label
+                    >Occupation <span class="text-red-500">*</span></label
                   >
                   <input
                     type="text"
@@ -909,7 +905,7 @@
                 </div>
                 <div class="mb-4">
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Company & Address</label
+                    >Company & Address <span class="text-red-500">*</span></label
                   >
                   <input
                     type="text"
@@ -921,7 +917,7 @@
                 </div>
                 <div>
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Contact No.</label
+                    >Contact No. <span class="text-red-500">*</span></label
                   >
                   <input
                     type="tel"
@@ -938,7 +934,7 @@
                 </h4>
                 <div class="mb-4">
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Mother's Maiden Name</label
+                    >Mother's Maiden Name <span class="text-red-500">*</span></label
                   >
                   <input
                     type="text"
@@ -950,7 +946,7 @@
                 </div>
                 <div class="mb-4">
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Occupation</label
+                    >Occupation <span class="text-red-500">*</span></label
                   >
                   <input
                     type="text"
@@ -962,7 +958,7 @@
                 </div>
                 <div class="mb-4">
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Company & Address</label
+                    >Company & Address <span class="text-red-500">*</span></label
                   >
                   <input
                     type="text"
@@ -974,7 +970,7 @@
                 </div>
                 <div>
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Contact No.</label
+                    >Contact No. <span class="text-red-500">*</span></label
                   >
                   <input
                     type="tel"
@@ -987,7 +983,7 @@
               </div>
               <div>
                 <h4 class="font-medium text-gray-800 mb-4">
-                  Guardian's Information
+                  Guardian's Information (Optional)
                 </h4>
                 <div class="mb-4">
                   <label class="block text-gray-700 text-sm mb-2"
@@ -998,7 +994,6 @@
                     class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     placeholder="Full name"
                     name="guardian_name"
-                    required
                   />
                 </div>
                 <div class="mb-4">
@@ -1010,7 +1005,6 @@
                     class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     placeholder="Occupation"
                     name="guardian_occupation"
-                    required
                   />
                 </div>
                 <div class="mb-4">
@@ -1022,7 +1016,6 @@
                     class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     placeholder="Company name and address"
                     name="guardian_company_address"
-                    required
                   />
                 </div>
                 <div>
@@ -1034,19 +1027,20 @@
                     class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     placeholder="Mobile number"
                     name="guardian_contact_number"
-                    required
                   />
                 </div>
               </div>
             </div>
             <div class="mt-8 flex justify-between">
               <button
+                type="button"
                 id="backToStep1"
                 class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap"
               >
                 Previous: Personal Information
               </button>
               <button
+                type="button"
                 id="nextToStep3"
                 class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap"
               >
@@ -1096,6 +1090,7 @@
                   <select
                     name="senior_high_school_track_strand"
                     class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary pr-8"
+                    required
                   >
                     <option value="">Select strand</option>
                     <option value="STEM">
@@ -1117,7 +1112,7 @@
                 </div>
                 <div>
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Inclusive Dates
+                    >Inclusive Dates (Year)
                     <span class="text-red-500">*</span></label
                   >
                   <div class="grid grid-cols-2 gap-4">
@@ -1140,7 +1135,7 @@
               </div>
               <div>
                 <h4 class="font-medium text-gray-800 mb-4">
-                  College (if any) / ALS Graduate
+                  College (if any) / ALS Graduate (Optional)
                 </h4>
                 <div class="mb-4">
                   <label class="block text-gray-700 text-sm mb-2"
@@ -1180,7 +1175,7 @@
                 </div>
                 <div>
                   <label class="block text-gray-700 text-sm mb-2"
-                    >Inclusive Dates</label
+                    >Inclusive Dates (Year)</label
                   >
                   <div class="grid grid-cols-2 gap-4">
                     <input
@@ -1201,14 +1196,47 @@
                 </div>
               </div>
             </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="font-medium text-gray-800 mb-4">Required Documents</h4>
+                <p class="text-sm text-gray-600 mb-4">Please upload clear copies. Max 5MB per file. Accepted formats: PDF, JPG, PNG.</p>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="shs_diploma_file_input">
+                        1. Certified True Copy of Senior High School Diploma <span class="text-red-500">*</span>
+                    </label>
+                    <input type="file" id="shs_diploma_file_input" name="shs_diploma_file_input"
+                           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                           accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="shs_card_file_input">
+                        2. Original Senior High School Report Card (Form 138) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="file" id="shs_card_file_input" name="shs_card_file_input"
+                           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                           accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="birth_certificate_file_input">
+                        3. Photocopy of PSA/NSO Birth Certificate <span class="text-red-500">*</span>
+                    </label>
+                    <input type="file" id="birth_certificate_file_input" name="birth_certificate_file_input"
+                           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                           accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
+            </div>
+
             <div class="mt-8 flex justify-between">
               <button
+                type="button"
                 id="backToStep2"
                 class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap"
               >
                 Previous: Family Details
               </button>
               <button
+                type="button"
                 id="nextToStep4"
                 class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap"
               >
@@ -1216,11 +1244,16 @@
               </button>
             </div>
           </div>
-          <!-- Step 4: Review & Submit -->
           <div id="step4" class="hidden">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">
               Review & Submit
             </h3>
+            <div
+              class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6"
+              id="reviewDataContainer"
+            >
+              <!-- Review data will be populated here by JS -->
+            </div>
             <div
               class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6"
             >
@@ -1260,18 +1293,18 @@
               <input type="checkbox" name="agreements" value="Yes" id="agreements" required>
               <label class="ml-2 text-gray-700"
                 >I have read and agree to the terms and conditions
-                above.</label
+                above. <span class="text-red-500">*</span></label
               >
             </div>
             <div class="grid grid-cols-1 gap-6 mb-6">
               <div>
-                <label class="block text-gray-700 text-sm mb-2" for="final_submission_date_input">Final Submission Date</label>
+                <label class="block text-gray-700 text-sm mb-2" for="final_submission_date_input">Final Submission Date <span class="text-red-500">*</span></label>
                 <input
                   type="date"
                   id="final_submission_date_input"
                   name="final_submission_date"
                   class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                  value="2025-04-24"
+                  value="{{ today_date_for_form }}" {# MODIFIED #}
                   required
                 />
               </div>
@@ -1279,13 +1312,12 @@
            
             <div class="mt-8 flex justify-between">
               <button
+                type="button"
                 id="backToStep3"
                 class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap"
               >
                 Previous: Educational Background
               </button>
-              
-                <!-- Add all your form fields here -->
                 <button
                    id="submitApplication"
                    class="bg-gray-300 text-white px-6 py-2 rounded-button font-medium whitespace-nowrap cursor-not-allowed"
@@ -1294,10 +1326,10 @@
                     >     
                       Submit Application
                   </button>
-              </form> 
             </div> 
           </div> 
         </div> 
+      </form>
       </div> 
     </main>
   </div> 
@@ -1344,6 +1376,10 @@
                  radioGroup.forEach(radio => { if (radio.checked) oneChecked = true; });
                  if (!oneChecked) isValid = false;
             }
+          } else if (field.type === 'file') {
+            if (field.required && !field.files.length) {
+                isValid = false;
+            }
           } else if (!field.value.trim()) {
             isValid = false;
           }
@@ -1362,12 +1398,12 @@
   
       requiredFields.forEach((field) => {
         field.addEventListener("input", validateForm);
-        if (field.type === 'radio' || field.type === 'checkbox') {
+        if (field.type === 'radio' || field.type === 'checkbox' || field.type === 'file') {
             field.addEventListener("change", validateForm);
         }
       });
   
-      validateForm();
+      validateForm(); 
     });
   
     document.addEventListener("DOMContentLoaded", function () {
@@ -1382,9 +1418,9 @@
       const nextToStep4 = document.getElementById("nextToStep4");
       const backToStep3Buttons = document.querySelectorAll("#backToStep3"); 
 
-      function collectFormData() {
+      function collectFormData() { 
         const formData = {
-          program: document.querySelector('input[name="program_choice"]').value,
+          program: document.querySelector('select[name="program_choice"]').value, // MODIFIED: Changed to select
           lastName: document.querySelector('input[name="last_name"]').value,
           firstName: document.querySelector('input[name="first_name"]').value,
           middleName: document.querySelector('input[name="middle_name"]').value,
@@ -1443,14 +1479,18 @@
 
       if(nextToStep4) nextToStep4.addEventListener("click", function (e) {
         e.preventDefault();
-        const formData = collectFormData();
+        const formData = collectFormData(); 
+        const diplomaFile = document.getElementById('shs_diploma_file_input').files[0];
+        const cardFile = document.getElementById('shs_card_file_input').files[0];
+        const birthCertFile = document.getElementById('birth_certificate_file_input').files[0];
+
         const reviewContent = `
         <div class="space-y-6">
         <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
         <h4 class="font-medium text-gray-800 mb-4">Personal Information</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div><p class="text-sm text-gray-600">Program:</p><p class="font-medium">${formData.program || "Not specified"}</p></div>
-        <div><p class="text-sm text-gray-600">Full Name:</p><p class="font-medium">${formData.lastName}, ${formData.firstName} ${formData.middleName}</p></div>
+        <div><p class="text-sm text-gray-600">Full Name:</p><p class="font-medium">${formData.lastName}, ${formData.firstName} ${formData.middleName || ''}</p></div>
         <div><p class="text-sm text-gray-600">Date of Birth:</p><p class="font-medium">${formData.dateOfBirth || "Not specified"}</p></div>
         <div><p class="text-sm text-gray-600">Place of Birth:</p><p class="font-medium">${formData.placeOfBirth || "Not specified"}</p></div>
         <div><p class="text-sm text-gray-600">Sex:</p><p class="font-medium">${formData.sex || "Not specified"}</p></div>
@@ -1472,6 +1512,12 @@
         <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
         <h4 class="font-medium text-gray-800 mb-4">Educational Background</h4>
         <div><h5 class="font-medium text-gray-700 mb-2">Senior High School</h5><p class="text-sm text-gray-600">School Name: <span class="font-medium">${formData.education.shs.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Address: <span class="font-medium">${formData.education.shs.address || "Not specified"}</span></p><p class="text-sm text-gray-600">Strand: <span class="font-medium">${formData.education.shs.strand || "Not specified"}</span></p><p class="text-sm text-gray-600">Year: <span class="font-medium">${formData.education.shs.yearFrom || "Not specified"} - ${formData.education.shs.yearTo || "Not specified"}</span></p></div>
+        <div class="mt-4">
+            <h5 class="font-medium text-gray-700 mb-2">Uploaded Documents</h5>
+            <p class="text-sm text-gray-600">SHS Diploma: <span class="font-medium">${diplomaFile ? diplomaFile.name : "Not selected/Error"}</span></p>
+            <p class="text-sm text-gray-600">SHS Card (Form 138): <span class="font-medium">${cardFile ? cardFile.name : "Not selected/Error"}</span></p>
+            <p class="text-sm text-gray-600">Birth Certificate: <span class="font-medium">${birthCertFile ? birthCertFile.name : "Not selected/Error"}</span></p>
+        </div>
         </div>
         </div>`;
         
@@ -1479,13 +1525,13 @@
         
         const existingReviewContainer = step4.querySelector("#reviewDataContainer");
         if (existingReviewContainer) {
-            existingReviewContainer.remove();
+            existingReviewContainer.innerHTML = reviewContent; // Update if exists
+        } else {
+            const reviewContainer = document.createElement("div");
+            reviewContainer.id = "reviewDataContainer"; 
+            reviewContainer.innerHTML = reviewContent;
+            consentSection.parentNode.insertBefore(reviewContainer, consentSection);
         }
-
-        const reviewContainer = document.createElement("div");
-        reviewContainer.id = "reviewDataContainer"; 
-        reviewContainer.innerHTML = reviewContent;
-        consentSection.parentNode.insertBefore(reviewContainer, consentSection);
         step3.classList.add("hidden");
         step4.classList.remove("hidden");
         window.scrollTo(0, 0);
@@ -1495,10 +1541,6 @@
       backToStep3Buttons.forEach(button => {
           button.addEventListener("click", function(e) {
               e.preventDefault();
-              const reviewContainer = step4.querySelector("#reviewDataContainer");
-              if (reviewContainer) {
-                  reviewContainer.remove(); 
-              }
               step4.classList.add("hidden");
               step3.classList.remove("hidden");
               window.scrollTo(0, 0);
@@ -1539,6 +1581,8 @@
           }
         });
       }
+      // Initialize stepper to step 1 on page load
+      updateStepperUI(1);
     });
   
     document.addEventListener("DOMContentLoaded", function () {
@@ -1561,6 +1605,13 @@
                 if (file) {
                     if (!file.type.startsWith("image/")) {
                         showPhotoToast("⚠️ Please select an image file", "error");
+                        photoInput.value = ""; 
+                        return;
+                    }
+                    const MAX_SIZE = 5 * 1024 * 1024; 
+                    if (file.size > MAX_SIZE) {
+                        showPhotoToast("⚠️ Photo is too large (max 5MB)", "error");
+                        photoInput.value = ""; 
                         return;
                     }
                     const reader = new FileReader();
@@ -1570,11 +1621,35 @@
                         if(photoPlaceholder) photoPlaceholder.classList.add("hidden");
                     };
                     reader.readAsDataURL(file);
-                    showPhotoToast("✅ Photo uploaded successfully", "success");
+                    showPhotoToast("✅ Photo selected: " + file.name, "success");
                 }
             });
         }
         
+        const fileInputs = document.querySelectorAll('input[type="file"][name$="_file_input"]'); 
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const MAX_DOC_SIZE = 5 * 1024 * 1024; 
+                    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+                    
+                    if (!allowedTypes.includes(file.type) && !allowedTypes.find(type => file.name.toLowerCase().endsWith(type.split('/')[1]))) {
+                        showPhotoToast(`⚠️ Invalid file type for ${input.labels[0].textContent.split('*')[0].trim()}. Allowed: PDF, JPG, PNG.`, "error");
+                        input.value = ""; 
+                        return;
+                    }
+                    if (file.size > MAX_DOC_SIZE) {
+                        showPhotoToast(`⚠️ ${input.labels[0].textContent.split('*')[0].trim()} is too large (max 5MB).`, "error");
+                        input.value = ""; 
+                        return;
+                    }
+                    showPhotoToast(`✅ File selected for ${input.labels[0].textContent.split('*')[0].trim()}: ${file.name}`, "success");
+                }
+            });
+        });
+
+
         function showPhotoToast(message, type) {
             if (!photoToast) return;
             photoToast.textContent = message;
@@ -1585,8 +1660,17 @@
             setTimeout(() => {
                 photoToast.classList.add("translate-y-full");
                 setTimeout(() => photoToast.classList.add("hidden"), 300);
-            }, 2000);
+            }, 3000); 
         }
+
+        // Set today's date for date_of_application and final_submission_date
+        // This will be handled by the `today_date_for_form` variable passed from Flask
+        // const today = new Date().toISOString().split('T')[0];
+        // const dateOfApplicationInput = document.querySelector('input[name="date_of_application"]');
+        // const finalSubmissionDateInput = document.getElementById('final_submission_date_input');
+        // if(dateOfApplicationInput) dateOfApplicationInput.value = today;
+        // if(finalSubmissionDateInput) finalSubmissionDateInput.value = today;
+
     });
 </script>
 
@@ -1617,6 +1701,4 @@
         }
     });
 </script>
-
-
 {% endblock %}
