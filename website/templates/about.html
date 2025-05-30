@@ -101,33 +101,30 @@ header {
 /* --- Video Section Styles --- */
 .video-container {
   position: relative;
-  height: 115vh; 
+  height: 115vh; /* This height seems quite large, consider 100vh or less */
   overflow: hidden;
+  background-color: #000; /* Fallback background for the container */
+  border-radius: 8px; /* If rounded corners are desired for the video area */
   /* Desktop: Video starts from top. Mobile: pushed down by header. */
 }
 
-.video-container video.video-player-custom { 
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
-  height: auto;
-  transform: translate(-50%, -50%);
-  z-index: 1; 
-  object-fit: cover;
-  max-width: 100%; 
-  border: 2px solid white;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-}
-
-.video-container .overlay { 
+.video-container video.video-player-custom {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 2; 
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* This ensures the video covers the container, maintaining aspect ratio */
+  z-index: 1;
+  /* Removed border, background-color, and border-radius from the video element itself.
+     These are better applied to the .video-container if needed. */
+}
+
+.video-container .overlay { /* This overlay is for text on top of the video, if used */
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
   width: 100%;
   height: 100%;
   display: flex;
@@ -136,7 +133,7 @@ header {
   align-items: center;
   color: white;
   text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
-  background-color: rgba(0, 0, 0, 0.4); 
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 /* --- About Section Styles --- */
@@ -150,8 +147,8 @@ header {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 1200px; 
-  margin: 0 auto; 
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 @media (min-width: 768px) {
@@ -162,7 +159,7 @@ header {
 
 .about-sidebar {
   flex: 1;
-  max-width: 300px; 
+  max-width: 300px;
 }
 
 .box-title {
@@ -183,7 +180,7 @@ header {
 .image-box img {
   width: 100%;
   height: auto;
-  display: block; 
+  display: block;
 }
 
 .about-content {
@@ -197,7 +194,7 @@ header {
   }
 }
 
-.heading { 
+.heading {
   font-size: 28px;
   color: #162938;
   margin-bottom: 12px;
@@ -209,9 +206,9 @@ header {
   line-height: 1.6;
 }
 
-.objectives { 
+.objectives {
   list-style-type: none;
-  padding-left: 32px; 
+  padding-left: 32px;
 }
 
 .objectives li {
@@ -221,25 +218,25 @@ header {
 /* --- Location/Map Section Styles --- */
 .location-section {
   padding: 2rem 1rem;
-  background-color: #d1d1d1; 
+  background-color: #d1d1d1;
   text-align: center;
 }
 
 .location-container {
-  max-width: 900px; 
-  margin: 0 auto; 
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-.location-section .heading { 
-  margin-bottom: 1.5rem; 
-  margin-top: 0; 
+.location-section .heading {
+  margin-bottom: 1.5rem;
+  margin-top: 0;
 }
 
 .map-embed-container {
   position: relative;
   overflow: hidden;
   width: 100%;
-  padding-top: 56.25%; 
+  padding-top: 56.25%;
   border: 1px solid #ccc;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -251,7 +248,7 @@ header {
   left: 0;
   width: 100%;
   height: 100%;
-  border: 0; 
+  border: 0;
 }
 
 
@@ -266,12 +263,12 @@ header {
   width: 50px;
   background: #fff;
   border: 3px solid #333;
-  display: none; 
+  display: none;
   justify-content: center;
   align-items: center;
   z-index: 999;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; 
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 
 .go-top-btn:hover {
@@ -292,76 +289,76 @@ header {
   padding: 2rem 1rem;
   text-align: center;
   color: white;
-  overflow: hidden; 
+  overflow: hidden;
 }
-    
+
 .footer::before {
   content: "";
   position: absolute;
-  inset: 0; 
+  inset: 0;
   background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat;
-  z-index: 0; 
-  opacity: 0.3; 
+  z-index: 0;
+  opacity: 0.3;
 }
-    
+
 .footer::after {
   content: "";
   position: absolute;
-  inset: 0; 
-  background: rgba(22, 41, 56, 0.442); 
-  z-index: 1; 
+  inset: 0;
+  background: rgba(22, 41, 56, 0.442);
+  z-index: 1;
 }
-    
+
 .footer * {
   position: relative;
   z-index: 2;
 }
-    
+
 .footer-logo {
   width: 100px;
   height: 100px;
   margin-bottom: 1rem;
 }
-    
+
 .footer-title {
   font-size: 1.5rem;
   font-weight: bold;
 }
-    
+
 .footer-subtitle {
   font-size: 1.25rem;
   font-weight: bold;
   margin-top: 0.5rem;
 }
-    
+
 .footer-connect {
   margin-top: 1rem;
   font-size: 1rem;
 }
-    
+
 .footer-socials {
   display: flex;
   gap: 1rem;
   margin-top: 0.5rem;
   font-size: 1.25rem;
 }
-    
+
 .footer-socials a {
   color: white;
   text-decoration: none;
   transition: color 0.3s ease;
 }
-    
+
 .footer-socials a:hover {
-  color: #0987d0; 
+  color: #0987d0;
 }
-    
+
 .footer-divider {
   border-top: 1px solid white;
   width: 25%;
   margin: 2rem 0;
 }
-    
+
 .footer-bottom {
   font-size: 0.875rem;
   line-height: 1.6;
@@ -372,38 +369,38 @@ header {
 @media (max-width: 992px) {
     header {
         padding: 10px 3%;
-        background-color: #162938; 
+        background-color: #162938;
     }
 
     .header-left img {
-        width: 70px; 
-        height: 50px; 
-        object-fit: contain; 
+        width: 70px;
+        height: 50px;
+        object-fit: contain;
     }
 
     .header-left .logo {
         font-size: 1em;
         margin-left: 10px;
-        color: #fff; 
+        color: #fff;
     }
 
     .menu-toggle span {
-        background-color: #ffffff; 
+        background-color: #ffffff;
     }
 
     .navigation {
         position: absolute;
-        top: 100%; 
+        top: 100%;
         right: 0;
         width: 250px;
-        background-color: #162938; 
+        background-color: #162938;
         box-shadow: 0 8px 16px rgba(0,0,0,0.15);
         flex-direction: column;
         align-items: stretch;
         display: none;
         z-index: 1050;
-        border-top: 1px solid #2a3f54; 
-        max-height: calc(100vh - 70px); 
+        border-top: 1px solid #2a3f54;
+        max-height: calc(100vh - 70px);
         overflow-y: auto;
     }
 
@@ -411,20 +408,20 @@ header {
         display: flex;
     }
 
-    .navigation a { 
+    .navigation a {
         display: block;
         padding: 12px 20px;
         margin-left: 0;
         text-align: left;
-        color: #f0f0f0; 
-        border-bottom: 1px solid #2a3f54; 
-        text-decoration: none; 
+        color: #f0f0f0;
+        border-bottom: 1px solid #2a3f54;
+        text-decoration: none;
     }
     .navigation a:last-child {
         border-bottom: none;
     }
     .navigation a:hover {
-        background-color: #22333f; 
+        background-color: #22333f;
     }
 
     .navigation a .btnLogin-popup {
@@ -454,10 +451,10 @@ header {
         transform: translateY(-9px) rotate(-45deg);
     }
 
-    .video-container { 
-        margin-top: 70px;  
-        height: 400px;    /* MODIFIED: Set a fixed height for mobile view for a rectangular shape */
-                           /* Adjust this value (e.g., 300px, 350px, etc.) as needed */
+    .video-container {
+        margin-top: 70px;
+        height: 400px;    /* Fixed height for mobile view */
+        border-radius: 8px; /* Ensure radius is also applied on mobile if desired */
     }
 }
 </style>
@@ -465,13 +462,13 @@ header {
 
 
 {% block head %}
-    {{ super() }} 
+    {{ super() }}
     <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
     <title>About Us - Padre Garcia Polytechnic College</title>
 {% endblock%}
 
 
-{% block body %} 
+{% block body %}
 <div class="overlay"></div>
 
 <header>
@@ -512,7 +509,8 @@ header {
     <source src="{{ url_for('static', filename='pgpcvideo.mp4') }}" type="video/mp4">
     Your browser does not support the video tag.
   </video>
-  {# The .overlay div that was previously here for video text is now styled directly on .video-container .overlay CSS rule #}
+
+   <div class="overlay"></div> 
 </div>
 
 <section class="about-section">
@@ -548,10 +546,10 @@ header {
     <div class="location-container">
         <h2 class="heading">Our Location</h2>
         <div class="map-embed-container">
-            <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3545.459040105033!2d121.2656064588598!3d13.882479556840263!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd3f0024d47b1b%3A0x111daf1b2a29e55e!2sPadre%20Garcia%20Polytechnic%20College!5e1!3m2!1sen!2sph!4v1747292232960!5m2!1sen!2sph" 
-                allowfullscreen="" 
-                loading="lazy" 
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3545.459040105033!2d121.2656064588598!3d13.882479556840263!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd3f0024d47b1b%3A0x111daf1b2a29e55e!2sPadre%20Garcia%20Polytechnic%20College!5e1!3m2!1sen!2sph!4v1747292232960!5m2!1sen!2sph"
+                allowfullscreen=""
+                loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"
                 title="Padre Garcia Polytechnic College Location Map">
             </iframe>
@@ -565,19 +563,19 @@ header {
 
 <footer class="footer">
     <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
-    
+
     <h1 class="footer-title">Padre Garcia Polytechnic College</h1>
     <h2 class="footer-subtitle">THE FUTURE BEGINS HERE.</h2>
-    
+
     <p class="footer-connect">Connect with us</p>
-    
+
     <div class="footer-socials">
       <a href="https://www.facebook.com/PadreGarciaPolytechnicCollege"><i class="fab fa-facebook-f"></i></a>
 
     </div>
-    
+
     <div class="footer-divider"></div>
-    
+
     <div class="footer-bottom">
       <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="{{ url_for('views.home') }}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7">Brgy.Castillo, Padre Garcia, Batangas</a> | +63 (2) 8524-4611</p>
       <p>© 2025. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home">Padre Garcia PH</a></p>
@@ -589,7 +587,7 @@ header {
 document.addEventListener('DOMContentLoaded', function () {
   const goTopBtn = document.getElementById('goTopBtn');
 
-  if (goTopBtn) { 
+  if (goTopBtn) {
     window.addEventListener('scroll', () => {
       if (window.scrollY > 200) {
         goTopBtn.style.display = "flex";
@@ -608,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // JavaScript for menu toggle (from index.html)
   const menuToggle = document.querySelector('.menu-toggle');
-  const navigation = document.getElementById('main-navigation'); 
+  const navigation = document.getElementById('main-navigation');
 
   if (menuToggle && navigation) {
       menuToggle.addEventListener('click', function() {
