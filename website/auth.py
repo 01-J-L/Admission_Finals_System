@@ -19,38 +19,64 @@ auth = Blueprint('auth', __name__)
 def get_db_connection():
     try:
         print("--- Attempting to Read DB Environment Variables ---")
-        env_db_host = os.getenv('DB_HOST')
-        env_db_user = os.getenv('DB_USER')
-        env_db_password_exists = "Yes" if os.getenv('DB_PASSWORD') else "No"
-        env_db_name = os.getenv('DB_NAME')
-        env_db_port = os.getenv('DB_PORT')
+        env_db_host_from_os = os.getenv('DB_HOST')
+        env_db_user_from_os = os.getenv('DB_USER')
+        # For logging actual password existence, not value
+        env_db_password_exists_from_os = "Yes" if os.getenv('DB_PASSWORD') else "No"
+        env_db_password_from_os = os.getenv('DB_PASSWORD') # Actual password value from env
+        env_db_name_from_os = os.getenv('DB_NAME')
+        env_db_port_str_from_os = os.getenv('DB_PORT') # Port from env is a string
 
-        print(f"Raw os.getenv('DB_HOST'): {env_db_host}")
-        print(f"Raw os.getenv('DB_USER'): {env_db_user}")
-        print(f"Raw os.getenv('DB_PASSWORD') exists: {env_db_password_exists}") # Don't log the actual password
-        print(f"Raw os.getenv('DB_NAME'): {env_db_name}")
-        print(f"Raw os.getenv('DB_PORT'): {env_db_port}")
+        print(f"Raw os.getenv('DB_HOST'): {env_db_host_from_os}")
+        print(f"Raw os.getenv('DB_USER'): {env_db_user_from_os}")
+        print(f"Raw os.getenv('DB_PASSWORD') exists: {env_db_password_exists_from_os}")
+        print(f"Raw os.getenv('DB_NAME'): {env_db_name_from_os}")
+        print(f"Raw os.getenv('DB_PORT'): {env_db_port_str_from_os}")
         print("--- End of Reading DB Environment Variables ---")
 
-        db_host = env_db_host or 'crossover.proxy.rlwy.net'
-        db_user = env_db_user or 'root'
-        db_password = os.getenv('DB_PASSWORD') or "jSFbqIMVIpKfAFdoGTampFzDSaJEkvtO" # Ensure password is read
-        db_name = env_db_name or "railway"
-        db_port_str = env_db_port or '36284'
+        # Railway specific defaults (derived from typical Railway setups and user-provided connection string)
+        RAILWAY_DEFAULT_HOST = 'crossover.proxy.rlwy.net'
+        RAILWAY_DEFAULT_USER = 'root'
+        RAILWAY_DEFAULT_PASSWORD = "jSFbqIMVIpKfAFdoGTampFzDSaJEkvtO"
+        RAILWAY_DEFAULT_DB_NAME = "railway" # As per user's connection string example
+        RAILWAY_DEFAULT_PORT_STR = '36284' # As per user's connection string example
+        
+        # Determine effective DB host
+        db_host = env_db_host_from_os
+        if env_db_host_from_os and env_db_host_from_os.lower() == 'localhost':
+            print(f"Warning: DB_HOST from environment is '{env_db_host_from_os}'. This is often incorrect for a remote Railway database. "
+                  f"Overriding to use the default Railway proxy host: '{RAILWAY_DEFAULT_HOST}'.")
+            db_host = RAILWAY_DEFAULT_HOST
+        elif not env_db_host_from_os:
+            print(f"DB_HOST not set in environment. Using default Railway proxy host: '{RAILWAY_DEFAULT_HOST}'.")
+            db_host = RAILWAY_DEFAULT_HOST
+        # If env_db_host_from_os is set and is not 'localhost', it will be used as db_host.
 
-        db_port = 50627 # Default to Railway port
+        # Determine other connection parameters: use environment variable if set, otherwise Railway default.
+        db_user = env_db_user_from_os or RAILWAY_DEFAULT_USER
+        db_password = env_db_password_from_os or RAILWAY_DEFAULT_PASSWORD
+        db_name = env_db_name_from_os or RAILWAY_DEFAULT_DB_NAME
+        
+        # Determine effective port: use port string from environment if set, else Railway default port string.
+        # Then convert to int, with a final fallback to a known valid integer (Railway's default port).
+        effective_port_str = env_db_port_str_from_os or RAILWAY_DEFAULT_PORT_STR
+        
+        db_port = int(RAILWAY_DEFAULT_PORT_STR) # Initialize with a known valid integer from Railway default
         try:
-            db_port = int(db_port_str)
+            db_port = int(effective_port_str)
         except (ValueError, TypeError):
-            print(f"CRITICAL: DB_PORT environment variable ('{db_port_str}') is not a valid integer. Using default {db_port}.")
-            db_port = 50627
-
+            # This message is critical if effective_port_str (which could be from env) is bad.
+            # If it was already using RAILWAY_DEFAULT_PORT_STR and failed, that's a bigger issue (e.g. misconfigured default).
+            print(f"CRITICAL: The determined DB_PORT string ('{effective_port_str}') is not a valid integer. "
+                  f"Falling back to the default Railway port number: {RAILWAY_DEFAULT_PORT_STR}.")
+            # db_port is already set to int(RAILWAY_DEFAULT_PORT_STR), so no change needed here for the fallback.
+        
         print(f"Attempting DB connection with: Host='{db_host}', Port={db_port}, User='{db_user}', Database='{db_name}'")
 
         conn = mysql.connector.connect(
             host=db_host,
             user=db_user,
-            password=db_password, # Use the read password
+            password=db_password,
             database=db_name,
             port=db_port
         )
