@@ -32,11 +32,11 @@ def get_db_connection():
         print(f"Raw os.getenv('DB_PORT'): {env_db_port}")
         print("--- End of Reading DB Environment Variables ---")
 
-        db_host = env_db_host or 'turntable.proxy.rlwy.net'
+        db_host = env_db_host or 'crossover.proxy.rlwy.net'
         db_user = env_db_user or 'root'
-        db_password = os.getenv('DB_PASSWORD') or "AgQvgFQsoRzjDFArCWmZVokbLdTvQAXl" # Ensure password is read
+        db_password = os.getenv('DB_PASSWORD') or "jSFbqIMVIpKfAFdoGTampFzDSaJEkvtO" # Ensure password is read
         db_name = env_db_name or "railway"
-        db_port_str = env_db_port or '50627'
+        db_port_str = env_db_port or '36284'
 
         db_port = 50627 # Default to Railway port
         try:
