@@ -18,33 +18,46 @@ auth = Blueprint('auth', __name__)
 # ----------------- DATABASE CONNECTION -----------------
 def get_db_connection():
     try:
-        db_host = os.getenv('DB_HOST', 'turntable.proxy.rlwy.net') # Corrected default host
-        db_user = os.getenv('DB_USER', 'root')
-        db_password = os.getenv('DB_PASSWORD', "AgQvgFQsoRzjDFArCWmZVokbLdTvQAXl") # Your DB password
-        db_name = os.getenv('DB_NAME', "railway")      # Your DB name
-        db_port_str = os.getenv('DB_PORT', '50627')   # Added DB_PORT, correct default port
+        print("--- Attempting to Read DB Environment Variables ---")
+        env_db_host = os.getenv('DB_HOST')
+        env_db_user = os.getenv('DB_USER')
+        env_db_password_exists = "Yes" if os.getenv('DB_PASSWORD') else "No"
+        env_db_name = os.getenv('DB_NAME')
+        env_db_port = os.getenv('DB_PORT')
 
-        db_port = 3306 # Default fallback port for mysql connector if parsing fails
+        print(f"Raw os.getenv('DB_HOST'): {env_db_host}")
+        print(f"Raw os.getenv('DB_USER'): {env_db_user}")
+        print(f"Raw os.getenv('DB_PASSWORD') exists: {env_db_password_exists}") # Don't log the actual password
+        print(f"Raw os.getenv('DB_NAME'): {env_db_name}")
+        print(f"Raw os.getenv('DB_PORT'): {env_db_port}")
+        print("--- End of Reading DB Environment Variables ---")
+
+        db_host = env_db_host or 'turntable.proxy.rlwy.net'
+        db_user = env_db_user or 'root'
+        db_password = os.getenv('DB_PASSWORD') or "AgQvgFQsoRzjDFArCWmZVokbLdTvQAXl" # Ensure password is read
+        db_name = env_db_name or "railway"
+        db_port_str = env_db_port or '50627'
+
+        db_port = 50627 # Default to Railway port
         try:
             db_port = int(db_port_str)
-        except ValueError:
-            print(f"CRITICAL: DB_PORT environment variable ('{db_port_str}') is not a valid integer. Using default 50627 for Railway connection.")
-            db_port = 50627 # Force to known good port for Railway if env var is malformed
+        except (ValueError, TypeError):
+            print(f"CRITICAL: DB_PORT environment variable ('{db_port_str}') is not a valid integer. Using default {db_port}.")
+            db_port = 50627
 
-        # Debugging: Print the connection parameters being used (excluding password)
         print(f"Attempting DB connection with: Host='{db_host}', Port={db_port}, User='{db_user}', Database='{db_name}'")
 
         conn = mysql.connector.connect(
             host=db_host,
             user=db_user,
-            password=db_password,
+            password=db_password, # Use the read password
             database=db_name,
-            port=db_port  # Crucial: Add the port argument
+            port=db_port
         )
-        print("Database connection successful.") # Add a success log
+        print("Database connection successful.")
         return conn
     except mysql.connector.Error as err:
-        print(f"Database connection error: {err}") # This is already there
+        print(f"Database connection error: {err}")
         traceback.print_exc()
         return None
 
