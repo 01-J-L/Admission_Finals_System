@@ -18,7 +18,7 @@ auth = Blueprint('auth', __name__)
 def get_db_connection():
     try:
         conn = mysql.connector.connect(
-            host=os.getenv('DB_HOST', 'trylocalhost'),
+            host=os.getenv('DB_HOST', 'mysql.railway.internal'),
             user=os.getenv('DB_USER', 'root'),
             password=os.getenv('DB_PASSWORD', "AgQvgFQsoRzjDFArCWmZVokbLdTvQAXl"), # Your DB password
             database=os.getenv('DB_NAME', "railway")      # Your DB name
