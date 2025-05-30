@@ -18,10 +18,10 @@ auth = Blueprint('auth', __name__)
 def get_db_connection():
     try:
         conn = mysql.connector.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
+            host=os.getenv('DB_HOST', 'trylocalhost'),
             user=os.getenv('DB_USER', 'root'),
-            password=os.getenv('DB_PASSWORD', "anime951827"), # Your DB password
-            database=os.getenv('DB_NAME', "ayusin")      # Your DB name
+            password=os.getenv('DB_PASSWORD', "AgQvgFQsoRzjDFArCWmZVokbLdTvQAXl"), # Your DB password
+            database=os.getenv('DB_NAME', "railway")      # Your DB name
         )
         return conn
     except mysql.connector.Error as err:
