@@ -1,3 +1,4 @@
+
 from flask import Blueprint, render_template, request, flash, redirect, session, url_for, jsonify, current_app, Response, send_file
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -17,15 +18,33 @@ auth = Blueprint('auth', __name__)
 # ----------------- DATABASE CONNECTION -----------------
 def get_db_connection():
     try:
+        db_host = os.getenv('DB_HOST', 'turntable.proxy.rlwy.net') # Corrected default host
+        db_user = os.getenv('DB_USER', 'root')
+        db_password = os.getenv('DB_PASSWORD', "AgQvgFQsoRzjDFArCWmZVokbLdTvQAXl") # Your DB password
+        db_name = os.getenv('DB_NAME', "railway")      # Your DB name
+        db_port_str = os.getenv('DB_PORT', '50627')   # Added DB_PORT, correct default port
+
+        db_port = 3306 # Default fallback port for mysql connector if parsing fails
+        try:
+            db_port = int(db_port_str)
+        except ValueError:
+            print(f"CRITICAL: DB_PORT environment variable ('{db_port_str}') is not a valid integer. Using default 50627 for Railway connection.")
+            db_port = 50627 # Force to known good port for Railway if env var is malformed
+
+        # Debugging: Print the connection parameters being used (excluding password)
+        print(f"Attempting DB connection with: Host='{db_host}', Port={db_port}, User='{db_user}', Database='{db_name}'")
+
         conn = mysql.connector.connect(
-            host=os.getenv('DB_HOST', 'mysql.railway.internal'),
-            user=os.getenv('DB_USER', 'root'),
-            password=os.getenv('DB_PASSWORD', "AgQvgFQsoRzjDFArCWmZVokbLdTvQAXl"), # Your DB password
-            database=os.getenv('DB_NAME', "railway")      # Your DB name
+            host=db_host,
+            user=db_user,
+            password=db_password,
+            database=db_name,
+            port=db_port  # Crucial: Add the port argument
         )
+        print("Database connection successful.") # Add a success log
         return conn
     except mysql.connector.Error as err:
-        print(f"Database connection error: {err}")
+        print(f"Database connection error: {err}") # This is already there
         traceback.print_exc()
         return None
 
