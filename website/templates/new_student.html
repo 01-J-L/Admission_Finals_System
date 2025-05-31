@@ -227,7 +227,7 @@
         color: #162938;       /* Default: dark text */
         padding: 8px 15px;
         border-radius: 5px;
-        border: 1px solid transparent; 
+        border: 1px solid transparent;
         cursor: pointer;
         font-weight: 500;
         transition: background-color 0.3s, color 0.3s, border-color 0.3s;
@@ -251,11 +251,11 @@
 
     /* CSS to remove line animation from logout link */
     .navigation a.logout-link:hover {
-        text-decoration: none !important; 
+        text-decoration: none !important;
     }
     .navigation a.logout-link::after,
     .navigation a.logout-link::before {
-        display: none !important; 
+        display: none !important;
     }
 
 
@@ -290,10 +290,11 @@
         }
 
         .header-left img {
-            width: 70px;
-            height: 50px;
-            object-fit: contain;
+            width: 70px; /* Adjusted for potentially smaller logo images */
+            height: 50px; /* Explicit height for mobile */
+            object-fit: contain; /* Ensures logo aspect ratio is maintained */
         }
+
 
         .header-left .logo {
             font-size: 1em; /* Mobile font size */
@@ -302,60 +303,60 @@
 
         .navigation {
             position: absolute;
-            top: 100%;
+            top: 100%; /* Position below the header */
             right: 0;
-            width: 250px;
-            background-color: #162938;
+            width: 250px; /* Or a percentage like 60% or 70% */
+            background-color: #162938; /* Consistent with header */
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             flex-direction: column;
-            align-items: stretch;
-            display: none;
+            align-items: stretch; /* Make links take full width */
+            display: none; /* Hidden by default */
             z-index: 1050;
-            border-top: 1px solid #2a3f54;
+            border-top: 1px solid #2a3f54; /* Separator */
             max-height: calc(100vh - 70px); /* Approx mobile header height */
-            overflow-y: auto;
+            overflow-y: auto; /* Scroll if content exceeds height */
         }
 
         .navigation.active {
-            display: flex;
+            display: flex; /* Show when active */
         }
 
         .navigation a {
-            display: block;
+            display: block; /* Stack links vertically */
             padding: 12px 20px;
             margin-left: 0;
             text-align: left;
-            color: #f0f0f0;
-            border-bottom: 1px solid #2a3f54;
+            color: #f0f0f0; /* Lighter text for readability */
+            border-bottom: 1px solid #2a3f54; /* Separator for links */
             text-decoration: none;
         }
         .navigation a:last-child {
-            border-bottom: none;
+            border-bottom: none; /* No border for the last item */
         }
         .navigation a:hover {
-            background-color: #22333f;
+            background-color: #22333f; /* Hover effect */
         }
 
         /* Layout for ALL btnLogin-popup buttons in mobile navigation */
         .navigation a .btnLogin-popup {
-            display: block; 
-            width: auto; 
-            margin: 5px 0;
+            display: block; /* Make buttons block level */
+            width: auto; /* Adjust width automatically */
+            margin: 5px 0; /* Add some vertical margin */
         }
 
         /* Make logout button fill the link area in mobile */
         .navigation a.logout-link {
-            padding: 0; 
+            padding: 0; /* Remove padding from <a> to let button fill */
         }
         .navigation a.logout-link .btnLogin-popup.btn-logout {
-            width: 100%; 
-            margin: 0;   
-            padding: 12px 20px; 
-            border-radius: 0; 
+            width: 100%; /* Full width */
+            margin: 0;   /* Reset margin */
+            padding: 12px 20px; /* Match link padding */
+            border-radius: 0; /* No rounded corners if filling whole area */
         }
         
         /* Ensure logout link in mobile also has no line animation */
-        .navigation a.logout-link.logout-link:hover { 
+        .navigation a.logout-link.logout-link:hover { /* Increased specificity */
              text-decoration: none !important;
         }
         .navigation a.logout-link.logout-link::after,
@@ -365,9 +366,10 @@
 
 
         .menu-toggle {
-            display: flex;
+            display: flex; /* Show hamburger on mobile */
         }
 
+        /* Hamburger animation to X */
         .menu-toggle.active span:nth-child(1) {
             transform: translateY(9px) rotate(45deg);
         }
@@ -387,9 +389,110 @@
 
     @media (min-width: 993px) { /* Desktop breakpoint */
         .main-content-area {
-            padding-top: 100px; 
+            padding-top: 100px; /* Approx desktop header height */
         }
     }
+
+    /* --- START OF MOBILE RESPONSIVE ADDITIONS FOR FORM AND FOOTER --- */
+    @media (max-width: 767px) { /* Targeting screens smaller than Tailwind's 'md' breakpoint (768px) */
+        
+        /* Adjust layout of title and "Back to Status" button container */
+        /* Selector targets the specific flex container holding the title and the optional "Back to Status" button */
+        .max-w-5xl > div > .p-6.border-b > .flex.justify-between.items-start {
+            flex-direction: column;
+            align-items: flex-start; /* Align items to the start when stacked */
+        }
+        /* Style for the "Back to Status" link itself when stacked */
+        .max-w-5xl > div > .p-6.border-b > .flex.justify-between.items-start a[href*="application_status_page"] {
+            margin-left: 0;    /* Remove left margin */
+            margin-top: 1rem;  /* Add space above the button when stacked */
+            width: 100%;       /* Make button full width */
+            text-align: center;
+            justify-content: center; /* Center icon and text within the button */
+        }
+
+        /* Stack step navigation buttons (Previous/Next/Submit) and make them full width */
+        /* Applies to single button containers (like step 1's next button) */
+        #step1 .flex.justify-end button,
+        /* Applies to two-button containers (like step 2, 3, 4's prev/next buttons) */
+        #step2 .flex.justify-between button,
+        #step3 .flex.justify-between button,
+        #step4 .flex.justify-between button {
+            width: 100%;
+            box-sizing: border-box; /* Ensure padding/border don't make it overflow 100% */
+        }
+
+        /* Adjust the flex containers for these buttons to stack them */
+        #step1 .flex.justify-end,
+        #step2 .flex.justify-between,
+        #step3 .flex.justify-between,
+        #step4 .flex.justify-between {
+            flex-direction: column-reverse; /* Stacks children, with the second child (e.g., "Next") appearing on top */
+            gap: 0.75rem; /* 12px space between stacked buttons */
+        }
+        /* Ensure single button (Next) in step 1 container also behaves as a column item */
+        #step1 .flex.justify-end {
+             align-items: stretch; /* Make button take full width if not already by above rule */
+        }
+
+
+        /* Footer adjustments for mobile */
+        .footer-logo {
+            width: 80px;
+            height: 80px;
+        }
+        .footer-title {
+            font-size: 1.25rem; 
+        }
+        .footer-subtitle {
+            font-size: 1rem; 
+        }
+        .footer-divider {
+            width: 70%; /* Wider on mobile */
+            margin: 1.5rem 0;
+        }
+        .footer-socials {
+            gap: 0.75rem; /* Slightly reduce gap */
+        }
+        .footer-socials a {
+            font-size: 1.15rem; 
+        }
+        .footer-bottom {
+            font-size: 0.8rem; /* Slightly smaller text */
+        }
+        .footer-bottom p {
+            line-height: 1.5;
+        }
+        .footer {
+            padding: 1.5rem 1rem; /* Adjust padding for smaller screens */
+        }
+
+        /* Reduce padding on form content for very small screens if needed */
+        .max-w-5xl .p-6 {
+            padding-left: 1rem;  /* from 1.5rem (p-6) */
+            padding-right: 1rem; /* from 1.5rem (p-6) */
+        }
+        /* Stepper UI padding adjustment */
+        .max-w-5xl .px-6.py-4 {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        /* Stepper text on mobile if it gets too cramped */
+        .px-6.py-4.border-b .flex.items-center .flex-col p.text-sm {
+             font-size: 0.75rem; /* equivalent to Tailwind's text-xs */
+             line-height: 1.2;   /* Tighter line height for short texts */
+             margin-top: 0.25rem; /* Reduce top margin slightly */
+        }
+        .px-6.py-4.border-b .flex.items-center .flex-col .w-10.h-10 {
+            width: 2rem; /* 32px */
+            height: 2rem; /* 32px */
+        }
+        .px-6.py-4.border-b .flex.items-center .flex-col .w-10.h-10 i {
+            font-size: 1rem; /* Adjust icon size within the circle */
+        }
+    }
+    /* --- END OF MOBILE RESPONSIVE ADDITIONS --- */
+
 </style>
 {% endblock %}
 
@@ -439,11 +542,7 @@
                         Complete all required information to apply for admission.
                     </p>
                 </div>
-                {% if student_logged_in %}
-                <a href="{{ url_for('views.application_status_page') }}" class="text-sm text-primary hover:text-primary/80 flex items-center whitespace-nowrap ml-4 px-4 py-2 rounded-button border border-primary hover:bg-primary/10 transition-colors">
-                    <i class="ri-arrow-left-line mr-2"></i>Back to Status
-                </a>
-                {% endif %}
+                
             </div>
         </div>
         <div class="px-6 py-4 border-b border-gray-200">
@@ -697,7 +796,7 @@
                     name="permanent_address_street_barangay"
                     required
                   />
-                  <div class="grid grid-cols-2 gap-4 mt-2">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2"> <!-- Use sm:grid-cols-2 for better mobile stacking than md:grid-cols-2 -->
                     <input
                       type="text"
                       class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
@@ -1553,28 +1652,31 @@
         const progressBars = document.querySelectorAll(".px-6.py-4.border-b .h-1.bg-gray-200 > div");
         stepperItems.forEach((item, index) => {
           const stepNumber = index + 1;
-          const circle = item.querySelector("div.w-10.h-10");
+          const circle = item.querySelector("div.w-10.h-10"); // Desktop circle selector
+          const mobileCircle = item.querySelector("div.w-8.h-8"); // Mobile circle selector (if using the new class)
+          const actualCircle = window.innerWidth <= 767 ? mobileCircle || circle : circle; // Choose based on screen width
+
           const text = item.querySelector("p");
-          const icon = circle.querySelector("i");
+          // const icon = circle.querySelector("i"); // Icon is inside circle
 
           if (stepNumber < activeStep) {
-            circle.classList.remove("bg-gray-200", "text-gray-500");
-            circle.classList.add("bg-primary", "text-white");
+            actualCircle.classList.remove("bg-gray-200", "text-gray-500");
+            actualCircle.classList.add("bg-primary", "text-white");
             text.classList.remove("text-gray-500");
             text.classList.add("text-primary");
             if (progressBars[index]) progressBars[index].style.transform = "scaleX(1)";
           } else if (stepNumber === activeStep) {
-            circle.classList.remove("bg-gray-200", "text-gray-500");
-            circle.classList.add("bg-primary", "text-white");
+            actualCircle.classList.remove("bg-gray-200", "text-gray-500");
+            actualCircle.classList.add("bg-primary", "text-white");
             text.classList.remove("text-gray-500");
             text.classList.add("text-primary");
-            circle.classList.add("scale-110");
-            setTimeout(() => circle.classList.remove("scale-110"), 300);
+            actualCircle.classList.add("scale-110");
+            setTimeout(() => actualCircle.classList.remove("scale-110"), 300);
             if (index > 0 && progressBars[index-1]) progressBars[index-1].style.transform = "scaleX(1)"; 
 
           } else {
-            circle.classList.remove("bg-primary", "text-white", "scale-110");
-            circle.classList.add("bg-gray-200", "text-gray-500");
+            actualCircle.classList.remove("bg-primary", "text-white", "scale-110");
+            actualCircle.classList.add("bg-gray-200", "text-gray-500");
             text.classList.remove("text-primary");
             text.classList.add("text-gray-500");
             if (progressBars[index - 1]) progressBars[index - 1].style.transform = "scaleX(0)";
@@ -1662,15 +1764,6 @@
                 setTimeout(() => photoToast.classList.add("hidden"), 300);
             }, 3000); 
         }
-
-        // Set today's date for date_of_application and final_submission_date
-        // This will be handled by the `today_date_for_form` variable passed from Flask
-        // const today = new Date().toISOString().split('T')[0];
-        // const dateOfApplicationInput = document.querySelector('input[name="date_of_application"]');
-        // const finalSubmissionDateInput = document.getElementById('final_submission_date_input');
-        // if(dateOfApplicationInput) dateOfApplicationInput.value = today;
-        // if(finalSubmissionDateInput) finalSubmissionDateInput.value = today;
-
     });
 </script>
 

@@ -154,7 +154,7 @@
         </a>
     </nav>
     <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-        <a href="{{ url_for('auth.logout') }}" class="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-button border border-gray-300 w-full">
+        <a href="{{ url_for('auth.logout') }}" id="sidebarBackToHomeLink" class="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-button border border-gray-300 w-full">
             <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-arrow-left-line"></i></div>
            Back to Home Page
         </a>
@@ -199,7 +199,7 @@
 
         <div id="dashboardContent">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-500 text-sm">Total Applications</p>
@@ -210,7 +210,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-500 text-sm">Pending Review</p>
@@ -221,7 +221,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-500 text-sm">Approved</p>
@@ -232,7 +232,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-500 text-sm">Rejected</p>
@@ -243,7 +243,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-500 text-sm">In Review</p>
@@ -254,7 +254,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-500 text-sm">Passed</p>
@@ -265,7 +265,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-500 text-sm">Failed</p>
@@ -279,13 +279,13 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-semibold text-gray-900">Application Trends (Last 7 Months)</h3>
                     </div>
                     <div id="applicationChart" style="width: 100%; height: 300px;"></div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-semibold text-gray-900">Application Status Breakdown</h3>
                     </div>
@@ -505,21 +505,21 @@
                                 </td>
                                 <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                                     <div class="flex space-x-1 justify-end items-center">
-                                        <button class="text-gray-500 hover:text-primary p-1 action-view" title="View Details" data-id="{{ app.applicant_id }}"><i class="ri-eye-line ri-lg"></i></button>
+                                        <button class="text-gray-500 hover:text-primary p-0.5 sm:p-1 action-view" title="View Details" data-id="{{ app.applicant_id }}"><i class="ri-eye-line ri-lg"></i></button>
                                         
-                                        <a href="{{ url_for('auth.admin_edit_application_page', applicant_id=app.applicant_id) }}" class="text-gray-500 hover:text-blue-500 p-1 action-edit-admin" title="Edit Application" data-id="{{ app.applicant_id }}">
+                                        <a href="{{ url_for('auth.admin_edit_application_page', applicant_id=app.applicant_id) }}" class="text-gray-500 hover:text-blue-500 p-0.5 sm:p-1 action-edit-admin" title="Edit Application" data-id="{{ app.applicant_id }}">
                                             <i class="ri-pencil-line ri-lg"></i>
                                         </a>
                                         
-                                        <a href="{{ url_for('auth.admin_print_application_form', applicant_id=app.applicant_id) }}" target="_blank" class="text-gray-500 hover:text-green-500 p-1 action-print" title="Print Application Form">
+                                        <a href="{{ url_for('auth.admin_print_application_form', applicant_id=app.applicant_id) }}" target="_blank" class="text-gray-500 hover:text-green-500 p-0.5 sm:p-1 action-print" title="Print Application Form">
                                             <i class="ri-printer-line ri-lg"></i>
                                         </a>
 
-                                        <button class="text-gray-500 hover:text-yellow-600 p-1 action-admin-notes" title="Admin Notes" data-id="{{ app.applicant_id }}"><i class="ri-sticky-note-line ri-lg"></i></button>
-                                        <button class="text-gray-500 hover:text-purple-600 p-1 action-control-number" title="Control Number" data-id="{{ app.applicant_id }}"><i class="ri-fingerprint-line ri-lg"></i></button>
-                                        <button class="text-gray-500 hover:text-teal-600 p-1 action-permit-details" title="Permit Details" data-id="{{ app.applicant_id }}"><i class="ri-ticket-line ri-lg"></i></button>
+                                        <button class="text-gray-500 hover:text-yellow-600 p-0.5 sm:p-1 action-admin-notes" title="Admin Notes" data-id="{{ app.applicant_id }}"><i class="ri-sticky-note-line ri-lg"></i></button>
+                                        <button class="text-gray-500 hover:text-purple-600 p-0.5 sm:p-1 action-control-number" title="Control Number" data-id="{{ app.applicant_id }}"><i class="ri-fingerprint-line ri-lg"></i></button>
+                                        <button class="text-gray-500 hover:text-teal-600 p-0.5 sm:p-1 action-permit-details" title="Permit Details" data-id="{{ app.applicant_id }}"><i class="ri-ticket-line ri-lg"></i></button>
                                         <div class="dropdown relative action-status-dropdown">
-                                            <button class="text-gray-500 hover:text-primary p-1" title="Change Status">
+                                            <button class="text-gray-500 hover:text-primary p-0.5 sm:p-1" title="Change Status">
                                                  <i class="ri-arrow-down-s-fill ri-lg"></i>
                                             </button>
                                             <div class="dropdown-content w-36 text-left">
@@ -531,7 +531,7 @@
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Failed">Set Failed</a>
                                             </div>
                                         </div>
-                                        <button class="text-gray-500 hover:text-red-500 p-1 action-delete-single" title="Delete Application" data-id="{{ app.applicant_id }}"><i class="ri-delete-bin-line ri-lg"></i></button>
+                                        <button class="text-gray-500 hover:text-red-500 p-0.5 sm:p-1 action-delete-single" title="Delete Application" data-id="{{ app.applicant_id }}"><i class="ri-delete-bin-line ri-lg"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -807,6 +807,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebarDashboardMenuLink = document.getElementById('sidebarDashboardMenuLink');
     const sidebarApplicationsMenuLink = document.getElementById('applicationsMenu');
     const sidebarAddApplicationMenuLink = document.getElementById('sidebarAddApplicationMenuLink'); // New sidebar link
+    const sidebarBackToHomeLink = document.getElementById('sidebarBackToHomeLink'); // Link for "Back to Home Page"
     const sidebarFilterLinks = {
         pending: document.getElementById('pendingFilterLink'),
         inReview: document.getElementById('inReviewFilterLink'),
@@ -1292,34 +1293,69 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initializeSidebarState() {
         if (!sidebar || !mainContentArea) return;
-        sidebar.classList.remove('sm:translate-x-0');
-        if (window.innerWidth >= 640) {
-            sidebar.classList.remove('-translate-x-full'); sidebar.classList.add('translate-x-0');
+        // On sm screens and up, sidebar is visible and main content has margin
+        if (window.innerWidth >= 640) { // 640px is Tailwind's 'sm' breakpoint
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
             mainContentArea.classList.add('sm:ml-64');
-        } else {
-            sidebar.classList.remove('translate-x-0'); sidebar.classList.add('-translate-x-full');
+        } else { // On smaller screens, sidebar is hidden, main content full width
+            sidebar.classList.remove('translate-x-0');
+            sidebar.classList.add('-translate-x-full');
             mainContentArea.classList.remove('sm:ml-64');
         }
     }
 
     if (sidebarToggleBtn && sidebar && mainContentArea && sidebarBackdrop) {
         const openSidebar = () => {
-            if (!sidebar) return; sidebar.classList.remove('-translate-x-full'); sidebar.classList.add('translate-x-0');
-            if (mainContentArea) mainContentArea.classList.add('sm:ml-64');
-            if (sidebarBackdrop && window.innerWidth < 640) sidebarBackdrop.classList.remove('hidden');
+            if (!sidebar) return;
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            if (window.innerWidth >= 640) { // Desktop
+                mainContentArea.classList.add('sm:ml-64');
+            } else { // Mobile
+                sidebarBackdrop.classList.remove('hidden');
+            }
             setTimeout(() => { if (dashboardContentDiv.style.display !== 'none') { window.applicationChartInstance?.resize(); window.statusChartInstance?.resize();}}, 350);
         };
         const closeSidebar = () => {
-            if (!sidebar) return; sidebar.classList.remove('translate-x-0'); sidebar.classList.add('-translate-x-full');
-            if (mainContentArea) mainContentArea.classList.remove('sm:ml-64');
-            if (sidebarBackdrop) sidebarBackdrop.classList.add('hidden');
+            if (!sidebar) return;
+            sidebar.classList.remove('translate-x-0');
+            sidebar.classList.add('-translate-x-full');
+            if (window.innerWidth >= 640) { // Desktop
+                 mainContentArea.classList.remove('sm:ml-64');
+            } else { // Mobile
+                sidebarBackdrop.classList.add('hidden');
+            }
             setTimeout(() => { if (dashboardContentDiv.style.display !== 'none') { window.applicationChartInstance?.resize(); window.statusChartInstance?.resize();}}, 350);
         };
-        sidebarToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); if (sidebar.classList.contains('translate-x-0')) closeSidebar(); else openSidebar(); });
-        sidebarBackdrop.addEventListener('click', closeSidebar);
-        const mainSidebarLinks = [ sidebarDashboardMenuLink, sidebarApplicationsMenuLink, sidebarAddApplicationMenuLink, ...Object.values(sidebarFilterLinks).filter(link => link) ].filter(link => link);
-        mainSidebarLinks.forEach(link => { link.addEventListener('click', () => { if (window.innerWidth < 640 && sidebar.classList.contains('translate-x-0')) closeSidebar(); }); });
+
+        sidebarToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sidebar.classList.contains('-translate-x-full')) { // If sidebar is hidden
+                openSidebar();
+            } else { // If sidebar is visible
+                closeSidebar();
+            }
+        });
+        sidebarBackdrop.addEventListener('click', closeSidebar); // Only relevant for mobile
+
+        const mainSidebarLinks = [
+            sidebarDashboardMenuLink,
+            sidebarApplicationsMenuLink,
+            sidebarAddApplicationMenuLink,
+            ...Object.values(sidebarFilterLinks).filter(link => link),
+            sidebarBackToHomeLink // Added the "Back to Home" link here
+        ].filter(link => link); // Ensure all links are valid elements
+
+        mainSidebarLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 640 && sidebar.classList.contains('translate-x-0')) { // If on mobile and sidebar is open
+                    closeSidebar();
+                }
+            });
+        });
     }
+
 
     function updateSidebarActiveState(activeView, activeStatus = null) {
         const allNavLinks = [ sidebarDashboardMenuLink, sidebarApplicationsMenuLink, sidebarAddApplicationMenuLink, ...Object.values(sidebarFilterLinks).filter(link => link)];
@@ -1598,20 +1634,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if(adminPhotoPreview) adminPhotoPreview.src = "";
                     if(adminPhotoPreview) adminPhotoPreview.classList.add("hidden");
                     if(adminPhotoPlaceholder) adminPhotoPlaceholder.classList.remove("hidden");
-                    // Optionally, navigate to applications list or refresh stats
-                    // To refresh the applications list (if visible) and stats, we need to fetch new data or add the new app to rawApplicationsData
-                    // For simplicity, let's just update stats and switch view
-                    // A more robust solution would involve fetching the new app's data and adding it to rawApplicationsData if needed by charts/table immediately.
-                    // For now, we rely on a full page reload or navigating back to the dashboard for the stats to fully reflect the new entry if it was complexly calculated.
-                    // However, simple count updates can be done.
                     
-                    // Example: Optimistically add to rawApplicationsData if we had all details from form
-                    // const newAppForRawData = { applicant_id: result.new_applicant_id (if returned), ...formDataToObject(formData), submitted_at: new Date().toISOString(), application_status: 'Pending' };
-                    // rawApplicationsData.push(newAppForRawData); 
-                    // Then call updateGlobalStatsOnStatusChange() and filterTableRows() if on applications view.
-
-                    updateGlobalStatsOnStatusChange(); // Recalculate stats based on current rawApplicationsData (will be off by 1 until reload/refetch)
-                    showView('applications', 'All'); // Switch to applications view; it will show old data until refresh
+                    updateGlobalStatsOnStatusChange(); 
+                    showView('applications', 'All'); 
                 } else {
                     showToast(result.message || 'Failed to add application.', 'error');
                 }
@@ -1627,11 +1652,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    initializeSidebarState();
-    updateGlobalStatsOnStatusChange();
-    showView('dashboard');
-    filterTableRows();
+    initializeSidebarState(); 
+    updateGlobalStatsOnStatusChange(); 
+    showView('dashboard'); 
+    filterTableRows(); 
+
+    window.addEventListener('resize', initializeSidebarState);
+});
+
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+    // Toggle sidebar open/close on mobile
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+        sidebarBackdrop.classList.toggle('hidden');
+    });
+
+    // Hide sidebar if clicked outside (on backdrop)
+    sidebarBackdrop.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        sidebarBackdrop.classList.add('hidden');
+    });
+
+    // Optional: hide sidebar when window is resized above mobile size
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 640) {
+            sidebar.classList.remove('-translate-x-full');
+            sidebarBackdrop.classList.add('hidden');
+        }
+    });
 });
 </script>
+
 </body>
 </html>

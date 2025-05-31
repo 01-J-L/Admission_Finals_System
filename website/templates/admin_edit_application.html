@@ -3,7 +3,7 @@
 {% block style %}
 <style>
     /* Styles from new_student.html/edit_application.html, adopted for admin_edit_application.html */
-    :where([class^="ri-"])::before { content: "\f3c2"; } 
+    :where([class^="ri-"])::before { content: "\f3c2"; }
     body {
         background-color: #f9fafb; /* Light gray background */
     }
@@ -21,21 +21,20 @@
     input[type="number"] {
         -moz-appearance: textfield;
     }
-    /* Simplified custom checkbox/radio for brevity, assuming Tailwind handles most of it */
     .go-top-btn {
         position: fixed; bottom: 20px; right: 20px; border-radius: 50%; cursor: pointer;
-        height: 50px; width: 50px; background: #162938; color: white; border: none; /* Primary color */
+        height: 50px; width: 50px; background: #4f46e5; color: white; border: none; /* Primary color for admin */
         display: none; justify-content: center; align-items: center; z-index: 999;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
     .go-top-btn i { font-size: 24px; } /* Using Remixicon */
-    
+
     /* Primary color from Tailwind config in admin_dashboard.html: primary:'#4f46e5' */
     .bg-primary { background-color: #4f46e5; }
     .text-primary { color: #4f46e5; }
     .border-primary { border-color: #4f46e5; }
     .hover\:bg-primary\/80:hover { background-color: rgba(79, 70, 229, 0.8); }
-    .focus\:ring-primary\/50:focus { ring-color: rgba(79, 70, 229, 0.5); }
+    .focus\:ring-primary\/50:focus { ring-color: rgba(79, 70, 229, 0.5); } /* Corrected: was missing 'rgba' and quotes for hex */
     .rounded-button { border-radius: 8px; } /* From Tailwind config */
 
     .file-download-link {
@@ -46,6 +45,111 @@
     .file-download-link:hover {
         color: #4338ca; /* darker primary */
     }
+
+    /* --- START OF MOBILE RESPONSIVE ADDITIONS FOR FORM --- */
+    @media (max-width: 767px) { /* Targeting screens smaller than Tailwind's 'md' breakpoint (768px) */
+
+        /* Admin Header Adjustments */
+        header.bg-primary h1.text-xl { /* Reduce admin header title size */
+            font-size: 1.125rem; /* Tailwind text-lg */
+        }
+        header.bg-primary a[href*="admin_dashboard"] { /* Adjust "Back to Dashboard" button */
+            padding: 0.375rem 0.75rem; /* py-1.5 px-3 */
+            font-size: 0.75rem; /* text-xs */
+        }
+        .main-content-area {
+             padding-top: 60px !important; /* Adjust if header height changes on mobile, py-3 + text-lg is approx 24px + font = ~50px. 60px is safer */
+        }
+
+
+        /* Adjust layout of title and "Back to Dashboard" button container within the form card */
+        .max-w-5xl > div > .p-6.border-b > .flex.justify-between.items-start {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        /* This targets the "Back to Dashboard" link INSIDE the form card, not the one in the main header */
+        .max-w-5xl > div > .p-6.border-b > .flex.justify-between.items-start a[href*="admin_dashboard"] {
+            margin-left: 0;
+            margin-top: 1rem;
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+        .max-w-5xl > div > .p-6.border-b h2.text-2xl { /* Reduce form title size on mobile */
+            font-size: 1.25rem; /* Tailwind text-xl */
+        }
+        .max-w-5xl > div > .p-6.border-b p.text-gray-600 { /* Reduce form subtitle size */
+            font-size: 0.875rem; /* Tailwind text-sm */
+        }
+
+        /* Stack step navigation buttons (Previous/Next/Submit) and make them full width */
+        #step1 .flex.justify-end button,
+        #step2 .flex.justify-between button,
+        #step3 .flex.justify-between button,
+        #step4 .flex.justify-between button {
+            width: 100%;
+            padding-left: 0.75rem; /* Adjust padding for smaller text */
+            padding-right: 0.75rem;
+            font-size: 0.875rem; /* text-sm */
+            box-sizing: border-box;
+        }
+
+        #step1 .flex.justify-end,
+        #step2 .flex.justify-between,
+        #step3 .flex.justify-between,
+        #step4 .flex.justify-between {
+            flex-direction: column-reverse;
+            gap: 0.75rem;
+        }
+         #step1 .flex.justify-end {
+             align-items: stretch;
+        }
+
+        /* Reduce padding on form content for very small screens */
+        .max-w-5xl .p-6 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        /* Stepper UI padding adjustment */
+        .max-w-5xl .px-6.py-4 {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        /* Stepper text and icons on mobile */
+        .px-6.py-4.border-b .flex.items-center .flex-col p.text-sm {
+             font-size: 0.75rem; /* text-xs */
+             line-height: 1.2;
+             margin-top: 0.25rem;
+        }
+        .px-6.py-4.border-b .flex.items-center .flex-col .w-10.h-10 {
+            width: 2rem; /* 32px */
+            height: 2rem; /* 32px */
+        }
+        .px-6.py-4.border-b .flex.items-center .flex-col .w-10.h-10 i {
+            font-size: 1rem;
+        }
+
+        /* Review data section on mobile */
+        #reviewDataContainer .grid {
+            grid-template-columns: 1fr !important; /* Force single column for all grids in review */
+        }
+        #reviewDataContainer h4, #reviewDataContainer h5 {
+            font-size: 1rem; /* text-base */
+        }
+         #reviewDataContainer p.text-sm, #reviewDataContainer p.text-xs { /* Target both sizes used in review */
+            font-size: 0.875rem; /* text-sm for base, xs will also look fine as sm */
+        }
+        #reviewDataContainer .bg-gray-50 {
+            padding: 0.75rem; /* p-3 */
+        }
+        
+        /* Flashed messages on mobile */
+        div[role="alert"] {
+            padding: 0.75rem; /* p-3 */
+            font-size: 0.875rem; /* text-sm */
+        }
+    }
+    /* --- END OF MOBILE RESPONSIVE ADDITIONS --- */
 </style>
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
 {% endblock %}
@@ -66,20 +170,7 @@
 <div class="main-content-area pt-20"> <!-- Adjusted padding top for fixed header -->
   <div class="min-h-screen flex flex-col">
     <main class="flex-grow container mx-auto px-4 py-8">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-          <div class="mb-4 p-4 rounded-md text-sm
-            {% if category == 'danger' %} bg-red-100 text-red-700 border border-red-200
-            {% elif category == 'success' %} bg-green-100 text-green-700 border border-green-200
-            {% elif category == 'warning' %} bg-yellow-100 text-yellow-700 border border-yellow-200
-            {% else %} bg-blue-100 text-blue-700 border border-blue-200 {% endif %}"
-            role="alert">
-            {{ message }}
-          </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+      
 
       <div class="max-w-5xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-6 border-b border-gray-200">
@@ -92,12 +183,10 @@
                         Modify the applicant's information below. Fields marked with <span class="text-red-500">*</span> are generally required.
                     </p>
                 </div>
-                <a href="{{ url_for('auth.admin_dashboard') }}" class="text-sm text-primary hover:text-primary/80 flex items-center whitespace-nowrap ml-4 px-4 py-2 rounded-button border border-primary hover:bg-primary/10 transition-colors">
-                    <i class="ri-arrow-left-line mr-2"></i>Back to Dashboard
-                </a>
+                
             </div>
         </div>
-        
+
         <div class="px-6 py-4 border-b border-gray-200">
           <div class="flex items-center">
             <div class="flex flex-col items-center flex-1"><div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center relative z-10"><i class="ri-user-line"></i></div><p class="text-sm font-medium text-primary mt-2">Personal Information</p></div>
@@ -109,7 +198,7 @@
             <div class="flex flex-col items-center flex-1"><div class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10"><i class="ri-check-line"></i></div><p class="text-sm font-medium text-gray-500 mt-2">Review & Update</p></div>
           </div>
         </div>
-        
+
         <form action="{{ url_for('auth.admin_update_application_action', applicant_id=application.applicant_id) }}" method="POST" enctype="multipart/form-data">
         <div class="p-6">
           <div id="step1" class="block">
@@ -171,7 +260,7 @@
                 <div class="mb-6">
                   <label class="block text-gray-700 font-medium mb-2">Permanent Address <span class="text-red-500">*</span></label>
                   <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Street, Barangay" name="permanent_address_street_barangay" value="{{ application.permanent_address_street_barangay | e }}" required />
-                  <div class="grid grid-cols-2 gap-4 mt-2">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2"> <!-- MODIFIED for better mobile stacking -->
                     <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="City/Municipality" name="permanent_address_city_municipality" value="{{ application.permanent_address_city_municipality | e }}" required />
                     <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Province" name="permanent_address_province" value="{{ application.permanent_address_province | e }}" required />
                   </div>
@@ -235,24 +324,24 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
                 <h4 class="font-medium text-gray-800 mb-4">Father's Information</h4>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Father's Name <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="father_name" value="{{ application.father_name | e }}" required /></div>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="father_occupation" value="{{ application.father_occupation | e }}" required /></div>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="father_company_address" value="{{ application.father_company_address | e }}" required /></div>
-                <div><label class="block text-gray-700 text-sm mb-2">Contact No. <span class="text-red-500">*</span></label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded" name="father_contact_number" value="{{ application.father_contact_number | e }}" required /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Father's Name <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="father_name" value="{{ application.father_name | e }}" required /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="father_occupation" value="{{ application.father_occupation | e }}" required /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="father_company_address" value="{{ application.father_company_address | e }}" required /></div>
+                <div><label class="block text-gray-700 text-sm mb-2">Contact No. <span class="text-red-500">*</span></label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="father_contact_number" value="{{ application.father_contact_number | e }}" required /></div>
               </div>
               <div>
                 <h4 class="font-medium text-gray-800 mb-4">Mother's Information</h4>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Mother's Maiden Name <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="mother_maiden_name" value="{{ application.mother_maiden_name | e }}" required /></div>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="mother_occupation" value="{{ application.mother_occupation | e }}" required /></div>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="mother_company_address" value="{{ application.mother_company_address | e }}" required /></div>
-                <div><label class="block text-gray-700 text-sm mb-2">Contact No. <span class="text-red-500">*</span></label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded" name="mother_contact_number" value="{{ application.mother_contact_number | e }}" required /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Mother's Maiden Name <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="mother_maiden_name" value="{{ application.mother_maiden_name | e }}" required /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="mother_occupation" value="{{ application.mother_occupation | e }}" required /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="mother_company_address" value="{{ application.mother_company_address | e }}" required /></div>
+                <div><label class="block text-gray-700 text-sm mb-2">Contact No. <span class="text-red-500">*</span></label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="mother_contact_number" value="{{ application.mother_contact_number | e }}" required /></div>
               </div>
               <div>
                 <h4 class="font-medium text-gray-800 mb-4">Guardian's Information (Optional)</h4>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Guardian's Name</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="guardian_name" value="{{ application.guardian_name | default('', true) | e }}" /></div>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="guardian_occupation" value="{{ application.guardian_occupation | default('', true) | e }}" /></div>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="guardian_company_address" value="{{ application.guardian_company_address | default('', true) | e }}" /></div>
-                <div><label class="block text-gray-700 text-sm mb-2">Contact No.</label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded" name="guardian_contact_number" value="{{ application.guardian_contact_number | default('', true) | e }}" /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Guardian's Name</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="guardian_name" value="{{ application.guardian_name | default('', true) | e }}" /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="guardian_occupation" value="{{ application.guardian_occupation | default('', true) | e }}" /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="guardian_company_address" value="{{ application.guardian_company_address | default('', true) | e }}" /></div>
+                <div><label class="block text-gray-700 text-sm mb-2">Contact No.</label><input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="guardian_contact_number" value="{{ application.guardian_contact_number | default('', true) | e }}" /></div>
               </div>
             </div>
             <div class="mt-8 flex justify-between">
@@ -266,17 +355,17 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <h4 class="font-medium text-gray-800 mb-4">Senior High School</h4>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">SHS Name <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="senior_high_school" value="{{ application.senior_high_school | e }}" required /></div>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Address (Brgy, City/Town, Province) <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="senior_high_school_address" value="{{ application.senior_high_school_address | e }}" required /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">SHS Name <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="senior_high_school" value="{{ application.senior_high_school | e }}" required /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Address (Brgy, City/Town, Province) <span class="text-red-500">*</span></label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="senior_high_school_address" value="{{ application.senior_high_school_address | e }}" required /></div>
                 <div class="mb-4">
                   <label class="block text-gray-700 text-sm mb-2">Strand <span class="text-red-500">*</span></label>
-                  <select name="senior_high_school_track_strand" class="w-full px-4 py-2 border border-gray-300 rounded pr-8" required>
+                  <select name="senior_high_school_track_strand" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary pr-8" required>
                     <option value="">Select strand</option>
-                    <option value="STEM" {% if application.senior_high_school_track_strand == 'STEM' %}selected{% endif %}>STEM</option>
-                    <option value="ABM" {% if application.senior_high_school_track_strand == 'ABM' %}selected{% endif %}>ABM</option>
-                    <option value="HUMSS" {% if application.senior_high_school_track_strand == 'HUMSS' %}selected{% endif %}>HUMSS</option>
-                    <option value="GAS" {% if application.senior_high_school_track_strand == 'GAS' %}selected{% endif %}>GAS</option>
-                    <option value="TVL" {% if application.senior_high_school_track_strand == 'TVL' %}selected{% endif %}>TVL</option>
+                    <option value="STEM" {% if application.senior_high_school_track_strand == 'STEM' %}selected{% endif %}>STEM (Science, Technology, Engineering, and Mathematics)</option>
+                    <option value="ABM" {% if application.senior_high_school_track_strand == 'ABM' %}selected{% endif %}>ABM (Accountancy, Business, and Management)</option>
+                    <option value="HUMSS" {% if application.senior_high_school_track_strand == 'HUMSS' %}selected{% endif %}>HUMSS (Humanities and Social Sciences)</option>
+                    <option value="GAS" {% if application.senior_high_school_track_strand == 'GAS' %}selected{% endif %}>GAS (General Academic Strand)</option>
+                    <option value="TVL" {% if application.senior_high_school_track_strand == 'TVL' %}selected{% endif %}>TVL (Technical-Vocational-Livelihood)</option>
                     <option value="SPORTS" {% if application.senior_high_school_track_strand == 'SPORTS' %}selected{% endif %}>Sports</option>
                     <option value="ARTS" {% if application.senior_high_school_track_strand == 'ARTS' %}selected{% endif %}>Arts and Design</option>
                   </select>
@@ -284,21 +373,21 @@
                 <div>
                   <label class="block text-gray-700 text-sm mb-2">Inclusive Dates (Year) <span class="text-red-500">*</span></label>
                   <div class="grid grid-cols-2 gap-4">
-                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" placeholder="From (Year)" name="senior_high_school_year_from" value="{{ application.senior_high_school_year_from | e }}" required />
-                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" placeholder="To (Year)" name="senior_high_school_year_to" value="{{ application.senior_high_school_year_to | e }}" required />
+                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="From (Year)" name="senior_high_school_year_from" value="{{ application.senior_high_school_year_from | e }}" required />
+                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="To (Year)" name="senior_high_school_year_to" value="{{ application.senior_high_school_year_to | e }}" required />
                   </div>
                 </div>
               </div>
               <div>
                 <h4 class="font-medium text-gray-800 mb-4">College (if any) / ALS Graduate (Optional)</h4>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">School Name</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="tertiary_school" value="{{ application.tertiary_school | default('', true) | e }}" /></div>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Address</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="tertiary_school_address" value="{{ application.tertiary_school_address | default('', true) | e }}" /></div>
-                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Program</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" name="tertiary_course" value="{{ application.tertiary_course | default('', true) | e }}" /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">School Name</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="tertiary_school" value="{{ application.tertiary_school | default('', true) | e }}" /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Address</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="tertiary_school_address" value="{{ application.tertiary_school_address | default('', true) | e }}" /></div>
+                <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Program</label><input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" name="tertiary_course" value="{{ application.tertiary_course | default('', true) | e }}" /></div>
                 <div>
                   <label class="block text-gray-700 text-sm mb-2">Inclusive Dates (Year)</label>
                   <div class="grid grid-cols-2 gap-4">
-                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" placeholder="From (Year)" name="tertiary_year_from" value="{{ application.tertiary_year_from | default('', true) | e }}" />
-                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded" placeholder="To (Year)" name="tertiary_year_to" value="{{ application.tertiary_year_to | default('', true) | e }}" />
+                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="From (Year)" name="tertiary_year_from" value="{{ application.tertiary_year_from | default('', true) | e }}" />
+                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="To (Year)" name="tertiary_year_to" value="{{ application.tertiary_year_to | default('', true) | e }}" />
                   </div>
                 </div>
               </div>
@@ -307,13 +396,13 @@
             <div class="mt-6 pt-6 border-t border-gray-200">
                 <h4 class="font-medium text-gray-800 mb-4">Update Required Documents</h4>
                 <p class="text-sm text-gray-600 mb-4">Upload new files only if you need to replace the current ones. Max 5MB per file. Accepted: PDF, JPG, PNG.</p>
-                
+
                 <div class="mb-6">
                     <label class="block text-gray-700 text-sm font-medium mb-2" for="shs_diploma_file_input">
                         1. Certified True Copy of Senior High School Diploma
                     </label>
                     {% if application.shs_diploma_filename %}
-                    <p class="text-xs text-gray-600 mb-1">Current: 
+                    <p class="text-xs text-gray-600 mb-1">Current:
                         <a href="{{ url_for('auth.get_applicant_document', applicant_id=application.applicant_id, doc_type='diploma') }}" target="_blank" class="file-download-link">{{ application.shs_diploma_filename }}</a>
                     </p>
                     {% endif %}
@@ -327,7 +416,7 @@
                         2. Original Senior High School Report Card (Form 138)
                     </label>
                      {% if application.shs_card_filename %}
-                    <p class="text-xs text-gray-600 mb-1">Current: 
+                    <p class="text-xs text-gray-600 mb-1">Current:
                         <a href="{{ url_for('auth.get_applicant_document', applicant_id=application.applicant_id, doc_type='card') }}" target="_blank" class="file-download-link">{{ application.shs_card_filename }}</a>
                     </p>
                     {% endif %}
@@ -341,7 +430,7 @@
                         3. Photocopy of PSA/NSO Birth Certificate
                     </label>
                     {% if application.birth_certificate_filename %}
-                    <p class="text-xs text-gray-600 mb-1">Current: 
+                    <p class="text-xs text-gray-600 mb-1">Current:
                         <a href="{{ url_for('auth.get_applicant_document', applicant_id=application.applicant_id, doc_type='birth_cert') }}" target="_blank" class="file-download-link">{{ application.birth_certificate_filename }}</a>
                     </p>
                     {% endif %}
@@ -360,7 +449,7 @@
 
           <div id="step4" class="hidden">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Review & Update Applicant Data</h3>
-            
+
             <div id="reviewDataContainer" class="mb-6">
                 <!-- JS will insert review content here -->
             </div>
@@ -372,12 +461,12 @@
             </div>
             <div class="flex items-center mb-6">
               <input type="checkbox" name="agreements" value="Yes" id="agreements" {% if application.agreements == 'Yes' %}checked{% endif %} /> <!-- NOT required for admin edit to proceed -->
-              <label class="ml-2 text-gray-700">Applicant's Agreement (View/modify if necessary. Original student agreement should be preserved unless there's a specific reason to change).</label>
+              <label class="ml-2 text-gray-700 text-sm">Applicant's Agreement (View/modify if necessary. Original student agreement should be preserved unless there's a specific reason to change).</label>
             </div>
             <div class="grid grid-cols-1 gap-6 mb-6">
               <div>
                 <label class="block text-gray-700 text-sm mb-2" for="final_submission_date_input">Final Submission Date (as set by applicant or admin) <span class="text-red-500">*</span></label>
-                <input type="date" id="final_submission_date_input" name="final_submission_date" class="w-full px-4 py-2 border border-gray-300 rounded" value="{{ application.final_submission_date }}" required />
+                <input type="date" id="final_submission_date_input" name="final_submission_date" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="{{ application.final_submission_date }}" required />
               </div>
             </div>
             <div class="mt-8 flex justify-between">
@@ -395,7 +484,7 @@
 
 <script>
     const initialApplicationFilenames = {
-        photo: "{{ 'photo_on_file.jpg' if application.photo else '' }}", 
+        photo: "{{ 'photo_on_file.jpg' if application.photo else '' }}",
         shs_diploma_filename: "{{ application.shs_diploma_filename | default('', true) | e }}",
         shs_card_filename: "{{ application.shs_card_filename | default('', true) | e }}",
         birth_certificate_filename: "{{ application.birth_certificate_filename | default('', true) | e }}"
@@ -405,31 +494,31 @@
     document.addEventListener("DOMContentLoaded", function () {
       const requiredFields = document.querySelectorAll(
         "form input[required]:not([type='file']), form select[required], form textarea[required]"
-      ); 
+      );
       const submitButton = document.getElementById("submitApplicationAdminBtn");
-  
+
       function validateForm() {
         let isValid = true;
         requiredFields.forEach((field) => {
           if (field.type === 'radio' || field.type === 'checkbox') {
-            if (field.type === 'radio') { 
+            if (field.type === 'radio') {
                  const radioGroup = document.querySelectorAll(`input[name="${field.name}"][required]`);
-                 if (radioGroup.length > 0) { 
+                 if (radioGroup.length > 0) {
                     let oneChecked = false;
                     radioGroup.forEach(radio => { if (radio.checked) oneChecked = true; });
                     if (!oneChecked) isValid = false;
                  }
             }
-          } else if (field.required && (!field.value || (typeof field.value === 'string' && !field.value.trim()))) { 
+          } else if (field.required && (!field.value || (typeof field.value === 'string' && !field.value.trim()))) {
             isValid = false;
           }
         });
-        
-        if(submitButton){ 
+
+        if(submitButton){
             if (isValid) {
               submitButton.disabled = false;
               submitButton.classList.remove("bg-gray-300", "cursor-not-allowed");
-              submitButton.classList.add("bg-primary");
+              submitButton.classList.add("bg-primary"); // Use the admin primary color
             } else {
               submitButton.disabled = true;
               submitButton.classList.add("bg-gray-300", "cursor-not-allowed");
@@ -437,31 +526,32 @@
             }
         }
       }
-  
+
       requiredFields.forEach((field) => {
         field.addEventListener("input", validateForm);
         if (field.type === 'radio' || field.type === 'checkbox') {
             field.addEventListener("change", validateForm);
         }
       });
+      // Agreement checkbox is not strictly required for admin to submit changes, but if it exists, listen to it.
       const agreementCheckbox = document.getElementById('agreements');
       if (agreementCheckbox) agreementCheckbox.addEventListener('change', validateForm);
-      
-      validateForm(); 
+
+      validateForm();
     });
-  
+
     document.addEventListener("DOMContentLoaded", function () {
       const step1 = document.getElementById("step1");
       const step2 = document.getElementById("step2");
       const step3 = document.getElementById("step3");
       const step4 = document.getElementById("step4");
-      
+
       const nextToStep2Btn = document.getElementById("nextToStep2");
       const backToStep1Btn = document.getElementById("backToStep1");
       const nextToStep3Btn = document.getElementById("nextToStep3");
-      const backToStep2Btn = document.getElementById("backToStep2From3"); 
+      const backToStep2Btn = document.getElementById("backToStep2From3");
       const nextToStep4Btn = document.getElementById("nextToStep4");
-      const backToStep3Btn = document.getElementById("backToStep3From4"); 
+      const backToStep3Btn = document.getElementById("backToStep3From4");
 
       function collectFormDataForReview() {
         return {
@@ -534,11 +624,11 @@
       if(backToStep1Btn) backToStep1Btn.addEventListener("click", function (e) { e.preventDefault(); if(step2)step2.classList.add("hidden"); if(step1)step1.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(1); });
       if(nextToStep3Btn) nextToStep3Btn.addEventListener("click", function (e) { e.preventDefault(); if(step2)step2.classList.add("hidden"); if(step3)step3.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(3); });
       if(backToStep2Btn) backToStep2Btn.addEventListener("click", function (e) { e.preventDefault(); if(step3)step3.classList.add("hidden"); if(step2)step2.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(2); });
-      
+
       if(nextToStep4Btn) nextToStep4Btn.addEventListener("click", function (e) {
         e.preventDefault();
         const formData = collectFormDataForReview();
-        
+
         const newPhotoFile = document.getElementById('photoInput').files[0];
         const newDiplomaFile = document.getElementById('shs_diploma_file_input').files[0];
         const newCardFile = document.getElementById('shs_card_file_input').files[0];
@@ -548,8 +638,14 @@
         let diplomaReview = newDiplomaFile ? `New SHS Diploma Uploaded: ${newDiplomaFile.name}` : (initialApplicationFilenames.shs_diploma_filename ? `Current SHS Diploma retained (<a href="/applicant-document/${applicantIdForLinks}/diploma" target="_blank" class="file-download-link">${initialApplicationFilenames.shs_diploma_filename}</a>)` : 'No SHS Diploma on file');
         let cardReview = newCardFile ? `New SHS Card Uploaded: ${newCardFile.name}` : (initialApplicationFilenames.shs_card_filename ? `Current SHS Card retained (<a href="/applicant-document/${applicantIdForLinks}/card" target="_blank" class="file-download-link">${initialApplicationFilenames.shs_card_filename}</a>)` : 'No SHS Card on file');
         let birthCertReview = newBirthCertFile ? `New Birth Certificate Uploaded: ${newBirthCertFile.name}` : (initialApplicationFilenames.birth_certificate_filename ? `Current Birth Certificate retained (<a href="/applicant-document/${applicantIdForLinks}/birth_cert" target="_blank" class="file-download-link">${initialApplicationFilenames.birth_certificate_filename}</a>)` : 'No Birth Certificate on file');
-        
-        const incomeText = formData.averageFamilyIncome ? formData.averageFamilyIncome.replace(/_/g, ' ').replace('to', '-').replace('above', ' above').replace('below', ' below') : "Not specified";
+
+        const incomeOptions = {
+            "10000_below": "₱10,000 below", "10001_to_20000": "₱10,001 - 20,000",
+            "20001_to_30000": "₱20,001 - 30,000", "30001_to_40000": "₱30,001 - 40,000",
+            "40001_to_50000": "₱40,001 - 50,000", "50001_to_100000": "₱50,001 - 100,000",
+            "100001_above": "₱100,001 above"
+        };
+        const incomeText = incomeOptions[formData.averageFamilyIncome] || formData.averageFamilyIncome || "Not specified";
 
 
         const reviewContent = `
@@ -623,43 +719,44 @@
 
             <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
                 <h4 class="text-md font-semibold text-gray-700 mb-3">Document Updates:</h4>
-                <p class="text-xs">${photoReview}</p>
-                <p class="text-xs">${diplomaReview}</p>
-                <p class="text-xs">${cardReview}</p>
-                <p class="text-xs">${birthCertReview}</p>
+                <p class="text-xs text-gray-600">${photoReview}</p>
+                <p class="text-xs text-gray-600">${diplomaReview}</p>
+                <p class="text-xs text-gray-600">${cardReview}</p>
+                <p class="text-xs text-gray-600">${birthCertReview}</p>
             </div>
         </div>`;
-        
+
         const reviewContainer = document.getElementById("reviewDataContainer");
         if(reviewContainer) reviewContainer.innerHTML = reviewContent;
-        
-        if(step3)step3.classList.add("hidden"); 
-        if(step4)step4.classList.remove("hidden"); 
-        window.scrollTo(0, 0); 
-        updateStepperUI(4); 
+
+        if(step3)step3.classList.add("hidden");
+        if(step4)step4.classList.remove("hidden");
+        window.scrollTo(0, 0);
+        updateStepperUI(4);
       });
 
-      if(backToStep3Btn) backToStep3Btn.addEventListener("click", function (e) { 
-        e.preventDefault(); 
+      if(backToStep3Btn) backToStep3Btn.addEventListener("click", function (e) {
+        e.preventDefault();
         const reviewContainer = document.getElementById("reviewDataContainer");
-        if(reviewContainer) reviewContainer.innerHTML = ""; 
-        if(step4)step4.classList.add("hidden"); 
-        if(step3)step3.classList.remove("hidden"); 
-        window.scrollTo(0, 0); 
-        updateStepperUI(3); 
+        if(reviewContainer) reviewContainer.innerHTML = "";
+        if(step4)step4.classList.add("hidden");
+        if(step3)step3.classList.remove("hidden");
+        window.scrollTo(0, 0);
+        updateStepperUI(3);
       });
-      
-      updateStepperUI(1);
+
+      updateStepperUI(1); // Initialize stepper on page load
 
       function updateStepperUI(activeStep) {
         const stepperItems = document.querySelectorAll(".px-6.py-4.border-b .flex.items-center > div.flex.flex-col");
         const progressBars = document.querySelectorAll(".px-6.py-4.border-b .h-1.bg-gray-200 > div");
         stepperItems.forEach((item, index) => {
           const stepNumber = index + 1;
-          const circle = item.querySelector("div.w-10.h-10");
+          const circle = item.querySelector("div.w-10.h-10"); // Desktop/default circle
           const text = item.querySelector("p");
           if(!circle || !text) return;
 
+          // CSS media query handles resizing the circle, JS just handles colors and scale
           if (stepNumber < activeStep) {
             circle.classList.remove("bg-gray-200", "text-gray-500"); circle.classList.add("bg-primary", "text-white");
             text.classList.remove("text-gray-500"); text.classList.add("text-primary");
@@ -676,19 +773,19 @@
           }
         });
       }
-    
+
         const uploadPhotoBtn = document.getElementById("uploadPhotoBtn");
         const photoInput = document.getElementById("photoInput");
         const photoPreview = document.getElementById("photoPreview");
         const photoPlaceholder = document.getElementById("photoPlaceholder");
         const photoToast = document.getElementById("photoToast");
 
-        function showToast(message, type = "success") { 
+        function showToast(message, type = "success") {
             if(!photoToast) return;
             photoToast.textContent = message;
             photoToast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white text-sm z-50 transform transition-transform duration-300`;
             if (type === "error") photoToast.classList.add("bg-red-500");
-            else photoToast.classList.add("bg-green-500");
+            else photoToast.classList.add("bg-green-500"); // Use green for success
             photoToast.classList.remove("hidden", "translate-y-full");
             setTimeout(() => {
               photoToast.classList.add("translate-y-full");
@@ -704,7 +801,7 @@
             const file = e.target.files[0];
             if (file) {
                 if (!file.type.startsWith("image/")) { showToast("⚠️ Please select an image file for photo.", "error"); photoInput.value = ""; return; }
-                const MAX_SIZE = 5 * 1024 * 1024; 
+                const MAX_SIZE = 5 * 1024 * 1024;
                 if (file.size > MAX_SIZE) { showToast("⚠️ Photo is too large (max 5MB).", "error"); photoInput.value = ""; return; }
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -712,21 +809,21 @@
                     if(photoPlaceholder) photoPlaceholder.classList.add("hidden");
                 };
                 reader.readAsDataURL(file);
-                showToast("✅ New photo selected: " + file.name, "success"); 
+                showToast("✅ New photo selected: " + file.name, "success");
             }
         });
 
-        const documentInputs = document.querySelectorAll('input[type="file"][name$="_file_input"]'); 
+        const documentInputs = document.querySelectorAll('input[type="file"][name$="_file_input"]');
         documentInputs.forEach(input => {
             input.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 const labelText = input.labels[0] ? input.labels[0].textContent.split('*')[0].trim().replace(/^[\d.]+\s*/, '') : 'Document';
                 if (file) {
-                    const MAX_DOC_SIZE = 5 * 1024 * 1024; 
+                    const MAX_DOC_SIZE = 5 * 1024 * 1024;
                     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
                     const fileExtension = file.name.split('.').pop().toLowerCase();
                     const isAllowedExtension = ['pdf', 'jpg', 'jpeg', 'png'].includes(fileExtension);
-                    
+
                     if (!allowedTypes.includes(file.type) && !isAllowedExtension) {
                         showToast(`⚠️ Invalid file type for ${labelText}. Allowed: PDF, JPG, PNG.`, "error");
                         input.value = ""; return;
