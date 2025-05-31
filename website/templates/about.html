@@ -509,7 +509,8 @@ header {
 
 <div class="video-container">
   <video class="video-player-custom" controls autoplay muted loop playsinline>
-    <source src="{{ url_for('static', filename='pgpcvideo.mp4') }}" type="video/mp4">
+    <source src="/static/pgpcvideo.mp4" type="video/mp4">
+
     Your browser does not support the video tag.
   </video>
   {# The .overlay div that was previously here for video text is now styled directly on .video-container .overlay CSS rule #}
