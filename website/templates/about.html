@@ -1,3 +1,5 @@
+
+
 {% extends 'base.html' %}
 
 {% block style %}
@@ -19,9 +21,7 @@ header {
     align-items: center;
     z-index: 1000;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    /* Default background can be transparent or light, letting base.html define it or having a default */
-    /* background: #fff; */ /* Example light background for desktop if needed */
-    transition: background-color 0.3s ease; /* Smooth transition for background change */
+    transition: background-color 0.3s ease;
 }
 
 .header-left {
@@ -31,17 +31,15 @@ header {
 
 .header-left .logo { /* College name */
     font-size: 1.4em;
-    /* color: #162938; */ /* Desktop logo color, could be dark if header bg is light */
     margin-left: 15px;
     white-space: nowrap;
-    transition: color 0.3s ease; /* Smooth transition for color change */
+    transition: color 0.3s ease;
 }
 
 /* Desktop Navigation Styles */
 .navigation a {
     position: relative;
     font-size: 1.1em;
-    /* color: #162938; */ /* Desktop nav link color */
     text-decoration: none;
     font-weight: 500;
     margin-left: 30px;
@@ -49,11 +47,6 @@ header {
 .navigation a.no-underline {
     text-decoration: none;
 }
-
-.navigation .btnLogin-popup {
-    /* Desktop specific adjustments if any */
-}
-
 
 /* Hamburger Menu Button */
 .menu-toggle {
@@ -74,84 +67,79 @@ header {
     display: block;
     width: 100%;
     height: 3px;
-    background-color: #162938; /* Default dark color for hamburger lines, will be overridden for dark header */
+    background-color: #162938; /* Default dark color for hamburger lines */
     border-radius: 3px;
     transition: all 0.3s ease-in-out;
 }
 
-/* --- General/Base Animation (potentially used by base.html or if Section_top is used) --- */
-.Section_top {
-    background-image: url("{{ url_for('static', filename='images/img1.jpg') }}");
-    animation: change 30s infinite ease-in-out;
-    /* Additional styles if .Section_top is used on this page, like in index.html */
+/* --- About Hero Banner Styles --- */
+.about-hero-banner {
+    background-image: url("{{ url_for('static', filename='images/img3.jpg') }}"); /* Static background image */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    background-attachment: fixed; /* Makes the background image fixed during scroll on DESKTOP */
+    height: 85vh; /* Default height for desktop */
+    min-height: 650px; /* Default min-height for desktop */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    padding: 20px;
+    padding-top: 120px; /* To push content below absolute header. Adjust based on header height. */
+    box-sizing: border-box;
+    position: relative; /* For overlay positioning */
 }
 
-@keyframes change {
-    10% { background-image: url("{{ url_for('static', filename='images/img1.jpg') }}"); }
-    20% { background-image: url("{{ url_for('static', filename='images/img2.jpg') }}"); }
-    40% { background-image: url("{{ url_for('static', filename='images/img3.jpg') }}"); }
-    60% { background-image: url("{{ url_for('static', filename='images/img4.jpg') }}"); }
-    80% { background-image: url("{{ url_for('static', filename='images/img5.jpg') }}"); }
-    100% { background-image: url("{{ url_for('static', filename='images/img6.jpg') }}"); }
+.about-hero-banner::before { /* Dark overlay for text readability */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.55); /* Adjust opacity as needed */
+    z-index: 1;
 }
 
-/* --- Video Section Styles --- */
-.video-container {
-  position: relative;
-  height: 115vh; 
-  overflow: hidden;
-  /* Desktop: Video starts from top. Mobile: pushed down by header. */
+.about-hero-banner .hero-content {
+    position: relative; /* To be above the overlay */
+    z-index: 2;
 }
 
-.video-container video.video-player-custom { 
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
-  height: auto;
-  transform: translate(-50%, -50%);
-  z-index: 1; 
-  object-fit: cover;
-  max-width: 100%; 
-  border: 2px solid white;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
+.about-hero-banner .hero-content h1 {
+    font-size: 2.8em;
+    margin-bottom: 0.5em;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+    font-weight: bold;
 }
 
-.video-container .overlay { 
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 2; 
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
-  background-color: rgba(0, 0, 0, 0.4); 
+.about-hero-banner .hero-content p {
+    font-size: 1.3em;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
+
 
 /* --- About Section Styles --- */
 .about-section {
-  padding: 2rem;
-  background-color: #ffffff;
+  padding: 3rem 2rem; /* Increased padding for more spacing */
+  background-color: #ffffff; /* Ensure this section has a background to overlay the fixed image */
   color: #333;
+  position: relative; /* Added to ensure it stacks correctly if needed */
+  z-index: 5; /* Ensures this section is above the fixed background's effective layer */
 }
 
 .about-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-width: 1200px; 
-  margin: 0 auto; 
+  gap: 30px; /* Increased gap */
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 @media (min-width: 768px) {
@@ -162,7 +150,7 @@ header {
 
 .about-sidebar {
   flex: 1;
-  max-width: 300px; 
+  max-width: 300px;
 }
 
 .box-title {
@@ -172,18 +160,22 @@ header {
   font-weight: bold;
   text-align: center;
   margin-bottom: 16px;
+  border-radius: 4px; /* Added border-radius */
 }
 
 .image-box {
   background: white;
-  padding: 16px;
-  border: 1px solid #ccc;
+  padding: 10px; /* Reduced padding */
+  border: 1px solid #e0e0e0; /* Lighter border */
+  border-radius: 4px; /* Added border-radius */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Subtle shadow */
 }
 
 .image-box img {
   width: 100%;
   height: auto;
-  display: block; 
+  display: block;
+  border-radius: 3px; /* Slight radius for image */
 }
 
 .about-content {
@@ -193,56 +185,209 @@ header {
 
 @media (min-width: 768px) {
   .about-content {
-    padding-left: 20px;
+    padding-left: 30px; /* Increased padding */
   }
 }
 
-.heading { 
-  font-size: 28px;
+.heading {
+  font-size: 2rem; /* Adjusted size */
   color: #162938;
-  margin-bottom: 12px;
-  margin-top: 24px;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem; /* Adjusted margin */
+  border-bottom: 2px solid #162938; /* Underline for heading */
+  padding-bottom: 0.5rem; /* Space below underline */
 }
+.about-content .heading:first-of-type {
+    margin-top: 0; /* Remove top margin for the first heading in content */
+}
+
 
 .about-content p {
-  margin-bottom: 24px;
-  line-height: 1.6;
+  margin-bottom: 1.5rem; /* Adjusted margin */
+  line-height: 1.7; /* Increased line height for readability */
+  font-size: 1rem;
 }
 
-.objectives { 
+.objectives {
   list-style-type: none;
-  padding-left: 32px; 
+  padding-left: 0; /* Removed default padding */
 }
 
 .objectives li {
-  margin-bottom: 12px;
+  margin-bottom: 1rem;
+  padding-left: 25px; /* Space for custom bullet */
+  position: relative;
+  font-size: 1rem;
 }
 
-/* --- Location/Map Section Styles --- */
-.location-section {
-  padding: 2rem 1rem;
-  background-color: #d1d1d1; 
+.objectives li::before { /* Custom bullet */
+    content: "✔"; /* Or any other icon/character */
+    position: absolute;
+    left: 0;
+    color: #162938; /* Theme color for bullet */
+    font-weight: bold;
+}
+
+/* --- Meet People Section Styles --- */
+.meet-people-section {
+  padding: 3rem 2rem;
+  background-color: #ffffff;
+  color: #333;
+  position: relative;
+  z-index: 5;
+}
+
+.meet-people-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.meet-people-top-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.meet-people-text {
+  flex: 1 1 55%;
+  min-width: 300px;
+}
+
+.meet-people-text h2 {
+  font-size: 2.2em;
+  color: #162938;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.meet-people-text p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.meet-people-image-large {
+  flex: 1 1 40%;
+  min-width: 300px;
+}
+
+.meet-people-image-large img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.meet-people-bottom-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: space-between;
+}
+
+.meet-people-item {
+  flex: 1 1 30%;
+  min-width: 250px;
   text-align: center;
 }
 
-.location-container {
-  max-width: 900px; 
-  margin: 0 auto; 
+.meet-people-item img {
+  width: 100%;
+  aspect-ratio: 3 / 4; /* MODIFIED: Default aspect ratio, makes image taller for its width */
+  object-fit: cover;
+  display: block;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.07);
 }
 
-.location-section .heading { 
-  margin-bottom: 1.5rem; 
-  margin-top: 0; 
+.meet-people-item p {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 0.25rem;
+}
+
+.meet-people-item h3 {
+  font-size: 1em;
+  color: #162938;
+  font-weight: 500;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive adjustments for Meet People Section */
+@media (max-width: 768px) {
+  .meet-people-top-row {
+    flex-direction: column;
+  }
+  .meet-people-text {
+    flex-basis: 100%;
+    margin-bottom: 2rem;
+  }
+  .meet-people-image-large {
+    flex-basis: 100%;
+  }
+  .meet-people-bottom-row {
+    justify-content: center;
+  }
+  .meet-people-item {
+    flex-basis: calc(50% - 0.75rem);
+    max-width: 300px;
+  }
+   .meet-people-text h2 {
+    font-size: 1.8em;
+    text-align: center;
+  }
+  /* .meet-people-item img aspect-ratio is already 3/4 from default, no need to repeat unless changing it specifically for this breakpoint */
+}
+
+@media (max-width: 576px) { /* Extra small screens */
+    .meet-people-item {
+        flex-basis: 100%;
+        max-width: 350px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .meet-people-item img {
+        aspect-ratio: 4 / 5; /* MODIFIED: Slightly portrait for stacked items, taller than square */
+        object-fit: cover;
+    }
+}
+
+
+/* --- Location/Map Section Styles --- */
+.location-section {
+  padding: 3rem 1rem;
+  background-color: #f4f4f4;
+  text-align: center;
+  position: relative;
+  z-index: 5;
+}
+
+.location-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.location-section .heading {
+  margin-bottom: 2rem;
+  margin-top: 0;
+  border-bottom: none;
 }
 
 .map-embed-container {
   position: relative;
   overflow: hidden;
   width: 100%;
-  padding-top: 56.25%; 
+  padding-top: 56.25%;
   border: 1px solid #ccc;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .map-embed-container iframe {
@@ -251,7 +396,7 @@ header {
   left: 0;
   width: 100%;
   height: 100%;
-  border: 0; 
+  border: 0;
 }
 
 
@@ -266,12 +411,12 @@ header {
   width: 50px;
   background: #fff;
   border: 3px solid #333;
-  display: none; 
+  display: none;
   justify-content: center;
   align-items: center;
   z-index: 999;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; 
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 
 .go-top-btn:hover {
@@ -292,76 +437,77 @@ header {
   padding: 2rem 1rem;
   text-align: center;
   color: white;
-  overflow: hidden; 
+  overflow: hidden;
+  z-index: 5;
 }
-    
+
 .footer::before {
   content: "";
   position: absolute;
-  inset: 0; 
+  inset: 0;
   background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat;
-  z-index: 0; 
-  opacity: 0.3; 
+  z-index: 0;
+  opacity: 0.3;
 }
-    
+
 .footer::after {
   content: "";
   position: absolute;
-  inset: 0; 
-  background: rgba(22, 41, 56, 0.442); 
-  z-index: 1; 
+  inset: 0;
+  background: rgba(22, 41, 56, 0.442);
+  z-index: 1;
 }
-    
+
 .footer * {
   position: relative;
   z-index: 2;
 }
-    
+
 .footer-logo {
   width: 100px;
   height: 100px;
   margin-bottom: 1rem;
 }
-    
+
 .footer-title {
   font-size: 1.5rem;
   font-weight: bold;
 }
-    
+
 .footer-subtitle {
   font-size: 1.25rem;
   font-weight: bold;
   margin-top: 0.5rem;
 }
-    
+
 .footer-connect {
   margin-top: 1rem;
   font-size: 1rem;
 }
-    
+
 .footer-socials {
   display: flex;
   gap: 1rem;
   margin-top: 0.5rem;
   font-size: 1.25rem;
 }
-    
+
 .footer-socials a {
   color: white;
   text-decoration: none;
   transition: color 0.3s ease;
 }
-    
+
 .footer-socials a:hover {
-  color: #0987d0; 
+  color: #0987d0;
 }
-    
+
 .footer-divider {
   border-top: 1px solid white;
   width: 25%;
   margin: 2rem 0;
 }
-    
+
 .footer-bottom {
   font-size: 0.875rem;
   line-height: 1.6;
@@ -372,38 +518,38 @@ header {
 @media (max-width: 992px) {
     header {
         padding: 10px 3%;
-        background-color: #162938; 
+        background-color: #162938;
     }
 
     .header-left img {
-        width: 70px; 
-        height: 50px; 
-        object-fit: contain; 
+        width: 70px;
+        height: 50px;
+        object-fit: contain;
     }
 
     .header-left .logo {
         font-size: 1em;
         margin-left: 10px;
-        color: #fff; 
+        color: #fff;
     }
 
     .menu-toggle span {
-        background-color: #ffffff; 
+        background-color: #ffffff;
     }
 
     .navigation {
         position: absolute;
-        top: 100%; 
+        top: 100%;
         right: 0;
         width: 250px;
-        background-color: #162938; 
+        background-color: #162938;
         box-shadow: 0 8px 16px rgba(0,0,0,0.15);
         flex-direction: column;
         align-items: stretch;
         display: none;
         z-index: 1050;
-        border-top: 1px solid #2a3f54; 
-        max-height: calc(100vh - 70px); 
+        border-top: 1px solid #2a3f54;
+        max-height: calc(100vh - 70px);
         overflow-y: auto;
     }
 
@@ -411,20 +557,20 @@ header {
         display: flex;
     }
 
-    .navigation a { 
+    .navigation a {
         display: block;
         padding: 12px 20px;
         margin-left: 0;
         text-align: left;
-        color: #f0f0f0; 
-        border-bottom: 1px solid #2a3f54; 
-        text-decoration: none; 
+        color: #f0f0f0;
+        border-bottom: 1px solid #2a3f54;
+        text-decoration: none;
     }
     .navigation a:last-child {
         border-bottom: none;
     }
     .navigation a:hover {
-        background-color: #22333f; 
+        background-color: #22333f;
     }
 
     .navigation a .btnLogin-popup {
@@ -435,9 +581,6 @@ header {
         text-align: center;
         display: block;
         height: auto;
-    }
-     .navigation a .btnLogin-popup[style*="background-color: #d9534f;"] {
-        /* Logout button specific styles are fine */
     }
 
     .menu-toggle {
@@ -454,25 +597,54 @@ header {
         transform: translateY(-9px) rotate(-45deg);
     }
 
-    .video-container { 
-        margin-top: 70px;  
-        height: 400px;    /* MODIFIED: Set a fixed height for mobile view for a rectangular shape */
-                           /* Adjust this value (e.g., 300px, 350px, etc.) as needed */
+    /* Mobile adjustments for hero banner */
+    .about-hero-banner {
+        padding-top: 90px;
+        height: 65vh;
+        min-height: 380px;
+        background-attachment: scroll;
+    }
+    .about-hero-banner .hero-content h1 {
+        font-size: 2.2em;
+    }
+    .about-hero-banner .hero-content p {
+        font-size: 1.1em;
+    }
+     .about-section {
+        padding: 2rem 1rem;
+    }
+    .heading {
+        font-size: 1.8rem;
+    }
+    .about-content p, .objectives li {
+        font-size: 0.95rem;
+    }
+
+}
+@media (max-width: 768px) {
+    .about-hero-banner {
+        padding-top: 80px;
+        height: 70vh;
+        min-height: 350px;
+        background-attachment: scroll;
+    }
+     .header-left .logo {
+        font-size: 0.9em;
     }
 }
+
 </style>
 {% endblock %}
 
 
 {% block head %}
-    {{ super() }} 
+    {{ super() }}
     <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
     <title>About Us - Padre Garcia Polytechnic College</title>
 {% endblock%}
 
 
-{% block body %} 
-<div class="overlay"></div>
+{% block body %}
 
 <header>
     <div class="header-left">
@@ -507,13 +679,12 @@ header {
     </nav>
 </header>
 
-<div class="video-container">
-  <video class="video-player-custom" controls autoplay muted loop playsinline>
-    <source src="{{ url_for('static', filename='pgpcvideo.mp4') }}" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-
-</div>
+<section class="about-hero-banner">
+    <div class="hero-content">
+        <h1>About Padre Garcia Polytechnic College</h1>
+        <p>Discover our commitment to excellence in education and community development.</p>
+    </div>
+</section>
 
 <section class="about-section">
   <div class="about-container">
@@ -525,7 +696,7 @@ header {
     </div>
 
     <div class="about-content">
-      <h1 class="heading">"GARCIANO AKO, DISIPLINADO, MABUTING TAO."</h1>
+      <h1 class="heading" style="font-size: 1.5em; text-align: center; border-bottom: none; margin-bottom: 2rem;">"GARCIANO AKO, DISIPLINADO, MABUTING TAO."</h1>
 
       <h2 class="heading">Vision</h2>
       <p>PGPC is a premier local higher learning institution in Region IV producing globally competitive and excellent professionals and leader's instrumental to community development and nation building.</p>
@@ -544,14 +715,48 @@ header {
   </div>
 </section>
 
+<!-- --- Meet People Section --- -->
+<section class="meet-people-section">
+    <div class="meet-people-container">
+        <div class="meet-people-top-row">
+            <div class="meet-people-text">
+                <h2>Meet People</h2>
+                <p>At Padre Garcia Polytechnic College, you're not just joining an institution — you're becoming part of a dynamic and supportive community. Meet passionate educators, dedicated staff, and ambitious students who are all working together to shape a brighter future. Whether you're engaging with student leaders, collaborating with faculty, the PGPC experience is one of connection, inspiration, and shared growth. Our college takes pride in cultivating a culture of inclusivity, mentorship, and opportunity where everyone is encouraged to thrive.</p>
+
+            </div>
+            <div class="meet-people-image-large">
+                <img src="{{ url_for('static', filename='images/meetpeople.jpg') }}" alt="People connecting and networking in a vibrant setting">
+            </div>
+        </div>
+        <div class="meet-people-bottom-row">
+            <div class="meet-people-item">
+                <img src="{{ url_for('static', filename='images/nino.jpg') }}" alt="Doc. Niño Javinal Viñas, President of PGPC">
+                <p>Doc. Niño Javinal Viñas</p>
+                <h3>President</h3>
+            </div>
+            <div class="meet-people-item">
+                <img src="{{ url_for('static', filename='images/mike.jpg') }}" alt="Mr. Michael V. Lariosa, Dean of Faculty at PGPC">
+                <p>Michael Almirez</p>
+                <h3>Dean Faculty</h3>
+            </div>
+            <div class="meet-people-item">
+                <img src="{{ url_for('static', filename='images/abu.jpg') }}" alt="Mr. Abu Talib T. Marohomsalic, Dean of Faculty at PGPC">
+                 <p>Joy Abu</p>
+                <h3>Dean Faculty</h3>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End of Meet People Section -->
+
 <section class="location-section">
     <div class="location-container">
         <h2 class="heading">Our Location</h2>
         <div class="map-embed-container">
-            <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3545.459040105033!2d121.2656064588598!3d13.882479556840263!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd3f0024d47b1b%3A0x111daf1b2a29e55e!2sPadre%20Garcia%20Polytechnic%20College!5e1!3m2!1sen!2sph!4v1747292232960!5m2!1sen!2sph" 
-                allowfullscreen="" 
-                loading="lazy" 
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3545.459040105033!2d121.2656064588598!3d13.882479556840263!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd3f0024d47b1b%3A0x111daf1b2a29e55e!2sPadre%20Garcia%20Polytechnic%20College!5e1!3m2!1sen!2sph!4v1747292232960!5m2!1sen!2sph"
+                allowfullscreen=""
+                loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"
                 title="Padre Garcia Polytechnic College Location Map">
             </iframe>
@@ -565,19 +770,19 @@ header {
 
 <footer class="footer">
     <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
-    
+
     <h1 class="footer-title">Padre Garcia Polytechnic College</h1>
     <h2 class="footer-subtitle">THE FUTURE BEGINS HERE.</h2>
-    
+
     <p class="footer-connect">Connect with us</p>
-    
+
     <div class="footer-socials">
       <a href="https://www.facebook.com/PadreGarciaPolytechnicCollege"><i class="fab fa-facebook-f"></i></a>
 
     </div>
-    
+
     <div class="footer-divider"></div>
-    
+
     <div class="footer-bottom">
       <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="{{ url_for('views.home') }}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7">Brgy.Castillo, Padre Garcia, Batangas</a> | +63 (2) 8524-4611</p>
       <p>© 2025. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home">Padre Garcia PH</a></p>
@@ -589,7 +794,7 @@ header {
 document.addEventListener('DOMContentLoaded', function () {
   const goTopBtn = document.getElementById('goTopBtn');
 
-  if (goTopBtn) { 
+  if (goTopBtn) {
     window.addEventListener('scroll', () => {
       if (window.scrollY > 200) {
         goTopBtn.style.display = "flex";
@@ -606,9 +811,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // JavaScript for menu toggle (from index.html)
+  // JavaScript for menu toggle
   const menuToggle = document.querySelector('.menu-toggle');
-  const navigation = document.getElementById('main-navigation'); 
+  const navigation = document.getElementById('main-navigation');
 
   if (menuToggle && navigation) {
       menuToggle.addEventListener('click', function() {
