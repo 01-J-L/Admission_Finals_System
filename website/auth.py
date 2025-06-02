@@ -11,6 +11,8 @@ import secrets
 from flask_mail import Message
 import os
 import io
+import secrets # for OTP generation
+from datetime import timedelta
 
 # ----------------- BLUEPRINT SETUP -----------------
 auth = Blueprint('auth', __name__)
@@ -114,7 +116,36 @@ def process_uploaded_file(file_storage, file_description_for_error, max_size_mb=
         return file_data, filename, mimetype, None
     return None, None, None, None
 
+# ----------------- EMAIL otp -----------------
+
+def send_otp_email(user_email, otp_code):
+    sender_name_from_config = current_app.config.get('MAIL_SENDER_NAME', 'Padre Garcia Polytechnic College')
+    subject = f"Verify Your PGPC Account - OTP: {otp_code} - {sender_name_from_config}"
+    
+    try:
+        verify_url = url_for('auth.verify_otp_page', _external=True) 
+    except RuntimeError:
+        verify_url = f"{current_app.config.get('PREFERRED_URL_SCHEME', 'http')}://{current_app.config.get('SERVER_NAME', 'your-domain.com')}/verify-otp"
+        if 'your-domain.com' in verify_url: print("Warning: SERVER_NAME might not be correctly set for OTP email links (verify_url).")
+
+    try:
+        html_body = render_template(
+            'email/otp_verification_email.html',
+            user_email=user_email,
+            otp_code=otp_code,
+            verify_url=verify_url,
+            sender_name=sender_name_from_config,
+            now=datetime.datetime.now()
+        )
+    except Exception as e_template:
+        print(f"CRITICAL: Email template 'email/otp_verification_email.html' not found or error rendering. Error: {e_template}")
+        html_body = f"<p>Dear User,</p><p>Your One-Time Password (OTP) for account verification is: <strong>{otp_code}</strong>. Please enter this OTP on the verification page. This OTP is valid for 10 minutes.</p><p>If you didn't request this, please ignore this email.</p>"
+        
+    email_sent = _send_email(subject, [user_email], html_body, sender_name_override=sender_name_from_config)
+    return email_sent
+
 # ----------------- EMAIL SENDING HELPER FUNCTIONS -----------------
+
 def _send_email(subject, recipients, html_body, sender_name_override=None):
     mail_handler = current_app.extensions.get('mail')
     if not mail_handler:
@@ -559,17 +590,61 @@ def create_student_account_page():
         if len(password) < 8: flash('Password must be at least 8 characters long.', 'danger'); return redirect(url_for('auth.create_student_account_page'))
         
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        otp_code = f"{secrets.randbelow(1000000):06d}" # Generate 6-digit OTP
+        otp_expiry = datetime.datetime.now() + timedelta(minutes=10) # OTP valid for 10 minutes
+
         conn = None; cursor = None
         try:
             conn = get_db_connection()
             if not conn: flash("Database error.", "danger"); return redirect(url_for('auth.create_student_account_page'))
-            cursor = conn.cursor()
-            cursor.execute("SELECT email FROM student_users WHERE email = %s", (email,))
-            if cursor.fetchone(): flash('Email already registered.', 'danger'); return redirect(url_for('auth.create_student_account_page'))
-            cursor.execute("INSERT INTO student_users (email, password, created_at, updated_at) VALUES (%s, %s, NOW(), NOW())", (email, hashed_password))
+            cursor = conn.cursor(dictionary=True) # Use dictionary cursor
+            cursor.execute("SELECT email, is_verified FROM student_users WHERE email = %s", (email,))
+            existing_user = cursor.fetchone()
+
+            if existing_user:
+                if existing_user['is_verified']:
+                    flash('Email already registered and verified. Please log in.', 'danger')
+                    return redirect(url_for('auth.student_login_page'))
+                else:
+                    # User exists but not verified, update OTP, password and resend
+                    cursor.execute("""
+                        UPDATE student_users 
+                        SET password = %s, otp_code = %s, otp_expiry = %s, updated_at = NOW()
+                        WHERE email = %s
+                    """, (hashed_password, otp_code, otp_expiry, email))
+                    conn.commit()
+                    email_sent = send_otp_email(email, otp_code)
+                    if email_sent:
+                        flash('Account existed but was not verified. A new OTP has been sent to your email. Please verify to continue.', 'info')
+                    else:
+                        flash('Failed to send OTP email. Please try again later.', 'danger')
+                    session['pending_verification_email'] = email 
+                    return redirect(url_for('auth.verify_otp_page'))
+            
+            # New user, insert with OTP details
+            cursor.execute("""
+                INSERT INTO student_users 
+                (email, password, created_at, updated_at, otp_code, otp_expiry, is_verified) 
+                VALUES (%s, %s, NOW(), NOW(), %s, %s, %s)
+            """, (email, hashed_password, otp_code, otp_expiry, False))
             conn.commit()
-            flash('✅ Account created! Please log in.', 'success')
-            return redirect(url_for('auth.student_login_page'))
+            
+            email_sent = send_otp_email(email, otp_code)
+            if email_sent:
+                flash('✅ Account created! Please check your email for an OTP to verify your account.', 'success')
+            else:
+                flash('Account created, but failed to send OTP email. Please try verifying later or contact support.', 'warning')
+            
+            session['pending_verification_email'] = email 
+            return redirect(url_for('auth.verify_otp_page'))
+
+        except mysql.connector.Error as db_err:
+            if db_err.errno == 1062: 
+                 flash('Email already registered. If not verified, try creating account again to resend OTP or try logging in.', 'danger')
+            else:
+                flash(f'Database error creating account: {db_err}', 'danger')
+            traceback.print_exc()
+            return redirect(url_for('auth.create_student_account_page'))
         except Exception as e:
             flash(f'Error creating account: {e}', 'danger'); traceback.print_exc()
             return redirect(url_for('auth.create_student_account_page'))
@@ -577,6 +652,152 @@ def create_student_account_page():
             if cursor: cursor.close()
             if conn and conn.is_connected(): conn.close()
     return render_template('create_account.html')
+
+@auth.route('/verify-otp', methods=['GET', 'POST'])
+def verify_otp_page():
+    email_to_verify = session.get('pending_verification_email')
+    if not email_to_verify: # If email not in session, try getting from form (e.g. if user bookmarked or navigated directly)
+        email_to_verify = request.form.get('email_for_verification') # Check form if it's a POST from verify_otp itself
+        if not email_to_verify and request.args.get('email'): # Check query param for GET requests
+            email_to_verify = request.args.get('email')
+            session['pending_verification_email'] = email_to_verify # Re-set session
+        elif not email_to_verify :
+            flash("No email found for verification. Please start by creating an account or trying to log in.", "warning")
+            return redirect(url_for('auth.create_student_account_page'))
+
+
+    if request.method == 'POST':
+        otp_entered = request.form.get('otp_code')
+        # Ensure email_to_verify is consistently used, preferring session then form
+        email_from_form = request.form.get('email_for_verification')
+        if email_from_form and email_from_form != email_to_verify: # Should ideally not happen if session is solid
+            email_to_verify = email_from_form
+            session['pending_verification_email'] = email_to_verify
+
+        if not otp_entered:
+            flash("Please enter the OTP.", "warning")
+            return render_template('verify_otp.html', email=email_to_verify)
+
+        conn = None; cursor = None
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash("Database connection error.", "danger")
+                return render_template('verify_otp.html', email=email_to_verify)
+            
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT id, otp_code, otp_expiry, is_verified FROM student_users WHERE email = %s", (email_to_verify,))
+            user = cursor.fetchone()
+
+            if not user:
+                flash("User not found. Please try creating an account again.", "danger")
+                session.pop('pending_verification_email', None) 
+                return redirect(url_for('auth.create_student_account_page'))
+            
+            if user['is_verified']:
+                flash("Account already verified. You can log in.", "info")
+                session.pop('pending_verification_email', None) 
+                return redirect(url_for('auth.student_login_page'))
+
+            db_otp_expiry = user['otp_expiry']
+            if isinstance(db_otp_expiry, str): # Ensure it's datetime
+                try: db_otp_expiry = datetime.datetime.fromisoformat(db_otp_expiry)
+                except ValueError:
+                    flash("OTP expiry data error. Contact support.", "danger")
+                    return render_template('verify_otp.html', email=email_to_verify)
+            
+            if not user['otp_code'] or not db_otp_expiry :
+                flash("OTP not set or issue with expiry for this account. Try resending OTP.", "danger")
+                return render_template('verify_otp.html', email=email_to_verify, show_resend=True)
+
+
+            if db_otp_expiry < datetime.datetime.now():
+                flash("OTP has expired. Please request a new one.", "danger")
+                return render_template('verify_otp.html', email=email_to_verify, show_resend=True)
+
+            if user['otp_code'] == otp_entered:
+                cursor.execute("""
+                    UPDATE student_users 
+                    SET is_verified = TRUE, otp_code = NULL, otp_expiry = NULL, updated_at = NOW()
+                    WHERE id = %s
+                """, (user['id'],))
+                conn.commit()
+                flash("✅ Account verified successfully! You can now log in.", "success")
+                session.pop('pending_verification_email', None) 
+                return redirect(url_for('auth.student_login_page'))
+            else:
+                flash("Invalid OTP. Please try again.", "danger")
+                return render_template('verify_otp.html', email=email_to_verify)
+
+        except Exception as e:
+            flash(f"An error occurred during OTP verification: {e}", "danger")
+            traceback.print_exc()
+            return render_template('verify_otp.html', email=email_to_verify)
+        finally:
+            if cursor: cursor.close()
+            if conn and conn.is_connected(): conn.close()
+
+    return render_template('verify_otp.html', email=email_to_verify)
+
+@auth.route('/resend-otp', methods=['POST'])
+def resend_otp_action():
+    email_to_resend = request.form.get('email') 
+    
+    if not email_to_resend:
+        flash("Email not provided for OTP resend.", "warning")
+        email_to_resend = session.get('pending_verification_email')
+        if not email_to_resend:
+             return redirect(url_for('auth.create_student_account_page'))
+
+    conn = None; cursor = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash("Database connection error.", "danger")
+            return redirect(url_for('auth.verify_otp_page', email=email_to_resend))
+
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id, is_verified FROM student_users WHERE email = %s", (email_to_resend,))
+        user = cursor.fetchone()
+
+        if not user:
+            flash(f"No account found for email {email_to_resend}. Please create an account.", "danger")
+            session.pop('pending_verification_email', None)
+            return redirect(url_for('auth.create_student_account_page'))
+
+        if user['is_verified']:
+            flash("Account is already verified. You can log in.", "info")
+            session.pop('pending_verification_email', None)
+            return redirect(url_for('auth.student_login_page'))
+
+        new_otp_code = f"{secrets.randbelow(1000000):06d}"
+        new_otp_expiry = datetime.datetime.now() + timedelta(minutes=10)
+
+        cursor.execute("""
+            UPDATE student_users 
+            SET otp_code = %s, otp_expiry = %s, updated_at = NOW()
+            WHERE id = %s
+        """, (new_otp_code, new_otp_expiry, user['id']))
+        conn.commit()
+
+        email_sent = send_otp_email(email_to_resend, new_otp_code)
+        if email_sent:
+            flash("A new OTP has been sent to your email address.", "success")
+        else:
+            flash("Failed to send new OTP. Please try again later or contact support.", "danger")
+        
+        session['pending_verification_email'] = email_to_resend 
+        return redirect(url_for('auth.verify_otp_page')) # Redirect without email in query, relies on session
+
+    except Exception as e:
+        flash(f"Error resending OTP: {e}", "danger")
+        traceback.print_exc()
+        if email_to_resend:
+            session['pending_verification_email'] = email_to_resend
+        return redirect(url_for('auth.verify_otp_page'))
+    finally:
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
 
 
 @auth.route('/student-login', methods=['GET', 'POST'])
@@ -590,13 +811,24 @@ def student_login_page():
             conn = get_db_connection()
             if not conn: flash("Database error.", "danger"); return redirect(url_for('auth.student_login_page'))
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT id, email, password FROM student_users WHERE email = %s", (email,))
+            cursor.execute("SELECT id, email, password, is_verified FROM student_users WHERE email = %s", (email,))
             user = cursor.fetchone()
-            if user and check_password_hash(user['password'], password):
-                session['student_id'] = user['id']
-                session['student_email'] = user['email']
-                flash('✅ Login successful!', 'success')
-                return redirect(url_for('views.application_status_page'))
+
+            if user:
+                if not user['is_verified']:
+                    flash('Your account is not verified. Please check your email for an OTP or request a new one on the verification page.', 'warning')
+                    session['pending_verification_email'] = email 
+                    return redirect(url_for('auth.verify_otp_page')) 
+
+                if check_password_hash(user['password'], password):
+                    session['student_id'] = user['id']
+                    session['student_email'] = user['email']
+                    flash('✅ Login successful!', 'success')
+                    session.pop('pending_verification_email', None) 
+                    return redirect(url_for('views.application_status_page'))
+                else:
+                    flash('Invalid email or password.', 'danger')
+                    return redirect(url_for('auth.student_login_page'))
             else:
                 flash('Invalid email or password.', 'danger')
                 return redirect(url_for('auth.student_login_page'))

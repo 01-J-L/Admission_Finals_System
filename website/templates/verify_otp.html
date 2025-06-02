@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Account - PGPC{% endblock %}
+
+{% block style %}
+<style>
+    body { background-color: #ffffff; }
+    html { scroll-behavior: smooth; }
+
+    /* Styles for the main content area, consistent with student_login.html's form section layout */
+    .main-content-area {
+        padding-bottom: 2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    @media (min-width: 640px) { /* sm breakpoint */
+        .main-content-area {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+    }
+    @media (min-width: 1024px) { /* lg breakpoint */
+        .main-content-area {
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="main-content-area min-h-screen flex items-center justify-center py-6 md:py-10">
+    <div class="w-full max-w-4xl mx-auto"> <!-- Matched max-width with student_login.html for two-panel layout -->
+        <div class="flex flex-col md:flex-row bg-white rounded-xl shadow-2xl overflow-hidden">
+            <!-- Left Decorative Panel -->
+            <div class="w-full md:w-2/5 bg-blue-700 text-white p-8 sm:p-10 md:p-12 flex flex-col justify-center items-center relative">
+                <div class="absolute -bottom-12 -left-12 w-36 h-36 md:w-48 md:h-48 bg-blue-600/50 rounded-full opacity-70"></div>
+                <div class="absolute -top-12 -right-12 w-32 h-32 md:w-40 md:h-40 bg-blue-600/50 rounded-full opacity-70"></div>
+                <div class="relative z-10 text-center">
+                    <img class="mx-auto h-20 sm:h-24 w-auto mb-4" src="{{ url_for('static', filename='logopgpc.png') }}" alt="PGPC Logo">
+                    <h1 class="text-2xl lg:text-3xl font-bold mb-2 sm:mb-3">Secure Verification</h1>
+                    <p class="text-md lg:text-lg leading-relaxed">
+                        Your security is important to us. Please verify your identity.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Form Panel (OTP Form) -->
+            <div class="w-full md:w-3/5 p-8 sm:p-10 md:p-12">
+                <div class="text-center md:text-left mb-6 md:mb-8">
+                    <!-- Logo for mobile, hidden on md+ as left panel has a larger logo -->
+                    <img class="mx-auto md:mx-0 h-16 sm:h-20 w-auto mb-4 md:hidden" src="{{ url_for('static', filename='logopgpc.png') }}" alt="PGPC Logo">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">
+                        Verify Your Account
+                    </h2>
+                    {% if email %}
+                    <p class="text-gray-600 text-sm sm:text-base">
+                        An OTP has been sent to <strong>{{ email }}</strong>. Please enter it below.
+                    </p>
+                    {% else %}
+                     <p class="text-gray-600 text-sm sm:text-base">
+                        Please enter the OTP sent to your email address.
+                    </p>
+                    {% endif %}
+                </div>
+
+                <form class="space-y-6" action="{{ url_for('auth.verify_otp_page') }}" method="POST">
+                    {# Pass email in a hidden field in case session is lost or for clarity #}
+                    {% if email %}
+                    <input type="hidden" name="email_for_verification" value="{{ email }}">
+                    {% endif %}
+                    <div>
+                        <label for="otp_code" class="block text-sm font-medium text-gray-700 mb-1 sr-only">OTP Code</label>
+                        <input id="otp_code" name="otp_code" type="text" pattern="\d{6}" title="Enter 6-digit OTP" maxlength="6" required
+                               class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
+                               placeholder="Enter 6-digit OTP">
+                    </div>
+
+                    <div>
+                        <button type="submit"
+                                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            Verify OTP
+                        </button>
+                    </div>
+                </form>
+
+                {% if email %} {# Only show resend if we know the email #}
+                <form action="{{ url_for('auth.resend_otp_action') }}" method="POST" class="mt-4 text-center md:text-left">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <p class="text-sm text-gray-600">Didn't receive the OTP or it expired?</p>
+                    <button type="submit" class="font-medium text-blue-600 hover:text-blue-500 underline">
+                        Resend OTP
+                    </button>
+                </form>
+                {% endif %}
+
+                <p class="mt-6 text-center md:text-left text-sm text-gray-600">
+                    Already verified or need to log in?
+                    <a href="{{ url_for('auth.student_login_page') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                        Sign in
+                    </a>
+                </p>
+                 <p class="mt-2 text-center md:text-left text-sm text-gray-600">
+                    Need to create a different account?
+                    <a href="{{ url_for('auth.create_student_account_page') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                        Create Account
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Removed the script for menu-toggle as header specific to student_login.html is not being added -->
+{% endblock %}
