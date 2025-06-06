@@ -88,7 +88,7 @@
                 <form action="{{ url_for('auth.resend_otp_action') }}" method="POST" class="mt-4 text-center md:text-left">
                     <input type="hidden" name="email" value="{{ email }}">
                     <p class="text-sm text-gray-600">Didn't receive the OTP or it expired?</p>
-                    <button type="submit" class="font-medium text-blue-600 hover:text-blue-500 underline">
+                    <button type="submit" id="resendOtpButton" class="font-medium text-blue-600 hover:text-blue-500 underline disabled:opacity-50 disabled:cursor-not-allowed">
                         Resend OTP
                     </button>
                 </form>
@@ -110,6 +110,111 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const resendButton = document.getElementById('resendOtpButton');
+    if (!resendButton) {
+        return; // Button doesn't exist (e.g., email not provided)
+    }
+
+    const cooldownKey = 'resendOtpCooldownEndTime_verify'; // Unique key for this page/form
+    const cooldownDuration = 2 * 60 * 1000; // 2 minutes in milliseconds
+    let countdownInterval;
+
+    // Helper functions for localStorage with try-catch for robustness
+    function getLocalStorageItem(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            console.warn("LocalStorage access denied. OTP resend cooldown will not persist across page loads.");
+            return null;
+        }
+    }
+
+    function setLocalStorageItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            // console.warn("LocalStorage access denied...");
+        }
+    }
+
+    function removeLocalStorageItem(key) {
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {
+            // console.warn("LocalStorage access denied...");
+        }
+    }
+
+    function updateButtonState() {
+        const endTimeString = getLocalStorageItem(cooldownKey);
+        if (!endTimeString) {
+            enableButton();
+            return;
+        }
+
+        const endTime = parseInt(endTimeString, 10);
+        const now = new Date().getTime();
+        const timeLeft = endTime - now;
+
+        if (timeLeft > 0) {
+            disableButton();
+            const secondsLeft = Math.ceil(timeLeft / 1000);
+            resendButton.textContent = `Resend OTP (${secondsLeft}s)`;
+            
+            if (countdownInterval) clearInterval(countdownInterval); // Clear existing interval
+            countdownInterval = setInterval(() => {
+                const currentNow = new Date().getTime();
+                const currenttimeLeft = endTime - currentNow;
+                if (currenttimeLeft <= 0) {
+                    enableButton();
+                    removeLocalStorageItem(cooldownKey);
+                    clearInterval(countdownInterval);
+                } else {
+                    resendButton.textContent = `Resend OTP (${Math.ceil(currenttimeLeft / 1000)}s)`;
+                }
+            }, 1000);
+        } else {
+            enableButton();
+            removeLocalStorageItem(cooldownKey);
+        }
+    }
+
+    function disableButton() {
+        resendButton.disabled = true;
+        // Tailwind classes for disabled state are added via `disabled:opacity-50 disabled:cursor-not-allowed` on the button
+    }
+
+    function enableButton() {
+        if (countdownInterval) clearInterval(countdownInterval);
+        resendButton.disabled = false;
+        resendButton.textContent = 'Resend OTP';
+    }
+
+    // Attach event listener to the form containing the resend button
+    const resendForm = resendButton.closest('form');
+    if (resendForm) {
+        resendForm.addEventListener('submit', function(event) {
+            // This event fires just before the form submits.
+            // We set the cooldown here. The page will then reload (or navigate).
+            // On page load, updateButtonState will pick up the cooldown.
+            if (!resendButton.disabled) { // Only set cooldown if button was active
+                const newEndTime = new Date().getTime() + cooldownDuration;
+                setLocalStorageItem(cooldownKey, newEndTime.toString());
+                // No need to call updateButtonState() here immediately as form submission will reload page.
+                // However, disabling it immediately provides quicker feedback if submission is slow.
+                disableButton();
+                resendButton.textContent = `Resend OTP (${Math.ceil(cooldownDuration / 1000)}s)`;
+            }
+        });
+    }
+
+    // Initial check when the page loads
+    updateButtonState();
+});
+</script>
 
 <!-- Removed the script for menu-toggle as header specific to student_login.html is not being added -->
 {% endblock %}
