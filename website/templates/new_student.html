@@ -175,20 +175,20 @@
         max-width: 700px;
     }
 
-    /* Header Styles - Adapted from index.html, default to dark for this page */
+    /* Header Styles - Adapted from index.html's sizing and relevant visual properties for a solid dark header */
     header {
-        position: relative;
+        position: relative; /* Retained from new_student.html's original header */
         top: 0;
         left: 0;
         width: 100%;
-        padding: 15px 5%; /* Desktop padding */
+        padding: 15px 5%; /* Desktop padding from index.html */
         display: flex;
         justify-content: space-between;
         align-items: center;
         z-index: 1000;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        background-color: #162938; /* Default dark background from original inline style */
-        transition: background-color 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Common practice, retained */
+        background-color: #162938; /* new_student.html header is always dark */
+        transition: background-color 0.3s ease; /* Added from index.html for consistency, though not actively used here */
     }
 
     .header-left {
@@ -197,34 +197,39 @@
     }
 
     .header-left img {
-        width: 100px; /* Desktop logo size */
-        height: auto;
+        /* SIZING FROM INDEX.HTML (Desktop) */
+        width: 80px; /* From index.html desktop */
+        height: auto; /* Calculated height based on aspect ratio for 80px width is ~66px */
     }
 
     .header-left .logo { /* College name */
-        font-size: 1.4em; /* Desktop font size */
-        color: #fff; /* White text on dark header */
-        margin-left: 15px;
+        /* SIZING/SPACING FROM INDEX.HTML (Desktop) */
+        font-size: 1.4em; /* Same as current new_student.html */
+        color: #fff;
+        margin-left: 15px; /* Same as current new_student.html */
         white-space: nowrap;
+        text-shadow: none; /* index.html mobile (solid bg) uses text-shadow: none */
     }
 
     /* Desktop Navigation Styles */
     .navigation a {
         position: relative;
-        font-size: 1.1em;
-        color: #fff; /* White text on dark header */
+        /* SIZING/SPACING FROM INDEX.HTML (Desktop) */
+        font-size: 1.1em; /* Same as current new_student.html */
+        color: #fff;
         text-decoration: none;
         font-weight: 500;
-        margin-left: 30px;
+        margin-left: 30px; /* Same as current new_student.html */
+        text-shadow: none; /* index.html mobile (solid bg) uses text-shadow: none */
     }
-    .navigation a.no-underline {
+    .navigation a.no-underline { /* This style already existed and is good */
         text-decoration: none;
     }
 
-    /* General style for buttons within nav links (e.g., "Apply Now") */
+    /* General style for buttons within nav links (e.g., "Apply Now") - Retained from new_student.html */
     .navigation .btnLogin-popup {
-        background-color: #fff; /* Default: white background */
-        color: #162938;       /* Default: dark text */
+        background-color: #fff; 
+        color: #162938;       
         padding: 8px 15px;
         border-radius: 5px;
         border: 1px solid transparent;
@@ -234,22 +239,22 @@
         text-align: center;
     }
     .navigation .btnLogin-popup:hover {
-        background-color: #f0f0f0; /* Default: Lighter grey hover */
+        background-color: #f0f0f0;
     }
 
-    /* Specific style for the Logout button */
+    /* Specific style for the Logout button - Retained from new_student.html */
     .navigation .btnLogin-popup.btn-logout {
-        background-color: #d9534f; /* Red background */
-        color: #fff;               /* White text */
-        border-color: #d9534f;     /* Border to match */
+        background-color: #d9534f;
+        color: #fff;
+        border-color: #d9534f;
     }
     .navigation .btnLogin-popup.btn-logout:hover {
-        background-color: #c9302c; /* Darker red on hover */
-        color: #fff;               /* Keep text white */
+        background-color: #c9302c;
+        color: #fff;
         border-color: #c9302c;
     }
 
-    /* CSS to remove line animation from logout link */
+    /* CSS to remove line animation from logout link - Retained from new_student.html */
     .navigation a.logout-link:hover {
         text-decoration: none !important;
     }
@@ -264,14 +269,14 @@
         display: none;
         flex-direction: column;
         justify-content: space-around;
-        width: 30px;
-        height: 25px;
+        width: 30px; /* Standard size */
+        height: 25px; /* Standard size */
         background: transparent;
         border: none;
         cursor: pointer;
         padding: 0;
         z-index: 1100;
-        margin-left: 20px;
+        margin-left: 20px; /* Spacing */
     }
 
     .menu-toggle span {
@@ -281,82 +286,88 @@
         background-color: #fff; /* White lines for dark header */
         border-radius: 3px;
         transition: all 0.3s ease-in-out;
+        box-shadow: none; /* index.html mobile (solid bg) uses box-shadow: none */
     }
 
     /* Mobile Navigation Styles */
     @media (max-width: 992px) {
         header {
-            padding: 10px 3%; /* Mobile padding */
+            padding: 10px 3%; /* Mobile padding from index.html */
         }
 
         .header-left img {
-            width: 70px; /* Adjusted for potentially smaller logo images */
-            height: 50px; /* Explicit height for mobile */
-            object-fit: contain; /* Ensures logo aspect ratio is maintained */
+            /* SIZING FROM INDEX.HTML (Mobile) */
+            width: 60px; /* From index.html mobile */
+            height: auto; /* Calculated height based on aspect ratio for 60px width is ~50px */
         }
 
 
         .header-left .logo {
-            font-size: 1em; /* Mobile font size */
-            margin-left: 10px;
+            /* SIZING/SPACING FROM INDEX.HTML (Mobile) */
+            font-size: 0.9em; /* From index.html mobile */
+            margin-left: 8px; /* From index.html mobile */
+            color: #fff; /* Ensure still white on dark mobile header */
+            text-shadow: none; /* Consistent with index.html mobile (solid bg) */
         }
 
         .navigation {
             position: absolute;
             top: 100%; /* Position below the header */
             right: 0;
-            width: 250px; /* Or a percentage like 60% or 70% */
-            background-color: #162938; /* Consistent with header */
+            width: 250px; /* From index.html mobile, same as current new_student.html */
+            background-color: #162938; /* Consistent with header, same as current new_student.html */
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             flex-direction: column;
-            align-items: stretch; /* Make links take full width */
-            display: none; /* Hidden by default */
+            align-items: stretch; 
+            display: none; 
             z-index: 1050;
-            border-top: 1px solid #2a3f54; /* Separator */
-            max-height: calc(100vh - 70px); /* Approx mobile header height */
-            overflow-y: auto; /* Scroll if content exceeds height */
+            border-top: 1px solid #2a3f54; 
+            /* Mobile header height: ~50px (image) + 2*10px (padding) = 70px */
+            max-height: calc(100vh - 70px); /* Adjusted based on new_student's mobile header height */
+            overflow-y: auto; 
         }
 
         .navigation.active {
-            display: flex; /* Show when active */
+            display: flex;
         }
 
         .navigation a {
-            display: block; /* Stack links vertically */
-            padding: 12px 20px;
+            display: block; 
+            padding: 12px 20px; /* From index.html mobile */
             margin-left: 0;
             text-align: left;
-            color: #f0f0f0; /* Lighter text for readability */
-            border-bottom: 1px solid #2a3f54; /* Separator for links */
+            color: #f0f0f0; /* Lighter text for readability, from index.html mobile */
+            border-bottom: 1px solid #2a3f54; 
             text-decoration: none;
+            text-shadow: none; /* Consistent with index.html mobile (solid bg) */
         }
         .navigation a:last-child {
-            border-bottom: none; /* No border for the last item */
+            border-bottom: none;
         }
         .navigation a:hover {
-            background-color: #22333f; /* Hover effect */
+            background-color: #22333f; 
         }
 
-        /* Layout for ALL btnLogin-popup buttons in mobile navigation */
+        /* Layout for ALL btnLogin-popup buttons in mobile navigation - Retained */
         .navigation a .btnLogin-popup {
-            display: block; /* Make buttons block level */
-            width: auto; /* Adjust width automatically */
-            margin: 5px 0; /* Add some vertical margin */
+            display: block; 
+            width: auto; 
+            margin: 5px 0; 
         }
 
-        /* Make logout button fill the link area in mobile */
+        /* Make logout button fill the link area in mobile - Retained */
         .navigation a.logout-link {
-            padding: 0; /* Remove padding from <a> to let button fill */
+            padding: 0; 
         }
         .navigation a.logout-link .btnLogin-popup.btn-logout {
-            width: 100%; /* Full width */
-            margin: 0;   /* Reset margin */
-            padding: 12px 20px; /* Match link padding */
-            border-radius: 0; /* No rounded corners if filling whole area */
+            width: 100%; 
+            margin: 0;   
+            padding: 12px 20px; 
+            border-radius: 0; 
         }
         
-        /* Ensure logout link in mobile also has no line animation */
-        .navigation a.logout-link.logout-link:hover { /* Increased specificity */
+        /* Ensure logout link in mobile also has no line animation - Retained */
+        .navigation a.logout-link.logout-link:hover { 
              text-decoration: none !important;
         }
         .navigation a.logout-link.logout-link::after,
@@ -364,12 +375,14 @@
             display: none !important;
         }
 
-
         .menu-toggle {
             display: flex; /* Show hamburger on mobile */
         }
+        /* .menu-toggle span styles already defined generally and should apply, 
+           explicit background-color and box-shadow:none from index.html mobile context already set above.
+        */
 
-        /* Hamburger animation to X */
+        /* Hamburger animation to X - Retained */
         .menu-toggle.active span:nth-child(1) {
             transform: translateY(9px) rotate(45deg);
         }
@@ -381,15 +394,17 @@
         }
     }
 
-    /* Main content area styling to account for fixed header */
+    /* Main content area styling to account for header */
     .main-content-area {
         /* Mobile-first defaults */
-        padding-top: 70px; /* Approx mobile header height (50px img H + 2*10px padding V) */
+        /* Mobile header height: ~50px (image from 60px width) + 2*10px padding = 70px */
+        padding-top: 70px;
     }
 
     @media (min-width: 993px) { /* Desktop breakpoint */
         .main-content-area {
-            padding-top: 100px; /* Approx desktop header height */
+            /* Desktop header height: ~66px (image from 80px width) + 2*15px padding = ~96px. Round to 100px. */
+            padding-top: 100px;
         }
     }
 
@@ -1444,7 +1459,7 @@
       </div>
       <div class="footer-divider"></div>
       <div class="footer-bottom">
-        <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="{{url_for('views.home')}}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7">Brgy.Castillo, Padre Garcia, Batangas</a> | +63 (2) 8524-4611</p>
+        <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="url_for('views.home')}}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7">Brgy.Castillo, Padre Garcia, Batangas</a> | +63 (2) 8524-4611</p>
         <p>© 2025. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home">Padre Garcia PH</a></p>
       </div>
   </footer>

@@ -5,22 +5,23 @@
 {% block style %}
 <style>
     body {
-        background-color: #ffffff; /* New vibrant blue background */
+        background-color: #ffffff; /* Page background */
     }
 
     html {
       scroll-behavior: smooth;
     }
 
+    /* Header Styles (from index.html, adapted for create_account.html) */
     header {
-        position: relative; /* MODIFIED: Was absolute, now in normal flow */
+        position: relative; /* In normal document flow */
         padding: 15px 5%;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        z-index: 1000; /* Kept for mobile nav dropdown */
+        z-index: 1000; /* For mobile nav dropdown context */
+        background-color: #162938; /* Consistent dark background */
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        background-color: #162938;
         transition: background-color 0.3s ease;
     }
 
@@ -29,17 +30,19 @@
         align-items: center;
     }
 
-    .header-left img {
-        width: 100px;
-        height: auto;
-    }
-
-    .header-left .logo {
+    .header-left .logo { /* College name */
         font-size: 1.4em;
         color: #fff;
         margin-left: 15px;
         white-space: nowrap;
+        transition: color 0.3s ease;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     }
+    .header-left img {
+        /* width attribute set in HTML (width="80"), height auto */
+        filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+    }
+
 
     .navigation a {
         position: relative;
@@ -48,10 +51,16 @@
         text-decoration: none;
         font-weight: 500;
         margin-left: 30px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     }
     .navigation a.no-underline {
         text-decoration: none;
     }
+
+    .navigation .btnLogin-popup {
+        /* Desktop specific adjustments if any from index.html */
+    }
+
 
     .menu-toggle {
         display: none;
@@ -63,7 +72,7 @@
         border: none;
         cursor: pointer;
         padding: 0;
-        z-index: 1100;
+        z-index: 1100; /* Above header, for mobile menu button */
         margin-left: 20px;
     }
 
@@ -71,40 +80,49 @@
         display: block;
         width: 100%;
         height: 3px;
-        background-color: #fff;
+        background-color: #fff; /* White hamburger lines for dark header */
         border-radius: 3px;
         transition: all 0.3s ease-in-out;
+        box-shadow: 0 0 2px rgba(0,0,0,0.5);
     }
 
+    /* Mobile Navigation Styles & Adjustments (from index.html) */
     @media (max-width: 992px) {
         header {
             padding: 10px 3%;
         }
 
         .header-left img {
-            width: 70px;
-            height: 50px;
-            object-fit: contain;
+            width: 60px; /* Adjusted size from index.html mobile */
+            height: auto;
+            filter: none;
         }
 
         .header-left .logo {
-            font-size: 1em;
-            margin-left: 10px;
+            font-size: 0.9em; /* Adjusted for smaller screens from index.html mobile */
+            margin-left: 8px;
+            color: #fff;
+            text-shadow: none;
+        }
+
+        .menu-toggle span {
+            background-color: #ffffff;
+            box-shadow: none;
         }
 
         .navigation {
-            position: absolute; /* Relative to header */
-            top: 100%; /* Position below the header */
-            right: 0; /* Align to the right of the header */
+            position: absolute;
+            top: 100%;
+            right: 0;
             width: 250px;
             background-color: #162938;
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             flex-direction: column;
             align-items: stretch;
             display: none;
-            z-index: 1050; /* Above content that follows */
+            z-index: 1050;
             border-top: 1px solid #2a3f54;
-            max-height: calc(100vh - 70px);
+            max-height: calc(100vh - 60px); /* Adjust based on actual header height on mobile */
             overflow-y: auto;
         }
 
@@ -120,6 +138,7 @@
             color: #f0f0f0;
             border-bottom: 1px solid #2a3f54;
             text-decoration: none;
+            text-shadow: none;
         }
         .navigation a:last-child {
             border-bottom: none;
@@ -129,13 +148,17 @@
         }
 
         .navigation a .btnLogin-popup {
-            width: 100%;
-            margin: 5px 0;
+            width: calc(100% - 10px);
+            margin: 5px;
             padding: 10px 15px;
             font-size: 1em;
             text-align: center;
             display: block;
             height: auto;
+            box-sizing: border-box;
+        }
+        .navigation a .btnLogin-popup[style*="background-color: #d9534f"] { /* Logout button */
+            margin-top: 5px;
         }
 
         .menu-toggle {
@@ -152,9 +175,15 @@
             transform: translateY(-9px) rotate(-45deg);
         }
     }
+    @media (max-width: 480px) {
+        .header-left .logo {
+            font-size: 0.8em;
+        }
+    }
 
+    /* Main content area styling */
     .main-content-area {
-        /* MODIFIED: Removed padding-top previously used for fixed/absolute header offset */
+        /* padding-top removed as header is now position: relative */
         padding-bottom: 2rem;
         padding-left: 1rem;
         padding-right: 1rem;
@@ -166,10 +195,6 @@
             padding-right: 1.5rem;
         }
     }
-
-    /* Desktop breakpoint specific padding-top is no longer needed for .main-content-area */
-    /* @media (min-width: 993px) { ... } */
-
     @media (min-width: 1024px) {
         .main-content-area {
             padding-left: 2rem;
@@ -181,10 +206,16 @@
 {% endblock %}
 
 {% block head %}
-<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+    {{ super() }}
+    <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+    <title>Create Student Account - PGPC</title>
+{% endblock %}
+
+
+{% block body %}
 <header>
     <div class="header-left">
-        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Company Logo" ></a>
+        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College Logo" width="80" height="auto" ></a>
         <h2 class="logo">Padre Garcia Polytechnic College</h2>
     </div>
 
@@ -200,15 +231,21 @@
         <a href="{{ url_for('views.home') }}#programs">Programs</a>
         <a href="{{ url_for('views.home') }}#news">News</a>
         <a href="{{ url_for('views.contact_page') }}">Contact</a>
-        <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
-            <button class="btnLogin-popup">Apply now</button>
-        </a>
+        {% if student_logged_in %}
+            <a href="{{ url_for('views.application_status_page') }}">
+                <button class="btnLogin-popup">My Application</button>
+            </a>
+            <a href="{{ url_for('auth.logout') }}">
+                 <button class="btnLogin-popup" style="background-color: #d9534f;">Logout</button>
+            </a>
+        {% else %}
+            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
+              <button class="btnLogin-popup">Apply now</button>
+            </a>
+        {% endif %}
     </nav>
 </header>
-{% endblock %}
 
-
-{% block body %}
 <div class="main-content-area min-h-screen flex items-center justify-center py-6 md:py-10">
     <div class="w-full max-w-4xl mx-auto">
         <div class="flex flex-col md:flex-row bg-white rounded-xl shadow-2xl overflow-hidden">

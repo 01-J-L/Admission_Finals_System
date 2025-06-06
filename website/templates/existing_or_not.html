@@ -2,14 +2,14 @@
 
 {% block style %}
 <style>
-/* General Styles from index.html's header block (excluding .Section_top specific animation) */
+/* General Styles */
 html {
   scroll-behavior: smooth;
 }
 
-/* Header Styles - Adapted for always-dark theme in existing_or_not.html */
+/* Header Styles (from index.html, adapted for existing_or_not.html) */
 header {
-    position: absolute;
+    position: absolute; /* To work with #landingPage padding-top */
     top: 0;
     left: 0;
     width: 100%;
@@ -17,10 +17,10 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    z-index: 1000; /* Header z-index */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    background-color: #162938; /* ALWAYS DARK HEADER */
-    transition: background-color 0.3s ease;
+    z-index: 1000;
+    background-color: #162938; /* ALWAYS DARK HEADER for this page */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Added for definition against page content */
+    transition: background-color 0.3s ease; /* Kept from index.html */
 }
 
 .header-left {
@@ -30,23 +30,35 @@ header {
 
 .header-left .logo { /* College name */
     font-size: 1.4em;
-    color: #fff;
+    color: #fff; /* White for dark background */
     margin-left: 15px;
     white-space: nowrap;
     transition: color 0.3s ease;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* From index.html, for readability (optional on solid bg) */
 }
+.header-left img {
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3)); /* From index.html (optional on solid bg) */
+}
+
 
 .navigation a {
     position: relative;
     font-size: 1.1em;
-    color: #f0f0f0;
+    color: #fff; /* White for dark background */
     text-decoration: none;
     font-weight: 500;
     margin-left: 30px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* From index.html (optional on solid bg) */
 }
 .navigation a.no-underline {
     text-decoration: none;
 }
+
+.navigation .btnLogin-popup {
+    /* Desktop specific adjustments if any */
+    /* Ensure button stands out, consider default white text and a contrasting background or border */
+}
+
 
 .menu-toggle {
     display: none;
@@ -58,7 +70,7 @@ header {
     border: none;
     cursor: pointer;
     padding: 0;
-    z-index: 1100; /* Menu toggle z-index */
+    z-index: 1100; /* Above header, below modal */
     margin-left: 20px;
 }
 
@@ -66,46 +78,51 @@ header {
     display: block;
     width: 100%;
     height: 3px;
-    background-color: #ffffff;
+    background-color: #fff; /* White hamburger lines for dark header */
     border-radius: 3px;
     transition: all 0.3s ease-in-out;
+    box-shadow: 0 0 2px rgba(0,0,0,0.5); /* From index.html (optional on solid bg) */
 }
 
+/* Mobile Navigation Styles & Adjustments (from index.html) */
 @media (max-width: 992px) {
     header {
         padding: 10px 3%;
+        /* background-color: #162938; is already set globally for this page's header */
     }
 
     .header-left img {
-        width: 70px; /* Adjusted for smaller screens */
-        height: 50px; /* Adjusted for smaller screens */
-        object-fit: contain;
+        width: 60px; /* Adjusted size from index.html mobile */
+        height: auto;
+        filter: none; /* Remove filter as header is solid */
     }
 
     .header-left .logo {
-        font-size: 1em; /* Adjusted for smaller screens */
-        margin-left: 10px;
-        color: #fff;
+        font-size: 0.9em; /* Adjusted for smaller screens from index.html mobile */
+        margin-left: 8px; /* Reduced margin from index.html mobile */
+        color: #fff; /* Ensure visible on dark background */
+        text-shadow: none; /* Remove shadow as header is solid */
     }
 
     .menu-toggle span {
-        background-color: #ffffff;
+        background-color: #ffffff; /* Hamburger lines color for dark header */
+        box-shadow: none; /* Remove shadow as header is solid */
     }
 
     .navigation {
         position: absolute;
-        top: 100%; /* Position below the header */
+        top: 100%; /* Position below header */
         right: 0;
-        width: 250px; /* Or a suitable width */
-        background-color: #162938; /* Match header or a slightly different shade */
+        width: 250px; /* Width of the mobile menu */
+        background-color: #162938; /* Dark background for nav */
         box-shadow: 0 8px 16px rgba(0,0,0,0.15);
         flex-direction: column;
         align-items: stretch;
         display: none; /* Hidden by default */
-        z-index: 1050; /* Mobile navigation dropdown z-index */
-        border-top: 1px solid #2a3f54; /* Optional separator */
-        max-height: calc(100vh - 70px); /* Prevent dropdown from being too long, 70px is example header height */
-        overflow-y: auto; /* Scroll if many items */
+        z-index: 1050; /* Mobile nav z-index */
+        border-top: 1px solid #2a3f54; /* Separator */
+        max-height: calc(100vh - 60px); /* Adjust based on actual header height on mobile */
+        overflow-y: auto;
     }
 
     .navigation.active {
@@ -117,9 +134,10 @@ header {
         padding: 12px 20px;
         margin-left: 0;
         text-align: left;
-        color: #f0f0f0; /* Light text for dark background */
-        border-bottom: 1px solid #2a3f54; /* Separator for items */
+        color: #f0f0f0; /* Light text color for links */
+        border-bottom: 1px solid #2a3f54; /* Separator for links */
         text-decoration: none;
+        text-shadow: none; /* Remove shadow as nav bg is solid */
     }
     .navigation a:last-child {
         border-bottom: none;
@@ -129,23 +147,23 @@ header {
     }
 
     .navigation a .btnLogin-popup {
-        width: 100%;
-        margin: 5px 0;
+        width: calc(100% - 10px); /* Full width button inside nav */
+        margin: 5px;
         padding: 10px 15px;
         font-size: 1em;
         text-align: center;
         display: block;
-        height: auto; /* Ensure button height is auto */
+        height: auto;
+        box-sizing: border-box;
     }
-     .navigation a .btnLogin-popup[style*="background-color: #d9534f;"] {
-        /* You can add specific styles for the logout button in mobile if needed */
+    .navigation a .btnLogin-popup[style*="background-color: #d9534f"] { /* Logout button */
+        margin-top: 5px;
     }
 
     .menu-toggle {
-        display: flex; /* Show toggle button on smaller screens */
+        display: flex; /* Show hamburger */
     }
 
-    /* Active state for menu toggle icon (hamburger to X) */
     .menu-toggle.active span:nth-child(1) {
         transform: translateY(9px) rotate(45deg);
     }
@@ -156,20 +174,26 @@ header {
         transform: translateY(-9px) rotate(-45deg);
     }
 }
+@media (max-width: 480px) {
+    .header-left .logo {
+        font-size: 0.8em; /* Further adjust logo size on very small screens */
+    }
+}
 
-/* Original styles from existing_or_not.html */
+
+/* Original styles from existing_or_not.html body */
  :where([class^="ri-"])::before { content: "\f3c2"; } /* This seems like a placeholder, ensure RemixIcon or your icon font is correctly linked if icons aren't showing */
  body {
     background-color: #f9fafb;
  }
 
 #landingPage {
-    padding-top: 115px; /* Adjusted for fixed header height + some space */
+    padding-top: 115px; /* Adjusted for absolute header height + some space */
 }
 
 @media (max-width: 992px) {
     #landingPage {
-        padding-top: 90px; /* Adjusted for smaller fixed header height */
+        padding-top: 90px; /* Adjusted for smaller absolute header height */
     }
 }
 
@@ -177,16 +201,22 @@ header {
 #procedureModal {
     /* The classes 'fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center overflow-y-auto' already handle positioning and appearance */
     /* We just need to ensure its z-index is highest */
-    z-index: 1200; /* HIGHER than header (1000) and menu-toggle (1100) */
+    z-index: 1200; /* HIGHER than header (1000), mobile nav (1050) and menu-toggle (1100) */
 }
 </style>
 {% endblock %}
 
 {% block head %}
-<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+    {{ super() }}
+    <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+    <title>PGPC - Student Admission</title>
+{% endblock%}
+
+{% block body %}
+
 <header>
     <div class="header-left">
-        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Company Logo" width="100" height="auto" ></a>
+        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College Logo" width="80" height="auto" ></a>
         <h2 class="logo">Padre Garcia Polytechnic College</h2>
     </div>
 
@@ -216,9 +246,7 @@ header {
         {% endif %}
     </nav>
 </header>
-{% endblock %}
 
-{% block body %}
 <div id="landingPage" class="min-h-screen flex flex-col">
     <main class="flex-grow container mx-auto px-4 py-8 flex flex-col items-center justify-center text-center">
         <h1 class="text-4xl font-['Pacifico'] text-primary mb-2">PGPC</h1>
