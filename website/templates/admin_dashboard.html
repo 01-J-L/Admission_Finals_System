@@ -134,6 +134,12 @@
                     <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-checkbox-circle-line"></i></div>
                     Approved <span class="ml-auto bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full" id="approvedCountSide">{{ stats.approved if stats else '0' }}</span>
                 </a>
+                <!-- START: Added Scheduled Filter Link -->
+                <a href="#" id="scheduledFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-gray-50 rounded ml-4"> <!-- Added ml-4 for indent -->
+                    <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-calendar-schedule-line"></i></div>
+                    Scheduled <span class="ml-auto bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-0.5 rounded-full" id="scheduledCountSide">{{ stats.scheduled if stats else '0' }}</span>
+                </a>
+                <!-- END: Added Scheduled Filter Link -->
                 <a href="#" id="rejectedFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-red-600 hover:bg-gray-50 rounded">
                     <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-close-circle-line"></i></div>
                     Rejected <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full" id="rejectedCountSide">{{ stats.rejected if stats else '0' }}</span>
@@ -810,7 +816,17 @@ const PGPC_LOGO_URL_JS = "{{ url_for('static', filename='logopgpc.png') }}";
 const BAYAN_LOGO_URL_JS = "{{ url_for('static', filename='images/bayan_padre_garcia_logo.png') }}"; 
 
 document.addEventListener('DOMContentLoaded', function() {
-    const rawApplicationsData = {{ applications | tojson | safe if applications else [] | tojson | safe }};
+    // Process rawApplicationsData to include 'is_scheduled'
+    const rawApplicationsData = ({{ applications | tojson | safe if applications else [] | tojson | safe }}).map(app => {
+        app.is_scheduled = (
+            app.application_status === 'Approved' &&
+            app.permit_exam_date &&
+            app.permit_exam_time && String(app.permit_exam_time).trim() !== '' &&
+            app.permit_testing_room && String(app.permit_testing_room).trim() !== ''
+        );
+        return app;
+    });
+
 
     const dashboardContentDiv = document.getElementById('dashboardContent');
     const applicationsContentDiv = document.getElementById('applicationsContent');
@@ -827,6 +843,7 @@ document.addEventListener('DOMContentLoaded', function() {
         pending: document.getElementById('pendingFilterLink'),
         inReview: document.getElementById('inReviewFilterLink'),
         approved: document.getElementById('approvedFilterLink'),
+        scheduled: document.getElementById('scheduledFilterLink'), 
         rejected: document.getElementById('rejectedFilterLink'),
         passed: document.getElementById('passedFilterLink'),
         failed: document.getElementById('failedFilterLink'),
@@ -976,7 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         badge.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge ${statusClass} status-flash-animation`;
         setTimeout(() => badge.classList.remove('status-flash-animation'), 600);
-        updateGlobalStatsOnStatusChange();
+        // updateGlobalStatsOnStatusChange(); // Called after successful API response instead
     }
 
     async function handleUpdateStatus(applicantId, newStatus, rowElement) {
@@ -993,16 +1010,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 const appInRawData = rawApplicationsData.find(app => app.applicant_id == applicantId);
                 if (appInRawData) {
                     appInRawData.application_status = newStatus;
-                    if (result.permit_control_no) { // If backend returned a PCN (e.g., on approval)
+                    if (result.permit_control_no !== undefined) { 
                         appInRawData.permit_control_no = result.permit_control_no;
                     }
+                    appInRawData.is_scheduled = (
+                        appInRawData.application_status === 'Approved' &&
+                        appInRawData.permit_exam_date &&
+                        appInRawData.permit_exam_time && String(appInRawData.permit_exam_time).trim() !== '' &&
+                        appInRawData.permit_testing_room && String(appInRawData.permit_testing_room).trim() !== ''
+                    );
                 }
                 if (rowElement) updateStatusBadge(rowElement, newStatus);
                 else {
                     const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${applicantId}"]`);
                     if(rowToUpdate) updateStatusBadge(rowToUpdate, newStatus);
                 }
-                filterTableRows(); // Re-filter as status change might affect visibility with status filters
+                updateGlobalStatsOnStatusChange(); 
+                filterTableRows();
             } else {
                 showToast(result.message || 'Failed to update status.', 'error');
             }
@@ -1038,7 +1062,7 @@ document.addEventListener('DOMContentLoaded', function() {
         closeModal(deleteConfirmationModal, deleteModalBackdrop);
         updateBulkActionsVisibility();
         updateSelectAllCheckboxState();
-        updateGlobalStatsOnDelete(idArray.length); // This will call updateGlobalStatsOnStatusChange
+        updateGlobalStatsOnDelete(idArray.length); 
         filterTableRows();
     }
 
@@ -1126,9 +1150,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let contentHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">`;
         const fieldOrder = [
             'applicant_id', 'student_account_email', 'first_name', 'last_name', 'middle_name', 'email_address', 'mobile_number', 'program_choice', 'application_status', 'submitted_at', 'date_of_application', 'date_of_birth', 'place_of_birth', 'sex', 'civil_status', 'religion', 'citizenship', 'permanent_address_street_barangay', 'permanent_address_city_municipality', 'permanent_address_province', 'permanent_address_postal_code', 'cultural_minority_group', 'physical_disability', 'academic_year', 'average_family_income', 'father_name', 'father_occupation', 'father_company_address', 'father_contact_number', 'mother_maiden_name', 'mother_occupation', 'mother_company_address', 'mother_contact_number', 'guardian_name', 'guardian_occupation', 'guardian_company_address', 'guardian_contact_number', 'senior_high_school', 'senior_high_school_address', 'senior_high_school_track_strand', 'senior_high_school_year_from', 'senior_high_school_year_to', 'tertiary_school', 'tertiary_school_address', 'tertiary_course', 'tertiary_year_from', 'tertiary_year_to', 'agreements', 'final_submission_date', 'decision_date', 'last_updated_at'
-        ]; // Removed control_number from here, as it's part of permit details now.
+        ];
         for (const key of fieldOrder) {
-            if (data.hasOwnProperty(key) && key !== 'photo' && key !== 'admin_notes' && !key.startsWith('permit_') && !key.endsWith('_file') && !key.endsWith('_filename') && !key.endsWith('_mimetype')) {
+            if (data.hasOwnProperty(key) && key !== 'photo' && key !== 'admin_notes' && !key.startsWith('permit_') && key !== 'control_number' && !key.endsWith('_file') && !key.endsWith('_filename') && !key.endsWith('_mimetype')) {
                  let value = data[key] === null || data[key] === undefined || data[key] === '' ? 'N/A' : data[key];
                  if ((key.includes('date') || key.includes('_at')) && value !== 'N/A' && !(value instanceof Date)) { try { value = new Date(value).toLocaleString(); } catch (e) { /* keep original */ }} else if (value instanceof Date) { value = value.toLocaleString(); }
                  let displayName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -1182,7 +1206,6 @@ document.addEventListener('DOMContentLoaded', function() {
     async function savePermitDetails() {
         if (!currentViewingApplicantId) return;
         const formData = new FormData();
-        // DO NOT send permit_control_no from here. It's auto-generated on approval & managed by backend.
         formData.append('permit_exam_date', permitExamDateModalInput.value);
         formData.append('permit_exam_time', permitExamTimeModalInput.value);
         formData.append('permit_testing_room', permitTestingRoomModalInput.value);
@@ -1194,17 +1217,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 closeModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop); 
                 const appInRaw = rawApplicationsData.find(app => app.applicant_id == currentViewingApplicantId); 
                 if(appInRaw) { 
-                    if (result.data) { // Backend includes the current permit_control_no
-                        appInRaw.permit_control_no = result.data.permit_control_no;
+                    if (result.data) {
+                        appInRaw.permit_control_no = result.data.permit_control_no; 
                         appInRaw.permit_exam_date = result.data.permit_exam_date;
                         appInRaw.permit_exam_time = result.data.permit_exam_time;
                         appInRaw.permit_testing_room = result.data.permit_testing_room;
-                    } else { 
-                        appInRaw.permit_exam_date = permitExamDateModalInput.value; 
-                        appInRaw.permit_exam_time = permitExamTimeModalInput.value; 
-                        appInRaw.permit_testing_room = permitTestingRoomModalInput.value;
-                        // appInRaw.permit_control_no remains as it was locally
+                        appInRaw.is_scheduled = (
+                            appInRaw.application_status === 'Approved' &&
+                            appInRaw.permit_exam_date &&
+                            appInRaw.permit_exam_time && String(appInRaw.permit_exam_time).trim() !== '' &&
+                            appInRaw.permit_testing_room && String(appInRaw.permit_testing_room).trim() !== ''
+                        );
                     }
+                    updateGlobalStatsOnStatusChange(); 
+                    filterTableRows(); 
                 }
             } else {
                  showToast(result.message || 'Failed to save permit details.', 'error'); 
@@ -1268,9 +1294,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     const appInRawData = rawApplicationsData.find(app => app.applicant_id == id); 
                     if (appInRawData) {
                         appInRawData.application_status = actionStatus;
-                        if (result.permit_control_no) { // If backend returned a PCN
+                        if (result.permit_control_no !== undefined) { 
                             appInRawData.permit_control_no = result.permit_control_no;
                         }
+                        appInRawData.is_scheduled = (
+                            appInRawData.application_status === 'Approved' &&
+                            appInRawData.permit_exam_date &&
+                            appInRawData.permit_exam_time && String(appInRawData.permit_exam_time).trim() !== '' &&
+                            appInRawData.permit_testing_room && String(appInRawData.permit_testing_room).trim() !== ''
+                        );
                     }
                     const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${id}"]`); 
                     if(rowToUpdate) updateStatusBadge(rowToUpdate, actionStatus); 
@@ -1287,6 +1319,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (successCount > 0) showToast(`${successCount} application(s) set to ${actionStatus}.`, 'success'); 
         if (failCount > 0) showToast(`${failCount} application(s) failed to update.`, 'error');
         document.getElementById('closeBulkActions')?.click(); 
+        updateGlobalStatsOnStatusChange();
         filterTableRows();
     }
 
@@ -1341,9 +1374,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('permit_exam_date', permitDetailsToSet.exam_date);
             formData.append('permit_exam_time', permitDetailsToSet.exam_time);
             formData.append('permit_testing_room', permitDetailsToSet.testing_room);
-            // Permit Control No is NOT sent in bulk set, it's auto-generated on individual approval.
-            // Backend's admin_save_permit_details will handle this correctly (it won't try to update PCN)
-
+            
             try {
                 const response = await fetch(`/admin/application/${id}/permit-details`, {
                     method: 'POST', 
@@ -1353,13 +1384,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (result.success) {
                     successCount++;
                     const appInRaw = rawApplicationsData.find(app => app.applicant_id == id);
-                    if (appInRaw && result.data) { // Ensure result.data exists
-                        // Update local data based on what was actually saved (returned by backend)
-                        // permit_control_no is included in result.data but it was not changed by this call.
+                    if (appInRaw && result.data) { 
                         appInRaw.permit_control_no = result.data.permit_control_no; 
                         appInRaw.permit_exam_date = result.data.permit_exam_date;
                         appInRaw.permit_exam_time = result.data.permit_exam_time;
                         appInRaw.permit_testing_room = result.data.permit_testing_room;
+                        appInRaw.is_scheduled = (
+                            appInRaw.application_status === 'Approved' &&
+                            appInRaw.permit_exam_date &&
+                            appInRaw.permit_exam_time && String(appInRaw.permit_exam_time).trim() !== '' &&
+                            appInRaw.permit_testing_room && String(appInRaw.permit_testing_room).trim() !== ''
+                        );
                     }
                 } else {
                     failCount++;
@@ -1377,6 +1412,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         closeModal(bulkPermitDetailsModal, bulkPermitDetailsModalBackdrop);
         document.getElementById('closeBulkActions')?.click(); 
+        updateGlobalStatsOnStatusChange(); 
+        filterTableRows(); 
     }
 
     if (saveBulkPermitDetailsBtn) {
@@ -1393,25 +1430,61 @@ document.addEventListener('DOMContentLoaded', function() {
         if (pageTitleHeaderElement && applicationsContentDiv.style.display !== 'none') pageTitleHeaderElement.textContent = title; if (mainPageTitleElement) mainPageTitleElement.textContent = title;
     }
     function filterTableRows() {
-        if (!tableBody) return; const searchTerm = searchInput.value.toLowerCase().trim(); const startDateString = startDateInput?.value; const endDateString = endDateInput?.value;
+        if (!tableBody) return; 
+        const searchTerm = searchInput.value.toLowerCase().trim(); 
+        const startDateString = startDateInput?.value; 
+        const endDateString = endDateInput?.value;
         let filterByDate = false, startDateObj = null, endDateObj = null;
-        if (startDateString) { startDateObj = new Date(startDateString); startDateObj.setHours(0, 0, 0, 0); filterByDate = true; } if (endDateString) { endDateObj = new Date(endDateString); endDateObj.setHours(23, 59, 59, 999); filterByDate = true; }
+        if (startDateString) { startDateObj = new Date(startDateString); startDateObj.setHours(0, 0, 0, 0); filterByDate = true; } 
+        if (endDateString) { endDateObj = new Date(endDateString); endDateObj.setHours(23, 59, 59, 999); filterByDate = true; }
+        
         allTableRows().forEach(row => {
-            const name = row.querySelector('.applicant-name')?.textContent.toLowerCase() || ''; const email = row.querySelector('.applicant-email')?.textContent.toLowerCase() || ''; const program = row.querySelector('.applicant-program')?.textContent.toLowerCase() || ''; const appIdText = `P2025${String(row.dataset.applicantId).padStart(4,'0')}`; const statusBadgeText = row.querySelector('.status-badge')?.textContent.trim() || '';
-            const submissionDateCell = row.querySelector('.submission-date-cell'); const submissionDateText = submissionDateCell?.textContent.trim(); let submissionDate = null;
+            const appInRawData = rawApplicationsData.find(app => app.applicant_id == row.dataset.applicantId);
+            if (!appInRawData) { 
+                row.style.display = 'none';
+                return;
+            }
+
+            const name = row.querySelector('.applicant-name')?.textContent.toLowerCase() || ''; 
+            const email = row.querySelector('.applicant-email')?.textContent.toLowerCase() || ''; 
+            const program = row.querySelector('.applicant-program')?.textContent.toLowerCase() || ''; 
+            const appIdText = `P2025${String(row.dataset.applicantId).padStart(4,'0')}`; 
+            const statusBadgeText = row.querySelector('.status-badge')?.textContent.trim() || '';
+            
+            const submissionDateCell = row.querySelector('.submission-date-cell'); 
+            const submissionDateText = submissionDateCell?.textContent.trim(); 
+            let submissionDate = null;
             if (submissionDateText && submissionDateText !== 'N/A') { try { submissionDate = new Date(submissionDateText); if (isNaN(submissionDate.getTime())) submissionDate = null; } catch (e) { submissionDate = null; }}
+            
             const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || program.includes(searchTerm) || appIdText.includes(searchTerm);
-            let matchesDate = true; if (filterByDate) { if (submissionDate) { if (startDateObj && endDateObj) matchesDate = submissionDate >= startDateObj && submissionDate <= endDateObj; else if (startDateObj) matchesDate = submissionDate >= startDateObj; else if (endDateObj) matchesDate = submissionDate <= endDateObj; } else matchesDate = false; }
-            const matchesStatus = (activeStatusFilter === 'All' || statusBadgeText === activeStatusFilter);
+            
+            let matchesDate = true; 
+            if (filterByDate) { 
+                if (submissionDate) { 
+                    if (startDateObj && endDateObj) matchesDate = submissionDate >= startDateObj && submissionDate <= endDateObj; 
+                    else if (startDateObj) matchesDate = submissionDate >= startDateObj; 
+                    else if (endDateObj) matchesDate = submissionDate <= endDateObj; 
+                } else matchesDate = false; 
+            }
+            
+            let matchesStatus = true;
+            if (activeStatusFilter === 'Scheduled') {
+                matchesStatus = appInRawData.is_scheduled;
+            } else if (activeStatusFilter !== 'All') {
+                matchesStatus = (statusBadgeText === activeStatusFilter);
+            }
+            
             row.style.display = (matchesSearch && matchesDate && matchesStatus) ? '' : 'none';
         });
-        updateSelectAllCheckboxState(); updateBulkActionsVisibility(); updateApplicationPageTitles();
+        updateSelectAllCheckboxState(); 
+        updateBulkActionsVisibility(); 
+        updateApplicationPageTitles();
     }
     searchInput?.addEventListener('input', filterTableRows); startDateInput?.addEventListener('change', filterTableRows); endDateInput?.addEventListener('change', filterTableRows);
     clearDateFilterBtn?.addEventListener('click', () => { if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; filterTableRows(); });
 
     const flaskStats = JSON.parse('{{ stats | tojson | safe }}');
-    let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, in_review:0, passed:0, failed:0 }));
+    let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, in_review:0, passed:0, failed:0, scheduled:0 }));
     
     function getApplicationTrends(applicationsInputData, numMonths = 7) {
         const trends = { labels: [], totals: new Array(numMonths).fill(0), approved: new Array(numMonths).fill(0) };
@@ -1441,11 +1514,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateGlobalStatsDisplay() {
-        document.getElementById('statsTotal').textContent = currentJsStats.total_applications || 0; document.getElementById('statsPending').textContent = currentJsStats.pending || 0; document.getElementById('statsApproved').textContent = currentJsStats.approved || 0; document.getElementById('statsRejected').textContent = currentJsStats.rejected || 0; document.getElementById('statsInReview').textContent = currentJsStats.in_review || 0;
+        document.getElementById('statsTotal').textContent = currentJsStats.total_applications || 0; 
+        document.getElementById('statsPending').textContent = currentJsStats.pending || 0; 
+        document.getElementById('statsApproved').textContent = currentJsStats.approved || 0; 
+        document.getElementById('statsRejected').textContent = currentJsStats.rejected || 0; 
+        document.getElementById('statsInReview').textContent = currentJsStats.in_review || 0;
         document.getElementById('statsPassed').textContent = currentJsStats.passed || 0;
         document.getElementById('statsFailed').textContent = currentJsStats.failed || 0;
 
-        document.getElementById('pendingCountSide').textContent = currentJsStats.pending || 0; document.getElementById('approvedCountSide').textContent = currentJsStats.approved || 0; document.getElementById('rejectedCountSide').textContent = currentJsStats.rejected || 0; document.getElementById('inReviewCountSide').textContent = currentJsStats.in_review || 0;
+        document.getElementById('pendingCountSide').textContent = currentJsStats.pending || 0; 
+        document.getElementById('approvedCountSide').textContent = currentJsStats.approved || 0; 
+        document.getElementById('scheduledCountSide').textContent = currentJsStats.scheduled || 0; 
+        document.getElementById('rejectedCountSide').textContent = currentJsStats.rejected || 0; 
+        document.getElementById('inReviewCountSide').textContent = currentJsStats.in_review || 0;
         document.getElementById('passedCountSide').textContent = currentJsStats.passed || 0;
         document.getElementById('failedCountSide').textContent = currentJsStats.failed || 0;
 
@@ -1457,16 +1538,25 @@ document.addEventListener('DOMContentLoaded', function() {
             { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } },
             { value: currentJsStats.passed || 0, name: 'Passed', itemStyle: { color: '#0d9488' } },
             { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } }
+            // 'Scheduled' could be added here if desired for the pie chart, e.g., as a segment of 'Approved' or standalone
         ].filter(item => item.value > 0) }] }); }
     }
-    function updateGlobalStatsOnStatusChange() { // This is now the primary stats updater
-        currentJsStats.pending = 0; currentJsStats.in_review = 0; currentJsStats.approved = 0; currentJsStats.rejected = 0;
-        currentJsStats.passed = 0; currentJsStats.failed = 0;
+
+    function updateGlobalStatsOnStatusChange() { 
+        currentJsStats.pending = 0; currentJsStats.in_review = 0; currentJsStats.approved = 0; 
+        currentJsStats.rejected = 0; currentJsStats.passed = 0; currentJsStats.failed = 0;
+        currentJsStats.scheduled = 0; 
+
         (rawApplicationsData || []).forEach(app => { 
             const status = app.application_status; 
             if (status === 'Pending') currentJsStats.pending++; 
             else if (status === 'In Review') currentJsStats.in_review++; 
-            else if (status === 'Approved') currentJsStats.approved++; 
+            else if (status === 'Approved') {
+                currentJsStats.approved++;
+                if (app.is_scheduled) { 
+                    currentJsStats.scheduled++;
+                }
+            } 
             else if (status === 'Rejected') currentJsStats.rejected++; 
             else if (status === 'Passed') currentJsStats.passed++; 
             else if (status === 'Failed') currentJsStats.failed++; 
@@ -1475,8 +1565,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateGlobalStatsDisplay();
     }
     function updateGlobalStatsOnDelete(count) { 
-        // The actual removal from rawApplicationsData happens in executeDelete
-        updateGlobalStatsOnStatusChange(); // Recalculate all stats from the modified rawApplicationsData
+        updateGlobalStatsOnStatusChange(); 
     }
 
 
@@ -1547,11 +1636,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateSidebarActiveState(activeView, activeStatus = null) {
         const allNavLinks = [ sidebarDashboardMenuLink, sidebarApplicationsMenuLink, sidebarAddApplicationMenuLink, ...Object.values(sidebarFilterLinks).filter(link => link)];
-        allNavLinks.forEach(link => { if (link) { link.classList.remove('text-primary', 'bg-primary/5'); if (link === sidebarFilterLinks.pending) link.classList.add('text-yellow-600'); else if (link === sidebarFilterLinks.inReview) link.classList.add('text-blue-600'); else if (link === sidebarFilterLinks.approved) link.classList.add('text-green-600'); else if (link === sidebarFilterLinks.rejected) link.classList.add('text-red-600'); else if (link === sidebarFilterLinks.passed) link.classList.add('text-teal-600'); else if (link === sidebarFilterLinks.failed) link.classList.add('text-orange-600'); else link.classList.add('text-gray-600'); link.classList.add('hover:bg-gray-50'); }});
-        const setActiveStyles = (link) => { if (!link) return; link.classList.add('text-primary', 'bg-primary/5'); link.classList.remove('text-gray-600', 'text-yellow-600', 'text-blue-600', 'text-green-600', 'text-red-600', 'text-teal-600', 'text-orange-600', 'hover:bg-gray-50'); };
+        allNavLinks.forEach(link => { 
+            if (link) { 
+                link.classList.remove('text-primary', 'bg-primary/5'); 
+                if (link === sidebarFilterLinks.pending) link.classList.add('text-yellow-600'); 
+                else if (link === sidebarFilterLinks.inReview) link.classList.add('text-blue-600'); 
+                else if (link === sidebarFilterLinks.approved) link.classList.add('text-green-600'); 
+                else if (link === sidebarFilterLinks.scheduled) link.classList.add('text-indigo-700'); 
+                else if (link === sidebarFilterLinks.rejected) link.classList.add('text-red-600'); 
+                else if (link === sidebarFilterLinks.passed) link.classList.add('text-teal-600'); 
+                else if (link === sidebarFilterLinks.failed) link.classList.add('text-orange-600'); 
+                else link.classList.add('text-gray-600'); 
+                link.classList.add('hover:bg-gray-50'); 
+            }
+        });
+        const setActiveStyles = (link) => { 
+            if (!link) return; 
+            link.classList.add('text-primary', 'bg-primary/5'); 
+            link.classList.remove('text-gray-600', 'text-yellow-600', 'text-blue-600', 'text-green-600', 'text-red-600', 'text-teal-600', 'text-orange-600', 'text-indigo-700', 'hover:bg-gray-50'); 
+        };
+        
         if (activeView === 'dashboard') setActiveStyles(sidebarDashboardMenuLink);
         else if (activeView === 'addApplication') setActiveStyles(sidebarAddApplicationMenuLink);
-        else if (activeView === 'applications') { if (activeStatus === 'All' || !activeStatus) setActiveStyles(sidebarApplicationsMenuLink); else { setActiveStyles(sidebarApplicationsMenuLink); let targetFilterLink; switch(activeStatus.toLowerCase()) { case 'pending': targetFilterLink = sidebarFilterLinks.pending; break; case 'in review': targetFilterLink = sidebarFilterLinks.inReview; break; case 'approved': targetFilterLink = sidebarFilterLinks.approved; break; case 'rejected': targetFilterLink = sidebarFilterLinks.rejected; break; case 'passed': targetFilterLink = sidebarFilterLinks.passed; break; case 'failed': targetFilterLink = sidebarFilterLinks.failed; break; } setActiveStyles(targetFilterLink); }}
+        else if (activeView === 'applications') { 
+            if (activeStatus === 'All' || !activeStatus) setActiveStyles(sidebarApplicationsMenuLink); 
+            else { 
+                setActiveStyles(sidebarApplicationsMenuLink); 
+                let targetFilterLink; 
+                switch(activeStatus.toLowerCase()) { 
+                    case 'pending': targetFilterLink = sidebarFilterLinks.pending; break; 
+                    case 'in review': targetFilterLink = sidebarFilterLinks.inReview; break; 
+                    case 'approved': targetFilterLink = sidebarFilterLinks.approved; break; 
+                    case 'scheduled': targetFilterLink = sidebarFilterLinks.scheduled; break; 
+                    case 'rejected': targetFilterLink = sidebarFilterLinks.rejected; break; 
+                    case 'passed': targetFilterLink = sidebarFilterLinks.passed; break; 
+                    case 'failed': targetFilterLink = sidebarFilterLinks.failed; break; 
+                } 
+                setActiveStyles(targetFilterLink); 
+            }
+        }
     }
     function showView(viewName, statusForSidebarHighlight = null) {
         dashboardContentDiv.style.display = 'none'; applicationsContentDiv.style.display = 'none'; addApplicationContentDiv.style.display = 'none';
@@ -1573,7 +1696,11 @@ document.addEventListener('DOMContentLoaded', function() {
     breadcrumbAdminHomeLink?.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
     const setupSidebarFilterClickHandler = (linkElement, statusValueToSet) => { linkElement?.addEventListener('click', (e) => { e.preventDefault(); activeStatusFilter = statusValueToSet; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; showView('applications', statusValueToSet); filterTableRows(); }); };
     setupSidebarFilterClickHandler(sidebarApplicationsMenuLink, 'All');
-    Object.entries(sidebarFilterLinks).forEach(([statusKey, linkElement]) => { let statusValue = statusKey.charAt(0).toUpperCase() + statusKey.slice(1); if (statusKey === 'inReview') statusValue = 'In Review'; setupSidebarFilterClickHandler(linkElement, statusValue); });
+    Object.entries(sidebarFilterLinks).forEach(([statusKey, linkElement]) => { 
+        let statusValue = statusKey.charAt(0).toUpperCase() + statusKey.slice(1); 
+        if (statusKey === 'inReview') statusValue = 'In Review';
+        setupSidebarFilterClickHandler(linkElement, statusValue); 
+    });
 
     const applicationChartDom = document.getElementById('applicationChart');
     if (applicationChartDom && typeof echarts !== 'undefined') { window.applicationChartInstance = echarts.init(applicationChartDom); const applicationOption = { tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, legend: { data: ['Total Applications', 'Approved'], top: '5%' }, grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true }, xAxis: { type: 'category', data: [] }, yAxis: { type: 'value' }, series: [ { name: 'Total Applications', type: 'bar', barWidth: '30%', color: '#4f46e5', data: [] }, { name: 'Approved', type: 'bar', barWidth: '30%', color: '#16a34a', data: [] } ]}; window.applicationChartInstance.setOption(applicationOption); window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.applicationChartInstance) window.applicationChartInstance.resize(); }); }
@@ -1822,8 +1949,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     const newApp = result.application_data; 
                     if (newApp) {
-                        // Convert ISO date strings from backend to Date objects if necessary for consistency
-                        // For simplicity, we assume rawApplicationsData handles string dates fine for display.
+                        newApp.is_scheduled = ( 
+                            newApp.application_status === 'Approved' &&
+                            newApp.permit_exam_date &&
+                            newApp.permit_exam_time && String(newApp.permit_exam_time).trim() !== '' &&
+                            newApp.permit_testing_room && String(newApp.permit_testing_room).trim() !== ''
+                        );
                         rawApplicationsData.unshift(newApp); 
                     }
                     updateGlobalStatsOnStatusChange(); 
@@ -1858,11 +1989,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-    const mainContentArea = document.getElementById('mainContentArea'); // Ensure this ID exists on your main content div
+    const mainContentArea = document.getElementById('mainContentArea'); 
 
     sidebarToggle.addEventListener('click', () => {
         sidebar.classList.toggle('-translate-x-full');
-        if (window.innerWidth < 640) { // sm breakpoint
+        if (window.innerWidth < 640) { 
              sidebarBackdrop.classList.toggle('hidden');
         }
     });
@@ -1878,12 +2009,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if(mainContentArea) mainContentArea.classList.add('sm:ml-64'); 
             sidebarBackdrop.classList.add('hidden'); 
         } else {
-             // If sidebar was open and screen resized to mobile, it might need explicit hiding
-            if (!sidebar.classList.contains('-translate-x-full')) {
-                 // Optionally hide sidebar on resize to mobile if it was open, or leave it
-                 // For now, we'll let it stay as it was, user can close with backdrop/toggle
-            }
-             if(mainContentArea) mainContentArea.classList.remove('sm:ml-64');
+            if(mainContentArea) mainContentArea.classList.remove('sm:ml-64');
         }
     });
 });
