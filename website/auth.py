@@ -175,18 +175,21 @@ def _send_email(subject, recipients, html_body, sender_name_override=None):
         traceback.print_exc()
         return False
 
-def send_application_status_email(applicant_email, applicant_name, new_status, application_id, program_choice=None, exam_status=None):
+def send_application_status_email(applicant_email, applicant_name, new_status, application_id, program_choice=None, exam_status=None, permit_details=None):
     sender_name_from_config = current_app.config.get('MAIL_SENDER_NAME', 'Padre Garcia Polytechnic College')
     app_id_formatted = f"P2025{application_id:04d}"
     subject, template_name = "", ""
+    
     email_context = {
         'applicant_name': applicant_name, 'application_id_formatted': app_id_formatted,
         'program_choice': program_choice, 'sender_name': sender_name_from_config,
-        'now': datetime.datetime.now(), 'exam_status': exam_status, 'application_status': new_status
+        'now': datetime.datetime.now(), 'exam_status': exam_status, 'application_status': new_status,
+        'application': permit_details 
     }
 
     status_map = {
         'Approved': ('email/application_approved_email.html', f"Application {app_id_formatted} Approved"),
+        'Scheduled': ('email/exam_scheduled_email.html', f"Admission Exam Scheduled for {app_id_formatted}"),
         'Rejected': ('email/application_rejected_email.html', f"Application {app_id_formatted} Update"),
         'Passed': ('email/application_passed_email.html', f"Congratulations! Application {app_id_formatted} Processed: Passed"),
         'Failed': ('email/application_failed_email.html', f"Application {app_id_formatted} Processed: Failed"),
@@ -204,20 +207,23 @@ def send_application_status_email(applicant_email, applicant_name, new_status, a
         elif new_status == 'Rejected' and exam_status == 'Failed':
             subject = f"Application {app_id_formatted} Update (Exam Result)"
         subject += f" - {sender_name_from_config}"
-    elif exam_status in exam_status_map and new_status not in status_map:
+    elif exam_status in exam_status_map and new_status not in status_map: 
         template_name, subject_base = exam_status_map[exam_status]
         subject = f"{subject_base} - {sender_name_from_config}"
     else:
-        # print(f"Email not sent: Status '{new_status}' or exam_status '{exam_status}' no primary notification for {app_id_formatted}.")
         return False
 
     try:
         html_body = render_template(template_name, **email_context)
     except Exception as e_template:
         print(f"CRITICAL: Email template '{template_name}' not found or error rendering. Error: {e_template}")
-        html_body = f"<p>Dear {applicant_name},</p><p>There is an update on your application {app_id_formatted}. Status: {new_status}. Exam: {exam_status or 'N/A'}.</p>"
+        if new_status == 'Scheduled':
+             html_body = f"<p>Dear {applicant_name},</p><p>Your admission exam for application {app_id_formatted} has been scheduled. Please check the student portal for details or await further communication.</p>"
+        else: 
+            html_body = f"<p>Dear {applicant_name},</p><p>There is an update on your application {app_id_formatted}. Status: {new_status}. Exam: {exam_status or 'N/A'}.</p>"
 
     return _send_email(subject, [applicant_email], html_body, sender_name_override=sender_name_from_config)
+
 
 def send_password_reset_email(user_email, token):
     sender_name_from_config = current_app.config.get('MAIL_SENDER_NAME', 'Padre Garcia Polytechnic College')
@@ -1010,8 +1016,8 @@ def submit_application():
         conn = get_db_connection();
         if not conn: flash("Database error.", "danger"); return redirect(url_for('views.new_student'))
         cursor = conn.cursor()
-        cursor.execute("SELECT applicant_id FROM applicants WHERE student_user_id = %s AND application_status IN ('Pending', 'In Review', 'Approved', 'Passed')", (student_user_id,))
-        if cursor.fetchone(): flash("⚠️ Active/Approved/Passed application exists.", "warning"); return redirect(url_for('views.application_status_page'))
+        cursor.execute("SELECT applicant_id FROM applicants WHERE student_user_id = %s AND application_status IN ('Pending', 'In Review', 'Approved', 'Passed', 'Scheduled')", (student_user_id,)) # Added Scheduled
+        if cursor.fetchone(): flash("⚠️ Active/Approved/Passed/Scheduled application exists.", "warning"); return redirect(url_for('views.application_status_page'))
 
         db_cols_app_insert = [
             'student_user_id', 'program_choice', 'last_name', 'first_name', 'middle_name', 'date_of_birth', 'place_of_birth', 'sex', 'civil_status', 
@@ -1076,10 +1082,10 @@ def submit_application():
 def admin_update_application_status(applicant_id):
     if not session.get('admin_logged_in'): return jsonify({"success": False, "message": "Unauthorized"}), 401
     new_status = request.form.get('status')
-    valid_statuses = ['Pending', 'In Review', 'Approved', 'Rejected', 'Passed', 'Failed']
+    valid_statuses = ['Pending', 'In Review', 'Approved', 'Scheduled', 'Rejected', 'Passed', 'Failed']
     if not new_status or new_status not in valid_statuses: return jsonify({"success": False, "message": "Invalid status"}), 400
 
-    conn = None; cursor = None # Combined cursors
+    conn = None; cursor = None 
     try:
         conn = get_db_connection()
         if not conn: return jsonify({"success": False, "message": "DB error"}), 500
@@ -1093,18 +1099,8 @@ def admin_update_application_status(applicant_id):
         applicant_name = f"{app_info.get('first_name','')} {app_info.get('last_name','')}".strip()
         now_dt = datetime.datetime.now()
         
-        generated_permit_control_no = app_info.get('permit_control_no') # Keep existing if any
+        generated_permit_control_no = app_info.get('permit_control_no') 
         new_permit_control_no_generated_flag = False
-
-        if new_status == 'Approved' and not generated_permit_control_no:
-            # Generate new permit_control_no only if Approved and not already set
-            cursor.execute("SELECT MAX(CAST(permit_control_no AS UNSIGNED)) as max_pcn FROM applicants WHERE permit_control_no REGEXP '^[0-9]+$'")
-            max_pcn_row = cursor.fetchone()
-            next_pcn_int = 1
-            if max_pcn_row and max_pcn_row['max_pcn'] is not None:
-                next_pcn_int = int(max_pcn_row['max_pcn']) + 1
-            generated_permit_control_no = f"{next_pcn_int:04d}" # Format as "0001", "0002", etc.
-            new_permit_control_no_generated_flag = True
 
         sql_update_parts = ["application_status = %s", "last_updated_at = %s"]
         params_update = [new_status, now_dt]
@@ -1112,42 +1108,69 @@ def admin_update_application_status(applicant_id):
         if new_status in ['Approved', 'Rejected', 'Passed', 'Failed']:
             sql_update_parts.append("decision_date = %s")
             params_update.append(now_dt)
-        else:
-            sql_update_parts.append("decision_date = NULL") # Clear decision date if not a final status
+        else: 
+            sql_update_parts.append("decision_date = NULL") 
 
-        if new_permit_control_no_generated_flag:
-            sql_update_parts.append("permit_control_no = %s")
-            params_update.append(generated_permit_control_no)
+        if new_status == 'Approved' and not generated_permit_control_no:
+            cursor.execute("SELECT MAX(CAST(permit_control_no AS UNSIGNED)) as max_pcn FROM applicants WHERE permit_control_no REGEXP '^[0-9]+$'")
+            max_pcn_row = cursor.fetchone()
+            next_pcn_int = 1
+            if max_pcn_row and max_pcn_row['max_pcn'] is not None:
+                next_pcn_int = int(max_pcn_row['max_pcn']) + 1
+            generated_permit_control_no = f"{next_pcn_int:04d}" 
+            new_permit_control_no_generated_flag = True
+            if new_permit_control_no_generated_flag:
+                 sql_update_parts.append("permit_control_no = %s")
+                 params_update.append(generated_permit_control_no)
         
         params_update.append(applicant_id)
         
         final_sql = f"UPDATE applicants SET {', '.join(sql_update_parts)} WHERE applicant_id = %s"
         
-        # Use a non-dictionary cursor for update if preferred, or just reuse.
         update_cursor = conn.cursor() 
         update_cursor.execute(final_sql, tuple(params_update))
         conn.commit()
         update_cursor.close()
 
 
-        if update_cursor.rowcount > 0 or new_permit_control_no_generated_flag : # consider success if PCN was generated even if status was already approved
+        if update_cursor.rowcount > 0 or new_permit_control_no_generated_flag : 
             email_sent = False
-            if new_status in ['Approved', 'Rejected', 'Passed', 'Failed'] and email_to_notify:
-                email_sent = send_application_status_email(email_to_notify, applicant_name, new_status, applicant_id, app_info.get('program_choice'), app_info.get('exam_status'))
+            permit_details_for_email = None
+            if new_status in ['Approved', 'Scheduled', 'Rejected', 'Passed', 'Failed'] and email_to_notify:
+                if new_status == 'Scheduled':
+                    details_cursor = conn.cursor(dictionary=True)
+                    details_cursor.execute("SELECT permit_exam_date, permit_exam_time, permit_testing_room, permit_control_no FROM applicants WHERE applicant_id = %s", (applicant_id,))
+                    permit_data = details_cursor.fetchone()
+                    details_cursor.close()
+                    permit_details_for_email = permit_data 
+
+                email_sent = send_application_status_email(
+                    email_to_notify, 
+                    applicant_name, 
+                    new_status, 
+                    applicant_id, 
+                    app_info.get('program_choice'), 
+                    app_info.get('exam_status'),
+                    permit_details=permit_details_for_email 
+                )
             
             msg = f"P2025{applicant_id:04d} status set to {new_status}."
             if new_permit_control_no_generated_flag:
                  msg += f" Permit Control No. {generated_permit_control_no} assigned."
-            if new_status in ['Approved', 'Rejected', 'Passed', 'Failed'] and email_to_notify:
+            if new_status in ['Approved', 'Scheduled', 'Rejected', 'Passed', 'Failed'] and email_to_notify:
                 msg += " Email sent." if email_sent else " Email failed."
-            return jsonify({"success": True, "message": msg, "new_status": new_status, "applicant_id": applicant_id, "permit_control_no": generated_permit_control_no if new_permit_control_no_generated_flag else app_info.get('permit_control_no')})
+            
+            effective_pcn = generated_permit_control_no if new_permit_control_no_generated_flag else app_info.get('permit_control_no')
+            if new_status == 'Scheduled' and permit_details_for_email: 
+                effective_pcn = permit_details_for_email.get('permit_control_no', effective_pcn)
+
+            return jsonify({"success": True, "message": msg, "new_status": new_status, "applicant_id": applicant_id, "permit_control_no": effective_pcn })
         else:
-            # Check if app exists if rowcount is 0
             cursor.execute("SELECT 1 FROM applicants WHERE applicant_id = %s", (applicant_id,))
             if cursor.fetchone(): return jsonify({"success": True, "message": f"Status already {new_status}.", "new_status": new_status, "applicant_id": applicant_id})
             return jsonify({"success": False, "message": "App not found"}), 404
             
-    except mysql.connector.Error as db_err: # Catch specific DB errors
+    except mysql.connector.Error as db_err: 
         print(f"Database error updating status for {applicant_id}: {db_err}"); traceback.print_exc()
         return jsonify({"success": False, "message": f"Database error: {db_err.msg}"}), 500
     except Exception as e:
@@ -1155,7 +1178,6 @@ def admin_update_application_status(applicant_id):
         return jsonify({"success": False, "message": "Server error"}), 500
     finally:
         if cursor: cursor.close()
-        # update_cursor is closed if used
         if conn and conn.is_connected(): conn.close()
 
 
@@ -1185,20 +1207,20 @@ def admin_update_exam_status(applicant_id):
             email_to_notify = app_info.get('student_account_email') or app_info.get('application_form_email')
             applicant_name = f"{app_info.get('first_name','')} {app_info.get('last_name','')}".strip()
             email_sent = False
-            if new_exam_status in ['Passed', 'Failed'] and email_to_notify and app_info.get('application_status') not in ['Approved', 'Rejected', 'Passed', 'Failed']:
+            if new_exam_status in ['Passed', 'Failed'] and email_to_notify and app_info.get('application_status') not in ['Approved', 'Scheduled', 'Rejected', 'Passed', 'Failed']:
                 email_sent = send_application_status_email(email_to_notify, applicant_name, app_info.get('application_status'), applicant_id, app_info.get('program_choice'), new_exam_status)
             
             msg = f"Exam status for P2025{applicant_id:04d} to '{new_exam_status or 'Not Set'}'."
-            if new_exam_status in ['Passed', 'Failed'] and email_to_notify and app_info.get('application_status') not in ['Approved', 'Rejected', 'Passed', 'Failed']:
+            if new_exam_status in ['Passed', 'Failed'] and email_to_notify and app_info.get('application_status') not in ['Approved', 'Scheduled', 'Rejected', 'Passed', 'Failed']:
                  msg += " Email sent." if email_sent else " Email failed."
             return jsonify({"success": True, "message": msg, "new_exam_status": new_exam_status, "applicant_id": applicant_id})
         else:
             cursor.execute("SELECT exam_status FROM applicants WHERE applicant_id = %s", (applicant_id,))
             db_status_row = cursor.fetchone()
-            current_db_exam_status = db_status_row[0] if db_status_row else None # Handle if row is None
-            if current_db_exam_status == new_exam_status: # Check if it was already the same
+            current_db_exam_status = db_status_row[0] if db_status_row else None 
+            if current_db_exam_status == new_exam_status: 
                  return jsonify({"success": True, "message": f"Exam status already '{new_exam_status or 'Not Set'}'." , "new_exam_status": new_exam_status, "applicant_id": applicant_id})
-            return jsonify({"success": False, "message": "App not found or status not updated."}), 404 # Should ideally be covered by rowcount > 0
+            return jsonify({"success": False, "message": "App not found or status not updated."}), 404 
     except Exception as e:
         print(f"Error updating exam status for {applicant_id}: {e}"); traceback.print_exc()
         return jsonify({"success": False, "message": "Server error"}), 500
@@ -1261,13 +1283,13 @@ def admin_get_application_details(applicant_id):
 def admin_dashboard():
     if not session.get('admin_logged_in'): flash("⚠️ Log in for admin dashboard.", "warning"); return redirect(url_for('auth.admin'))
     applications = []
-    stats = {'total_applications': 0, 'pending': 0, 'in_review': 0, 'approved': 0, 'rejected': 0, 'passed': 0, 'failed': 0, 'passed_exam': 0, 'failed_exam': 0}
+    stats = {'total_applications': 0, 'pending': 0, 'in_review': 0, 'approved': 0, 'scheduled': 0, 'rejected': 0, 'passed': 0, 'failed': 0, 'passed_exam': 0, 'failed_exam': 0}
     conn = None; cursor = None
     try:
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT a.applicant_id, a.first_name, a.last_name, a.email_address, a.program_choice, a.date_of_application, a.application_status, a.submitted_at, a.decision_date, a.exam_status, a.permit_control_no, su.email as student_account_email FROM applicants a LEFT JOIN student_users su ON a.student_user_id = su.id ORDER BY CASE a.application_status WHEN 'Pending' THEN 1 WHEN 'In Review' THEN 2 WHEN 'Approved' THEN 3 WHEN 'Passed' THEN 4 WHEN 'Failed' THEN 5 WHEN 'Rejected' THEN 6 ELSE 7 END, a.submitted_at DESC, a.applicant_id DESC")
+            cursor.execute("SELECT a.applicant_id, a.first_name, a.last_name, a.email_address, a.program_choice, a.date_of_application, a.application_status, a.submitted_at, a.decision_date, a.exam_status, a.permit_control_no, a.permit_exam_date, a.permit_exam_time, a.permit_testing_room, su.email as student_account_email FROM applicants a LEFT JOIN student_users su ON a.student_user_id = su.id ORDER BY CASE a.application_status WHEN 'Pending' THEN 1 WHEN 'In Review' THEN 2 WHEN 'Approved' THEN 3 WHEN 'Scheduled' THEN 4 WHEN 'Passed' THEN 5 WHEN 'Failed' THEN 6 WHEN 'Rejected' THEN 7 ELSE 8 END, a.submitted_at DESC, a.applicant_id DESC")
             applications = cursor.fetchall()
             stats['total_applications'] = len(applications)
             for app in applications:
@@ -1278,6 +1300,7 @@ def admin_dashboard():
                 
                 status_key = app.get('application_status','').lower().replace(' ', '_')
                 if status_key in stats: stats[status_key] += 1
+                
                 if app.get('exam_status') == 'Passed': stats['passed_exam'] += 1
                 elif app.get('exam_status') == 'Failed': stats['failed_exam'] += 1
         else: flash("Database error.", "danger")
