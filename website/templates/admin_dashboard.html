@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard - PGPC</title>
 <script src="https://cdn.tailwindcss.com/3.4.1"></script>
-<script>tailwind.config={theme:{extend:{colors:{primary:'#4f46e5',secondary:'#6366f1', teal: { 100: '#ccfbf1', 600: '#0d9488', 800: '#115e59' }, orange: { 100: '#ffedd5', 600: '#ea580c', 800: '#9a3412' } },borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4f46e5',secondary:'#6366f1', teal: { 100: '#ccfbf1', 600: '#0d9488', 800: '#115e59' }, orange: { 100: '#ffedd5', 600: '#ea580c', 800: '#9a3412' }, indigo: {100: '#e0e7ff', 700: '#4338ca', 200: '#c7d2fe'} },borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -335,6 +335,9 @@
                     <button id="bulkFailBtn" class="px-3 py-1.5 bg-orange-100 text-orange-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-orange-200">
                         <i class="ri-shield-cross-line mr-1"></i> Fail
                     </button>
+                     <button id="bulkSetPermitDetailsBtn" class="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-indigo-200">
+                        <i class="ri-ticket-line mr-1"></i> Set Permit Details
+                    </button>
                     <button id="bulkDeleteBtn" class="px-3 py-1.5 bg-gray-100 text-red-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-gray-200">
                         <i class="ri-delete-bin-line mr-1"></i> Delete
                     </button>
@@ -398,7 +401,7 @@
             </div>
             <div id="adminNotesModalBackdrop" class="modal-backdrop"></div>
 
-            <!-- Permit Details Modal -->
+            <!-- Permit Details Modal (Single Application) -->
             <div id="adminPermitDetailsModal" class="modal w-full max-w-xl">
                 <div class="flex justify-between items-center pb-3 border-b">
                     <h3 class="text-xl font-semibold text-gray-900" id="adminPermitDetailsModalTitle">Admission Test Permit Details</h3>
@@ -411,7 +414,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                             <label for="permitControlNoModal" class="block text-xs font-medium text-gray-700">Permit Control No.</label>
-                            <input type="text" id="permitControlNoModal" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                            <input type="text" id="permitControlNoModal" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 bg-gray-100 cursor-not-allowed" readonly title="Permit Control Number is auto-generated upon approval.">
                         </div>
                         <div>
                             <label for="permitExamDateModal" class="block text-xs font-medium text-gray-700">Date of Examination</label>
@@ -433,6 +436,37 @@
                 </div>
             </div>
             <div id="adminPermitDetailsModalBackdrop" class="modal-backdrop"></div>
+
+            <!-- Bulk Set Permit Details Modal -->
+            <div id="bulkPermitDetailsModal" class="modal w-full max-w-md">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h3 class="text-xl font-semibold text-gray-900" id="bulkPermitDetailsModalTitle">Set Permit Details for Selected</h3>
+                    <button id="closeBulkPermitDetailsModalIcon" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line ri-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-4 space-y-4">
+                    <p class="text-sm text-gray-600">Enter common permit details to apply to all selected applications.</p>
+                    <div>
+                        <label for="bulkPermitExamDate" class="block text-xs font-medium text-gray-700">Date of Examination</label>
+                        <input type="date" id="bulkPermitExamDate" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                    </div>
+                    <div>
+                        <label for="bulkPermitExamTime" class="block text-xs font-medium text-gray-700">Time</label>
+                        <input type="text" id="bulkPermitExamTime" placeholder="e.g., 09:00 AM" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                    </div>
+                    <div>
+                        <label for="bulkPermitTestingRoom" class="block text-xs font-medium text-gray-700">Testing Room</label>
+                        <input type="text" id="bulkPermitTestingRoom" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                    </div>
+                    <p class="text-xs text-gray-500">Note: Permit Control No. is auto-generated upon approval and set individually.</p>
+                </div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button id="cancelBulkPermitDetailsBtn" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300">Cancel</button>
+                    <button id="saveBulkPermitDetailsBtn" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90">Apply to Selected</button>
+                </div>
+            </div>
+            <div id="bulkPermitDetailsModalBackdrop" class="modal-backdrop"></div>
 
 
             <div class="overflow-x-auto custom-scrollbar">
@@ -773,22 +807,22 @@
 <script>
 // Make logo URLs available to JavaScript
 const PGPC_LOGO_URL_JS = "{{ url_for('static', filename='logopgpc.png') }}";
-const BAYAN_LOGO_URL_JS = "{{ url_for('static', filename='images/bayan_padre_garcia_logo.png') }}"; // Assumed filename, adjust if needed
+const BAYAN_LOGO_URL_JS = "{{ url_for('static', filename='images/bayan_padre_garcia_logo.png') }}"; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const rawApplicationsData = {{ applications | tojson | safe if applications else [] | tojson | safe }};
 
     const dashboardContentDiv = document.getElementById('dashboardContent');
     const applicationsContentDiv = document.getElementById('applicationsContent');
-    const addApplicationContentDiv = document.getElementById('addApplicationContent'); // New content div
+    const addApplicationContentDiv = document.getElementById('addApplicationContent'); 
     const pageTitleHeaderElement = document.getElementById('pageTitleHeader');
     const breadcrumbCurrentPageElement = document.getElementById('breadcrumbCurrentPage');
     const breadcrumbAdminHomeLink = document.getElementById('breadcrumbAdminHomeLink');
 
     const sidebarDashboardMenuLink = document.getElementById('sidebarDashboardMenuLink');
     const sidebarApplicationsMenuLink = document.getElementById('applicationsMenu');
-    const sidebarAddApplicationMenuLink = document.getElementById('sidebarAddApplicationMenuLink'); // New sidebar link
-    const sidebarBackToHomeLink = document.getElementById('sidebarBackToHomeLink'); // Link for "Back to Home Page"
+    const sidebarAddApplicationMenuLink = document.getElementById('sidebarAddApplicationMenuLink'); 
+    const sidebarBackToHomeLink = document.getElementById('sidebarBackToHomeLink'); 
     const sidebarFilterLinks = {
         pending: document.getElementById('pendingFilterLink'),
         inReview: document.getElementById('inReviewFilterLink'),
@@ -829,7 +863,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelAdminNotesBtn = document.getElementById('cancelAdminNotesBtn');
     const saveAdminNotesModalBtn = document.getElementById('saveAdminNotesModalBtn');
 
-    // Permit Details Modal
+    // Permit Details Modal (Single Application)
     const adminPermitDetailsModal = document.getElementById('adminPermitDetailsModal');
     const adminPermitDetailsModalBackdrop = document.getElementById('adminPermitDetailsModalBackdrop');
     const adminPermitDetailsModalTitle = document.getElementById('adminPermitDetailsModalTitle');
@@ -841,6 +875,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeAdminPermitDetailsModalIcon = document.getElementById('closeAdminPermitDetailsModalIcon');
     const cancelAdminPermitDetailsBtn = document.getElementById('cancelAdminPermitDetailsBtn');
     const saveAdminPermitDetailsModalBtn = document.getElementById('saveAdminPermitDetailsModalBtn');
+
+    // Bulk Permit Details Modal
+    const bulkSetPermitDetailsBtn = document.getElementById('bulkSetPermitDetailsBtn'); 
+    const bulkPermitDetailsModal = document.getElementById('bulkPermitDetailsModal');
+    const bulkPermitDetailsModalBackdrop = document.getElementById('bulkPermitDetailsModalBackdrop');
+    const closeBulkPermitDetailsModalIcon = document.getElementById('closeBulkPermitDetailsModalIcon');
+    const cancelBulkPermitDetailsBtn = document.getElementById('cancelBulkPermitDetailsBtn');
+    const saveBulkPermitDetailsBtn = document.getElementById('saveBulkPermitDetailsBtn');
+    const bulkPermitExamDateInput = document.getElementById('bulkPermitExamDate');
+    const bulkPermitExamTimeInput = document.getElementById('bulkPermitExamTime');
+    const bulkPermitTestingRoomInput = document.getElementById('bulkPermitTestingRoom');
+
 
     // Admin Add Application Form Elements
     const adminAddApplicationForm = document.getElementById('adminAddApplicationForm');
@@ -945,13 +991,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 showToast(result.message, 'success');
                 const appInRawData = rawApplicationsData.find(app => app.applicant_id == applicantId);
-                if (appInRawData) appInRawData.application_status = newStatus;
+                if (appInRawData) {
+                    appInRawData.application_status = newStatus;
+                    if (result.permit_control_no) { // If backend returned a PCN (e.g., on approval)
+                        appInRawData.permit_control_no = result.permit_control_no;
+                    }
+                }
                 if (rowElement) updateStatusBadge(rowElement, newStatus);
                 else {
                     const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${applicantId}"]`);
                     if(rowToUpdate) updateStatusBadge(rowToUpdate, newStatus);
                 }
-                filterTableRows();
+                filterTableRows(); // Re-filter as status change might affect visibility with status filters
             } else {
                 showToast(result.message || 'Failed to update status.', 'error');
             }
@@ -987,7 +1038,7 @@ document.addEventListener('DOMContentLoaded', function() {
         closeModal(deleteConfirmationModal, deleteModalBackdrop);
         updateBulkActionsVisibility();
         updateSelectAllCheckboxState();
-        updateGlobalStatsOnDelete(idArray.length);
+        updateGlobalStatsOnDelete(idArray.length); // This will call updateGlobalStatsOnStatusChange
         filterTableRows();
     }
 
@@ -1032,6 +1083,11 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (actionPermitDetails) {
                 event.preventDefault();
                 currentViewingApplicantId = actionPermitDetails.dataset.id;
+                
+                permitControlNoModalInput.readOnly = true; 
+                permitControlNoModalInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                permitControlNoModalInput.title = "Permit Control Number is auto-generated upon approval.";
+
                  try {
                     const response = await fetch(`/admin/application/${currentViewingApplicantId}/details`);
                     const result = await response.json();
@@ -1041,9 +1097,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         permitExamDateModalInput.value = result.data.permit_exam_date ? result.data.permit_exam_date.split('T')[0] : '';
                         permitExamTimeModalInput.value = result.data.permit_exam_time || '';
                         permitTestingRoomModalInput.value = result.data.permit_testing_room || '';
+                        
                         openModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop);
-                    } else { showToast('Could not load permit data.', 'error'); }
-                } catch (error) { showToast('Error fetching permit data.', 'error'); }
+                    } else { 
+                        showToast('Could not load permit data.', 'error'); 
+                    }
+                } catch (error) { 
+                    showToast('Error fetching permit data.', 'error'); 
+                }
             } else if (actionUpdateStatus) {
                 event.preventDefault();
                 handleUpdateStatus(actionUpdateStatus.dataset.id, actionUpdateStatus.dataset.status, actionUpdateStatus.closest('tr'));
@@ -1065,9 +1126,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let contentHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">`;
         const fieldOrder = [
             'applicant_id', 'student_account_email', 'first_name', 'last_name', 'middle_name', 'email_address', 'mobile_number', 'program_choice', 'application_status', 'submitted_at', 'date_of_application', 'date_of_birth', 'place_of_birth', 'sex', 'civil_status', 'religion', 'citizenship', 'permanent_address_street_barangay', 'permanent_address_city_municipality', 'permanent_address_province', 'permanent_address_postal_code', 'cultural_minority_group', 'physical_disability', 'academic_year', 'average_family_income', 'father_name', 'father_occupation', 'father_company_address', 'father_contact_number', 'mother_maiden_name', 'mother_occupation', 'mother_company_address', 'mother_contact_number', 'guardian_name', 'guardian_occupation', 'guardian_company_address', 'guardian_contact_number', 'senior_high_school', 'senior_high_school_address', 'senior_high_school_track_strand', 'senior_high_school_year_from', 'senior_high_school_year_to', 'tertiary_school', 'tertiary_school_address', 'tertiary_course', 'tertiary_year_from', 'tertiary_year_to', 'agreements', 'final_submission_date', 'decision_date', 'last_updated_at'
-        ];
+        ]; // Removed control_number from here, as it's part of permit details now.
         for (const key of fieldOrder) {
-            if (data.hasOwnProperty(key) && key !== 'photo' && key !== 'admin_notes' && !key.startsWith('permit_') && key !== 'control_number' && !key.endsWith('_file') && !key.endsWith('_filename') && !key.endsWith('_mimetype')) {
+            if (data.hasOwnProperty(key) && key !== 'photo' && key !== 'admin_notes' && !key.startsWith('permit_') && !key.endsWith('_file') && !key.endsWith('_filename') && !key.endsWith('_mimetype')) {
                  let value = data[key] === null || data[key] === undefined || data[key] === '' ? 'N/A' : data[key];
                  if ((key.includes('date') || key.includes('_at')) && value !== 'N/A' && !(value instanceof Date)) { try { value = new Date(value).toLocaleString(); } catch (e) { /* keep original */ }} else if (value instanceof Date) { value = value.toLocaleString(); }
                  let displayName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -1075,10 +1136,31 @@ document.addEventListener('DOMContentLoaded', function() {
                  contentHtml += `<div><strong>${displayName}:</strong> <span class="text-gray-700">${value}</span></div>`;
             }
         }
-        contentHtml += `</div>`;
+        contentHtml += `</div>`; // Close main grid
 
         if (data.photo) contentHtml += `<div class="mt-4"><strong>2x2 Photo:</strong><br><img src="${data.photo}" alt="Applicant Photo" class="max-w-xs max-h-64 border rounded mt-1"></div>`;
         else contentHtml += `<div class="mt-4"><strong>2x2 Photo:</strong> <span class="text-gray-700">Not provided</span></div>`;
+
+        // Admission Test Permit Details Section
+        contentHtml += `<div class="mt-6 pt-4 border-t">`;
+        contentHtml += `<h4 class="text-md font-semibold text-gray-800 mb-3">Admission Test Permit</h4>`;
+        contentHtml += `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">`;
+        contentHtml += `<div><strong>Permit Control No:</strong> <span class="text-gray-700">${data.permit_control_no || 'N/A'}</span></div>`;
+        let examDateDisplay = 'N/A';
+        if (data.permit_exam_date) {
+            try { 
+                const dateObj = new Date(data.permit_exam_date);
+                if (!isNaN(dateObj.getTime()) && dateObj.getFullYear() > 1970) {
+                     examDateDisplay = dateObj.toLocaleDateString();
+                } else {
+                     examDateDisplay = data.permit_exam_date; 
+                }
+            } catch (e) { examDateDisplay = data.permit_exam_date; } 
+        }
+        contentHtml += `<div><strong>Exam Date:</strong> <span class="text-gray-700">${examDateDisplay}</span></div>`;
+        contentHtml += `<div><strong>Exam Time:</strong> <span class="text-gray-700">${data.permit_exam_time || 'N/A'}</span></div>`;
+        contentHtml += `<div><strong>Testing Room:</strong> <span class="text-gray-700">${data.permit_testing_room || 'N/A'}</span></div>`;
+        contentHtml += `</div></div>`; 
 
         contentHtml += `<div class="mt-6 pt-4 border-t">`;
         contentHtml += `<h4 class="text-md font-semibold text-gray-800 mb-3">Uploaded Requirements</h4>`;
@@ -1100,11 +1182,37 @@ document.addEventListener('DOMContentLoaded', function() {
     async function savePermitDetails() {
         if (!currentViewingApplicantId) return;
         const formData = new FormData();
-        formData.append('permit_control_no', permitControlNoModalInput.value);
+        // DO NOT send permit_control_no from here. It's auto-generated on approval & managed by backend.
         formData.append('permit_exam_date', permitExamDateModalInput.value);
         formData.append('permit_exam_time', permitExamTimeModalInput.value);
         formData.append('permit_testing_room', permitTestingRoomModalInput.value);
-        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/permit-details`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) { showToast(result.message, 'success'); closeModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop); const appInRaw = rawApplicationsData.find(app => app.applicant_id == currentViewingApplicantId); if(appInRaw) { appInRaw.permit_control_no = permitControlNoModalInput.value; appInRaw.permit_exam_date = permitExamDateModalInput.value; appInRaw.permit_exam_time = permitExamTimeModalInput.value; appInRaw.permit_testing_room = permitTestingRoomModalInput.value;}} else showToast(result.message || 'Failed to save permit details.', 'error'); } catch (error) { showToast('An error occurred while saving permit details: ' + error.toString(), 'error'); console.error("Error saving permit details:", error); }
+        try { 
+            const response = await fetch(`/admin/application/${currentViewingApplicantId}/permit-details`, { method: 'POST', body: formData }); 
+            const result = await response.json(); 
+            if (result.success) { 
+                showToast(result.message, 'success'); 
+                closeModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop); 
+                const appInRaw = rawApplicationsData.find(app => app.applicant_id == currentViewingApplicantId); 
+                if(appInRaw) { 
+                    if (result.data) { // Backend includes the current permit_control_no
+                        appInRaw.permit_control_no = result.data.permit_control_no;
+                        appInRaw.permit_exam_date = result.data.permit_exam_date;
+                        appInRaw.permit_exam_time = result.data.permit_exam_time;
+                        appInRaw.permit_testing_room = result.data.permit_testing_room;
+                    } else { 
+                        appInRaw.permit_exam_date = permitExamDateModalInput.value; 
+                        appInRaw.permit_exam_time = permitExamTimeModalInput.value; 
+                        appInRaw.permit_testing_room = permitTestingRoomModalInput.value;
+                        // appInRaw.permit_control_no remains as it was locally
+                    }
+                }
+            } else {
+                 showToast(result.message || 'Failed to save permit details.', 'error'); 
+            } 
+        } catch (error) { 
+            showToast('An error occurred while saving permit details: ' + error.toString(), 'error'); 
+            console.error("Error saving permit details:", error); 
+        }
     }
 
     if(saveAdminNotesModalBtn) saveAdminNotesModalBtn.addEventListener('click', saveAdminNotes);
@@ -1150,11 +1258,131 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedIds = getSelectedIds(); if (selectedIds.length === 0) { showToast(`No applications selected to ${actionStatus.toLowerCase()}.`, 'info'); return; }
         let successCount = 0, failCount = 0;
         for (const id of selectedIds) {
-            try { const formData = new FormData(); formData.append('status', actionStatus); const response = await fetch(`/admin/application/${id}/status`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) { successCount++; const appInRawData = rawApplicationsData.find(app => app.applicant_id == id); if (appInRawData) appInRawData.application_status = actionStatus; const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${id}"]`); if(rowToUpdate) updateStatusBadge(rowToUpdate, actionStatus); } else { failCount++; }} catch (error) { failCount++; console.error(`Error updating P2025${id} to ${actionStatus}:`, error); }
+            try { 
+                const formData = new FormData(); 
+                formData.append('status', actionStatus); 
+                const response = await fetch(`/admin/application/${id}/status`, { method: 'POST', body: formData }); 
+                const result = await response.json(); 
+                if (result.success) { 
+                    successCount++; 
+                    const appInRawData = rawApplicationsData.find(app => app.applicant_id == id); 
+                    if (appInRawData) {
+                        appInRawData.application_status = actionStatus;
+                        if (result.permit_control_no) { // If backend returned a PCN
+                            appInRawData.permit_control_no = result.permit_control_no;
+                        }
+                    }
+                    const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${id}"]`); 
+                    if(rowToUpdate) updateStatusBadge(rowToUpdate, actionStatus); 
+                } else { 
+                    failCount++; 
+                    showToast(`Failed P2025${String(id).padStart(4,'0')}: ${result.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) { 
+                failCount++; 
+                console.error(`Error updating P2025${id} to ${actionStatus}:`, error); 
+                showToast(`Error for P2025${String(id).padStart(4,'0')}: ${error.toString()}`, 'error');
+            }
         }
-        if (successCount > 0) showToast(`${successCount} application(s) set to ${actionStatus}.`, 'success'); if (failCount > 0) showToast(`${failCount} application(s) failed to update.`, 'error');
-        document.getElementById('closeBulkActions')?.click(); filterTableRows();
+        if (successCount > 0) showToast(`${successCount} application(s) set to ${actionStatus}.`, 'success'); 
+        if (failCount > 0) showToast(`${failCount} application(s) failed to update.`, 'error');
+        document.getElementById('closeBulkActions')?.click(); 
+        filterTableRows();
     }
+
+    // Bulk Set Permit Details Logic
+    if (bulkSetPermitDetailsBtn) {
+        bulkSetPermitDetailsBtn.addEventListener('click', () => {
+            const selectedIds = getSelectedIds();
+            if (selectedIds.length === 0) {
+                showToast('No applications selected.', 'info');
+                return;
+            }
+            bulkPermitExamDateInput.value = '';
+            bulkPermitExamTimeInput.value = '';
+            bulkPermitTestingRoomInput.value = '';
+            openModal(bulkPermitDetailsModal, bulkPermitDetailsModalBackdrop);
+        });
+    }
+
+    if (closeBulkPermitDetailsModalIcon) closeBulkPermitDetailsModalIcon.addEventListener('click', () => closeModal(bulkPermitDetailsModal, bulkPermitDetailsModalBackdrop));
+    if (bulkPermitDetailsModalBackdrop) bulkPermitDetailsModalBackdrop.addEventListener('click', (e) => { if(e.target === bulkPermitDetailsModalBackdrop) closeModal(bulkPermitDetailsModal, bulkPermitDetailsModalBackdrop);});
+    if (cancelBulkPermitDetailsBtn) cancelBulkPermitDetailsBtn.addEventListener('click', () => closeModal(bulkPermitDetailsModal, bulkPermitDetailsModalBackdrop));
+    
+    async function handleBulkSetPermitDetails() {
+        const selectedIds = getSelectedIds();
+        if (selectedIds.length === 0) {
+            showToast('No applications selected.', 'info');
+            closeModal(bulkPermitDetailsModal, bulkPermitDetailsModalBackdrop);
+            return;
+        }
+
+        const permitDetailsToSet = {
+            exam_date: bulkPermitExamDateInput.value,
+            exam_time: bulkPermitExamTimeInput.value,
+            testing_room: bulkPermitTestingRoomInput.value
+        };
+
+        if (!permitDetailsToSet.exam_date && !permitDetailsToSet.exam_time && !permitDetailsToSet.testing_room) {
+             showToast('Please fill in at least one permit detail (Date, Time, or Room).', 'error');
+             return;
+        }
+         if (!permitDetailsToSet.exam_date || !permitDetailsToSet.exam_time || !permitDetailsToSet.testing_room) {
+             showToast('Please fill in all permit details (Date, Time, Room) to apply them.', 'error');
+             return;
+        }
+
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const id of selectedIds) {
+            const formData = new FormData();
+            formData.append('permit_exam_date', permitDetailsToSet.exam_date);
+            formData.append('permit_exam_time', permitDetailsToSet.exam_time);
+            formData.append('permit_testing_room', permitDetailsToSet.testing_room);
+            // Permit Control No is NOT sent in bulk set, it's auto-generated on individual approval.
+            // Backend's admin_save_permit_details will handle this correctly (it won't try to update PCN)
+
+            try {
+                const response = await fetch(`/admin/application/${id}/permit-details`, {
+                    method: 'POST', 
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    successCount++;
+                    const appInRaw = rawApplicationsData.find(app => app.applicant_id == id);
+                    if (appInRaw && result.data) { // Ensure result.data exists
+                        // Update local data based on what was actually saved (returned by backend)
+                        // permit_control_no is included in result.data but it was not changed by this call.
+                        appInRaw.permit_control_no = result.data.permit_control_no; 
+                        appInRaw.permit_exam_date = result.data.permit_exam_date;
+                        appInRaw.permit_exam_time = result.data.permit_exam_time;
+                        appInRaw.permit_testing_room = result.data.permit_testing_room;
+                    }
+                } else {
+                    failCount++;
+                    showToast(`Failed for P2025${String(id).padStart(4,'0')}: ${result.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                failCount++;
+                showToast(`Error for P2025${String(id).padStart(4,'0')}: ${error.toString()}`, 'error');
+                console.error("Error bulk setting permit details for ID " + id, error);
+            }
+        }
+
+        if (successCount > 0) showToast(`${successCount} application(s) had permit details updated.`, 'success');
+        if (failCount > 0) showToast(`${failCount} application(s) failed to update permit details.`, 'error');
+
+        closeModal(bulkPermitDetailsModal, bulkPermitDetailsModalBackdrop);
+        document.getElementById('closeBulkActions')?.click(); 
+    }
+
+    if (saveBulkPermitDetailsBtn) {
+        saveBulkPermitDetailsBtn.addEventListener('click', handleBulkSetPermitDetails);
+    }
+
 
     const mainPageTitleElement = document.getElementById('mainPageTitle');
     const searchInput = document.getElementById('searchInput');
@@ -1190,7 +1418,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const now = new Date();
         for (let i = 0; i < numMonths; i++) {
             const dateForLabel = new Date(now.getFullYear(), now.getMonth() - (numMonths - 1 - i), 1);
-            trends.labels.push(dateForLabel.toLocaleString('default', { month: 'long' })); // Display full month name
+            trends.labels.push(dateForLabel.toLocaleString('default', { month: 'long' })); 
 
             const targetYear = dateForLabel.getFullYear();
             const targetMonth = dateForLabel.getMonth();
@@ -1231,23 +1459,34 @@ document.addEventListener('DOMContentLoaded', function() {
             { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } }
         ].filter(item => item.value > 0) }] }); }
     }
-    function updateGlobalStatsOnStatusChange() {
+    function updateGlobalStatsOnStatusChange() { // This is now the primary stats updater
         currentJsStats.pending = 0; currentJsStats.in_review = 0; currentJsStats.approved = 0; currentJsStats.rejected = 0;
         currentJsStats.passed = 0; currentJsStats.failed = 0;
-        (rawApplicationsData || []).forEach(app => { const status = app.application_status; if (status === 'Pending') currentJsStats.pending++; else if (status === 'In Review') currentJsStats.in_review++; else if (status === 'Approved') currentJsStats.approved++; else if (status === 'Rejected') currentJsStats.rejected++; else if (status === 'Passed') currentJsStats.passed++; else if (status === 'Failed') currentJsStats.failed++; });
-        currentJsStats.total_applications = (rawApplicationsData || []).length; updateGlobalStatsDisplay();
+        (rawApplicationsData || []).forEach(app => { 
+            const status = app.application_status; 
+            if (status === 'Pending') currentJsStats.pending++; 
+            else if (status === 'In Review') currentJsStats.in_review++; 
+            else if (status === 'Approved') currentJsStats.approved++; 
+            else if (status === 'Rejected') currentJsStats.rejected++; 
+            else if (status === 'Passed') currentJsStats.passed++; 
+            else if (status === 'Failed') currentJsStats.failed++; 
+        });
+        currentJsStats.total_applications = (rawApplicationsData || []).length; 
+        updateGlobalStatsDisplay();
     }
-    function updateGlobalStatsOnDelete(count) { updateGlobalStatsOnStatusChange(); }
+    function updateGlobalStatsOnDelete(count) { 
+        // The actual removal from rawApplicationsData happens in executeDelete
+        updateGlobalStatsOnStatusChange(); // Recalculate all stats from the modified rawApplicationsData
+    }
 
 
     function initializeSidebarState() {
         if (!sidebar || !mainContentArea) return;
-        // On sm screens and up, sidebar is visible and main content has margin
-        if (window.innerWidth >= 640) { // 640px is Tailwind's 'sm' breakpoint
+        if (window.innerWidth >= 640) { 
             sidebar.classList.remove('-translate-x-full');
             sidebar.classList.add('translate-x-0');
             mainContentArea.classList.add('sm:ml-64');
-        } else { // On smaller screens, sidebar is hidden, main content full width
+        } else { 
             sidebar.classList.remove('translate-x-0');
             sidebar.classList.add('-translate-x-full');
             mainContentArea.classList.remove('sm:ml-64');
@@ -1259,9 +1498,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!sidebar) return;
             sidebar.classList.remove('-translate-x-full');
             sidebar.classList.add('translate-x-0');
-            if (window.innerWidth >= 640) { // Desktop
+            if (window.innerWidth >= 640) { 
                 mainContentArea.classList.add('sm:ml-64');
-            } else { // Mobile
+            } else { 
                 sidebarBackdrop.classList.remove('hidden');
             }
             setTimeout(() => { if (dashboardContentDiv.style.display !== 'none') { window.applicationChartInstance?.resize(); window.statusChartInstance?.resize();}}, 350);
@@ -1270,9 +1509,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!sidebar) return;
             sidebar.classList.remove('translate-x-0');
             sidebar.classList.add('-translate-x-full');
-            if (window.innerWidth >= 640) { // Desktop
+            if (window.innerWidth >= 640) { 
                  mainContentArea.classList.remove('sm:ml-64');
-            } else { // Mobile
+            } else { 
                 sidebarBackdrop.classList.add('hidden');
             }
             setTimeout(() => { if (dashboardContentDiv.style.display !== 'none') { window.applicationChartInstance?.resize(); window.statusChartInstance?.resize();}}, 350);
@@ -1280,25 +1519,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
         sidebarToggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (sidebar.classList.contains('-translate-x-full')) { // If sidebar is hidden
+            if (sidebar.classList.contains('-translate-x-full')) { 
                 openSidebar();
-            } else { // If sidebar is visible
+            } else { 
                 closeSidebar();
             }
         });
-        sidebarBackdrop.addEventListener('click', closeSidebar); // Only relevant for mobile
+        sidebarBackdrop.addEventListener('click', closeSidebar); 
 
         const mainSidebarLinks = [
             sidebarDashboardMenuLink,
             sidebarApplicationsMenuLink,
             sidebarAddApplicationMenuLink,
             ...Object.values(sidebarFilterLinks).filter(link => link),
-            sidebarBackToHomeLink // Added the "Back to Home" link here
-        ].filter(link => link); // Ensure all links are valid elements
+            sidebarBackToHomeLink 
+        ].filter(link => link); 
 
         mainSidebarLinks.forEach(link => {
             link.addEventListener('click', () => {
-                if (window.innerWidth < 640 && sidebar.classList.contains('translate-x-0')) { // If on mobile and sidebar is open
+                if (window.innerWidth < 640 && sidebar.classList.contains('translate-x-0')) { 
                     closeSidebar();
                 }
             });
@@ -1500,7 +1739,6 @@ document.addEventListener('DOMContentLoaded', function() {
         printReportBtn.addEventListener('click', generateAndPrintReport);
     }
 
-    // Admin Add Application Form Photo Preview
     if (adminUploadPhotoBtn) {
         adminUploadPhotoBtn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -1533,7 +1771,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    // Admin Add Application Form: File input feedback (excluding photo)
     const adminFileInputs = addApplicationContentDiv.querySelectorAll('input[type="file"]:not(#adminPhotoInput)');
     adminFileInputs.forEach(input => {
         input.addEventListener('change', function(e) {
@@ -1561,7 +1798,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 
-    // Admin Add Application Form Submission
     if (adminAddApplicationForm) {
         adminAddApplicationForm.addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -1579,13 +1815,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
                 if (result.success) {
                     showToast(result.message, 'success');
-                    adminAddApplicationForm.reset(); // Clear the form
+                    adminAddApplicationForm.reset(); 
                     if(adminPhotoPreview) adminPhotoPreview.src = "";
                     if(adminPhotoPreview) adminPhotoPreview.classList.add("hidden");
                     if(adminPhotoPlaceholder) adminPhotoPlaceholder.classList.remove("hidden");
                     
+                    const newApp = result.application_data; 
+                    if (newApp) {
+                        // Convert ISO date strings from backend to Date objects if necessary for consistency
+                        // For simplicity, we assume rawApplicationsData handles string dates fine for display.
+                        rawApplicationsData.unshift(newApp); 
+                    }
                     updateGlobalStatsOnStatusChange(); 
                     showView('applications', 'All'); 
+                    filterTableRows(); 
                 } else {
                     showToast(result.message || 'Failed to add application.', 'error');
                 }
@@ -1615,24 +1858,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const mainContentArea = document.getElementById('mainContentArea'); // Ensure this ID exists on your main content div
 
-    // Toggle sidebar open/close on mobile
     sidebarToggle.addEventListener('click', () => {
         sidebar.classList.toggle('-translate-x-full');
-        sidebarBackdrop.classList.toggle('hidden');
+        if (window.innerWidth < 640) { // sm breakpoint
+             sidebarBackdrop.classList.toggle('hidden');
+        }
     });
 
-    // Hide sidebar if clicked outside (on backdrop)
     sidebarBackdrop.addEventListener('click', () => {
         sidebar.classList.add('-translate-x-full');
         sidebarBackdrop.classList.add('hidden');
     });
 
-    // Optional: hide sidebar when window is resized above mobile size
     window.addEventListener('resize', () => {
-        if (window.innerWidth >= 640) {
-            sidebar.classList.remove('-translate-x-full');
-            sidebarBackdrop.classList.add('hidden');
+        if (window.innerWidth >= 640) { 
+            sidebar.classList.remove('-translate-x-full'); 
+            if(mainContentArea) mainContentArea.classList.add('sm:ml-64'); 
+            sidebarBackdrop.classList.add('hidden'); 
+        } else {
+             // If sidebar was open and screen resized to mobile, it might need explicit hiding
+            if (!sidebar.classList.contains('-translate-x-full')) {
+                 // Optionally hide sidebar on resize to mobile if it was open, or leave it
+                 // For now, we'll let it stay as it was, user can close with backdrop/toggle
+            }
+             if(mainContentArea) mainContentArea.classList.remove('sm:ml-64');
         }
     });
 });

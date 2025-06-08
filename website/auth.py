@@ -1,4 +1,3 @@
-
 from flask import Blueprint, render_template, request, flash, redirect, session, url_for, jsonify, current_app, Response, send_file
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,8 +10,9 @@ import secrets
 from flask_mail import Message
 import os
 import io
-import secrets # for OTP generation
-from datetime import timedelta
+# Ensure secrets is imported if not already (it was duplicated in your original file)
+# import secrets # for OTP generation
+# from datetime import timedelta # already imported
 
 # ----------------- BLUEPRINT SETUP -----------------
 auth = Blueprint('auth', __name__)
@@ -20,21 +20,21 @@ auth = Blueprint('auth', __name__)
 # ----------------- DATABASE CONNECTION -----------------
 def get_db_connection():
     try:
-        print("--- Attempting to Read DB Environment Variables ---")
+        # print("--- Attempting to Read DB Environment Variables ---")
         env_db_host_from_os = os.getenv('DB_HOST')
         env_db_user_from_os = os.getenv('DB_USER')
         # For logging actual password existence, not value
-        env_db_password_exists_from_os = "Yes" if os.getenv('DB_PASSWORD') else "No"
+        # env_db_password_exists_from_os = "Yes" if os.getenv('DB_PASSWORD') else "No"
         env_db_password_from_os = os.getenv('DB_PASSWORD') # Actual password value from env
         env_db_name_from_os = os.getenv('DB_NAME')
         env_db_port_str_from_os = os.getenv('DB_PORT') # Port from env is a string
 
-        print(f"Raw os.getenv('DB_HOST'): {env_db_host_from_os}")
-        print(f"Raw os.getenv('DB_USER'): {env_db_user_from_os}")
-        print(f"Raw os.getenv('DB_PASSWORD') exists: {env_db_password_exists_from_os}")
-        print(f"Raw os.getenv('DB_NAME'): {env_db_name_from_os}")
-        print(f"Raw os.getenv('DB_PORT'): {env_db_port_str_from_os}")
-        print("--- End of Reading DB Environment Variables ---")
+        # print(f"Raw os.getenv('DB_HOST'): {env_db_host_from_os}")
+        # print(f"Raw os.getenv('DB_USER'): {env_db_user_from_os}")
+        # print(f"Raw os.getenv('DB_PASSWORD') exists: {env_db_password_exists_from_os}")
+        # print(f"Raw os.getenv('DB_NAME'): {env_db_name_from_os}")
+        # print(f"Raw os.getenv('DB_PORT'): {env_db_port_str_from_os}")
+        # print("--- End of Reading DB Environment Variables ---")
 
         # Railway specific defaults (derived from typical Railway setups and user-provided connection string)
         RAILWAY_DEFAULT_HOST = 'crossover.proxy.rlwy.net'
@@ -43,37 +43,30 @@ def get_db_connection():
         RAILWAY_DEFAULT_DB_NAME = "railway" # As per user's connection string example
         RAILWAY_DEFAULT_PORT_STR = '36284' # As per user's connection string example
         
-        # Determine effective DB host
         db_host = env_db_host_from_os
         if env_db_host_from_os and env_db_host_from_os.lower() == 'localhost':
-            print(f"Warning: DB_HOST from environment is '{env_db_host_from_os}'. This is often incorrect for a remote Railway database. "
-                  f"Overriding to use the default Railway proxy host: '{RAILWAY_DEFAULT_HOST}'.")
+            # print(f"Warning: DB_HOST from environment is '{env_db_host_from_os}'. This is often incorrect for a remote Railway database. "
+                #   f"Overriding to use the default Railway proxy host: '{RAILWAY_DEFAULT_HOST}'.")
             db_host = RAILWAY_DEFAULT_HOST
         elif not env_db_host_from_os:
-            print(f"DB_HOST not set in environment. Using default Railway proxy host: '{RAILWAY_DEFAULT_HOST}'.")
+            # print(f"DB_HOST not set in environment. Using default Railway proxy host: '{RAILWAY_DEFAULT_HOST}'.")
             db_host = RAILWAY_DEFAULT_HOST
-        # If env_db_host_from_os is set and is not 'localhost', it will be used as db_host.
 
-        # Determine other connection parameters: use environment variable if set, otherwise Railway default.
         db_user = env_db_user_from_os or RAILWAY_DEFAULT_USER
         db_password = env_db_password_from_os or RAILWAY_DEFAULT_PASSWORD
         db_name = env_db_name_from_os or RAILWAY_DEFAULT_DB_NAME
         
-        # Determine effective port: use port string from environment if set, else Railway default port string.
-        # Then convert to int, with a final fallback to a known valid integer (Railway's default port).
         effective_port_str = env_db_port_str_from_os or RAILWAY_DEFAULT_PORT_STR
         
-        db_port = int(RAILWAY_DEFAULT_PORT_STR) # Initialize with a known valid integer from Railway default
+        db_port = int(RAILWAY_DEFAULT_PORT_STR) 
         try:
             db_port = int(effective_port_str)
         except (ValueError, TypeError):
-            # This message is critical if effective_port_str (which could be from env) is bad.
-            # If it was already using RAILWAY_DEFAULT_PORT_STR and failed, that's a bigger issue (e.g. misconfigured default).
-            print(f"CRITICAL: The determined DB_PORT string ('{effective_port_str}') is not a valid integer. "
-                  f"Falling back to the default Railway port number: {RAILWAY_DEFAULT_PORT_STR}.")
-            # db_port is already set to int(RAILWAY_DEFAULT_PORT_STR), so no change needed here for the fallback.
+            # print(f"CRITICAL: The determined DB_PORT string ('{effective_port_str}') is not a valid integer. "
+                #   f"Falling back to the default Railway port number: {RAILWAY_DEFAULT_PORT_STR}.")
+            pass # db_port is already set
         
-        print(f"Attempting DB connection with: Host='{db_host}', Port={db_port}, User='{db_user}', Database='{db_name}'")
+        # print(f"Attempting DB connection with: Host='{db_host}', Port={db_port}, User='{db_user}', Database='{db_name}'")
 
         conn = mysql.connector.connect(
             host=db_host,
@@ -82,7 +75,7 @@ def get_db_connection():
             database=db_name,
             port=db_port
         )
-        print("Database connection successful.")
+        # print("Database connection successful.")
         return conn
     except mysql.connector.Error as err:
         print(f"Database connection error: {err}")
@@ -175,7 +168,7 @@ def _send_email(subject, recipients, html_body, sender_name_override=None):
     try:
         msg = Message(subject=subject, sender=final_sender, recipients=recipients, html=html_body)
         mail_handler.send(msg)
-        print(f"Email '{subject}' successfully dispatched to {recipients}.")
+        # print(f"Email '{subject}' successfully dispatched to {recipients}.") # Reduced verbosity
         return True
     except Exception as e_mail_send:
         print(f"CRITICAL: Failed to send email '{subject}' to {recipients}. Error: {e_mail_send}")
@@ -215,14 +208,13 @@ def send_application_status_email(applicant_email, applicant_name, new_status, a
         template_name, subject_base = exam_status_map[exam_status]
         subject = f"{subject_base} - {sender_name_from_config}"
     else:
-        print(f"Email not sent: Status '{new_status}' or exam_status '{exam_status}' no primary notification for {app_id_formatted}.")
+        # print(f"Email not sent: Status '{new_status}' or exam_status '{exam_status}' no primary notification for {app_id_formatted}.")
         return False
 
     try:
         html_body = render_template(template_name, **email_context)
     except Exception as e_template:
         print(f"CRITICAL: Email template '{template_name}' not found or error rendering. Error: {e_template}")
-        # Basic fallback (consider enhancing if templates are critical)
         html_body = f"<p>Dear {applicant_name},</p><p>There is an update on your application {app_id_formatted}. Status: {new_status}. Exam: {exam_status or 'N/A'}.</p>"
 
     return _send_email(subject, [applicant_email], html_body, sender_name_override=sender_name_from_config)
@@ -283,36 +275,81 @@ def admin_save_application_notes(applicant_id):
 @auth.route('/admin/application/<int:applicant_id>/permit-details', methods=['POST'])
 def admin_save_permit_details(applicant_id):
     if not session.get('admin_logged_in'): return jsonify({"success": False, "message": "Unauthorized"}), 401
-    data = {key: request.form.get(key) for key in ['permit_control_no', 'permit_exam_date', 'permit_exam_time', 'permit_testing_room']}
-    permit_exam_date = None
-    if data['permit_exam_date'] and data['permit_exam_date'].strip():
-        try: permit_exam_date = datetime.datetime.strptime(data['permit_exam_date'], '%Y-%m-%d').date()
-        except ValueError: return jsonify({"success": False, "message": "Invalid date format. Use YYYY-MM-DD."}), 400
     
-    params = (
-        data['permit_control_no'] or None, permit_exam_date,
-        data['permit_exam_time'] or None, data['permit_testing_room'] or None, applicant_id
-    )
-    conn = None; cursor = None
+    # permit_control_no is NOT taken from form for update here. It's auto-generated on approval.
+    form_permit_exam_date = request.form.get('permit_exam_date')
+    form_permit_exam_time = request.form.get('permit_exam_time')
+    form_permit_testing_room = request.form.get('permit_testing_room')
+
+    conn = None
+    read_cursor = None
+    update_cursor = None
+    
     try:
         conn = get_db_connection()
         if not conn: return jsonify({"success": False, "message": "Database connection error"}), 500
-        cursor = conn.cursor()
-        cursor.execute("UPDATE applicants SET permit_control_no=%s, permit_exam_date=%s, permit_exam_time=%s, permit_testing_room=%s, last_updated_at=NOW() WHERE applicant_id=%s", params)
+        
+        read_cursor = conn.cursor(dictionary=True)
+        read_cursor.execute("SELECT applicant_id FROM applicants WHERE applicant_id = %s", (applicant_id,))
+        application = read_cursor.fetchone()
+
+        if not application:
+            return jsonify({"success": False, "message": "Application not found."}), 404
+
+        permit_exam_date_to_db = None
+        if form_permit_exam_date and form_permit_exam_date.strip():
+            try: 
+                permit_exam_date_to_db = datetime.datetime.strptime(form_permit_exam_date, '%Y-%m-%d').date()
+            except ValueError: 
+                return jsonify({"success": False, "message": "Invalid date format for exam date. Use YYYY-MM-DD."}), 400
+        
+        update_params = (
+            permit_exam_date_to_db,
+            form_permit_exam_time.strip() if form_permit_exam_time else None, 
+            form_permit_testing_room.strip() if form_permit_testing_room else None, 
+            applicant_id
+        )
+        
+        update_cursor = conn.cursor()
+        # Note: permit_control_no is NOT updated here.
+        update_cursor.execute("""
+            UPDATE applicants 
+            SET permit_exam_date=%s, permit_exam_time=%s, permit_testing_room=%s, last_updated_at=NOW() 
+            WHERE applicant_id=%s
+        """, update_params)
         conn.commit()
-        if cursor.rowcount > 0: return jsonify({"success": True, "message": f"Permit details for P2025{applicant_id:04d} saved."})
-        cursor.execute("SELECT COUNT(*) FROM applicants WHERE applicant_id = %s", (applicant_id,))
-        if cursor.fetchone()[0] > 0: return jsonify({"success": True, "message": "Permit details saved (no change)."})
-        return jsonify({"success": False, "message": "Application not found."}), 404
+        
+        if update_cursor.rowcount > 0: 
+            # Fetch the current permit_control_no to include in response data, as it's not changed here
+            read_cursor.execute("SELECT permit_control_no FROM applicants WHERE applicant_id = %s", (applicant_id,))
+            current_pcn_data = read_cursor.fetchone()
+            current_pcn = current_pcn_data['permit_control_no'] if current_pcn_data else None
+
+            saved_data = {
+                "permit_control_no": current_pcn, # Display existing PCN
+                "permit_exam_date": str(permit_exam_date_to_db) if permit_exam_date_to_db else None,
+                "permit_exam_time": form_permit_exam_time.strip() if form_permit_exam_time else None,
+                "permit_testing_room": form_permit_testing_room.strip() if form_permit_testing_room else None
+            }
+            return jsonify({"success": True, "message": f"Permit details (excluding control no.) for P2025{applicant_id:04d} saved.", "data": saved_data })
+
+        read_cursor.execute("SELECT COUNT(*) as count FROM applicants WHERE applicant_id = %s", (applicant_id,))
+        check_app_exists = read_cursor.fetchone()
+        if check_app_exists and check_app_exists['count'] > 0:
+             return jsonify({"success": True, "message": "Permit details saved (no change detected)."})
+        
+        return jsonify({"success": False, "message": "Application not found during update attempt."}), 404
     except Exception as e:
         print(f"Error saving permit details for {applicant_id}: {e}"); traceback.print_exc()
         return jsonify({"success": False, "message": "Server error saving permit details."}), 500
     finally:
-        if cursor: cursor.close()
+        if read_cursor: read_cursor.close()
+        if update_cursor: update_cursor.close()
         if conn and conn.is_connected(): conn.close()
 
+
 @auth.route('/admin/application/<int:applicant_id>/control-number', methods=['POST'])
-def admin_save_control_number(applicant_id):
+def admin_save_control_number(applicant_id): # This is likely for the main application control number, not permit.
     if not session.get('admin_logged_in'): return jsonify({"success": False, "message": "Unauthorized"}), 401
     control_number = request.form.get('control_number')
     control_number = control_number.strip() if control_number and control_number.strip() else None
@@ -375,7 +412,6 @@ def admin_add_application_by_admin_action():
         applicant_email = form_data.get('email_address')
         if not applicant_email: return jsonify({"success": False, "message": "Email is required."}), 400
 
-        # Student User Account Handling
         student_user_cursor = conn.cursor(dictionary=True)
         student_user_cursor.execute("SELECT id FROM student_users WHERE email = %s", (applicant_email,))
         existing_user = student_user_cursor.fetchone()
@@ -401,7 +437,6 @@ def admin_add_application_by_admin_action():
             finally:
                 if insert_user_curs: insert_user_curs.close()
         
-        # File Processing
         files_data = {}
         file_fields = {
             'photo': ('2x2 Photo', MAX_PHOTO_SIZE_MB), 
@@ -416,13 +451,12 @@ def admin_add_application_by_admin_action():
                 if err: return jsonify({"success": False, "message": f"{desc} Error: {err}"}), 400
                 files_data[form_key] = {'data': data, 'filename': fname, 'mimetype': mtype}
 
-        # Insert into applicants table
         db_cols = [
             'student_user_id', 'program_choice', 'last_name', 'first_name', 'middle_name', 'date_of_birth', 'place_of_birth',
             'sex', 'civil_status', 'religion', 'citizenship', 'mobile_number', 'email_address',
             'permanent_address_street_barangay', 'permanent_address_city_municipality',
             'permanent_address_province', 'permanent_address_postal_code',
-            'cultural_minority_group', 'physical_disability', 'control_number', 
+            'cultural_minority_group', 'physical_disability', 'control_number', 'permit_control_no', # Added permit_control_no
             'date_of_application', 'academic_year', 'average_family_income',
             'father_name', 'father_occupation', 'father_company_address', 'father_contact_number',
             'mother_maiden_name', 'mother_occupation', 'mother_company_address', 'mother_contact_number',
@@ -437,14 +471,12 @@ def admin_add_application_by_admin_action():
             'application_status', 'submitted_at', 'last_updated_at', 'exam_status'
         ]
         
-        insert_vals = [student_user_id] + [form_data.get(col_name) for col_name in field_list if col_name in db_cols and col_name != 'student_user_id'] # Simplified based on `field_list`
-        
-        # Reconstruct insert_vals more carefully to match db_cols order
         final_insert_vals = []
-        now = datetime.datetime.now()
+        now_dt = datetime.datetime.now()
         for col in db_cols:
             if col == 'student_user_id': final_insert_vals.append(student_user_id)
-            elif col == 'control_number': final_insert_vals.append(None)
+            elif col == 'control_number': final_insert_vals.append(None) 
+            elif col == 'permit_control_no': final_insert_vals.append(None) # Initially NULL
             elif col == 'photo': final_insert_vals.append(files_data.get('photo', {}).get('data'))
             elif col == 'shs_diploma_file': final_insert_vals.append(files_data.get('shs_diploma_file_input', {}).get('data'))
             elif col == 'shs_diploma_filename': final_insert_vals.append(files_data.get('shs_diploma_file_input', {}).get('filename'))
@@ -456,11 +488,11 @@ def admin_add_application_by_admin_action():
             elif col == 'birth_certificate_filename': final_insert_vals.append(files_data.get('birth_certificate_file_input', {}).get('filename'))
             elif col == 'birth_certificate_mimetype': final_insert_vals.append(files_data.get('birth_certificate_file_input', {}).get('mimetype'))
             elif col == 'application_status': final_insert_vals.append('Pending')
-            elif col == 'submitted_at': final_insert_vals.append(now)
-            elif col == 'last_updated_at': final_insert_vals.append(now)
+            elif col == 'submitted_at': final_insert_vals.append(now_dt)
+            elif col == 'last_updated_at': final_insert_vals.append(now_dt)
             elif col == 'exam_status': final_insert_vals.append(None)
             elif col in form_data: final_insert_vals.append(form_data[col])
-            else: final_insert_vals.append(None) # Should not happen if db_cols is exhaustive
+            else: final_insert_vals.append(None)
 
         if len(final_insert_vals) != len(db_cols):
              return jsonify({"success": False, "message": f"Internal Error: Column count mismatch ({len(final_insert_vals)} vs {len(db_cols)})."}), 500
@@ -468,6 +500,7 @@ def admin_add_application_by_admin_action():
         cursor = conn.cursor()
         query = f"INSERT INTO applicants (`{ '`, `'.join(db_cols) }`) VALUES ({ ', '.join(['%s']*len(db_cols)) })"
         cursor.execute(query, tuple(final_insert_vals))
+        new_app_id = cursor.lastrowid
         conn.commit()
         
         email_notif_msg = ""
@@ -475,8 +508,20 @@ def admin_add_application_by_admin_action():
             full_name = f"{form_data.get('first_name','')} {form_data.get('last_name','_')}".strip()
             email_sent = send_admin_created_account_email(applicant_email, full_name, temp_pass)
             email_notif_msg = " Account credentials email sent." if email_sent else " Failed to send credentials email."
+
+        new_app_data_cursor = conn.cursor(dictionary=True)
+        new_app_data_cursor.execute("SELECT a.*, su.email as student_account_email FROM applicants a LEFT JOIN student_users su ON a.student_user_id = su.id WHERE a.applicant_id = %s", (new_app_id,))
+        new_app_data_for_frontend = new_app_data_cursor.fetchone()
+        new_app_data_cursor.close()
+
+        if new_app_data_for_frontend:
+            for key_fe, value_fe in new_app_data_for_frontend.items():
+                if isinstance(value_fe, (datetime.datetime, datetime.date)):
+                    new_app_data_for_frontend[key_fe] = value_fe.isoformat()
+                elif isinstance(value_fe, bytes): 
+                    new_app_data_for_frontend[key_fe] = f"Binary Data ({len(value_fe)} bytes)"
         
-        return jsonify({"success": True, "message": f"Application added. {acc_msg}{email_notif_msg}"})
+        return jsonify({"success": True, "message": f"Application P2025{new_app_id:04d} added. {acc_msg}{email_notif_msg}", "application_data": new_app_data_for_frontend})
 
     except mysql.connector.Error as err:
         if conn and conn.is_connected(): conn.rollback()
@@ -529,7 +574,6 @@ def admin_print_application_form(applicant_id):
         if not app_data: flash("Application not found.", "danger"); return redirect(url_for('auth.admin_dashboard'))
 
         application = app_data.copy()
-        # Decode byte strings and format dates/photo
         string_fields = [
             'program_choice', 'last_name', 'first_name', 'middle_name', 'place_of_birth', 'sex', 'civil_status', 
             'religion', 'citizenship', 'mobile_number', 'email_address', 'permanent_address_street_barangay', 
@@ -548,7 +592,7 @@ def admin_print_application_form(applicant_id):
                 try: application[key] = application[key].decode('utf-8')
                 except UnicodeDecodeError: application[key] = f"Undecodable ({len(application[key])} bytes)"
             elif key in application and application[key] is not None and not isinstance(application[key], (str, int, float, datetime.date, datetime.datetime)):
-                 application[key] = str(application[key]) # For enums or other non-standard types
+                 application[key] = str(application[key])
 
         if application.get('photo') and isinstance(application['photo'], bytes):
             fmt = "jpeg"
@@ -565,7 +609,6 @@ def admin_print_application_form(applicant_id):
             elif val: application[field + '_formatted'] = str(val)
             else: application[field + '_formatted'] = 'N/A'
         
-        # Ensure all expected fields for template have a default
         all_expected_for_template = string_fields + date_fields_display + datetime_fields_display
         for key in all_expected_for_template:
             application.setdefault(key, '')
@@ -590,14 +633,14 @@ def create_student_account_page():
         if len(password) < 8: flash('Password must be at least 8 characters long.', 'danger'); return redirect(url_for('auth.create_student_account_page'))
         
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        otp_code = f"{secrets.randbelow(1000000):06d}" # Generate 6-digit OTP
-        otp_expiry = datetime.datetime.now() + timedelta(minutes=10) # OTP valid for 10 minutes
+        otp_code = f"{secrets.randbelow(1000000):06d}" 
+        otp_expiry = datetime.datetime.now() + timedelta(minutes=10)
 
         conn = None; cursor = None
         try:
             conn = get_db_connection()
             if not conn: flash("Database error.", "danger"); return redirect(url_for('auth.create_student_account_page'))
-            cursor = conn.cursor(dictionary=True) # Use dictionary cursor
+            cursor = conn.cursor(dictionary=True) 
             cursor.execute("SELECT email, is_verified FROM student_users WHERE email = %s", (email,))
             existing_user = cursor.fetchone()
 
@@ -606,7 +649,6 @@ def create_student_account_page():
                     flash('Email already registered and verified. Please log in.', 'danger')
                     return redirect(url_for('auth.student_login_page'))
                 else:
-                    # User exists but not verified, update OTP, password and resend
                     cursor.execute("""
                         UPDATE student_users 
                         SET password = %s, otp_code = %s, otp_expiry = %s, updated_at = NOW()
@@ -621,7 +663,6 @@ def create_student_account_page():
                     session['pending_verification_email'] = email 
                     return redirect(url_for('auth.verify_otp_page'))
             
-            # New user, insert with OTP details
             cursor.execute("""
                 INSERT INTO student_users 
                 (email, password, created_at, updated_at, otp_code, otp_expiry, is_verified) 
@@ -656,21 +697,19 @@ def create_student_account_page():
 @auth.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp_page():
     email_to_verify = session.get('pending_verification_email')
-    if not email_to_verify: # If email not in session, try getting from form (e.g. if user bookmarked or navigated directly)
-        email_to_verify = request.form.get('email_for_verification') # Check form if it's a POST from verify_otp itself
-        if not email_to_verify and request.args.get('email'): # Check query param for GET requests
+    if not email_to_verify: 
+        email_to_verify = request.form.get('email_for_verification') 
+        if not email_to_verify and request.args.get('email'): 
             email_to_verify = request.args.get('email')
-            session['pending_verification_email'] = email_to_verify # Re-set session
+            session['pending_verification_email'] = email_to_verify 
         elif not email_to_verify :
             flash("No email found for verification. Please start by creating an account or trying to log in.", "warning")
             return redirect(url_for('auth.create_student_account_page'))
 
-
     if request.method == 'POST':
         otp_entered = request.form.get('otp_code')
-        # Ensure email_to_verify is consistently used, preferring session then form
         email_from_form = request.form.get('email_for_verification')
-        if email_from_form and email_from_form != email_to_verify: # Should ideally not happen if session is solid
+        if email_from_form and email_from_form != email_to_verify: 
             email_to_verify = email_from_form
             session['pending_verification_email'] = email_to_verify
 
@@ -700,7 +739,7 @@ def verify_otp_page():
                 return redirect(url_for('auth.student_login_page'))
 
             db_otp_expiry = user['otp_expiry']
-            if isinstance(db_otp_expiry, str): # Ensure it's datetime
+            if isinstance(db_otp_expiry, str): 
                 try: db_otp_expiry = datetime.datetime.fromisoformat(db_otp_expiry)
                 except ValueError:
                     flash("OTP expiry data error. Contact support.", "danger")
@@ -709,7 +748,6 @@ def verify_otp_page():
             if not user['otp_code'] or not db_otp_expiry :
                 flash("OTP not set or issue with expiry for this account. Try resending OTP.", "danger")
                 return render_template('verify_otp.html', email=email_to_verify, show_resend=True)
-
 
             if db_otp_expiry < datetime.datetime.now():
                 flash("OTP has expired. Please request a new one.", "danger")
@@ -787,7 +825,7 @@ def resend_otp_action():
             flash("Failed to send new OTP. Please try again later or contact support.", "danger")
         
         session['pending_verification_email'] = email_to_resend 
-        return redirect(url_for('auth.verify_otp_page')) # Redirect without email in query, relies on session
+        return redirect(url_for('auth.verify_otp_page')) 
 
     except Exception as e:
         flash(f"Error resending OTP: {e}", "danger")
@@ -885,9 +923,8 @@ def reset_password_page(token):
         if not user: flash("Invalid token.", "danger"); return redirect(url_for('auth.forgot_password_request_page'))
         
         expiry_time = user.get('reset_token_expiry')
-        # Ensure expiry_time is datetime object before comparison
-        if isinstance(expiry_time, str): # Or other non-datetime types from DB
-            try: expiry_time = datetime.datetime.fromisoformat(expiry_time) # Or appropriate parsing
+        if isinstance(expiry_time, str): 
+            try: expiry_time = datetime.datetime.fromisoformat(expiry_time) 
             except ValueError: 
                 flash("Token expiry format error.", "danger"); return redirect(url_for('auth.forgot_password_request_page'))
 
@@ -930,7 +967,6 @@ def submit_application():
     MAX_PHOTO_SIZE_MB, MAX_DOC_SIZE_MB = 5, 5
 
     try:
-        # File uploads first
         files_to_upload = {
             'photo': ('2x2 Photo', MAX_PHOTO_SIZE_MB, True), 
             'shs_diploma_file_input': ('SHS Diploma', MAX_DOC_SIZE_MB, True),
@@ -945,7 +981,6 @@ def submit_application():
             if is_required and not data: flash(f"⚠️ {desc} is required.", "danger"); return redirect(url_for('views.new_student'))
             if data: processed_files[key] = {'data': data, 'filename': fname, 'mimetype': mtype}
 
-        # Form fields
         field_list = [
             'program_choice', 'last_name', 'first_name', 'middle_name', 'date_of_birth', 'place_of_birth',
             'sex', 'civil_status', 'religion', 'citizenship', 'mobile_number', 'email_address',
@@ -982,7 +1017,8 @@ def submit_application():
             'student_user_id', 'program_choice', 'last_name', 'first_name', 'middle_name', 'date_of_birth', 'place_of_birth', 'sex', 'civil_status', 
             'religion', 'citizenship', 'mobile_number', 'email_address', 'permanent_address_street_barangay', 
             'permanent_address_city_municipality', 'permanent_address_province', 'permanent_address_postal_code', 
-            'cultural_minority_group', 'physical_disability', 'control_number', 'date_of_application', 'academic_year', 
+            'cultural_minority_group', 'physical_disability', 'control_number', 'permit_control_no', # Added permit_control_no
+            'date_of_application', 'academic_year', 
             'average_family_income', 'father_name', 'father_occupation', 'father_company_address', 'father_contact_number', 
             'mother_maiden_name', 'mother_occupation', 'mother_company_address', 'mother_contact_number', 'guardian_name', 
             'guardian_occupation', 'guardian_company_address', 'guardian_contact_number', 'senior_high_school', 
@@ -993,7 +1029,7 @@ def submit_application():
             'shs_card_mimetype', 'birth_certificate_file', 'birth_certificate_filename', 'birth_certificate_mimetype', 
             'application_status', 'submitted_at', 'last_updated_at', 'exam_status'
         ]
-        now = datetime.datetime.now()
+        now_dt = datetime.datetime.now()
         app_insert_vals = [
             student_user_id, form_data.get('program_choice'), form_data.get('last_name'), form_data.get('first_name'), form_data.get('middle_name'),
             form_data.get('date_of_birth'), form_data.get('place_of_birth'), form_data.get('sex'), form_data.get('civil_status'),
@@ -1001,6 +1037,7 @@ def submit_application():
             form_data.get('permanent_address_street_barangay'), form_data.get('permanent_address_city_municipality'),
             form_data.get('permanent_address_province'), form_data.get('permanent_address_postal_code'),
             form_data.get('cultural_minority_group'), form_data.get('physical_disability'), None, # control_number
+            None, # permit_control_no initially null
             form_data.get('date_of_application'), form_data.get('academic_year'), form_data.get('average_family_income'),
             form_data.get('father_name'), form_data.get('father_occupation'), form_data.get('father_company_address'), form_data.get('father_contact_number'),
             form_data.get('mother_maiden_name'), form_data.get('mother_occupation'), form_data.get('mother_company_address'), form_data.get('mother_contact_number'),
@@ -1014,7 +1051,7 @@ def submit_application():
             processed_files.get('shs_diploma_file_input', {}).get('data'), processed_files.get('shs_diploma_file_input', {}).get('filename'), processed_files.get('shs_diploma_file_input', {}).get('mimetype'),
             processed_files.get('shs_card_file_input', {}).get('data'), processed_files.get('shs_card_file_input', {}).get('filename'), processed_files.get('shs_card_file_input', {}).get('mimetype'),
             processed_files.get('birth_certificate_file_input', {}).get('data'), processed_files.get('birth_certificate_file_input', {}).get('filename'), processed_files.get('birth_certificate_file_input', {}).get('mimetype'),
-            'Pending', now, now, None # application_status, submitted_at, last_updated_at, exam_status
+            'Pending', now_dt, now_dt, None # application_status, submitted_at, last_updated_at, exam_status
         ]
         
         if len(app_insert_vals) != len(db_cols_app_insert):
@@ -1042,54 +1079,83 @@ def admin_update_application_status(applicant_id):
     valid_statuses = ['Pending', 'In Review', 'Approved', 'Rejected', 'Passed', 'Failed']
     if not new_status or new_status not in valid_statuses: return jsonify({"success": False, "message": "Invalid status"}), 400
 
-    conn = None; app_info_cursor = None; update_cursor = None; check_cursor = None
+    conn = None; cursor = None # Combined cursors
     try:
         conn = get_db_connection()
         if not conn: return jsonify({"success": False, "message": "DB error"}), 500
         
-        app_info_cursor = conn.cursor(dictionary=True)
-        app_info_cursor.execute("SELECT a.first_name, a.last_name, a.program_choice, a.exam_status, su.email as student_account_email, a.email_address as application_form_email FROM applicants a LEFT JOIN student_users su ON a.student_user_id = su.id WHERE a.applicant_id = %s", (applicant_id,))
-        app_info = app_info_cursor.fetchone()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT a.first_name, a.last_name, a.program_choice, a.exam_status, a.permit_control_no, su.email as student_account_email, a.email_address as application_form_email FROM applicants a LEFT JOIN student_users su ON a.student_user_id = su.id WHERE a.applicant_id = %s", (applicant_id,))
+        app_info = cursor.fetchone()
         if not app_info: return jsonify({"success": False, "message": "App not found"}), 404
 
         email_to_notify = app_info.get('student_account_email') or app_info.get('application_form_email')
         applicant_name = f"{app_info.get('first_name','')} {app_info.get('last_name','')}".strip()
-        now = datetime.datetime.now()
+        now_dt = datetime.datetime.now()
         
-        update_cursor = conn.cursor()
-        sql = "UPDATE applicants SET application_status = %s, last_updated_at = %s"
-        params = [new_status, now]
-        if new_status in ['Approved', 'Rejected', 'Passed', 'Failed']:
-            sql += ", decision_date = %s"
-            params.append(now)
-        else:
-            sql += ", decision_date = NULL"
-        sql += " WHERE applicant_id = %s"
-        params.append(applicant_id)
-        update_cursor.execute(sql, tuple(params))
-        conn.commit()
+        generated_permit_control_no = app_info.get('permit_control_no') # Keep existing if any
+        new_permit_control_no_generated_flag = False
 
-        if update_cursor.rowcount > 0:
+        if new_status == 'Approved' and not generated_permit_control_no:
+            # Generate new permit_control_no only if Approved and not already set
+            cursor.execute("SELECT MAX(CAST(permit_control_no AS UNSIGNED)) as max_pcn FROM applicants WHERE permit_control_no REGEXP '^[0-9]+$'")
+            max_pcn_row = cursor.fetchone()
+            next_pcn_int = 1
+            if max_pcn_row and max_pcn_row['max_pcn'] is not None:
+                next_pcn_int = int(max_pcn_row['max_pcn']) + 1
+            generated_permit_control_no = f"{next_pcn_int:04d}" # Format as "0001", "0002", etc.
+            new_permit_control_no_generated_flag = True
+
+        sql_update_parts = ["application_status = %s", "last_updated_at = %s"]
+        params_update = [new_status, now_dt]
+
+        if new_status in ['Approved', 'Rejected', 'Passed', 'Failed']:
+            sql_update_parts.append("decision_date = %s")
+            params_update.append(now_dt)
+        else:
+            sql_update_parts.append("decision_date = NULL") # Clear decision date if not a final status
+
+        if new_permit_control_no_generated_flag:
+            sql_update_parts.append("permit_control_no = %s")
+            params_update.append(generated_permit_control_no)
+        
+        params_update.append(applicant_id)
+        
+        final_sql = f"UPDATE applicants SET {', '.join(sql_update_parts)} WHERE applicant_id = %s"
+        
+        # Use a non-dictionary cursor for update if preferred, or just reuse.
+        update_cursor = conn.cursor() 
+        update_cursor.execute(final_sql, tuple(params_update))
+        conn.commit()
+        update_cursor.close()
+
+
+        if update_cursor.rowcount > 0 or new_permit_control_no_generated_flag : # consider success if PCN was generated even if status was already approved
             email_sent = False
             if new_status in ['Approved', 'Rejected', 'Passed', 'Failed'] and email_to_notify:
                 email_sent = send_application_status_email(email_to_notify, applicant_name, new_status, applicant_id, app_info.get('program_choice'), app_info.get('exam_status'))
             
-            msg = f"P2025{applicant_id:04d} status to {new_status}."
+            msg = f"P2025{applicant_id:04d} status set to {new_status}."
+            if new_permit_control_no_generated_flag:
+                 msg += f" Permit Control No. {generated_permit_control_no} assigned."
             if new_status in ['Approved', 'Rejected', 'Passed', 'Failed'] and email_to_notify:
                 msg += " Email sent." if email_sent else " Email failed."
-            return jsonify({"success": True, "message": msg, "new_status": new_status, "applicant_id": applicant_id})
+            return jsonify({"success": True, "message": msg, "new_status": new_status, "applicant_id": applicant_id, "permit_control_no": generated_permit_control_no if new_permit_control_no_generated_flag else app_info.get('permit_control_no')})
         else:
-            check_cursor = conn.cursor()
-            check_cursor.execute("SELECT 1 FROM applicants WHERE applicant_id = %s", (applicant_id,))
-            if check_cursor.fetchone(): return jsonify({"success": True, "message": f"Status already {new_status}.", "new_status": new_status, "applicant_id": applicant_id})
+            # Check if app exists if rowcount is 0
+            cursor.execute("SELECT 1 FROM applicants WHERE applicant_id = %s", (applicant_id,))
+            if cursor.fetchone(): return jsonify({"success": True, "message": f"Status already {new_status}.", "new_status": new_status, "applicant_id": applicant_id})
             return jsonify({"success": False, "message": "App not found"}), 404
+            
+    except mysql.connector.Error as db_err: # Catch specific DB errors
+        print(f"Database error updating status for {applicant_id}: {db_err}"); traceback.print_exc()
+        return jsonify({"success": False, "message": f"Database error: {db_err.msg}"}), 500
     except Exception as e:
         print(f"Error updating status for {applicant_id}: {e}"); traceback.print_exc()
         return jsonify({"success": False, "message": "Server error"}), 500
     finally:
-        if app_info_cursor: app_info_cursor.close()
-        if update_cursor: update_cursor.close()
-        if check_cursor: check_cursor.close()
+        if cursor: cursor.close()
+        # update_cursor is closed if used
         if conn and conn.is_connected(): conn.close()
 
 
@@ -1128,9 +1194,11 @@ def admin_update_exam_status(applicant_id):
             return jsonify({"success": True, "message": msg, "new_exam_status": new_exam_status, "applicant_id": applicant_id})
         else:
             cursor.execute("SELECT exam_status FROM applicants WHERE applicant_id = %s", (applicant_id,))
-            db_status = cursor.fetchone()
-            if db_status and db_status[0] == new_exam_status: return jsonify({"success": True, "message": f"Exam status already '{new_exam_status or 'Not Set'}'." , "new_exam_status": new_exam_status, "applicant_id": applicant_id})
-            return jsonify({"success": False, "message": "App not found or status not updated."}), 404
+            db_status_row = cursor.fetchone()
+            current_db_exam_status = db_status_row[0] if db_status_row else None # Handle if row is None
+            if current_db_exam_status == new_exam_status: # Check if it was already the same
+                 return jsonify({"success": True, "message": f"Exam status already '{new_exam_status or 'Not Set'}'." , "new_exam_status": new_exam_status, "applicant_id": applicant_id})
+            return jsonify({"success": False, "message": "App not found or status not updated."}), 404 # Should ideally be covered by rowcount > 0
     except Exception as e:
         print(f"Error updating exam status for {applicant_id}: {e}"); traceback.print_exc()
         return jsonify({"success": False, "message": "Server error"}), 500
@@ -1199,11 +1267,11 @@ def admin_dashboard():
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT a.applicant_id, a.first_name, a.last_name, a.email_address, a.program_choice, a.date_of_application, a.application_status, a.submitted_at, a.decision_date, a.exam_status, su.email as student_account_email FROM applicants a LEFT JOIN student_users su ON a.student_user_id = su.id ORDER BY CASE a.application_status WHEN 'Pending' THEN 1 WHEN 'In Review' THEN 2 WHEN 'Approved' THEN 3 WHEN 'Passed' THEN 4 WHEN 'Failed' THEN 5 WHEN 'Rejected' THEN 6 ELSE 7 END, a.submitted_at DESC, a.applicant_id DESC")
+            cursor.execute("SELECT a.applicant_id, a.first_name, a.last_name, a.email_address, a.program_choice, a.date_of_application, a.application_status, a.submitted_at, a.decision_date, a.exam_status, a.permit_control_no, su.email as student_account_email FROM applicants a LEFT JOIN student_users su ON a.student_user_id = su.id ORDER BY CASE a.application_status WHEN 'Pending' THEN 1 WHEN 'In Review' THEN 2 WHEN 'Approved' THEN 3 WHEN 'Passed' THEN 4 WHEN 'Failed' THEN 5 WHEN 'Rejected' THEN 6 ELSE 7 END, a.submitted_at DESC, a.applicant_id DESC")
             applications = cursor.fetchall()
             stats['total_applications'] = len(applications)
             for app in applications:
-                for key, value in app.items(): # Decode bytes
+                for key, value in app.items(): 
                     if isinstance(value, bytes):
                         try: app[key] = value.decode('utf-8')
                         except UnicodeDecodeError: app[key] = "Decode Error"
@@ -1277,7 +1345,7 @@ def get_applicant_document(applicant_id, doc_type):
         content, filename, mimetype = app_data.get(file_col), app_data.get(name_col), app_data.get(mime_col)
         if content and filename and mimetype:
             return send_file(io.BytesIO(content), mimetype=mimetype, as_attachment=True, download_name=filename)
-        flash(f"{doc_type.title()} not found.", "warning"); return redirect(request.referrer or url_for('views.home'))
+        flash(f"{doc_type.title().replace('_', ' ')} not found.", "warning"); return redirect(request.referrer or url_for('views.home'))
     except Exception as e:
         print(f"Error getting doc {doc_type} for {applicant_id}: {e}"); traceback.print_exc()
         flash("Server error retrieving document.", "danger"); return redirect(request.referrer or url_for('views.home'))
@@ -1306,7 +1374,7 @@ def edit_application_page(applicant_id):
         for field in date_fields:
             if field in processed_app and isinstance(processed_app[field], (datetime.datetime, datetime.date)):
                 processed_app[field] = processed_app[field].strftime('%Y-%m-%d') if field in date_input_fields else processed_app[field].isoformat()
-            elif field in date_input_fields and processed_app.get(field) is None: # ensure empty string for date inputs
+            elif field in date_input_fields and processed_app.get(field) is None: 
                 processed_app[field] = ""
 
         return render_template('edit_application.html', application=processed_app, student_logged_in=True)
@@ -1456,7 +1524,7 @@ def admin_update_application_action(applicant_id):
             'guardian_company_address', 'guardian_contact_number', 'senior_high_school', 'senior_high_school_address',
             'senior_high_school_track_strand', 'senior_high_school_year_from', 'senior_high_school_year_to',
             'tertiary_school', 'tertiary_school_address', 'tertiary_course', 'tertiary_year_from', 'tertiary_year_to',
-            'agreements', 'final_submission_date' # Admin can edit agreements too
+            'agreements', 'final_submission_date'
         ]
         req_text_fields_admin_edit = [f for f in field_list_update_admin if f not in ['middle_name', 'guardian_name', 'guardian_occupation', 'guardian_company_address', 'guardian_contact_number', 'tertiary_school', 'tertiary_school_address', 'tertiary_course', 'tertiary_year_from', 'tertiary_year_to']]
         req_date_fields_admin_edit = ['date_of_birth', 'date_of_application', 'final_submission_date']
@@ -1466,9 +1534,8 @@ def admin_update_application_action(applicant_id):
             val = request.form.get(field)
             if field in req_text_fields_admin_edit and (not val or not val.strip()): flash(f"⚠️ {field.replace('_',' ').title()} required for admin edit.", "danger"); return redirect(url_for('auth.admin_edit_application_page', applicant_id=applicant_id))
             if field in req_date_fields_admin_edit and not val: flash(f"⚠️ {field.replace('_',' ').title()} date required for admin edit.", "danger"); return redirect(url_for('auth.admin_edit_application_page', applicant_id=applicant_id))
-            # Admin directly sets agreement based on form
             processed_val = val.strip() if val and isinstance(val, str) else val
-            if field == 'agreements': processed_val = 'Yes' if val == 'Yes' else 'No' # Explicitly handle checkbox
+            if field == 'agreements': processed_val = 'Yes' if val == 'Yes' else 'No' 
 
             update_clauses_admin.append(f"`{field}` = %s"); values_for_update_admin.append(processed_val)
         
