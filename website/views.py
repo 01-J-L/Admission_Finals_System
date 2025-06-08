@@ -332,9 +332,11 @@ def new_student():
         flash("⚠️ Please log in to access the application form.", "warning")
         return redirect(url_for('auth.student_login_page'))
     
+    student_email_from_session = session.get('student_email', '') # Get email from session
     today_date_str = datetime.date.today().strftime('%Y-%m-%d')
     return render_template(
         'new_student.html', 
         student_logged_in='student_id' in session,
-        today_date_for_form=today_date_str
+        today_date_for_form=today_date_str,
+        student_email=student_email_from_session # Pass student_email to the template
     )

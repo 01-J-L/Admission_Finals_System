@@ -508,6 +508,20 @@
     }
     /* --- END OF MOBILE RESPONSIVE ADDITIONS --- */
 
+    /* Style for validation error messages */
+    .validation-error-message {
+        color: #e53e3e; /* Tailwind red-600 */
+        font-size: 0.75rem; /* text-xs */
+        margin-top: 0.25rem; /* mt-1 */
+    }
+    /* Style for fields with validation errors */
+    .border-red-500 {
+        border-color: #f56565 !important; /* Tailwind red-500 */
+    }
+    .ring-red-500 {
+        --tw-ring-color: #f56565 !important; /* Tailwind red-500 */
+    }
+
 </style>
 {% endblock %}
 
@@ -795,6 +809,7 @@
                       class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                       placeholder="Your email address"
                       name="email_address"
+                      value="{{ student_email if student_email else '' }}"
                       required
                     />
                   </div>
@@ -1470,6 +1485,100 @@
 </button>
 
 <script>
+    // --- START OF VALIDATION HELPER FUNCTIONS ---
+    function findFirstInvalidField(stepElement) {
+        const fields = stepElement.querySelectorAll('input[required], select[required], textarea[required]');
+        const checkedRadioGroups = new Set();
+
+        for (const field of fields) {
+            // Skip fields that are not visible (e.g., part of a hidden conditional section within the step)
+            // offsetParent will be null if the element or its parents are display:none
+            if (!field.offsetParent && field.type !== 'hidden') continue;
+
+            let isInvalid = false;
+            if (field.type === 'radio') {
+                const groupName = field.name;
+                // Only validate required radio groups once
+                if (field.required && !checkedRadioGroups.has(groupName)) {
+                    const groupChecked = stepElement.querySelector(`input[name="${groupName}"]:checked`);
+                    if (!groupChecked) {
+                        // Return the first radio button of the group for focus
+                        return stepElement.querySelector(`input[name="${groupName}"][required]`) || field;
+                    }
+                    checkedRadioGroups.add(groupName);
+                }
+            } else if (field.type === 'checkbox') {
+                if (field.required && !field.checked) {
+                    isInvalid = true;
+                }
+            } else if (field.type === 'file') {
+                if (field.required && field.files.length === 0) {
+                    isInvalid = true;
+                }
+            } else if (field.tagName.toLowerCase() === 'select') {
+                if (field.required && field.value === '') {
+                    isInvalid = true;
+                }
+            } else { // Text, email, date, tel, etc.
+                if (field.required && !field.value.trim()) {
+                    isInvalid = true;
+                }
+            }
+
+            if (isInvalid) {
+                return field;
+            }
+        }
+        return null; // All required fields in this step are valid
+    }
+
+    function showValidationError(field, message = "This field is required.") {
+        if (!field) return;
+
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Delay focus slightly to ensure scrolling is complete, especially on some browsers
+        setTimeout(() => field.focus({ preventScroll: true }), 100);
+
+
+        // Remove any existing error message for this field's parent group to avoid duplicates
+        // This targets the div directly containing the field or its label/field group
+        let fieldContainer = field.closest('.mb-6') || field.closest('.mb-4') || field.parentElement;
+        const existingErrorMsg = fieldContainer.querySelector('.validation-error-message');
+        if (existingErrorMsg) {
+            existingErrorMsg.remove();
+        }
+        
+        // Remove error style from the field first
+        field.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+        // Then add it back, ensures visual feedback even if called multiple times
+        field.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+        
+        const errorMsgElement = document.createElement('p');
+        errorMsgElement.className = 'validation-error-message text-red-500 text-xs mt-1';
+        errorMsgElement.textContent = message;
+        
+        // Insert error message after the field or its immediate wrapper if it's complex (e.g. radio/checkbox groups)
+        if (field.type === 'radio' || field.type === 'checkbox') {
+            // Place error after the group of radios/checkboxes or their container
+            let parentWrapper = field.closest('.flex.gap-6') || field.closest('.flex.flex-wrap.gap-4') || field.parentElement;
+            parentWrapper.parentElement.appendChild(errorMsgElement);
+        } else {
+             field.parentElement.appendChild(errorMsgElement);
+        }
+
+
+        const clearError = () => {
+            field.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+            const msgToRemove = fieldContainer.querySelector('.validation-error-message');
+            if (msgToRemove) msgToRemove.remove();
+            field.removeEventListener('input', clearError);
+            field.removeEventListener('change', clearError);
+        };
+        field.addEventListener('input', clearError);
+        field.addEventListener('change', clearError);
+    }
+    // --- END OF VALIDATION HELPER FUNCTIONS ---
+
     // Existing script content from new_student.html for form logic
     document.addEventListener("DOMContentLoaded", function () {
       const requiredFields = document.querySelectorAll(
@@ -1477,7 +1586,7 @@
       );
       const submitButton = document.getElementById("submitApplication");
   
-      function validateForm() {
+      function validateForm() { // This function controls the submit button's enabled state
         let isValid = true;
   
         requiredFields.forEach((field) => {
@@ -1485,16 +1594,19 @@
             if (field.type === 'checkbox' && field.name === 'agreements') { 
                  if (!field.checked) isValid = false;
             } else if (field.type === 'radio') {
-                 const radioGroup = document.querySelectorAll(`input[name="${field.name}"]`);
-                 let oneChecked = false;
-                 radioGroup.forEach(radio => { if (radio.checked) oneChecked = true; });
-                 if (!oneChecked) isValid = false;
+                 // Check if field is visible before validating
+                 if (field.offsetParent !== null || field.type === 'hidden') {
+                    const radioGroup = document.querySelectorAll(`input[name="${field.name}"]`);
+                    let oneChecked = false;
+                    radioGroup.forEach(radio => { if (radio.checked) oneChecked = true; });
+                    if (field.required && !oneChecked) isValid = false;
+                 }
             }
           } else if (field.type === 'file') {
-            if (field.required && !field.files.length) {
+            if (field.required && (field.offsetParent !== null || field.type === 'hidden') && !field.files.length) {
                 isValid = false;
             }
-          } else if (!field.value.trim()) {
+          } else if ((field.offsetParent !== null || field.type === 'hidden') && field.required && !field.value.trim()) {
             isValid = false;
           }
         });
@@ -1517,7 +1629,7 @@
         }
       });
   
-      validateForm(); 
+      validateForm(); // Initial check
     });
   
     document.addEventListener("DOMContentLoaded", function () {
@@ -1531,6 +1643,9 @@
       const backToStep2Buttons = document.querySelectorAll("#backToStep2"); 
       const nextToStep4 = document.getElementById("nextToStep4");
       const backToStep3Buttons = document.querySelectorAll("#backToStep3"); 
+      // CORRECTED LINE:
+      const form = document.querySelector('form[action="{{ url_for("auth.submit_application") }}"]');
+
 
       function collectFormData() { 
         const formData = {
@@ -1577,9 +1692,41 @@
         return formData;
       }
 
-      if(nextToStep2) nextToStep2.addEventListener("click", function (e) { e.preventDefault(); step1.classList.add("hidden"); step2.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(2); });
-      if(backToStep1) backToStep1.addEventListener("click", function (e) { e.preventDefault(); step2.classList.add("hidden"); step1.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(1); });
-      if(nextToStep3) nextToStep3.addEventListener("click", function (e) { e.preventDefault(); step2.classList.add("hidden"); step3.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(3); });
+    if(nextToStep2) {
+        nextToStep2.addEventListener("click", function (e) {
+            e.preventDefault();
+            step1.querySelectorAll('.validation-error-message').forEach(el => el.remove());
+            step1.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
+            const invalidField = findFirstInvalidField(step1);
+            if (invalidField) {
+                showValidationError(invalidField, "Please complete this required field.");
+            } else {
+                step1.classList.add("hidden");
+                step2.classList.remove("hidden");
+                window.scrollTo(0, 0);
+                updateStepperUI(2);
+            }
+        });
+    }
+
+    if(backToStep1) backToStep1.addEventListener("click", function (e) { e.preventDefault(); step2.classList.add("hidden"); step1.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(1); });
+      
+    if(nextToStep3) {
+        nextToStep3.addEventListener("click", function (e) {
+            e.preventDefault();
+            step2.querySelectorAll('.validation-error-message').forEach(el => el.remove());
+            step2.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
+            const invalidField = findFirstInvalidField(step2);
+            if (invalidField) {
+                showValidationError(invalidField, "Please complete this required field.");
+            } else {
+                step2.classList.add("hidden");
+                step3.classList.remove("hidden");
+                window.scrollTo(0, 0);
+                updateStepperUI(3);
+            }
+        });
+    }
       
       backToStep2Buttons.forEach(button => {
           button.addEventListener("click", function (e) {
@@ -1591,66 +1738,75 @@
           });
       });
 
-      if(nextToStep4) nextToStep4.addEventListener("click", function (e) {
-        e.preventDefault();
-        const formData = collectFormData(); 
-        const diplomaFile = document.getElementById('shs_diploma_file_input').files[0];
-        const cardFile = document.getElementById('shs_card_file_input').files[0];
-        const birthCertFile = document.getElementById('birth_certificate_file_input').files[0];
+    if(nextToStep4) {
+        nextToStep4.addEventListener("click", function (e) {
+            e.preventDefault();
+            step3.querySelectorAll('.validation-error-message').forEach(el => el.remove());
+            step3.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
+            const invalidField = findFirstInvalidField(step3);
+            if (invalidField) {
+                showValidationError(invalidField, "Please complete this required field or document upload.");
+            } else {
+                const formData = collectFormData(); 
+                const diplomaFile = document.getElementById('shs_diploma_file_input').files[0];
+                const cardFile = document.getElementById('shs_card_file_input').files[0];
+                const birthCertFile = document.getElementById('birth_certificate_file_input').files[0];
 
-        const reviewContent = `
-        <div class="space-y-6">
-        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-        <h4 class="font-medium text-gray-800 mb-4">Personal Information</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div><p class="text-sm text-gray-600">Program:</p><p class="font-medium">${formData.program || "Not specified"}</p></div>
-        <div><p class="text-sm text-gray-600">Full Name:</p><p class="font-medium">${formData.lastName}, ${formData.firstName} ${formData.middleName || ''}</p></div>
-        <div><p class="text-sm text-gray-600">Date of Birth:</p><p class="font-medium">${formData.dateOfBirth || "Not specified"}</p></div>
-        <div><p class="text-sm text-gray-600">Place of Birth:</p><p class="font-medium">${formData.placeOfBirth || "Not specified"}</p></div>
-        <div><p class="text-sm text-gray-600">Sex:</p><p class="font-medium">${formData.sex || "Not specified"}</p></div>
-        <div><p class="text-sm text-gray-600">Civil Status:</p><p class="font-medium">${formData.civilStatus || "Not specified"}</p></div>
-        <div><p class="text-sm text-gray-600">Religion:</p><p class="font-medium">${formData.religion || "Not specified"}</p></div>
-        <div><p class="text-sm text-gray-600">Citizenship:</p><p class="font-medium">${formData.citizenship || "Not specified"}</p></div>
-        <div><p class="text-sm text-gray-600">Mobile No:</p><p class="font-medium">${formData.mobileNo || "Not specified"}</p></div>
-        <div><p class="text-sm text-gray-600">Email:</p><p class="font-medium">${formData.email || "Not specified"}</p></div>
-        </div>
-        <div class="mt-4"><p class="text-sm text-gray-600">Complete Address:</p><p class="font-medium">${formData.address.street}, ${formData.address.city}, ${formData.address.province} ${formData.address.postalCode}</p></div>
-        </div>
-        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-        <h4 class="font-medium text-gray-800 mb-4">Family Information</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div><h5 class="font-medium text-gray-700 mb-2">Father's Information</h5><p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.father.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Occupation: <span class="font-medium">${formData.father.occupation || "Not specified"}</span></p><p class="text-sm text-gray-600">Company & Address: <span class="font-medium">${formData.father.company || "Not specified"}</span></p><p class="text-sm text-gray-600">Contact No: <span class="font-medium">${formData.father.contact || "Not specified"}</span></p></div>
-        <div><h5 class="font-medium text-gray-700 mb-2">Mother's Information</h5><p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.mother.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Occupation: <span class="font-medium">${formData.mother.occupation || "Not specified"}</span></p><p class="text-sm text-gray-600">Company & Address: <span class="font-medium">${formData.mother.company || "Not specified"}</span></p><p class="text-sm text-gray-600">Contact No: <span class="font-medium">${formData.mother.contact || "Not specified"}</span></p></div>
-        </div>
-        </div>
-        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-        <h4 class="font-medium text-gray-800 mb-4">Educational Background</h4>
-        <div><h5 class="font-medium text-gray-700 mb-2">Senior High School</h5><p class="text-sm text-gray-600">School Name: <span class="font-medium">${formData.education.shs.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Address: <span class="font-medium">${formData.education.shs.address || "Not specified"}</span></p><p class="text-sm text-gray-600">Strand: <span class="font-medium">${formData.education.shs.strand || "Not specified"}</span></p><p class="text-sm text-gray-600">Year: <span class="font-medium">${formData.education.shs.yearFrom || "Not specified"} - ${formData.education.shs.yearTo || "Not specified"}</span></p></div>
-        <div class="mt-4">
-            <h5 class="font-medium text-gray-700 mb-2">Uploaded Documents</h5>
-            <p class="text-sm text-gray-600">SHS Diploma: <span class="font-medium">${diplomaFile ? diplomaFile.name : "Not selected/Error"}</span></p>
-            <p class="text-sm text-gray-600">SHS Card (Form 138): <span class="font-medium">${cardFile ? cardFile.name : "Not selected/Error"}</span></p>
-            <p class="text-sm text-gray-600">Birth Certificate: <span class="font-medium">${birthCertFile ? birthCertFile.name : "Not selected/Error"}</span></p>
-        </div>
-        </div>
-        </div>`;
-        
-        const consentSection = step4.querySelector(".bg-gray-50.p-6.rounded-lg.border.border-gray-200.mb-6"); 
-        
-        const existingReviewContainer = step4.querySelector("#reviewDataContainer");
-        if (existingReviewContainer) {
-            existingReviewContainer.innerHTML = reviewContent; // Update if exists
-        } else {
-            const reviewContainer = document.createElement("div");
-            reviewContainer.id = "reviewDataContainer"; 
-            reviewContainer.innerHTML = reviewContent;
-            consentSection.parentNode.insertBefore(reviewContainer, consentSection);
-        }
-        step3.classList.add("hidden");
-        step4.classList.remove("hidden");
-        window.scrollTo(0, 0);
-        updateStepperUI(4);
-      });
+                const reviewContent = `
+                <div class="space-y-6">
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h4 class="font-medium text-gray-800 mb-4">Personal Information</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><p class="text-sm text-gray-600">Program:</p><p class="font-medium">${formData.program || "Not specified"}</p></div>
+                <div><p class="text-sm text-gray-600">Full Name:</p><p class="font-medium">${formData.lastName}, ${formData.firstName} ${formData.middleName || ''}</p></div>
+                <div><p class="text-sm text-gray-600">Date of Birth:</p><p class="font-medium">${formData.dateOfBirth || "Not specified"}</p></div>
+                <div><p class="text-sm text-gray-600">Place of Birth:</p><p class="font-medium">${formData.placeOfBirth || "Not specified"}</p></div>
+                <div><p class="text-sm text-gray-600">Sex:</p><p class="font-medium">${formData.sex || "Not specified"}</p></div>
+                <div><p class="text-sm text-gray-600">Civil Status:</p><p class="font-medium">${formData.civilStatus || "Not specified"}</p></div>
+                <div><p class="text-sm text-gray-600">Religion:</p><p class="font-medium">${formData.religion || "Not specified"}</p></div>
+                <div><p class="text-sm text-gray-600">Citizenship:</p><p class="font-medium">${formData.citizenship || "Not specified"}</p></div>
+                <div><p class="text-sm text-gray-600">Mobile No:</p><p class="font-medium">${formData.mobileNo || "Not specified"}</p></div>
+                <div><p class="text-sm text-gray-600">Email:</p><p class="font-medium">${formData.email || "Not specified"}</p></div>
+                </div>
+                <div class="mt-4"><p class="text-sm text-gray-600">Complete Address:</p><p class="font-medium">${formData.address.street}, ${formData.address.city}, ${formData.address.province} ${formData.address.postalCode}</p></div>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h4 class="font-medium text-gray-800 mb-4">Family Information</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div><h5 class="font-medium text-gray-700 mb-2">Father's Information</h5><p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.father.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Occupation: <span class="font-medium">${formData.father.occupation || "Not specified"}</span></p><p class="text-sm text-gray-600">Company & Address: <span class="font-medium">${formData.father.company || "Not specified"}</span></p><p class="text-sm text-gray-600">Contact No: <span class="font-medium">${formData.father.contact || "Not specified"}</span></p></div>
+                <div><h5 class="font-medium text-gray-700 mb-2">Mother's Information</h5><p class="text-sm text-gray-600">Name: <span class="font-medium">${formData.mother.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Occupation: <span class="font-medium">${formData.mother.occupation || "Not specified"}</span></p><p class="text-sm text-gray-600">Company & Address: <span class="font-medium">${formData.mother.company || "Not specified"}</span></p><p class="text-sm text-gray-600">Contact No: <span class="font-medium">${formData.mother.contact || "Not specified"}</span></p></div>
+                </div>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h4 class="font-medium text-gray-800 mb-4">Educational Background</h4>
+                <div><h5 class="font-medium text-gray-700 mb-2">Senior High School</h5><p class="text-sm text-gray-600">School Name: <span class="font-medium">${formData.education.shs.name || "Not specified"}</span></p><p class="text-sm text-gray-600">Address: <span class="font-medium">${formData.education.shs.address || "Not specified"}</span></p><p class="text-sm text-gray-600">Strand: <span class="font-medium">${formData.education.shs.strand || "Not specified"}</span></p><p class="text-sm text-gray-600">Year: <span class="font-medium">${formData.education.shs.yearFrom || "Not specified"} - ${formData.education.shs.yearTo || "Not specified"}</span></p></div>
+                <div class="mt-4">
+                    <h5 class="font-medium text-gray-700 mb-2">Uploaded Documents</h5>
+                    <p class="text-sm text-gray-600">SHS Diploma: <span class="font-medium">${diplomaFile ? diplomaFile.name : "Not selected/Error"}</span></p>
+                    <p class="text-sm text-gray-600">SHS Card (Form 138): <span class="font-medium">${cardFile ? cardFile.name : "Not selected/Error"}</span></p>
+                    <p class="text-sm text-gray-600">Birth Certificate: <span class="font-medium">${birthCertFile ? birthCertFile.name : "Not selected/Error"}</span></p>
+                </div>
+                </div>
+                </div>`;
+                
+                const consentSection = step4.querySelector(".bg-gray-50.p-6.rounded-lg.border.border-gray-200.mb-6"); 
+                
+                const existingReviewContainer = step4.querySelector("#reviewDataContainer");
+                if (existingReviewContainer) {
+                    existingReviewContainer.innerHTML = reviewContent; // Update if exists
+                } else {
+                    const reviewContainer = document.createElement("div");
+                    reviewContainer.id = "reviewDataContainer"; 
+                    reviewContainer.innerHTML = reviewContent;
+                    consentSection.parentNode.insertBefore(reviewContainer, consentSection);
+                }
+                step3.classList.add("hidden");
+                step4.classList.remove("hidden");
+                window.scrollTo(0, 0);
+                updateStepperUI(4);
+            }
+        });
+    }
       
       backToStep3Buttons.forEach(button => {
           button.addEventListener("click", function(e) {
@@ -1661,42 +1817,85 @@
               updateStepperUI(3);
           });
       });
+
+      if (form) {
+          form.addEventListener('submit', function(event) {
+              const stepsToValidate = [
+                  { el: step1, num: 1, name: "Personal Information" },
+                  { el: step2, num: 2, name: "Family Details" },
+                  { el: step3, num: 3, name: "Educational Background" },
+                  { el: step4, num: 4, name: "Review & Submit (Consent & Date)" }
+              ];
+
+              for (const stepInfo of stepsToValidate) {
+                  // Clear previous error indicators for this step before re-validating
+                  stepInfo.el.querySelectorAll('.validation-error-message').forEach(el => el.remove());
+                  stepInfo.el.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
+
+                  const invalidField = findFirstInvalidField(stepInfo.el);
+                  if (invalidField) {
+                      event.preventDefault(); // Stop form submission
+
+                      const currentVisibleStepContainer = document.querySelector('#step1.block, #step2.block, #step3.block, #step4.block');
+                      if (currentVisibleStepContainer !== stepInfo.el) {
+                          document.querySelectorAll('#step1, #step2, #step3, #step4').forEach(s => s.classList.add('hidden'));
+                          stepInfo.el.classList.remove('hidden');
+                          updateStepperUI(stepInfo.num);
+                      }
+                      
+                      showValidationError(invalidField, `Please complete this field in the "${stepInfo.name}" section.`);
+                      if (typeof showPhotoToastGlobal === "function") { // Check if toast function exists
+                          showPhotoToastGlobal(`Please correct the errors in the "${stepInfo.name}" section before submitting.`, "error");
+                      }
+                      return; 
+                  }
+              }
+              // If loop completes, all validations passed, form will submit naturally.
+          });
+      }
       
       function updateStepperUI(activeStep) {
         const stepperItems = document.querySelectorAll(".px-6.py-4.border-b .flex.items-center > div.flex.flex-col");
         const progressBars = document.querySelectorAll(".px-6.py-4.border-b .h-1.bg-gray-200 > div");
         stepperItems.forEach((item, index) => {
           const stepNumber = index + 1;
-          const circle = item.querySelector("div.w-10.h-10"); // Desktop circle selector
-          const mobileCircle = item.querySelector("div.w-8.h-8"); // Mobile circle selector (if using the new class)
-          const actualCircle = window.innerWidth <= 767 ? mobileCircle || circle : circle; // Choose based on screen width
-
+          const circle = item.querySelector("div.w-10.h-10"); 
           const text = item.querySelector("p");
-          // const icon = circle.querySelector("i"); // Icon is inside circle
 
           if (stepNumber < activeStep) {
-            actualCircle.classList.remove("bg-gray-200", "text-gray-500");
-            actualCircle.classList.add("bg-primary", "text-white");
+            circle.classList.remove("bg-gray-200", "text-gray-500");
+            circle.classList.add("bg-primary", "text-white");
             text.classList.remove("text-gray-500");
             text.classList.add("text-primary");
             if (progressBars[index]) progressBars[index].style.transform = "scaleX(1)";
           } else if (stepNumber === activeStep) {
-            actualCircle.classList.remove("bg-gray-200", "text-gray-500");
-            actualCircle.classList.add("bg-primary", "text-white");
+            circle.classList.remove("bg-gray-200", "text-gray-500");
+            circle.classList.add("bg-primary", "text-white");
             text.classList.remove("text-gray-500");
             text.classList.add("text-primary");
-            actualCircle.classList.add("scale-110");
-            setTimeout(() => actualCircle.classList.remove("scale-110"), 300);
+            circle.classList.add("scale-110");
+            setTimeout(() => circle.classList.remove("scale-110"), 300);
+            // Ensure current step's preceding progress bar is filled
             if (index > 0 && progressBars[index-1]) progressBars[index-1].style.transform = "scaleX(1)"; 
+            // Ensure current step's own progress bar (if it's not the last step) is reset or partially filled if needed
+            // For now, it means the bar *after* the current step icon is not filled yet unless activeStep makes it so.
+            if (progressBars[index]) progressBars[index].style.transform = "scaleX(0)";
 
-          } else {
-            actualCircle.classList.remove("bg-primary", "text-white", "scale-110");
-            actualCircle.classList.add("bg-gray-200", "text-gray-500");
+
+          } else { // Steps after activeStep
+            circle.classList.remove("bg-primary", "text-white", "scale-110");
+            circle.classList.add("bg-gray-200", "text-gray-500");
             text.classList.remove("text-primary");
             text.classList.add("text-gray-500");
-            if (progressBars[index - 1]) progressBars[index - 1].style.transform = "scaleX(0)";
+            // Ensure progress bars for future steps are reset
+            if (progressBars[index -1]) progressBars[index-1].style.transform = "scaleX(0)"; // bar before this future step
+            if (progressBars[index]) progressBars[index].style.transform = "scaleX(0)"; // bar after this future step (if any)
           }
         });
+         // Special handling for the very first progress bar if activeStep is 1
+        if (activeStep === 1 && progressBars[0]) {
+            progressBars[0].style.transform = "scaleX(0)";
+        }
       }
       // Initialize stepper to step 1 on page load
       updateStepperUI(1);
@@ -1721,13 +1920,13 @@
                 const file = e.target.files[0];
                 if (file) {
                     if (!file.type.startsWith("image/")) {
-                        showPhotoToast("⚠️ Please select an image file", "error");
+                        showPhotoToastGlobal("⚠️ Please select an image file", "error");
                         photoInput.value = ""; 
                         return;
                     }
                     const MAX_SIZE = 5 * 1024 * 1024; 
                     if (file.size > MAX_SIZE) {
-                        showPhotoToast("⚠️ Photo is too large (max 5MB)", "error");
+                        showPhotoToastGlobal("⚠️ Photo is too large (max 5MB)", "error");
                         photoInput.value = ""; 
                         return;
                     }
@@ -1738,7 +1937,7 @@
                         if(photoPlaceholder) photoPlaceholder.classList.add("hidden");
                     };
                     reader.readAsDataURL(file);
-                    showPhotoToast("✅ Photo selected: " + file.name, "success");
+                    showPhotoToastGlobal("✅ Photo selected: " + file.name, "success");
                 }
             });
         }
@@ -1752,31 +1951,39 @@
                     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
                     
                     if (!allowedTypes.includes(file.type) && !allowedTypes.find(type => file.name.toLowerCase().endsWith(type.split('/')[1]))) {
-                        showPhotoToast(`⚠️ Invalid file type for ${input.labels[0].textContent.split('*')[0].trim()}. Allowed: PDF, JPG, PNG.`, "error");
+                        showPhotoToastGlobal(`⚠️ Invalid file type for ${input.labels[0].textContent.split('*')[0].trim()}. Allowed: PDF, JPG, PNG.`, "error");
                         input.value = ""; 
                         return;
                     }
                     if (file.size > MAX_DOC_SIZE) {
-                        showPhotoToast(`⚠️ ${input.labels[0].textContent.split('*')[0].trim()} is too large (max 5MB).`, "error");
+                        showPhotoToastGlobal(`⚠️ ${input.labels[0].textContent.split('*')[0].trim()} is too large (max 5MB).`, "error");
                         input.value = ""; 
                         return;
                     }
-                    showPhotoToast(`✅ File selected for ${input.labels[0].textContent.split('*')[0].trim()}: ${file.name}`, "success");
+                    showPhotoToastGlobal(`✅ File selected for ${input.labels[0].textContent.split('*')[0].trim()}: ${file.name}`, "success");
                 }
             });
         });
 
-
-        function showPhotoToast(message, type) {
+        // Make showPhotoToast globally accessible if defined here, or ensure it's defined globally elsewhere.
+        // For simplicity, defining it here if it's specific to this page's photo/file uploads.
+        // If it's intended to be a global utility, it should be defined outside specific DOMContentLoaded listeners.
+        // Let's assume it's this one for now:
+        window.showPhotoToastGlobal = function showPhotoToast(message, type) {
             if (!photoToast) return;
             photoToast.textContent = message;
-            photoToast.className = "fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white text-sm z-50 transform transition-transform duration-300";
+            photoToast.className = "fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white text-sm z-50 transform transition-transform duration-300"; // Reset classes
             if (type === "success") photoToast.classList.add("bg-green-500");
             else if (type === "error") photoToast.classList.add("bg-red-500");
+            else photoToast.classList.add("bg-blue-500"); // Default color
+
             photoToast.classList.remove("hidden", "translate-y-full");
+            photoToast.classList.add("translate-y-0"); // Animate in
+
             setTimeout(() => {
-                photoToast.classList.add("translate-y-full");
-                setTimeout(() => photoToast.classList.add("hidden"), 300);
+                photoToast.classList.remove("translate-y-0");
+                photoToast.classList.add("translate-y-full"); // Animate out
+                setTimeout(() => photoToast.classList.add("hidden"), 300); // Hide after animation
             }, 3000); 
         }
     });
