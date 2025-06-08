@@ -398,25 +398,6 @@
             </div>
             <div id="adminNotesModalBackdrop" class="modal-backdrop"></div>
 
-            <!-- Control Number Modal -->
-            <div id="adminControlNumberModal" class="modal w-full max-w-md">
-                <div class="flex justify-between items-center pb-3 border-b">
-                    <h3 class="text-xl font-semibold text-gray-900" id="adminControlNumberModalTitle">Application Control Number</h3>
-                    <button id="closeAdminControlNumberModalIcon" class="text-gray-400 hover:text-gray-600">
-                        <i class="ri-close-line ri-lg"></i>
-                    </button>
-                </div>
-                <div class="mt-4">
-                    <label for="adminControlNumberInputModal" class="block text-sm font-medium text-gray-700">Control Number for Application <span id="adminControlNumberAppId" class="font-semibold"></span>:</label>
-                    <input type="text" id="adminControlNumberInputModal" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
-                </div>
-                <div class="mt-4 flex justify-end space-x-2">
-                     <button id="cancelAdminControlNumberBtn" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300">Cancel</button>
-                    <button id="saveAdminControlNumberModalBtn" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90">Save Control No.</button>
-                </div>
-            </div>
-            <div id="adminControlNumberModalBackdrop" class="modal-backdrop"></div>
-
             <!-- Permit Details Modal -->
             <div id="adminPermitDetailsModal" class="modal w-full max-w-xl">
                 <div class="flex justify-between items-center pb-3 border-b">
@@ -517,7 +498,6 @@
                                         </a>
 
                                         <button class="text-gray-500 hover:text-yellow-600 p-0.5 sm:p-1 action-admin-notes" title="Admin Notes" data-id="{{ app.applicant_id }}"><i class="ri-sticky-note-line ri-lg"></i></button>
-                                        <button class="text-gray-500 hover:text-purple-600 p-0.5 sm:p-1 action-control-number" title="Control Number" data-id="{{ app.applicant_id }}"><i class="ri-fingerprint-line ri-lg"></i></button>
                                         <button class="text-gray-500 hover:text-teal-600 p-0.5 sm:p-1 action-permit-details" title="Permit Details" data-id="{{ app.applicant_id }}"><i class="ri-ticket-line ri-lg"></i></button>
                                         <div class="dropdown relative action-status-dropdown">
                                             <button class="text-gray-500 hover:text-primary p-0.5 sm:p-1" title="Change Status">
@@ -849,16 +829,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelAdminNotesBtn = document.getElementById('cancelAdminNotesBtn');
     const saveAdminNotesModalBtn = document.getElementById('saveAdminNotesModalBtn');
 
-    // Control Number Modal
-    const adminControlNumberModal = document.getElementById('adminControlNumberModal');
-    const adminControlNumberModalBackdrop = document.getElementById('adminControlNumberModalBackdrop');
-    const adminControlNumberModalTitle = document.getElementById('adminControlNumberModalTitle');
-    const adminControlNumberAppIdSpan = document.getElementById('adminControlNumberAppId');
-    const adminControlNumberInputModal = document.getElementById('adminControlNumberInputModal');
-    const closeAdminControlNumberModalIcon = document.getElementById('closeAdminControlNumberModalIcon');
-    const cancelAdminControlNumberBtn = document.getElementById('cancelAdminControlNumberBtn');
-    const saveAdminControlNumberModalBtn = document.getElementById('saveAdminControlNumberModalBtn');
-
     // Permit Details Modal
     const adminPermitDetailsModal = document.getElementById('adminPermitDetailsModal');
     const adminPermitDetailsModalBackdrop = document.getElementById('adminPermitDetailsModalBackdrop');
@@ -1028,7 +998,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const actionUpdateStatus = target.closest('.action-update-status');
             const actionDeleteSingle = target.closest('.action-delete-single');
             const actionAdminNotes = target.closest('.action-admin-notes');
-            const actionControlNumber = target.closest('.action-control-number');
             const actionPermitDetails = target.closest('.action-permit-details');
             const actionEditAdmin = target.closest('.action-edit-admin'); 
             const actionPrint = target.closest('.action-print'); 
@@ -1060,18 +1029,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         openModal(adminNotesModal, adminNotesModalBackdrop);
                     } else { showToast('Could not load notes data.', 'error'); }
                 } catch (error) { showToast('Error fetching notes data.', 'error'); }
-            } else if (actionControlNumber) {
-                event.preventDefault();
-                currentViewingApplicantId = actionControlNumber.dataset.id;
-                try {
-                    const response = await fetch(`/admin/application/${currentViewingApplicantId}/details`);
-                    const result = await response.json();
-                    if (result.success && result.data) {
-                        adminControlNumberAppIdSpan.textContent = `P2025${String(result.data.applicant_id).padStart(4, '0')}`;
-                        adminControlNumberInputModal.value = result.data.control_number || '';
-                        openModal(adminControlNumberModal, adminControlNumberModalBackdrop);
-                    } else { showToast('Could not load control number data.', 'error'); }
-                } catch (error) { showToast('Error fetching control number data.', 'error'); }
             } else if (actionPermitDetails) {
                 event.preventDefault();
                 currentViewingApplicantId = actionPermitDetails.dataset.id;
@@ -1139,11 +1096,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(); formData.append('notes', adminNotesTextareaModal.value);
         try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/notes`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) { showToast(result.message, 'success'); closeModal(adminNotesModal, adminNotesModalBackdrop); const appInRaw = rawApplicationsData.find(app => app.applicant_id == currentViewingApplicantId); if(appInRaw) appInRaw.admin_notes = adminNotesTextareaModal.value;} else showToast(result.message || 'Failed to save notes.', 'error'); } catch (error) { showToast('An error occurred while saving notes: ' + error.toString(), 'error'); console.error("Error saving notes:", error); }
     }
-    async function saveControlNumber() {
-        if (!currentViewingApplicantId || !adminControlNumberInputModal) return;
-        const formData = new FormData(); formData.append('control_number', adminControlNumberInputModal.value);
-        try { const response = await fetch(`/admin/application/${currentViewingApplicantId}/control-number`, { method: 'POST', body: formData }); const result = await response.json(); if (result.success) { showToast(result.message, 'success'); closeModal(adminControlNumberModal, adminControlNumberModalBackdrop); const appInRaw = rawApplicationsData.find(app => app.applicant_id == currentViewingApplicantId); if(appInRaw) appInRaw.control_number = adminControlNumberInputModal.value;} else showToast(result.message || 'Failed to save control number.', 'error'); } catch (error) { showToast('An error occurred while saving control number: ' + error.toString(), 'error'); console.error("Error saving control number:", error); }
-    }
+
     async function savePermitDetails() {
         if (!currentViewingApplicantId) return;
         const formData = new FormData();
@@ -1155,16 +1108,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if(saveAdminNotesModalBtn) saveAdminNotesModalBtn.addEventListener('click', saveAdminNotes);
-    if(saveAdminControlNumberModalBtn) saveAdminControlNumberModalBtn.addEventListener('click', saveControlNumber);
     if(saveAdminPermitDetailsModalBtn) saveAdminPermitDetailsModalBtn.addEventListener('click', savePermitDetails);
 
     if(closeAdminNotesModalIcon) closeAdminNotesModalIcon.addEventListener('click', () => closeModal(adminNotesModal, adminNotesModalBackdrop));
     if(adminNotesModalBackdrop) adminNotesModalBackdrop.addEventListener('click', (e) => { if(e.target === adminNotesModalBackdrop) closeModal(adminNotesModal, adminNotesModalBackdrop);});
     if(cancelAdminNotesBtn) cancelAdminNotesBtn.addEventListener('click', () => closeModal(adminNotesModal, adminNotesModalBackdrop));
-
-    if(closeAdminControlNumberModalIcon) closeAdminControlNumberModalIcon.addEventListener('click', () => closeModal(adminControlNumberModal, adminControlNumberModalBackdrop));
-    if(adminControlNumberModalBackdrop) adminControlNumberModalBackdrop.addEventListener('click', (e) => { if(e.target === adminControlNumberModalBackdrop) closeModal(adminControlNumberModal, adminControlNumberModalBackdrop);});
-    if(cancelAdminControlNumberBtn) cancelAdminControlNumberBtn.addEventListener('click', () => closeModal(adminControlNumberModal, adminControlNumberModalBackdrop));
 
     if(closeAdminPermitDetailsModalIcon) closeAdminPermitDetailsModalIcon.addEventListener('click', () => closeModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop));
     if(adminPermitDetailsModalBackdrop) adminPermitDetailsModalBackdrop.addEventListener('click', (e) => { if(e.target === adminPermitDetailsModalBackdrop) closeModal(adminPermitDetailsModal, adminPermitDetailsModalBackdrop);});
