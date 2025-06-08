@@ -126,20 +126,15 @@
                     <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-time-line"></i></div>
                     Pending <span class="ml-auto bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full" id="pendingCountSide">{{ stats.pending if stats else '0' }}</span>
                 </a>
-                <a href="#" id="inReviewFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:bg-gray-50 rounded">
-                    <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-file-search-line"></i></div>
-                    In Review <span class="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full" id="inReviewCountSide">{{ stats.in_review if stats else '0' }}</span>
-                </a>
+                <!-- REMOVED In Review Filter Link -->
                 <a href="#" id="approvedFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-green-600 hover:bg-gray-50 rounded">
                     <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-checkbox-circle-line"></i></div>
                     Approved <span class="ml-auto bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full" id="approvedCountSide">{{ stats.approved if stats else '0' }}</span>
                 </a>
-                <!-- START: Added Scheduled Filter Link -->
-                <a href="#" id="scheduledFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-gray-50 rounded ml-4"> <!-- Added ml-4 for indent -->
+                <a href="#" id="scheduledFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-gray-50 rounded ml-4"> 
                     <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-calendar-schedule-line"></i></div>
                     Scheduled <span class="ml-auto bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-0.5 rounded-full" id="scheduledCountSide">{{ stats.scheduled if stats else '0' }}</span>
                 </a>
-                <!-- END: Added Scheduled Filter Link -->
                 <a href="#" id="rejectedFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-red-600 hover:bg-gray-50 rounded">
                     <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-close-circle-line"></i></div>
                     Rejected <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full" id="rejectedCountSide">{{ stats.rejected if stats else '0' }}</span>
@@ -205,7 +200,8 @@
         </div>
 
         <div id="dashboardContent">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <!-- Adjusted grid columns for overview stats: lg:grid-cols-4 or 6, instead of 5 or 7 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
@@ -250,17 +246,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-500 text-sm">In Review</p>
-                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsInReview">{{ stats.in_review if stats else '0' }}</h2>
-                        </div>
-                        <div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg">
-                             <i class="ri-file-search-line ri-lg"></i>
-                        </div>
-                    </div>
-                </div>
+                <!-- REMOVED In Review Stats Card -->
                 <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
@@ -280,6 +266,17 @@
                         </div>
                         <div class="w-10 h-10 flex items-center justify-center bg-orange-100 text-orange-600 rounded-lg">
                             <i class="ri-shield-cross-line ri-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm">Scheduled for Exam</p>
+                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsScheduled">{{ stats.scheduled if stats else '0' }}</h2>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-indigo-100 text-indigo-700 rounded-lg">
+                            <i class="ri-calendar-schedule-line ri-lg"></i>
                         </div>
                     </div>
                 </div>
@@ -546,7 +543,7 @@
                                             <div class="dropdown-content w-36 text-left">
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Approved">Approve</a>
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Rejected">Reject</a>
-                                                <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="In Review">Set In Review</a>
+                                                <!-- REMOVED In Review status change option -->
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Pending">Set Pending</a>
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Passed">Set Passed</a>
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Failed">Set Failed</a>
@@ -816,7 +813,6 @@ const PGPC_LOGO_URL_JS = "{{ url_for('static', filename='logopgpc.png') }}";
 const BAYAN_LOGO_URL_JS = "{{ url_for('static', filename='images/bayan_padre_garcia_logo.png') }}"; 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Process rawApplicationsData to include 'is_scheduled'
     const rawApplicationsData = ({{ applications | tojson | safe if applications else [] | tojson | safe }}).map(app => {
         app.is_scheduled = (
             app.application_status === 'Approved' &&
@@ -841,7 +837,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebarBackToHomeLink = document.getElementById('sidebarBackToHomeLink'); 
     const sidebarFilterLinks = {
         pending: document.getElementById('pendingFilterLink'),
-        inReview: document.getElementById('inReviewFilterLink'),
+        // inReview: document.getElementById('inReviewFilterLink'), // Removed
         approved: document.getElementById('approvedFilterLink'),
         scheduled: document.getElementById('scheduledFilterLink'), 
         rejected: document.getElementById('rejectedFilterLink'),
@@ -985,7 +981,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let statusClass = 'bg-gray-100 text-gray-800';
         if (newStatus === 'Approved') statusClass = 'bg-green-100 text-green-800';
         else if (newStatus === 'Rejected') statusClass = 'bg-red-100 text-red-800';
-        else if (newStatus === 'In Review') statusClass = 'bg-blue-100 text-blue-800';
+        // else if (newStatus === 'In Review') statusClass = 'bg-blue-100 text-blue-800'; // Removed
         else if (newStatus === 'Pending') statusClass = 'bg-yellow-100 text-yellow-800';
         else if (newStatus === 'Passed') statusClass = 'bg-teal-100 text-teal-800';
         else if (newStatus === 'Failed') statusClass = 'bg-orange-100 text-orange-800';
@@ -1484,7 +1480,7 @@ document.addEventListener('DOMContentLoaded', function() {
     clearDateFilterBtn?.addEventListener('click', () => { if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; filterTableRows(); });
 
     const flaskStats = JSON.parse('{{ stats | tojson | safe }}');
-    let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, in_review:0, passed:0, failed:0, scheduled:0 }));
+    let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, /*in_review:0,*/ passed:0, failed:0, scheduled:0 })); // Removed in_review from default
     
     function getApplicationTrends(applicationsInputData, numMonths = 7) {
         const trends = { labels: [], totals: new Array(numMonths).fill(0), approved: new Array(numMonths).fill(0) };
@@ -1517,8 +1513,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('statsTotal').textContent = currentJsStats.total_applications || 0; 
         document.getElementById('statsPending').textContent = currentJsStats.pending || 0; 
         document.getElementById('statsApproved').textContent = currentJsStats.approved || 0; 
+        document.getElementById('statsScheduled').textContent = currentJsStats.scheduled || 0; // Added for dashboard card
         document.getElementById('statsRejected').textContent = currentJsStats.rejected || 0; 
-        document.getElementById('statsInReview').textContent = currentJsStats.in_review || 0;
+        // document.getElementById('statsInReview').textContent = currentJsStats.in_review || 0; // Removed
         document.getElementById('statsPassed').textContent = currentJsStats.passed || 0;
         document.getElementById('statsFailed').textContent = currentJsStats.failed || 0;
 
@@ -1526,7 +1523,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('approvedCountSide').textContent = currentJsStats.approved || 0; 
         document.getElementById('scheduledCountSide').textContent = currentJsStats.scheduled || 0; 
         document.getElementById('rejectedCountSide').textContent = currentJsStats.rejected || 0; 
-        document.getElementById('inReviewCountSide').textContent = currentJsStats.in_review || 0;
+        // document.getElementById('inReviewCountSide').textContent = currentJsStats.in_review || 0; // Removed
         document.getElementById('passedCountSide').textContent = currentJsStats.passed || 0;
         document.getElementById('failedCountSide').textContent = currentJsStats.failed || 0;
 
@@ -1535,22 +1532,22 @@ document.addEventListener('DOMContentLoaded', function() {
             { value: currentJsStats.approved || 0, name: 'Approved', itemStyle: { color: '#16a34a' } },
             { value: currentJsStats.rejected || 0, name: 'Rejected', itemStyle: { color: '#dc2626' } },
             { value: currentJsStats.pending || 0, name: 'Pending', itemStyle: { color: '#ca8a04' } },
-            { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } },
+            // { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } }, // Removed
             { value: currentJsStats.passed || 0, name: 'Passed', itemStyle: { color: '#0d9488' } },
-            { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } }
-            // 'Scheduled' could be added here if desired for the pie chart, e.g., as a segment of 'Approved' or standalone
+            { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } },
+            { value: currentJsStats.scheduled || 0, name: 'Scheduled', itemStyle: { color: '#4338ca' } } // Added to pie
         ].filter(item => item.value > 0) }] }); }
     }
 
     function updateGlobalStatsOnStatusChange() { 
-        currentJsStats.pending = 0; currentJsStats.in_review = 0; currentJsStats.approved = 0; 
+        currentJsStats.pending = 0; /*currentJsStats.in_review = 0;*/ currentJsStats.approved = 0; 
         currentJsStats.rejected = 0; currentJsStats.passed = 0; currentJsStats.failed = 0;
         currentJsStats.scheduled = 0; 
 
         (rawApplicationsData || []).forEach(app => { 
             const status = app.application_status; 
             if (status === 'Pending') currentJsStats.pending++; 
-            else if (status === 'In Review') currentJsStats.in_review++; 
+            // else if (status === 'In Review') currentJsStats.in_review++; // Removed
             else if (status === 'Approved') {
                 currentJsStats.approved++;
                 if (app.is_scheduled) { 
@@ -1640,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (link) { 
                 link.classList.remove('text-primary', 'bg-primary/5'); 
                 if (link === sidebarFilterLinks.pending) link.classList.add('text-yellow-600'); 
-                else if (link === sidebarFilterLinks.inReview) link.classList.add('text-blue-600'); 
+                // else if (link === sidebarFilterLinks.inReview) link.classList.add('text-blue-600'); // Removed
                 else if (link === sidebarFilterLinks.approved) link.classList.add('text-green-600'); 
                 else if (link === sidebarFilterLinks.scheduled) link.classList.add('text-indigo-700'); 
                 else if (link === sidebarFilterLinks.rejected) link.classList.add('text-red-600'); 
@@ -1665,7 +1662,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 let targetFilterLink; 
                 switch(activeStatus.toLowerCase()) { 
                     case 'pending': targetFilterLink = sidebarFilterLinks.pending; break; 
-                    case 'in review': targetFilterLink = sidebarFilterLinks.inReview; break; 
+                    // case 'in review': targetFilterLink = sidebarFilterLinks.inReview; break; // Removed
                     case 'approved': targetFilterLink = sidebarFilterLinks.approved; break; 
                     case 'scheduled': targetFilterLink = sidebarFilterLinks.scheduled; break; 
                     case 'rejected': targetFilterLink = sidebarFilterLinks.rejected; break; 
@@ -1697,8 +1694,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const setupSidebarFilterClickHandler = (linkElement, statusValueToSet) => { linkElement?.addEventListener('click', (e) => { e.preventDefault(); activeStatusFilter = statusValueToSet; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; showView('applications', statusValueToSet); filterTableRows(); }); };
     setupSidebarFilterClickHandler(sidebarApplicationsMenuLink, 'All');
     Object.entries(sidebarFilterLinks).forEach(([statusKey, linkElement]) => { 
+        if (!linkElement) return; // Skip if link element is null (e.g. inReviewFilterLink if it was removed)
         let statusValue = statusKey.charAt(0).toUpperCase() + statusKey.slice(1); 
-        if (statusKey === 'inReview') statusValue = 'In Review';
+        // if (statusKey === 'inReview') statusValue = 'In Review'; // No longer needed
         setupSidebarFilterClickHandler(linkElement, statusValue); 
     });
 
@@ -1709,9 +1707,10 @@ document.addEventListener('DOMContentLoaded', function() {
         { value: currentJsStats.approved || 0, name: 'Approved', itemStyle: { color: '#16a34a' } },
         { value: currentJsStats.rejected || 0, name: 'Rejected', itemStyle: { color: '#dc2626' } },
         { value: currentJsStats.pending || 0, name: 'Pending', itemStyle: { color: '#ca8a04' } },
-        { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } },
+        // { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } }, // Removed
         { value: currentJsStats.passed || 0, name: 'Passed', itemStyle: { color: '#0d9488' } },
-        { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } }
+        { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } },
+        { value: currentJsStats.scheduled || 0, name: 'Scheduled', itemStyle: { color: '#4338ca' } } 
     ].filter(item => item.value > 0) }]}; window.statusChartInstance.setOption(statusOption); window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.statusChartInstance) window.statusChartInstance.resize(); }); }
 
     function generateAndPrintReport() {
