@@ -19,7 +19,6 @@ header {
     justify-content: space-between;
     align-items: center;
     z-index: 1000;
-    /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */ /* Optional: remove shadow if pure overlay on hero */
     transition: background-color 0.3s ease;
 }
 
@@ -30,25 +29,25 @@ header {
 
 .header-left .logo {
     font-size: 1.4em;
-    color: #fff; /* Default to white for better visibility on hero images */
+    color: #fff;
     margin-left: 15px;
     white-space: nowrap;
     transition: color 0.3s ease;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Add shadow for readability */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 .header-left img {
-    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3)); /* Slight shadow for logo image */
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
 }
 
 
 .navigation a {
     position: relative;
     font-size: 1.1em;
-    color: #fff; /* Default to white for better visibility on hero images */
+    color: #fff;
     text-decoration: none;
     font-weight: 500;
     margin-left: 30px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Add shadow for readability */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 .navigation a.no-underline {
     text-decoration: none;
@@ -75,7 +74,7 @@ header {
     display: block;
     width: 100%;
     height: 3px;
-    background-color: #fff; /* Default to white for hamburger lines on hero */
+    background-color: #fff;
     border-radius: 3px;
     transition: all 0.3s ease-in-out;
     box-shadow: 0 0 2px rgba(0,0,0,0.5);
@@ -84,13 +83,13 @@ header {
 
 /* --- About Hero Banner Styles --- */
 .about-hero-banner {
-    background-image: url("{{ url_for('static', filename='images/img3.jpg') }}"); /* Static background image */
+    background-image: url("{{ url_for('static', filename='images/img3.jpg') }}");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-attachment: fixed; /* Makes the background image fixed during scroll */
-    height: 85vh; /* Default height for desktop */
-    min-height: 650px; /* Default min-height for desktop */
+    background-attachment: fixed;
+    height: 85vh;
+    min-height: 650px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -98,24 +97,24 @@ header {
     text-align: center;
     color: white;
     padding: 20px;
-    padding-top: 120px; /* To push content below absolute header. Adjust based on header height. */
+    padding-top: 120px;
     box-sizing: border-box;
-    position: relative; /* For overlay positioning */
+    position: relative;
 }
 
-.about-hero-banner::before { /* Dark overlay for text readability */
+.about-hero-banner::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.55); /* Adjust opacity as needed */
+    background-color: rgba(0, 0, 0, 0.55);
     z-index: 1;
 }
 
 .about-hero-banner .hero-content {
-    position: relative; /* To be above the overlay */
+    position: relative;
     z-index: 2;
 }
 
@@ -137,17 +136,17 @@ header {
 
 /* --- About Section Styles --- */
 .about-section {
-  padding: 3rem 2rem; 
-  background-color: #ffffff; 
+  padding: 3rem 2rem;
+  background-color: #ffffff;
   color: #333;
-  position: relative; 
-  z-index: 5; 
+  position: relative;
+  z-index: 5;
 }
 
 .about-container {
   display: flex;
   flex-direction: column;
-  gap: 30px; 
+  gap: 30px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -170,22 +169,22 @@ header {
   font-weight: bold;
   text-align: center;
   margin-bottom: 16px;
-  border-radius: 4px; 
+  border-radius: 4px;
 }
 
 .image-box {
   background: white;
-  padding: 10px; 
-  border: 1px solid #e0e0e0; 
-  border-radius: 4px; 
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .image-box img {
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 3px; 
+  border-radius: 3px;
 }
 
 .about-content {
@@ -195,85 +194,82 @@ header {
 
 @media (min-width: 768px) {
   .about-content {
-    padding-left: 30px; 
+    padding-left: 30px;
   }
 }
 
-/* General heading style within .about-content, overridden by more specific rules below */
 .about-content .heading {
-  font-size: 2rem; 
+  font-size: 2rem;
   color: #162938;
   margin-bottom: 1rem;
-  margin-top: 1.5rem; 
-  border-bottom: 2px solid #162938; 
-  padding-bottom: 0.5rem; 
-}
-
-/* NEW/MODIFIED: Styling for the Motto ("GARCIANO AKO...") */
-.about-content > h1.heading:first-of-type {
-    font-size: 1.7em; 
-    font-weight: 600; /* Bolder */
-    font-style: italic; /* Italicized for emphasis */
-    color: #162938; /* Consistent theme color */
-    text-align: center; 
-    padding: 1.5rem; /* More padding */
-    margin-top: 0; /* Keep from original specific rule */
-    margin-bottom: 3rem; /* Increased space after motto */
-    background-color: #eef3f7; /* Light, distinct background */
-    border: 1px solid #d0d9e0; /* Subtle border */
-    border-left: 5px solid #162938; /* Accent color */
-    border-radius: 8px; /* Rounded corners */
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05); /* Soft shadow */
-    border-bottom: none; /* Ensure no underline from general .heading */
-}
-
-/* NEW/MODIFIED: Styling for Vision, Mission, Core Values headings */
-.about-content > h2.heading {
-  font-size: 2.1em; /* Slightly larger for sub-sections */
-  color: #162938;
-  margin-top: 2rem; /* More space above these headings */
+  margin-top: 1.5rem;
   border-bottom: 2px solid #162938;
-  padding-bottom: 0.6rem; /* Slightly more space for the underline */
-  margin-bottom: 1.8rem; /* Increased space after heading and its border */
+  padding-bottom: 0.5rem;
+}
+
+.about-content > h1.heading:first-of-type {
+    font-size: 1.7em;
+    font-weight: 600;
+    font-style: italic;
+    color: #162938;
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 3rem;
+    background-color: #eef3f7;
+    border: 1px solid #d0d9e0;
+    border-left: 5px solid #162938;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    border-bottom: none;
+}
+
+.about-content > h2.heading {
+  font-size: 2.1em;
+  color: #162938;
+  margin-top: 2rem;
+  border-bottom: 2px solid #162938;
+  padding-bottom: 0.6rem;
+  margin-bottom: 1.8rem;
 }
 
 .about-content p {
-  margin-bottom: 2.5rem; /* Increased for better separation between V/M/CV blocks */
-  line-height: 1.75; /* Increased for readability */
-  font-size: 1.05em; /* Slightly larger paragraph text */
-  color: #454545; /* Slightly softer black */
+  margin-bottom: 2.5rem;
+  line-height: 1.75;
+  font-size: 1.05em;
+  color: #454545;
 }
 
-.objectives { /* This is ul.objectives for Core Values */
+.objectives {
   list-style-type: none;
-  padding-left: 0; 
-  margin-bottom: 2.5rem; /* Consistent with paragraph bottom margin */
+  padding-left: 0;
+  margin-bottom: 2.5rem;
 }
 
 .objectives li {
-  margin-bottom: 1.2rem; /* Space between list items */
-  padding-left: 35px; /* Space for custom bullet + text indent */
+  margin-bottom: 1.2rem;
+  padding-left: 35px;
   position: relative;
-  font-size: 1.05em; /* Consistent with paragraph */
-  line-height: 1.7; /* Improved line height for list items */
-  color: #454545; /* Consistent with paragraph text */
+  font-size: 1.05em;
+  line-height: 1.7;
+  color: #454545;
 }
 
-.objectives li::before { /* Custom bullet for Core Values */
-    content: "✔"; 
+.objectives li::before {
+    content: "✔";
     position: absolute;
     left: 0;
-    top: 50%; /* For better vertical alignment */
-    transform: translateY(-50%); /* Center the checkmark */
-    color: #162938; 
+    top: 50%;
+    transform: translateY(-50%);
+    color: #162938;
     font-weight: bold;
-    font-size: 1.2em; /* Slightly larger checkmark */
+    font-size: 1.2em;
 }
 
 /* --- Meet People Section Styles --- */
 .meet-people-section {
-  padding: 4rem 2rem; /* MODIFIED: Increased vertical padding */
-  background-color: #f8f9fa; 
+  padding: 4rem 2rem;
+  background-color: #f8f9fa;
   color: #333;
   position: relative;
   z-index: 5;
@@ -324,28 +320,28 @@ header {
 }
 
 .meet-people-bottom-row {
-    margin-top: 3rem; 
-    padding: 1rem 0; 
+    margin-top: 3rem;
+    padding: 1rem 0;
 }
 
 .single-featured-person {
     display: flex;
     flex-direction: row;
-    align-items: flex-start; 
-    gap: 2.5rem; 
-    max-width: 950px; 
-    margin: 0 auto; 
+    align-items: flex-start;
+    gap: 2.5rem;
+    max-width: 950px;
+    margin: 0 auto;
     padding: 2rem;
-    background-color: #ffffff; 
+    background-color: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* MODIFIED: Slightly more pronounced shadow */
-    border: 1px solid #e2e8f0; /* MODIFIED: Added light border for definition */
-    overflow: hidden; 
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
 }
 
 .single-featured-person .person-image-container {
-    flex: 0 0 35%; 
-    max-width: 320px; 
+    flex: 0 0 35%;
+    max-width: 320px;
     min-width: 200px;
 }
 
@@ -353,202 +349,139 @@ header {
     width: 100%;
     height: auto;
     display: block;
-    border-radius: 8px; 
+    border-radius: 8px;
     object-fit: cover;
 }
 
 .single-featured-person .person-details-container {
-    flex: 1 1 60%; 
-    padding-top: 0.5rem; 
+    flex: 1 1 60%;
+    padding-top: 0.5rem;
 }
 
-.single-featured-person .person-name { 
-    font-size: 1.8em; 
+.single-featured-person .person-name {
+    font-size: 1.8em;
     font-weight: 700;
-    color: #162938; 
+    color: #162938;
     margin-top: 0;
     margin-bottom: 0.5rem;
 }
 
-.single-featured-person .person-role { 
+.single-featured-person .person-role {
     font-size: 1.15em;
-    color: #4a5568; 
+    color: #4a5568;
     font-weight: 600;
     margin-bottom: 1.25rem;
-    text-transform: uppercase; 
-    letter-spacing: 0.5px; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .single-featured-person .person-description {
-    font-size: 1rem; 
-    line-height: 1.75; 
-    color: #2d3748; 
+    font-size: 1rem;
+    line-height: 1.75;
+    color: #2d3748;
     margin-bottom: 0;
 }
 
-/* Responsive adjustments for Meet People Section and Single Featured Person */
 @media (max-width: 768px) {
-  .meet-people-top-row {
-    flex-direction: column;
-  }
-  .meet-people-text {
-    flex-basis: 100%;
-    margin-bottom: 2rem;
-    text-align: center;
-  }
-   .meet-people-text h2 {
-    font-size: 1.8em;
-  }
-  .meet-people-image-large {
-    flex-basis: 100%;
-  }
-
-  .single-featured-person {
-      flex-direction: column;
-      align-items: center; 
-      text-align: center; 
-      padding: 1.5rem;
-      gap: 1.5rem;
-  }
-
-  .single-featured-person .person-image-container {
-      flex-basis: auto; 
-      width: 60%; 
-      max-width: 240px; 
-      margin: 0 auto; 
-  }
-
-  .single-featured-person .person-details-container {
-      flex-basis: auto; 
-      width: 100%;
-      padding-top: 0;
-  }
-  .single-featured-person .person-name,
-  .single-featured-person .person-role,
-  .single-featured-person .person-description {
-      text-align: center; 
-  }
-   .single-featured-person .person-name {
-      font-size: 1.6em;
-   }
-   .single-featured-person .person-role {
-      font-size: 1.05em;
-   }
-   .single-featured-person .person-description {
-      font-size: 0.95rem;
-   }
+  .meet-people-top-row { flex-direction: column; }
+  .meet-people-text { flex-basis: 100%; margin-bottom: 2rem; text-align: center; }
+  .meet-people-text h2 { font-size: 1.8em; }
+  .meet-people-image-large { flex-basis: 100%; }
+  .single-featured-person { flex-direction: column; align-items: center; text-align: center; padding: 1.5rem; gap: 1.5rem; }
+  .single-featured-person .person-image-container { flex-basis: auto; width: 60%; max-width: 240px; margin: 0 auto; }
+  .single-featured-person .person-details-container { flex-basis: auto; width: 100%; padding-top: 0; }
+  .single-featured-person .person-name, .single-featured-person .person-role, .single-featured-person .person-description { text-align: center; }
+  .single-featured-person .person-name { font-size: 1.6em; }
+  .single-featured-person .person-role { font-size: 1.05em; }
+  .single-featured-person .person-description { font-size: 0.95rem; }
 }
 
-@media (max-width: 576px) { 
-    .meet-people-text p {
-        font-size: 0.95rem;
-    }
-    .single-featured-person .person-image-container {
-        width: 70%;
-        max-width: 200px;
-    }
-     .single-featured-person .person-name {
-        font-size: 1.4em;
-     }
+@media (max-width: 576px) {
+    .meet-people-text p { font-size: 0.95rem; }
+    .single-featured-person .person-image-container { width: 70%; max-width: 200px; }
+    .single-featured-person .person-name { font-size: 1.4em; }
 }
 
 
 /* --- Meet Our Staff Section Styles --- */
 .meet-our-staff-section {
     padding: 3rem 2rem;
-    background-color: #ffffff; 
+    background-color: #ffffff;
     position: relative;
     z-index: 5;
 }
 
 .meet-our-staff-container {
-    max-width: 1200px; 
+    max-width: 1200px;
     margin: 0 auto;
 }
 
-.staff-header-container {
+.staff-category {
+    margin-bottom: 4rem;
+}
+.staff-category:last-child {
+    margin-bottom: 0;
+}
+
+.staff-header-container { /* MODIFIED: Now only for titles */
     display: flex;
     align-items: center;
-    justify-content: space-between; 
-    margin-bottom: 3rem; 
+    justify-content: center; /* Center the titles block */
+    margin-bottom: 2rem; /* Space between titles and carousel */
 }
 
 .staff-header-titles {
-    flex-grow: 1; 
+    flex-grow: 0; /* Don't need to grow, just center */
     text-align: center;
 }
 
 .staff-section-subtitle {
-    font-size: 1em; /* MODIFIED: Slightly larger */
-    color: #6c757d; 
-    margin-bottom: 0.45rem; /* Adjusted spacing */
+    font-size: 1em;
+    color: #6c757d;
+    margin-bottom: 0.45rem;
     text-transform: uppercase;
-    letter-spacing: 1.5px; /* MODIFIED: More spacing */
-    font-weight: 500; /* MODIFIED: Medium weight */
+    letter-spacing: 1.5px;
+    font-weight: 500;
 }
 
 .staff-section-main-title {
-    font-size: 2.8em; /* MODIFIED: Larger title */
+    font-size: 2.8em;
     font-weight: bold;
-    color: #162938; 
-    margin-bottom: 0; 
-    letter-spacing: -0.5px; /* MODIFIED: Optical adjustment for larger font */
+    color: #162938;
+    margin-bottom: 0;
+    letter-spacing: -0.5px;
 }
 
-.staff-nav-arrow {
-    background-color: #fff;
-    border: 1px solid #ced4da; 
-    border-radius: 50%;
-    width: 44px; 
-    height: 44px;
-    font-size: 1.5em;
-    color: #343a40; 
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+/* NEW: Wrapper for carousel content (grid + arrows) */
+.staff-carousel-content-wrapper {
+    position: relative; /* For absolute positioning of arrows */
 }
-
-.staff-nav-arrow:hover {
-    background-color: #e9ecef; 
-    border-color: #adb5bd;
-}
-
-.staff-nav-arrow:disabled { 
-    opacity: 0.5;
-    cursor: not-allowed;
-    background-color: #f8f9fa;
-}
-
 
 .staff-grid-wrapper {
     overflow: hidden;
     width: 100%;
-    position: relative; 
 }
 
 .staff-grid {
     display: flex;
-    flex-wrap: nowrap; 
-    justify-content: flex-start; 
-    gap: 25px; 
-    transition: transform 0.5s ease-in-out; 
-    padding-bottom: 10px; 
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 25px;
+    transition: transform 0.5s ease-in-out;
+    padding-bottom: 10px;
 }
 
 .staff-member-card {
-    flex-shrink: 0; 
-    width: 280px;   
-    box-sizing: border-box; 
-    
-    background-color: #f8f9fa; 
-    border-radius: 15px; 
+    flex-shrink: 0;
+    width: 280px;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    border-radius: 15px;
     padding: 25px;
     text-align: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); 
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer; /* Indicate it's clickable */
 }
 
 .staff-member-card:hover {
@@ -557,69 +490,124 @@ header {
 }
 
 .staff-member-card img {
-    width: 120px; 
+    width: 120px;
     height: 120px;
-    border-radius: 50%; 
-    object-fit: cover; 
-    margin: 0 auto 20px auto; 
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 20px auto;
     display: block;
-    border: 3px solid #ffffff; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+    border: 3px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .staff-member-name {
     font-size: 1.25em;
-    font-weight: 700; 
-    color: #343a40; 
+    font-weight: 700;
+    color: #343a40;
     margin-top: 0;
     margin-bottom: 0.5rem;
 }
 
 .staff-member-role {
     font-size: 0.95em;
-    color: #6c757d; 
+    color: #6c757d;
     margin-bottom: 0;
 }
 
-/* Responsive adjustments for Meet Our Staff Section */
+/* MODIFIED: staff-nav-arrow positioning and styles */
+.staff-nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10; /* Ensure arrows are above the grid content */
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 1.5em;
+    color: #343a40;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease, top 0.3s ease, transform 0.3s ease; /* Added top and transform transition */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.staff-nav-arrow:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.staff-nav-arrow:disabled {
+    opacity: 0.5; /* Handles disabled appearance */
+    cursor: not-allowed;
+    background-color: #f8f9fa;
+    border-color: #ced4da; /* Match normal border or lighten as preferred */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Lighter shadow for disabled state */
+}
+
+.staff-nav-arrow.prev {
+    left: -50px; /* ADJUSTED: Position further outside the grid wrapper */
+}
+
+.staff-nav-arrow.next {
+    right: -50px; /* ADJUSTED: Position further outside the grid wrapper */
+}
+
+
+@media (max-width: 992px) {
+    .staff-nav-arrow.prev {
+        left: 10px; /* Bring arrows closer on medium screens */
+    }
+    .staff-nav-arrow.next {
+        right: 10px; /* Bring arrows closer on medium screens */
+    }
+}
+
 @media (max-width: 768px) {
-    .meet-our-staff-section {
-        padding: 2rem 1rem;
+    .meet-our-staff-section { padding: 2rem 1rem; }
+    .staff-category { margin-bottom: 3rem; }
+    .staff-header-container { margin-bottom: 1rem; } /* Adjusted margin for tighter layout if arrows are above */
+    .staff-section-main-title { font-size: 2.2em; }
+    .staff-member-card { width: 250px; }
+    .staff-member-card img { width: 100px; height: 100px; }
+
+    /* --- Staff Carousel Arrow Adjustments for Mobile --- */
+    .staff-carousel-content-wrapper {
+        padding-top: 55px; /* Create space for arrows above the grid */
     }
-    .staff-header-container {
-        justify-content: center; 
-        margin-bottom: 2rem;
+    .staff-nav-arrow {
+        top: 8px; /* Position arrows in the new space at the top */
+        transform: translateY(0); /* Remove vertical centering */
     }
-    .staff-section-main-title {
-        font-size: 2.2em; /* MODIFIED: Adjusted responsive size */
+    .staff-nav-arrow.prev {
+        left: 5px; 
     }
-    .staff-member-card {
-        width: 250px; 
-    }
-    .staff-member-card img {
-        width: 100px;
-        height: 100px;
+    .staff-nav-arrow.next {
+        right: 5px; 
     }
 }
 
 @media (max-width: 576px) {
-    .staff-section-main-title {
-        font-size: 2em; /* MODIFIED: Adjusted responsive size */
+    .staff-section-main-title { font-size: 2em; }
+    .staff-member-card { width: 220px; padding: 20px; }
+    .staff-member-card img { width: 90px; height: 90px; margin-bottom: 15px; }
+    .staff-member-name { font-size: 1.15em; }
+    .staff-member-role { font-size: 0.9em; }
+    
+    .staff-nav-arrow { 
+        width: 38px; 
+        height: 38px; 
+        font-size: 1.3em; 
     }
-    .staff-member-card {
-        width: 220px; 
-        padding: 20px;
+    .staff-nav-arrow.prev {
+        left: 0px; 
     }
-    .staff-member-card img {
-        width: 90px;
-        height: 90px;
-        margin-bottom: 15px;
-    }
-    .staff-member-name {
-        font-size: 1.15em;
-    }
-    .staff-member-role {
-        font-size: 0.9em;
+    .staff-nav-arrow.next {
+        right: 0px; 
     }
 }
 
@@ -638,11 +626,11 @@ header {
   margin: 0 auto;
 }
 
-.location-section .heading { /* This targets the "Our Location" h2 */
+.location-section .heading {
   margin-bottom: 2rem;
-  margin-top: 0; /* Ensure no extra top margin for this specific heading */
-  border-bottom: none; /* No underline for this heading */
-  font-size: 2.5em; /* Make it prominent */
+  margin-top: 0;
+  border-bottom: none;
+  font-size: 2.5em;
   color: #162938;
 }
 
@@ -685,14 +673,8 @@ header {
   transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 
-.go-top-btn:hover {
-  opacity: 0.8;
-}
-
-.go-top-btn img {
-  width: 20px;
-  height: 20px;
-}
+.go-top-btn:hover { opacity: 0.8; }
+.go-top-btn img { width: 20px; height: 20px; }
 
 /* --- Footer Styles --- */
 .footer {
@@ -724,223 +706,199 @@ header {
   z-index: 1;
 }
 
-.footer * {
-  position: relative;
-  z-index: 2;
-}
+.footer * { position: relative; z-index: 2; }
+.footer-logo { width: 100px; height: 100px; margin-bottom: 1rem; }
+.footer-title { font-size: 1.5rem; font-weight: bold; }
+.footer-subtitle { font-size: 1.25rem; font-weight: bold; margin-top: 0.5rem; }
+.footer-connect { margin-top: 1rem; font-size: 1rem; }
+.footer-socials { display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 1.25rem; }
+.footer-socials a { color: white; text-decoration: none; transition: color 0.3s ease; }
+.footer-socials a:hover { color: #0987d0; }
+.footer-divider { border-top: 1px solid white; width: 25%; margin: 2rem 0; }
+.footer-bottom { font-size: 0.875rem; line-height: 1.6; max-width: 700px; }
 
-.footer-logo {
-  width: 100px;
-  height: 100px;
-  margin-bottom: 1rem;
-}
-
-.footer-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.footer-subtitle {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-top: 0.5rem;
-}
-
-.footer-connect {
-  margin-top: 1rem;
-  font-size: 1rem;
-}
-
-.footer-socials {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  font-size: 1.25rem;
-}
-
-.footer-socials a {
-  color: white;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.footer-socials a:hover {
-  color: #0987d0;
-}
-
-.footer-divider {
-  border-top: 1px solid white;
-  width: 25%;
-  margin: 2rem 0;
-}
-
-.footer-bottom {
-  font-size: 0.875rem;
-  line-height: 1.6;
-  max-width: 700px;
-}
-
-/* Mobile Navigation Styles & Adjustments (Copied and adapted from index.html) */
+/* Mobile Navigation Styles & Adjustments */
 @media (max-width: 992px) {
-    header {
-        padding: 10px 3%;
-        background-color: #162938; /* Solid background for mobile header */
-    }
-
-    .header-left img {
-        width: 60px; /* Adjusted size */
-        height: auto;
-        filter: none; /* Remove filter if header is solid */
-    }
-
-    .header-left .logo {
-        font-size: 0.9em; /* Adjusted for smaller screens */
-        margin-left: 8px; /* Reduced margin */
-        color: #fff; /* Ensure visible on dark background */
-        text-shadow: none; /* Remove shadow if header is solid */
-    }
-
-    .menu-toggle span {
-        background-color: #ffffff; /* Hamburger lines color for dark header */
-        box-shadow: none;
-    }
-
-    .navigation {
-        position: absolute;
-        top: 100%; /* Position below header */
-        right: 0;
-        width: 250px; /* Width of the mobile menu */
-        background-color: #162938; /* Dark background for nav */
-        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-        flex-direction: column;
-        align-items: stretch;
-        display: none; /* Hidden by default */
-        z-index: 1050;
-        border-top: 1px solid #2a3f54; /* Separator */
-        max-height: calc(100vh - 60px); /* Adjust based on actual header height on mobile */
-        overflow-y: auto;
-    }
-
-    .navigation.active {
-        display: flex; /* Show when active */
-    }
-
-    .navigation a {
-        display: block;
-        padding: 12px 20px;
-        margin-left: 0;
-        text-align: left;
-        color: #f0f0f0; /* Light text color for links */
-        border-bottom: 1px solid #2a3f54; /* Separator for links */
-        text-decoration: none;
-        text-shadow: none;
-    }
-    .navigation a:last-child {
-        border-bottom: none;
-    }
-    .navigation a:hover {
-        background-color: #22333f; /* Hover effect */
-    }
-
-    .navigation a .btnLogin-popup {
-        width: calc(100% - 10px); /* Full width button inside nav */
-        margin: 5px;
-        padding: 10px 15px;
-        font-size: 1em;
-        text-align: center;
-        display: block;
-        height: auto;
-        box-sizing: border-box;
-    }
-    .navigation a .btnLogin-popup[style*="background-color: #d9534f"] { /* Logout button */
-        margin-top: 5px;
-    }
-
-    .menu-toggle {
-        display: flex; /* Show hamburger */
-    }
-
-    .menu-toggle.active span:nth-child(1) {
-        transform: translateY(9px) rotate(45deg);
-    }
-    .menu-toggle.active span:nth-child(2) {
-        opacity: 0;
-    }
-    .menu-toggle.active span:nth-child(3) {
-        transform: translateY(-9px) rotate(-45deg);
-    }
-
-   
-    .about-hero-banner {
-        padding-top: 90px; /* Adjust for mobile header */
-        height: 65vh;
-        min-height: 380px;
-        /* background-attachment: scroll; */ /* REMOVED: Parallax can be jumpy on mobile, so disable -> Now fixed on mobile too */
-    }
-    .about-hero-banner .hero-content h1 {
-        font-size: 2.2em;
-    }
-    .about-hero-banner .hero-content p {
-        font-size: 1.1em;
-    }
-     .about-section {
-        padding: 2rem 1rem;
-    }
-    /* Adjust heading sizes for mobile within .about-content */
-    .about-content > h1.heading:first-of-type { /* Motto */
-        font-size: 1.5em;
-        padding: 1rem;
-        margin-bottom: 2rem;
-    }
-    .about-content > h2.heading { /* Vision, Mission, etc. */
-        font-size: 1.8em;
-    }
-    .about-content p, .objectives li {
-        font-size: 0.95rem; /* Slightly smaller text for mobile */
-    }
-    .objectives li {
-        padding-left: 30px; /* Adjust padding for bullet */
-    }
-    .objectives li::before {
-        font-size: 1.1em; /* Adjust bullet size */
-    }
-
+    header { padding: 10px 3%; background-color: #162938; }
+    .header-left img { width: 60px; height: auto; filter: none; }
+    .header-left .logo { font-size: 0.9em; margin-left: 8px; color: #fff; text-shadow: none; }
+    .menu-toggle span { background-color: #ffffff; box-shadow: none; }
+    .navigation { position: absolute; top: 100%; right: 0; width: 250px; background-color: #162938; box-shadow: 0 8px 16px rgba(0,0,0,0.15); flex-direction: column; align-items: stretch; display: none; z-index: 1050; border-top: 1px solid #2a3f54; max-height: calc(100vh - 60px); overflow-y: auto; }
+    .navigation.active { display: flex; }
+    .navigation a { display: block; padding: 12px 20px; margin-left: 0; text-align: left; color: #f0f0f0; border-bottom: 1px solid #2a3f54; text-decoration: none; text-shadow: none; }
+    .navigation a:last-child { border-bottom: none; }
+    .navigation a:hover { background-color: #22333f; }
+    .navigation a .btnLogin-popup { width: calc(100% - 10px); margin: 5px; padding: 10px 15px; font-size: 1em; text-align: center; display: block; height: auto; box-sizing: border-box; }
+    .navigation a .btnLogin-popup[style*="background-color: #d9534f"] { margin-top: 5px; }
+    .menu-toggle { display: flex; }
+    .menu-toggle.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+    .menu-toggle.active span:nth-child(2) { opacity: 0; }
+    .menu-toggle.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+    .about-hero-banner { padding-top: 90px; height: 65vh; min-height: 380px; }
+    .about-hero-banner .hero-content h1 { font-size: 2.2em; }
+    .about-hero-banner .hero-content p { font-size: 1.1em; }
+    .about-section { padding: 2rem 1rem; }
+    .about-content > h1.heading:first-of-type { font-size: 1.5em; padding: 1rem; margin-bottom: 2rem; }
+    .about-content > h2.heading { font-size: 1.8em; }
+    .about-content p, .objectives li { font-size: 0.95rem; }
+    .objectives li { padding-left: 30px; }
+    .objectives li::before { font-size: 1.1em; }
 }
-@media (max-width: 768px) {
-    .about-hero-banner {
-        padding-top: 80px; /* Further adjust if header height changes */
-        height: 70vh;
-        min-height: 350px;
-    }
-    /* .header-left .logo rule from index.html's 992px rule is sufficient here, or will be overridden by 480px rule if needed */
-   ocation-section .heading {
-        font-size: 2em;
-    }
+@media (max-width: 768px) { /* Combined existing and new 768px rules */
+    .about-hero-banner { padding-top: 80px; height: 70vh; min-height: 350px; }
+    .location-section .heading { font-size: 2em; }
 }
 @media (max-width: 480px) {
-    .header-left .logo {
-        font-size: 0.8em; /* Further adjust logo size on very small screens (from index.html) */
+    .header-left .logo { font-size: 0.8em; }
+    .about-hero-banner .hero-content h1 { font-size: 1.8em; }
+    .about-hero-banner .hero-content p { font-size: 1em; }
+    .about-content > h1.heading:first-of-type { font-size: 1.3em; }
+    .about-content > h2.heading { font-size: 1.6em; }
+    .about-content p, .objectives li { font-size: 0.9rem; }
+    .staff-section-main-title { font-size: 1.8em; } 
+    .location-section .heading { font-size: 1.8em; }
+}
+
+
+/* --- Staff Member Modal Styles --- */
+.staff-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.staff-modal.active {
+    display: flex;
+}
+
+.staff-modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    position: relative;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    animation: fadeInModal 0.3s ease-out;
+    border: 5px solid #800000; /* Maroon color */
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.staff-modal-close {
+    position: absolute;
+    top: -18px; 
+    right: -18px;
+    background-color: #fff;
+    border: 2px solid #800000; 
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    font-size: 1.8em;
+    color: #800000; 
+    cursor: pointer;
+    line-height: 32px; 
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+.staff-modal-close:hover {
+    background-color: #f0f0f0;
+    color: #5a0000; 
+}
+
+.staff-modal #modalStaffImage {
+    width: 100%; 
+    max-width: 250px; 
+    height: auto; 
+    border-radius: 6px; 
+    object-fit: cover;
+    margin-bottom: 20px;
+    border: 2px solid #eee; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.staff-modal #modalStaffName {
+    font-size: 1.9em;
+    font-weight: bold;
+    color: #800000; 
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+}
+
+.staff-modal #modalStaffRole {
+    display: inline-block;
+    background-color: #800000; 
+    color: #fff;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 8px 20px;
+    border-radius: 20px;
+    margin-top: 0;
+    margin-bottom: 0;
+    text-transform: uppercase;
+}
+
+/* --- Staff Modal Mobile Adjustments --- */
+@media (max-width: 576px) {
+    .staff-modal-content {
+        padding: 20px; 
+        max-width: 320px; 
+        width: 90%; 
+        border-width: 4px; 
     }
-    .about-hero-banner .hero-content h1 {
-        font-size: 1.8em;
+    .staff-modal #modalStaffImage {
+        max-width: 180px; 
+        margin-bottom: 15px;
     }
-    .about-hero-banner .hero-content p {
-        font-size: 1em;
+    .staff-modal #modalStaffName {
+        font-size: 1.5em; 
+        margin-bottom: 0.6rem;
     }
-    .about-content > h1.heading:first-of-type { /* Motto */
-        font-size: 1.3em;
+    .staff-modal #modalStaffRole {
+        font-size: 0.9em; 
+        padding: 6px 15px; 
     }
-    .about-content > h2.heading { /* Vision, Mission, etc. */
-        font-size: 1.6em;
+    .staff-modal-close {
+        width: 32px; 
+        height: 32px;
+        font-size: 1.5em;
+        line-height: 28px;
+        top: -15px; 
+        right: -15px;
     }
-    .about-content p, .objectives li {
-        font-size: 0.9rem;
+}
+@media (max-width: 380px) { 
+    .staff-modal-content {
+        padding: 15px;
+        max-width: 280px;
     }
-    .staff-section-main-title {
-        font-size: 1.8em; /* Further adjust staff title */
+     .staff-modal #modalStaffImage {
+        max-width: 150px; 
     }
-    .location-section .heading {
-        font-size: 1.8em;
+    .staff-modal #modalStaffName {
+        font-size: 1.3em; 
+    }
+    .staff-modal #modalStaffRole {
+        font-size: 0.8em; 
+        padding: 5px 12px; 
     }
 }
 
@@ -1007,7 +965,7 @@ header {
     </div>
 
     <div class="about-content">
-      <!-- MODIFIED: Removed inline style from this h1 -->
+   
       <h1 class="heading">"GARCIANO AKO, DISIPLINADO, MABUTING TAO, IPINAGMAMALAKI KO."</h1>
 
       <h2 class="heading">Vision</h2>
@@ -1045,10 +1003,10 @@ header {
                     <img src="{{ url_for('static', filename='images/nino.jpg') }}" alt="Doc. Niño Javinal Viñas, President of PGPC">
                 </div>
                 <div class="person-details-container">
-                    <h2 class="person-name">Doc. Niño Javinal Viñas</h2>
-                    <p class="person-role">President</p>
+                    <h2 class="person-name">Dr. Niño Javinal Viñas</h2>
+                    <p class="person-role">College President</p>
                     <p class="person-description">
-                        The President of Padre Garcia Polytechnic College, Doc. Niño Javinal Viñas provides overall leadership and strategic vision, 
+                        The President of Padre Garcia Polytechnic College, Dr. Niño Javinal Viñas provides overall leadership and strategic vision, 
                         focusing on ensuring academic excellence and 
                         the relevance of its technical-vocational programs. 
                     </p>
@@ -1062,195 +1020,235 @@ header {
 <!-- --- Meet Our Staff Section --- -->
 <section class="meet-our-staff-section">
     <div class="meet-our-staff-container">
-        <div class="staff-header-container">
-            <button class="staff-nav-arrow prev" aria-label="Previous staff">←</button>
-            <div class="staff-header-titles">
-                <p class="staff-section-subtitle">Padre Garcia Polytechnic College</p>
-                <h2 class="staff-section-main-title">Faculty Members</h2>
+
+        <!-- Category 1: Leadership & Deans -->
+        <div class="staff-category">
+            <div class="staff-header-container"> 
+                <div class="staff-header-titles">
+                    <p class="staff-section-subtitle">Padre Garcia Polytechnic College</p>
+                    <h2 class="staff-section-main-title">Leadership & Deans</h2>
+                </div>
             </div>
-            <button class="staff-nav-arrow next" aria-label="Next staff">→</button>
-        </div>
-
-        <div class="staff-grid-wrapper">
-            <div class="staff-grid">
-                <!-- Staff member cards remain the same -->
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/nino2.jpg') }}" alt="DR. NIÑO J. VIÑAS, COLLEGE PRESIDENT / VPAA">
-                    <p class="staff-member-name">DR. NIÑO J. VIÑAS</p>
-                    <h3 class="staff-member-role">COLLEGE PRESIDENT / VPAA</h3>
+            <div class="staff-carousel-content-wrapper"> 
+                
+                <div class="staff-grid-wrapper">
+                    <div class="staff-grid">
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/nino2.jpg') }}" alt="DR. NIÑO J. VIÑAS, COLLEGE PRESIDENT / VPAA">
+                            <p class="staff-member-name">DR. NIÑO J. VIÑAS</p>
+                            <h3 class="staff-member-role">COLLEGE PRESIDENT / VPAA</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/romy.jpg') }}" alt="ROMY C. DIAZ, VICE PRESIDENT FOR ADMINISTRATION AND FINANCE">
+                            <p class="staff-member-name">ROMY C. DIAZ</p>
+                            <h3 class="staff-member-role">VICE PRESIDENT FOR ADMINISTRATION AND FINANCE</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/mike2.jpg') }}" alt="MICHAEL K. ALMIREZ, COLLEGE DEAN / CCBA">
+                            <p class="staff-member-name">MICHAEL K. ALMIREZ</p>
+                            <h3 class="staff-member-role">COLLEGE DEAN / CCBA</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/abu2.jpg') }}" alt="JOY H. ABU, DEAN & PROGRAM CHAIR - COLLEGE OF CRIMINAL JUSTICE EDUCATION">
+                            <p class="staff-member-name">JOY H. ABU</p>
+                            <h3 class="staff-member-role">DEAN & PROGRAM CHAIR - COLLEGE OF CRIMINAL JUSTICE EDUCATION</h3>
+                        </div>
+                    </div>
                 </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/romy.jpg') }}" alt="ROMY C. DIAZ, VICE PRESIDENT FOR ADMINISTRATION AND FINANCE">
-                    <p class="staff-member-name">ROMY C. DIAZ</p>
-                    <h3 class="staff-member-role">VICE PRESIDENT FOR ADMINISTRATION AND FINANCE</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/mike2.jpg') }}" alt="MICHAEL K. ALMIREZ, COLLEGE DEAN / CCBA">
-                    <p class="staff-member-name">MICHAEL K. ALMIREZ</p>
-                    <h3 class="staff-member-role">COLLEGE DEAN / CCBA</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/abu2.jpg') }}" alt="JOY H. ABU, DEAN & PROGRAM CHAIR - COLLEGE OF CRIMINAL JUSTICE EDUCATION">
-                    <p class="staff-member-name">JOY H. ABU</p>
-                    <h3 class="staff-member-role">DEAN & PROGRAM CHAIR - COLLEGE OF CRIMINAL JUSTICE EDUCATION</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/ali.jpg') }}" alt="JOHN LESTER ALIWALAS, PROGRAM CHAIR, BSCS">
-                    <p class="staff-member-name">JOHN LESTER ALIWALAS</p>
-                    <h3 class="staff-member-role">PROGRAM CHAIR, BSCS/INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/tina.jpg') }}" alt="JOHN LESTER B. ALIWALAS, INSTRUCTOR">
-                    <p class="staff-member-name">MARIA CRISTINA G. MAGNAYE</p>
-                    <h3 class="staff-member-role">MIS COORDINATOR/INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/nicky.jpg') }}" alt="NICKY JANE A. SOLIS, COLLEGE REGISTRAR COORDINATOR">
-                    <p class="staff-member-name">NICKY JANE A. SOLIS</p>
-                    <h3 class="staff-member-role">COLLEGE REGISTRAR COORDINATOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/jef.jpg') }}" alt="JAY FRE V. ENDAYA, PROPERTY MANAGEMENT OFFICER">
-                    <p class="staff-member-name">JAY FRE V. ENDAYA</p>
-                    <h3 class="staff-member-role">PROPERTY MANAGEMENT OFFICER</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/leo.jpg') }}" alt="LEO P. LARESMA, OFFICE OF STUDENT AFFAIRS">
-                    <p class="staff-member-name">LEO P. LARESMA</p>
-                    <h3 class="staff-member-role">OFFICE OF STUDENT AFFAIRS</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/cath.jpg') }}" alt="CATHERINE P. BAYANIN, CASHIER'S STAFF">
-                    <p class="staff-member-name">CATHERINE P. BAYANIN</p>
-                    <h3 class="staff-member-role">CASHIER'S STAFF</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/eunice.jpg') }}" alt="EUNICE ACE M. AMPARO, COLLEGE SECRETARY">
-                    <p class="staff-member-name">EUNICE ACE M. AMPARO</p>
-                    <h3 class="staff-member-role">COLLEGE SECRETARY</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/maria.jpg') }}" alt="MARIA PRISCILLA L. CORONEL, COLLEGE LIBRARIAN">
-                    <p class="staff-member-name">MARIA PRISCILLA L. CORONEL</p>
-                    <h3 class="staff-member-role">COLLEGE LIBRARIAN</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/jennifer.jpg') }}" alt="JENNIFER S. BUYA, GUIDANCE COUNSELOR">
-                    <p class="staff-member-name">JENNIFER S. BUYA</p>
-                    <h3 class="staff-member-role">GUIDANCE COUNSELOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/aldrin.jpg') }}" alt="ALARMA G. MANGURALI, ACCOUNTING & LIAISON STAFF">
-                    <p class="staff-member-name">ALDRIN G. MANGURALI</p>
-                    <h3 class="staff-member-role">ACCOUNTING & LIAISON STAFF</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/marielle.jpg') }}" alt="MARIELLE RIANNA B. SALUDO, INSTRUCTOR">
-                    <p class="staff-member-name">MARIELLE RIANNA B. SALUDO</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/reymundo.jpg') }}" alt="REYMUNDO R. BENEDICTO, UTILITY & MAINTENANCE">
-                    <p class="staff-member-name">REYMUNDO R. BENEDICTO</p>
-                    <h3 class="staff-member-role">UTILITY & MAINTENANCE</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/daisy.jpg') }}" alt="DAISY V. BALINGIT, UTILITY & MAINTENANCE">
-                    <p class="staff-member-name">DAISY V. BALINGIT</p>
-                    <h3 class="staff-member-role">UTILITY & MAINTENANCE</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/nedy.jpg') }}" alt="NEDY R. SULABO, UTILITY & MAINTENANCE">
-                    <p class="staff-member-name">NEDY R. SULABO</p>
-                    <h3 class="staff-member-role">UTILITY & MAINTENANCE</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/julius.jpg') }}" alt="JULIUS E. ESCALA, INSTRUCTOR">
-                    <p class="staff-member-name">JULIUS E. ESCALA</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/michelle.jpg') }}" alt="MICHELLE A. ABANIA, INSTRUCTOR">
-                    <p class="staff-member-name">MICHELLE A. ABANIA</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/renald.jpg') }}" alt="RENALD S. QUINTO, INSTRUCTOR">
-                    <p class="staff-member-name">RENALD S. QUINTO</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/roanne.jpg') }}" alt="ROANNE L. VETUZ, INSTRUCTOR">
-                    <p class="staff-member-name">ROANNE L. VETUZ</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/renan.jpg') }}" alt="RENAN A. ABU, INSTRUCTOR">
-                    <p class="staff-member-name">RENAN A. ABU</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/jenny.jpg') }}" alt="JENNY S. MORALES, INSTRUCTOR">
-                    <p class="staff-member-name">JENNY S. MORALES</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/jamilla.jpg') }}" alt="JAMILA JAMAE M. REÑA, INSTRUCTOR">
-                    <p class="staff-member-name">JAMILA JAMAE M. REÑA</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/gayzhelle.jpg') }}" alt="GAYZELLE D. CARINGAL, INSTRUCTOR">
-                    <p class="staff-member-name">GAYZELLE D. CARINGAL</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/nelia.jpg') }}" alt="NELIA O. ALEGADO, SCHOOL NURSE">
-                    <p class="staff-member-name">NELIA O. ALEGADO</p>
-                    <h3 class="staff-member-role">SCHOOL NURSE</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/allan.jpg') }}" alt="ALLAN M. DIMACULANGAN, INSTRUCTOR">
-                    <p class="staff-member-name">ALLAN M. DIMACULANGAN</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/alyana.jpg') }}" alt="FRANCIS ALYANA B. MAGTIBAY, INSTRUCTOR">
-                    <p class="staff-member-name">FRANCIS ALYANA B. MAGTIBAY</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/sebuc.jpg') }}" alt="PRINCESS JOY M. SEBUC, INSTRUCTOR">
-                    <p class="staff-member-name">PRINCESS JOY M. SEBUC</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/alexander.jpg') }}" alt="ALEXANDER J. CORACHEA, INSTRUCTOR">
-                    <p class="staff-member-name">ALEXANDER J. CORACHEA</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/quano.jpg') }}" alt="LARRICE JOY M. OUANO, INSTRUCTOR">
-                    <p class="staff-member-name">LARRICE JOY M. OUANO</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/rommel.jpg') }}" alt="ROMMEL M. ALCANTARA, INSTRUCTOR">
-                    <p class="staff-member-name">ROMMEL M. ALCANTARA</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-                <div class="staff-member-card">
-                    <img src="{{ url_for('static', filename='images/roldan.jpg') }}" alt="ROLDAN M. SARMIENTO, INSTRUCTOR">
-                    <p class="staff-member-name">ROLDAN M. SARMIENTO</p>
-                    <h3 class="staff-member-role">INSTRUCTOR</h3>
-                </div>
-
+                 <button class="staff-nav-arrow prev" aria-label="Previous staff"><i class='fas fa-angle-left'></i></button>
+                 <button class="staff-nav-arrow next" aria-label="Next staff"><i class='fas fa-angle-right'></i></button>
             </div>
         </div>
+
+        <!-- Category 2: Faculty & Program Heads -->
+        <div class="staff-category">
+            <div class="staff-header-container">
+                <div class="staff-header-titles">
+                    
+                    <h2 class="staff-section-main-title">Faculty & Program Heads</h2>
+                </div>
+            </div>
+            <div class="staff-carousel-content-wrapper">
+                <button class="staff-nav-arrow prev" aria-label="Previous staff"><i class='fas fa-angle-left'></i></button>
+                <div class="staff-grid-wrapper">
+                    <div class="staff-grid">
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/ali.jpg') }}" alt="JOHN LESTER ALIWALAS, PROGRAM CHAIR, BSCS/INSTRUCTOR">
+                            <p class="staff-member-name">JOHN LESTER ALIWALAS</p>
+                            <h3 class="staff-member-role">PROGRAM CHAIR, BSCS/INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/tina.jpg') }}" alt="MARIA CRISTINA G. MAGNAYE, MIS COORDINATOR/INSTRUCTOR">
+                            <p class="staff-member-name">MARIA CRISTINA G. MAGNAYE</p>
+                            <h3 class="staff-member-role">MIS COORDINATOR/INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/marielle.jpg') }}" alt="MARIELLE RIANNA B. SALUDO, INSTRUCTOR">
+                            <p class="staff-member-name">MARIELLE RIANNA B. SALUDO</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/julius.jpg') }}" alt="JULIUS E. ESCALA, INSTRUCTOR">
+                            <p class="staff-member-name">JULIUS E. ESCALA</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/michelle.jpg') }}" alt="MICHELLE A. ABANIA, INSTRUCTOR">
+                            <p class="staff-member-name">MICHELLE A. ABANIA</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/renald.jpg') }}" alt="RENALD S. QUINTO, INSTRUCTOR">
+                            <p class="staff-member-name">RENALD S. QUINTO</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/roanne.jpg') }}" alt="ROANNE L. VETUZ, INSTRUCTOR">
+                            <p class="staff-member-name">ROANNE L. VETUZ</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/renan.jpg') }}" alt="RENAN A. ABU, INSTRUCTOR">
+                            <p class="staff-member-name">RENAN A. ABU</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/jenny.jpg') }}" alt="JENNY S. MORALES, INSTRUCTOR">
+                            <p class="staff-member-name">JENNY S. MORALES</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/jamilla.jpg') }}" alt="JAMILA JAMAE M. REÑA, INSTRUCTOR">
+                            <p class="staff-member-name">JAMILA JAMAE M. REÑA</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/gayzhelle.jpg') }}" alt="GAYZELLE D. CARINGAL, INSTRUCTOR">
+                            <p class="staff-member-name">GAYZELLE D. CARINGAL</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                         <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/allan.jpg') }}" alt="ALLAN M. DIMACULANGAN, INSTRUCTOR">
+                            <p class="staff-member-name">ALLAN M. DIMACULANGAN</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/alyana.jpg') }}" alt="FRANCIS ALYANA B. MAGTIBAY, INSTRUCTOR">
+                            <p class="staff-member-name">FRANCIS ALYANA B. MAGTIBAY</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/sebuc.jpg') }}" alt="PRINCESS JOY M. SEBUC, INSTRUCTOR">
+                            <p class="staff-member-name">PRINCESS JOY M. SEBUC</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/alexander.jpg') }}" alt="ALEXANDER J. CORACHEA, INSTRUCTOR">
+                            <p class="staff-member-name">ALEXANDER J. CORACHEA</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/quano.jpg') }}" alt="LARRICE JOY M. OUANO, INSTRUCTOR">
+                            <p class="staff-member-name">LARRICE JOY M. OUANO</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/rommel.jpg') }}" alt="ROMMEL M. ALCANTARA, INSTRUCTOR">
+                            <p class="staff-member-name">ROMMEL M. ALCANTARA</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/roldan.jpg') }}" alt="ROLDAN M. SARMIENTO, INSTRUCTOR">
+                            <p class="staff-member-name">ROLDAN M. SARMIENTO</p>
+                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                        </div>
+                    </div>
+                </div>
+                <button class="staff-nav-arrow next" aria-label="Next staff"><i class='fas fa-angle-right'></i></button>
+            </div>
+        </div>
+
+        <!-- Category 3: Administrative & Support Staff -->
+        <div class="staff-category">
+            <div class="staff-header-container">
+                <div class="staff-header-titles">
+                 
+                    <h2 class="staff-section-main-title">Administrative & Support Staff</h2>
+                </div>
+            </div>
+            <div class="staff-carousel-content-wrapper">
+                <button class="staff-nav-arrow prev" aria-label="Previous staff"><i class='fas fa-angle-left'></i></button>
+                <div class="staff-grid-wrapper">
+                    <div class="staff-grid">
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/nicky.jpg') }}" alt="NICKY JANE A. SOLIS, COLLEGE REGISTRAR COORDINATOR">
+                            <p class="staff-member-name">NICKY JANE A. SOLIS</p>
+                            <h3 class="staff-member-role">COLLEGE REGISTRAR COORDINATOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/jef.jpg') }}" alt="JAY FRE V. ENDAYA, PROPERTY MANAGEMENT OFFICER">
+                            <p class="staff-member-name">JAY FRE V. ENDAYA</p>
+                            <h3 class="staff-member-role">PROPERTY MANAGEMENT OFFICER</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/leo.jpg') }}" alt="LEO P. LARESMA, OFFICE OF STUDENT AFFAIRS">
+                            <p class="staff-member-name">LEO P. LARESMA</p>
+                            <h3 class="staff-member-role">OFFICE OF STUDENT AFFAIRS</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/cath.jpg') }}" alt="CATHERINE P. BAYANIN, CASHIER'S STAFF">
+                            <p class="staff-member-name">CATHERINE P. BAYANIN</p>
+                            <h3 class="staff-member-role">CASHIER'S STAFF</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/eunice.jpg') }}" alt="EUNICE ACE M. AMPARO, COLLEGE SECRETARY">
+                            <p class="staff-member-name">EUNICE ACE M. AMPARO</p>
+                            <h3 class="staff-member-role">COLLEGE SECRETARY</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/maria.jpg') }}" alt="MARIA PRISCILLA L. CORONEL, COLLEGE LIBRARIAN">
+                            <p class="staff-member-name">MARIA PRISCILLA L. CORONEL</p>
+                            <h3 class="staff-member-role">COLLEGE LIBRARIAN</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/jennifer.jpg') }}" alt="JENNIFER S. BUYA, GUIDANCE COUNSELOR">
+                            <p class="staff-member-name">JENNIFER S. BUYA</p>
+                            <h3 class="staff-member-role">GUIDANCE COUNSELOR</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/aldrin.jpg') }}" alt="ALDRIN G. MANGURALI, ACCOUNTING & LIAISON STAFF">
+                            <p class="staff-member-name">ALDRIN G. MANGURALI</p>
+                            <h3 class="staff-member-role">ACCOUNTING & LIAISON STAFF</h3>
+                        </div>
+                         <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/nelia.jpg') }}" alt="NELIA O. ALEGADO, SCHOOL NURSE">
+                            <p class="staff-member-name">NELIA O. ALEGADO</p>
+                            <h3 class="staff-member-role">SCHOOL NURSE</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/reymundo.jpg') }}" alt="REYMUNDO R. BENEDICTO, UTILITY & MAINTENANCE">
+                            <p class="staff-member-name">REYMUNDO R. BENEDICTO</p>
+                            <h3 class="staff-member-role">UTILITY & MAINTENANCE</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/daisy.jpg') }}" alt="DAISY V. BALINGIT, UTILITY & MAINTENANCE">
+                            <p class="staff-member-name">DAISY V. BALINGIT</p>
+                            <h3 class="staff-member-role">UTILITY & MAINTENANCE</h3>
+                        </div>
+                        <div class="staff-member-card">
+                            <img src="{{ url_for('static', filename='images/nedy.jpg') }}" alt="NEDY R. SULABO, UTILITY & MAINTENANCE">
+                            <p class="staff-member-name">NEDY R. SULABO</p>
+                            <h3 class="staff-member-role">UTILITY & MAINTENANCE</h3>
+                        </div>
+                    </div>
+                </div>
+                <button class="staff-nav-arrow next" aria-label="Next staff"><i class='fas fa-angle-right'></i></button>
+            </div>
+        </div>
+
     </div>
 </section>
 <!-- End of Meet Our Staff Section -->
-
 
 <section class="location-section">
     <div class="location-container">
@@ -1266,6 +1264,7 @@ header {
         </div>
     </div>
 </section>
+
 
 <button class="go-top-btn" id="goTopBtn">
   <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="Scroll to top arrow" />
@@ -1292,6 +1291,16 @@ header {
     </div>
 </footer>
 
+<!-- Staff Member Modal HTML -->
+<div class="staff-modal" id="staffMemberModal" role="dialog" aria-modal="true" aria-labelledby="modalStaffName">
+    <div class="staff-modal-content">
+        <button class="staff-modal-close" aria-label="Close modal">×</button>
+        <img src="" alt="Staff Member" id="modalStaffImage">
+        <h2 id="modalStaffName"></h2>
+        <p id="modalStaffRole"></p>
+    </div>
+</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -1314,7 +1323,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // JavaScript for menu toggle
   const menuToggle = document.querySelector('.menu-toggle');
   const navigation = document.getElementById('main-navigation');
 
@@ -1327,161 +1335,314 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
-  // --- Staff Slider Logic ---
-  const staffSection = document.querySelector('.meet-our-staff-section');
-  if (staffSection) {
-      const prevButton = staffSection.querySelector('.staff-nav-arrow.prev');
-      const nextButton = staffSection.querySelector('.staff-nav-arrow.next');
-      const staffGrid = staffSection.querySelector('.staff-grid');
-      const staffGridWrapper = staffSection.querySelector('.staff-grid-wrapper');
+  function initializeStaffSlider(staffCategoryElement) {
+    const carouselContentWrapper = staffCategoryElement.querySelector('.staff-carousel-content-wrapper');
+    if (!carouselContentWrapper) return; 
 
-      let autoSlideInterval;
-      const AUTO_SLIDE_DELAY = 4000; // 4 seconds
+    const prevButton = carouselContentWrapper.querySelector('.staff-nav-arrow.prev');
+    const nextButton = carouselContentWrapper.querySelector('.staff-nav-arrow.next');
+    const staffGrid = carouselContentWrapper.querySelector('.staff-grid');
+    const staffGridWrapper = carouselContentWrapper.querySelector('.staff-grid-wrapper');
 
-      if (staffGrid && staffGridWrapper && prevButton && nextButton) {
-          const cards = Array.from(staffGrid.querySelectorAll('.staff-member-card'));
+    let autoSlideInterval;
+    const AUTO_SLIDE_DELAY = 4000;
 
-          if (cards.length > 0) {
-              let currentIndex = 0;
-              let cardWidthIncludingGap;
-              let visibleCardsCount;
-              let maxIndex; // Maximum index for scrolling
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let isSwiping = false;
+    const swipeThreshold = 50; 
 
-              function calculateMetrics() {
-                  if (cards.length === 0) return;
+    if (staffGrid && staffGridWrapper && prevButton && nextButton) {
+        const cards = Array.from(staffGrid.querySelectorAll('.staff-member-card'));
 
-                  const cardOuterWidth = cards[0].offsetWidth;
-                  const gap = parseFloat(getComputedStyle(staffGrid).gap) || 0;
-                  cardWidthIncludingGap = cardOuterWidth + gap;
+        if (cards.length > 0) {
+            let currentIndex = 0;
+            let cardWidthIncludingGap;
+            let visibleCardsCount;
+            let maxIndex; // Max index for non-infinite scroll; still useful for calculations
 
-                  const wrapperWidth = staffGridWrapper.offsetWidth;
-                  visibleCardsCount = Math.max(1, Math.floor((wrapperWidth + gap) / cardWidthIncludingGap));
-                  
-                  // Adjust maxIndex calculation: it's the total cards minus how many are visible.
-                  // If all cards are visible, maxIndex will be 0 or less.
-                  maxIndex = cards.length - visibleCardsCount;
-                  if (maxIndex < 0) maxIndex = 0; // Ensure maxIndex is not negative
-              }
+            function calculateMetrics() {
+                if (cards.length === 0) return;
+                const cardOuterWidth = cards[0].offsetWidth;
+                const gapStyle = getComputedStyle(staffGrid).gap;
+                const gap = gapStyle && gapStyle !== 'normal' ? parseFloat(gapStyle) : 0; 
+                cardWidthIncludingGap = cardOuterWidth + gap;
 
-              function updateButtonStates() {
-                  // Buttons are disabled only if there are not enough cards to scroll
-                  const canScroll = maxIndex > 0;
+                const wrapperWidth = staffGridWrapper.offsetWidth;
+                // Calculate how many full cards can be visible
+                visibleCardsCount = cardWidthIncludingGap > 0 ? Math.max(1, Math.floor((wrapperWidth + gap) / cardWidthIncludingGap)) : cards.length;
+                
+                // maxIndex is the highest starting index for a "page" of cards
+                maxIndex = Math.max(0, cards.length - visibleCardsCount);
+            }
 
-                  prevButton.disabled = !canScroll;
-                  nextButton.disabled = !canScroll;
+            function updateButtonStates() {
+                calculateMetrics(); 
+                // For infinite scroll, buttons are disabled only if no scrolling is possible at all.
+                const canScrollAtAll = cards.length > visibleCardsCount;
+                
+                prevButton.disabled = !canScrollAtAll;
+                nextButton.disabled = !canScrollAtAll;
+            }
 
-                  if (!canScroll) {
-                      prevButton.style.opacity = '0.3';
-                      nextButton.style.opacity = '0.3';
-                      prevButton.style.pointerEvents = 'none';
-                      nextButton.style.pointerEvents = 'none';
-                  } else {
-                      prevButton.style.opacity = '1'; // Always fully visible if scrollable
-                      nextButton.style.opacity = '1'; // Always fully visible if scrollable
-                      prevButton.style.pointerEvents = 'auto';
-                      nextButton.style.pointerEvents = 'auto';
-                  }
-              }
 
-              function slide(isAutoTriggered = false) {
-                  calculateMetrics(); // Ensure metrics are up-to-date
+            function slide(isAutoTriggered = false) {
+                calculateMetrics(); // Ensure metrics are up-to-date
+                
+                // This 'if' block is specifically for auto-slide looping
+                if (isAutoTriggered) {
+                    if (cards.length > visibleCardsCount && currentIndex > maxIndex) { 
+                        // If auto-slide went past the "natural" end, loop to start
+                        currentIndex = 0;
+                    }
+                }
+                // For manual clicks, currentIndex is already adjusted before slide() is called
 
-                  if (isAutoTriggered) {
-                      if (currentIndex > maxIndex) { // Auto-slide went past the end
-                          currentIndex = 0; // Loop back to the start
-                      }
-                      // Auto-slide only increments, so no < 0 check needed here for it
-                  }
-                  // For manual clicks, currentIndex is already set by the click handlers
-                  // including looping logic.
+                const offset = cardWidthIncludingGap > 0 ? -currentIndex * cardWidthIncludingGap : 0;
+                staffGrid.style.transform = `translateX(${offset}px)`;
+                updateButtonStates(); 
+            }
 
-                  const offset = -currentIndex * cardWidthIncludingGap;
-                  staffGrid.style.transform = `translateX(${offset}px)`;
-                  updateButtonStates();
-              }
+            function stopAutoSlide() {
+                clearInterval(autoSlideInterval);
+            }
 
-              function stopAutoSlide() {
-                  clearInterval(autoSlideInterval);
-              }
+            function startAutoSlide() {
+                stopAutoSlide();
+                calculateMetrics();
+                if (cards.length > visibleCardsCount) { // Only auto-slide if scrolling is possible
+                    autoSlideInterval = setInterval(() => {
+                        currentIndex++;
+                        // Looping handled inside slide(true)
+                        slide(true); 
+                    }, AUTO_SLIDE_DELAY);
+                }
+            }
 
-              function startAutoSlide() {
-                  stopAutoSlide();
-                  calculateMetrics();
-                  if (maxIndex > 0) { // Only auto-slide if there's something to scroll
-                      autoSlideInterval = setInterval(() => {
-                          currentIndex++;
-                          // slide() will handle looping currentIndex back to 0 if it exceeds maxIndex
-                          slide(true); // Indicate it's an auto-slide
-                      }, AUTO_SLIDE_DELAY);
-                  }
-              }
+            function resetAndStartAutoSlide() {
+                stopAutoSlide();
+                startAutoSlide();
+            }
 
-              function resetAndStartAutoSlide() {
-                  stopAutoSlide();
-                  startAutoSlide();
-              }
+            nextButton.addEventListener('click', () => {
+                calculateMetrics(); // Recalculate metrics, especially maxIndex
+                if (cards.length > visibleCardsCount) { // Only if scrolling is possible
+                    currentIndex++;
+                    if (currentIndex > maxIndex) { // If went past the last item's start position
+                        currentIndex = 0; // Wrap to the beginning
+                    }
+                    slide();
+                    resetAndStartAutoSlide();
+                }
+            });
 
-              nextButton.addEventListener('click', () => {
-                  calculateMetrics(); // Ensure maxIndex is current
-                  if (maxIndex > 0) { // Only if scrollable
-                      currentIndex++;
-                      if (currentIndex > maxIndex) {
-                          currentIndex = 0; // Loop to start
-                      }
-                      slide();
-                      resetAndStartAutoSlide();
-                  }
-              });
+            prevButton.addEventListener('click', () => {
+                calculateMetrics();
+                 if (cards.length > visibleCardsCount) { // Only if scrolling is possible
+                    currentIndex--;
+                    if (currentIndex < 0) { // If went before the first item
+                        currentIndex = maxIndex; // Wrap to the end (last possible starting index)
+                    }
+                    slide();
+                    resetAndStartAutoSlide();
+                }
+            });
 
-              prevButton.addEventListener('click', () => {
-                  calculateMetrics(); // Ensure maxIndex is current
-                  if (maxIndex > 0) { // Only if scrollable
-                      currentIndex--;
-                      if (currentIndex < 0) {
-                          currentIndex = maxIndex; // Loop to end
-                      }
-                      slide();
-                      resetAndStartAutoSlide();
-                  }
-              });
+            function handleTouchStart(event) {
+                if (!event.touches || event.touches.length === 0) return;
+                touchStartX = event.touches[0].clientX;
+                touchStartY = event.touches[0].clientY;
+                isSwiping = true;
+                stopAutoSlide();
+                staffGrid.style.transition = 'none'; 
+            }
 
-              // Initial setup
-              calculateMetrics();
-              slide();
-              startAutoSlide();
+            function handleTouchMove(event) {
+                if (!isSwiping || !event.touches || event.touches.length === 0) return;
 
-              [staffGridWrapper, prevButton, nextButton].forEach(element => {
-                  element.addEventListener('mouseenter', stopAutoSlide);
-                  element.addEventListener('mouseleave', startAutoSlide);
-              });
+                const touchCurrentX = event.touches[0].clientX;
+                const touchCurrentY = event.touches[0].clientY;
 
-              let resizeTimeout;
-              window.addEventListener('resize', () => {
-                  clearTimeout(resizeTimeout);
-                  resizeTimeout = setTimeout(() => {
-                      const oldMaxIndex = maxIndex;
-                      calculateMetrics();
-                      
-                      if (currentIndex > maxIndex) { // If window resized and current index is now out of bounds
-                          currentIndex = maxIndex; // Adjust to new max
-                      } else if (cards.length > 0 && currentIndex < 0) { // Should not happen but as a safe guard
-                          currentIndex = 0;
-                      }
+                if (typeof touchStartX === 'undefined' || typeof touchStartY === 'undefined') return;
 
-                      slide();
-                      resetAndStartAutoSlide();
-                  }, 250);
-              });
+                const deltaX = touchCurrentX - touchStartX;
+                const deltaY = touchCurrentY - touchStartY;
 
-          } else { // No staff cards
-              if(prevButton) prevButton.style.display = 'none';
-              if(nextButton) nextButton.style.display = 'none';
-          }
-      } else { // Essential elements not found
-          if(prevButton) prevButton.style.display = 'none';
-          if(nextButton) nextButton.style.display = 'none';
-      }
+                if (Math.abs(deltaX) > Math.abs(deltaY)) { 
+                    if (Math.abs(deltaX) > 5) { 
+                         event.preventDefault(); 
+                    }
+                }
+            }
+
+            function handleTouchEnd(event) {
+                if (!isSwiping) return;
+                touchEndX = event.changedTouches[0].clientX;
+                const swipeDistance = touchEndX - touchStartX;
+                isSwiping = false;
+                
+                staffGrid.style.transition = 'transform 0.5s ease-in-out';
+
+                if (Math.abs(swipeDistance) > swipeThreshold) {
+                    calculateMetrics(); // Ensure maxIndex is current
+                    if (cards.length > visibleCardsCount) { // Only process swipe if scrolling is possible
+                        if (swipeDistance < 0) { // Swiped left (next)
+                            currentIndex++;
+                            if (currentIndex > maxIndex) {
+                                currentIndex = 0; // Wrap to start
+                            }
+                        } else { // Swiped right (prev)
+                            currentIndex--;
+                            if (currentIndex < 0) {
+                                currentIndex = maxIndex; // Wrap to end
+                            }
+                        }
+                    }
+                }
+                slide(); 
+                resetAndStartAutoSlide();
+            }
+            
+            const addSwipeListeners = () => {
+                staffGridWrapper.addEventListener('touchstart', handleTouchStart, { passive: true });
+                staffGridWrapper.addEventListener('touchmove', handleTouchMove, { passive: false });
+                staffGridWrapper.addEventListener('touchend', handleTouchEnd);
+                staffGridWrapper.dataset.swipeListeners = 'true';
+            };
+
+            const removeSwipeListeners = () => {
+                staffGridWrapper.removeEventListener('touchstart', handleTouchStart);
+                staffGridWrapper.removeEventListener('touchmove', handleTouchMove);
+                staffGridWrapper.removeEventListener('touchend', handleTouchEnd);
+                staffGridWrapper.dataset.swipeListeners = 'false';
+            };
+            
+            if (window.innerWidth <= 768 && staffGridWrapper) { 
+                addSwipeListeners();
+            }
+
+
+            calculateMetrics();
+            slide(); 
+            startAutoSlide();
+
+            [carouselContentWrapper, prevButton, nextButton].forEach(element => {
+                if (element) { 
+                    element.addEventListener('mouseenter', stopAutoSlide);
+                    element.addEventListener('mouseleave', startAutoSlide);
+                }
+            });
+            
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    calculateMetrics();
+                    // Adjust currentIndex if it's now out of bounds due to resize
+                    if (cards.length > 0 && currentIndex > maxIndex) {
+                         // If it became > maxIndex, and we want to loop, this is fine.
+                         // Or, if it should clamp: currentIndex = maxIndex;
+                         // For infinite, it's better to let it be, or reset if it's totally invalid.
+                         // The slide() call will recalculate and apply transform.
+                         // If currentIndex became invalid, clamp it to a valid range or reset.
+                        if (currentIndex > maxIndex && maxIndex >=0) { // Check maxIndex validity
+                            currentIndex = maxIndex > 0 ? maxIndex : 0; // Clamp to new maxIndex or 0
+                        } else if (currentIndex < 0) {
+                            currentIndex = 0;
+                        }
+                    }
+                    slide(); 
+                    resetAndStartAutoSlide(); 
+
+                    const currentlyMobile = window.innerWidth <= 768;
+                    const listenersAttached = staffGridWrapper.dataset.swipeListeners === 'true';
+
+                    if (currentlyMobile && !listenersAttached && staffGridWrapper) {
+                        addSwipeListeners();
+                    } else if (!currentlyMobile && listenersAttached && staffGridWrapper) {
+                        removeSwipeListeners();
+                    }
+
+                }, 250);
+            });
+             if (staffGridWrapper) staffGridWrapper.dataset.swipeListeners = (window.innerWidth <= 768).toString();
+
+
+        } else { 
+            if(prevButton) { prevButton.style.display = 'none'; prevButton.disabled = true; }
+            if(nextButton) { nextButton.style.display = 'none'; nextButton.disabled = true; }
+        }
+    } else { 
+        if(prevButton) { prevButton.style.display = 'none'; prevButton.disabled = true; }
+        if(nextButton) { nextButton.style.display = 'none'; nextButton.disabled = true; }
+    }
   }
+
+  const staffCategories = document.querySelectorAll('.staff-category');
+  staffCategories.forEach(categoryElement => {
+      initializeStaffSlider(categoryElement);
+  });
+
+  // --- Staff Member Modal Functionality ---
+  const staffModal = document.getElementById('staffMemberModal');
+  const modalImage = document.getElementById('modalStaffImage');
+  const modalName = document.getElementById('modalStaffName');
+  const modalRole = document.getElementById('modalStaffRole');
+  
+  if (staffModal && modalImage && modalName && modalRole) { 
+    const closeModalButton = staffModal.querySelector('.staff-modal-close');
+    const allStaffCards = document.querySelectorAll('.staff-member-card');
+
+    allStaffCards.forEach(card => {
+        card.setAttribute('role', 'button'); 
+        card.setAttribute('tabindex', '0');  
+
+        card.addEventListener('click', function() {
+            const imgSrc = this.querySelector('img').src;
+            const name = this.querySelector('.staff-member-name').textContent;
+            const role = this.querySelector('.staff-member-role').textContent;
+
+            modalImage.src = imgSrc;
+            modalImage.alt = name + ", " + role; 
+            modalName.textContent = name;
+            modalRole.textContent = role;
+
+            staffModal.classList.add('active');
+            document.body.style.overflow = 'hidden'; 
+            if(closeModalButton) closeModalButton.focus(); 
+        });
+
+        card.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault(); 
+                this.click(); 
+            }
+        });
+    });
+
+    if (closeModalButton) {
+        closeModalButton.addEventListener('click', function() {
+            staffModal.classList.remove('active');
+            document.body.style.overflow = ''; 
+        });
+    }
+
+    staffModal.addEventListener('click', function(event) {
+        if (event.target === staffModal) { 
+            staffModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && staffModal.classList.contains('active')) {
+            staffModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+  }
+
 });
 </script>
 
