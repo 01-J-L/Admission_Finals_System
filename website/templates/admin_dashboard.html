@@ -341,9 +341,7 @@
                      <button id="bulkSetPermitDetailsBtn" class="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-indigo-200">
                         <i class="ri-ticket-line mr-1"></i> Set Permit Details
                     </button>
-                    <button id="bulkDeleteBtn" class="px-3 py-1.5 bg-gray-100 text-red-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-gray-200">
-                        <i class="ri-delete-bin-line mr-1"></i> Delete
-                    </button>
+                    
                 </div>
                 <button id="closeBulkActions" class="ml-auto text-gray-500 hover:text-gray-700 p-1">
                     <i class="ri-close-line ri-lg"></i>
@@ -526,9 +524,7 @@
                                     <div class="flex space-x-1 justify-end items-center">
                                         <button class="text-gray-500 hover:text-primary p-0.5 sm:p-1 action-view" title="View Details" data-id="{{ app.applicant_id }}"><i class="ri-eye-line ri-lg"></i></button>
                                         
-                                        <a href="{{ url_for('auth.admin_edit_application_page', applicant_id=app.applicant_id) }}" class="text-gray-500 hover:text-blue-500 p-0.5 sm:p-1 action-edit-admin" title="Edit Application" data-id="{{ app.applicant_id }}">
-                                            <i class="ri-pencil-line ri-lg"></i>
-                                        </a>
+                                        <!-- REMOVED Edit Application Button -->
                                         
                                         <a href="{{ url_for('auth.admin_print_application_form', applicant_id=app.applicant_id) }}" target="_blank" class="text-gray-500 hover:text-green-500 p-0.5 sm:p-1 action-print" title="Print Application Form">
                                             <i class="ri-printer-line ri-lg"></i>
@@ -549,7 +545,7 @@
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Failed">Set Failed</a>
                                             </div>
                                         </div>
-                                        <button class="text-gray-500 hover:text-red-500 p-0.5 sm:p-1 action-delete-single" title="Delete Application" data-id="{{ app.applicant_id }}"><i class="ri-delete-bin-line ri-lg"></i></button>
+                                        <!-- REMOVED Delete Application Button -->
                                     </div>
                                 </td>
                             </tr>
@@ -1067,10 +1063,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const target = event.target;
             const actionView = target.closest('.action-view');
             const actionUpdateStatus = target.closest('.action-update-status');
-            const actionDeleteSingle = target.closest('.action-delete-single');
+            // const actionDeleteSingle = target.closest('.action-delete-single'); // Removed
             const actionAdminNotes = target.closest('.action-admin-notes');
             const actionPermitDetails = target.closest('.action-permit-details');
-            const actionEditAdmin = target.closest('.action-edit-admin'); 
+            // const actionEditAdmin = target.closest('.action-edit-admin'); // Removed
             const actionPrint = target.closest('.action-print'); 
 
 
@@ -1129,13 +1125,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 event.preventDefault();
                 handleUpdateStatus(actionUpdateStatus.dataset.id, actionUpdateStatus.dataset.status, actionUpdateStatus.closest('tr'));
                 toggleDropdown(actionUpdateStatus.closest('.action-status-dropdown'), false);
-            } else if (actionDeleteSingle) {
-                event.preventDefault();
-                itemToDelete = parseInt(actionDeleteSingle.dataset.id);
-                deleteModalTitle.textContent = "Delete Application";
-                deleteModalMessage.textContent = `Are you sure you want to delete application P2025${String(itemToDelete).padStart(4, '0')}? This action cannot be undone.`;
-                openModal(deleteConfirmationModal, deleteModalBackdrop);
-            } else if (actionEditAdmin || actionPrint) {
+            } 
+            // else if (actionDeleteSingle) { // Removed
+            //     event.preventDefault();
+            //     itemToDelete = parseInt(actionDeleteSingle.dataset.id);
+            //     deleteModalTitle.textContent = "Delete Application";
+            //     deleteModalMessage.textContent = `Are you sure you want to delete application P2025${String(itemToDelete).padStart(4, '0')}? This action cannot be undone.`;
+            //     openModal(deleteConfirmationModal, deleteModalBackdrop);
+            // } 
+            else if (actionPrint) { // Kept print logic
                 // Default link behavior
             }
         });
@@ -1185,8 +1183,8 @@ document.addEventListener('DOMContentLoaded', function() {
         contentHtml += `<div class="mt-6 pt-4 border-t">`;
         contentHtml += `<h4 class="text-md font-semibold text-gray-800 mb-3">Uploaded Requirements</h4>`;
         contentHtml += `<div class="space-y-2 text-sm">`;
-        if (data.shs_diploma_filename) { contentHtml += `<div><strong>SHS Diploma:</strong> <a href="/applicant-document/${data.applicant_id}/diploma" target="_blank" class="document-link">${data.shs_diploma_filename} (View/Download)</a></div>`; } else { contentHtml += `<div><strong>SHS Diploma:</strong> <span class="text-gray-500">Not provided</span></div>`; }
-        if (data.shs_card_filename) { contentHtml += `<div><strong>SHS Card (Form 138):</strong> <a href="/applicant-document/${data.applicant_id}/card" target="_blank" class="document-link">${data.shs_card_filename} (View/Download)</a></div>`; } else { contentHtml += `<div><strong>SHS Card (Form 138):</strong> <span class="text-gray-500">Not provided</span></div>`; }
+        if (data.shs_diploma_filename) { contentHtml += `<div><strong>Copy of Good Moral:</strong> <a href="/applicant-document/${data.applicant_id}/diploma" target="_blank" class="document-link">${data.shs_diploma_filename} (View/Download)</a></div>`; } else { contentHtml += `<div><strong>SHS Diploma:</strong> <span class="text-gray-500">Not provided</span></div>`; }
+        if (data.shs_card_filename) { contentHtml += `<div><strong>Brgy. Certificate:</strong> <a href="/applicant-document/${data.applicant_id}/card" target="_blank" class="document-link">${data.shs_card_filename} (View/Download)</a></div>`; } else { contentHtml += `<div><strong>SHS Card (Form 138):</strong> <span class="text-gray-500">Not provided</span></div>`; }
         if (data.birth_certificate_filename) { contentHtml += `<div><strong>Birth Certificate:</strong> <a href="/applicant-document/${data.applicant_id}/birth_cert" target="_blank" class="document-link">${data.birth_certificate_filename} (View/Download)</a></div>`; } else { contentHtml += `<div><strong>Birth Certificate:</strong> <span class="text-gray-500">Not provided</span></div>`; }
         contentHtml += `</div></div>`;
 
