@@ -1202,8 +1202,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         contentHtml += `</div>`; // Close main grid
 
-        if (data.photo) contentHtml += `<div class="mt-4"><strong>2x2 Photo:</strong><br><img src="${data.photo}" alt="Applicant Photo" class="max-w-xs max-h-64 border rounded mt-1"></div>`;
-        else contentHtml += `<div class="mt-4"><strong>2x2 Photo:</strong> <span class="text-gray-700">Not provided</span></div>`;
+        if (data.photo) {
+            let photoFilename = `P2025${String(data.applicant_id).padStart(4, '0')}_2x2_photo`;
+            try {
+                const urlParts = data.photo.split('/');
+                const originalFilename = urlParts[urlParts.length - 1].split('?')[0]; 
+                const ext = originalFilename.split('.').pop();
+                if (ext && ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext.toLowerCase())) {
+                    photoFilename += `.${ext}`;
+                } else {
+                    photoFilename += `.jpg`; // Default extension
+                }
+            } catch (e) {
+                photoFilename += `.jpg`; // Fallback
+            }
+
+            contentHtml += `
+                <div class="mt-4">
+                    <strong>2x2 Photo:</strong><br>
+                    <a href="${data.photo}" download="${photoFilename}" title="Download Photo">
+                        <img src="${data.photo}" alt="Applicant Photo" class="max-w-xs max-h-64 border rounded mt-1 mb-1">
+                    </a>
+                    <br>
+                    <a href="${data.photo}" download="${photoFilename}" class="text-sm document-link inline-flex items-center">
+                        <i class="ri-download-2-line mr-1"></i> Download Photo
+                    </a>
+                </div>`;
+        } else {
+            contentHtml += `<div class="mt-4"><strong>2x2 Photo:</strong> <span class="text-gray-700">Not provided</span></div>`;
+        }
+
 
         // Admission Test Permit Details Section
         contentHtml += `<div class="mt-6 pt-4 border-t">`;
