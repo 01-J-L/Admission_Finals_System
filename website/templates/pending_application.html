@@ -208,6 +208,7 @@
                         {% set show_edit_button = false %}
                         {% set show_enroll_button = false %}
                         {% set show_new_app_advice = false %}
+                        {% set show_passed_confirmation_button = false %}
 
 
                         {% if status == 'Pending' %}
@@ -238,7 +239,7 @@
                             {% set status_main_color_class = 'text-approved-dark' %}
                             {% set status_title = "Congratulations! Application Approved" %}
                             {% set status_message = "Your application has been <strong class='" + status_text_class + "'>Approved</strong>!" %}
-                            {% set status_message_detail = "Further instructions regarding enrollment and next steps have been sent to " + (application.email_address or 'your registered email') + ". Please check your inbox (and spam folder). You can view your permit details by clicking the 'Proceed to Enrollment' button." %}
+                            {% set status_message_detail = "Further instructions regarding enrollment and next steps have been sent to " + (application.email_address or 'your registered email') + ". Please check your inbox (and spam folder). You can view your permit details by clicking the 'View Permit' button. <br><br><strong>Please prepare the following requirements:</strong><ul class='list-disc list-inside ml-4 mt-2'><li>1 long brown folder</li><li>Examination fee (PHP 100)</li></ul>" %}
                             {% set show_enroll_button = true %}
                         {% elif status == 'Rejected' %}
                             {% set status_icon_class = 'ri-close-circle-line status-icon-lg status-rejected-color' %}
@@ -258,7 +259,8 @@
                             {% set status_main_color_class = 'text-passed-dark' %}
                             {% set status_title = "Application Processed: Passed" %}
                             {% set status_message = "Congratulations! Your application has <strong class='" + status_text_class + "'>Passed</strong> this stage." %}
-                            {% set status_message_detail = "Please await further instructions regarding the next steps or admission test results, which will be sent to " + (application.email_address or 'your registered email') + " and reflected here." %}
+                            {% set status_message_detail = "Please await further instructions regarding the next steps, which will be sent to " + (application.email_address or 'your registered email') + " and reflected here. You can print a confirmation of your 'Passed' status using the button below." %}
+                            {% set show_passed_confirmation_button = true %}
                         {% elif status == 'Failed' %}
                             {% set status_icon_class = 'ri-shield-cross-line status-icon-lg status-failed-color' %}
                             {% set status_text_class = 'text-orange-600 font-semibold' %}
@@ -320,6 +322,14 @@
                             <div class="mt-6 flex flex-wrap gap-3">
                                 <button id="proceedToEnrollmentBtn" type="button" class="bg-primary text-white px-4 py-2 rounded-button whitespace-nowrap flex items-center text-sm hover:bg-primary/90 transition-colors">
                                     <i class="ri-arrow-right-line mr-2"></i> View Permit
+                                </button>
+                            </div>
+                            {% endif %}
+
+                            {% if show_passed_confirmation_button %}
+                            <div class="mt-6 flex flex-wrap gap-3">
+                                <button id="viewPassedConfirmationBtn" type="button" class="bg-teal-600 text-white px-4 py-2 rounded-button whitespace-nowrap flex items-center text-sm hover:bg-teal-700 transition-colors">
+                                    <i class="ri-printer-line mr-2"></i> View Passed Confirmation
                                 </button>
                             </div>
                             {% endif %}
@@ -590,7 +600,50 @@
             </div>
         </div>
     </div>
-    <!-- END MODAL -->
+    <!-- END PERMIT STUB MODAL -->
+
+    <!-- MODAL FOR PASSED CONFIRMATION -->
+    <div id="passedConfirmationModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
+        <div class="relative p-6 border w-full max-w-lg shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3 border-b mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Application Stage Passed</h3>
+                <button id="closePassedConfirmationModalBtn" type="button" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
+            </div>
+            <div id="modalPassedConfirmationContentPrintable">
+                {% if application and status == 'Passed' %}
+                <div class="text-center mb-4">
+                    <i class="ri-shield-check-line text-5xl status-passed-color"></i>
+                    <h4 class="text-2xl font-semibold text-passed-dark mt-2">Congratulations!</h4>
+                    <p class="text-gray-700 mt-1">You have successfully passed this stage of the application process.</p>
+                </div>
+                <div class="space-y-2 text-sm text-gray-700 bg-gray-50 p-4 rounded-md border">
+                    <p><strong>Applicant Name:</strong> {{ application.first_name }} {{ application.middle_name if application.middle_name and application.middle_name|trim and application.middle_name|trim|lower != 'n/a' else '' }} {{ application.last_name }}</p>
+                    <p><strong>Application ID:</strong> P2025{{ "%04d" | format(application.applicant_id) }}</p>
+                    <p><strong>Program Choice:</strong> {{ application.program_choice }}</p>
+                    {% if application.decision_date %}
+                    <p><strong>Decision Date:</strong> {{ application.decision_date.strftime('%B %d, %Y') }}</p>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-gray-500 mt-6">Note: This confirmation is for your records. Please await further official communication regarding the next steps from the admissions office.</p>
+                {% else %}
+                <p class="text-gray-600">Confirmation details are not applicable for this status.</p>
+                {% endif %}
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="closePassedConfirmationModalBtnSecondary" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-button focus:outline-none">
+                    Close
+                </button>
+                {% if application and status == 'Passed' %}
+                <button id="printPassedConfirmationBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-button flex items-center focus:outline-none">
+                    <i class="ri-printer-line mr-2"></i>Print Confirmation
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- END PASSED CONFIRMATION MODAL -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -706,7 +759,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (proceedToEnrollmentBtn) {
         proceedToEnrollmentBtn.addEventListener('click', function(event) {
             event.preventDefault();
-            // The button visibility is already controlled by Jinja based on 'Approved' status
             openPermitModal();
         });
     }
@@ -718,7 +770,7 @@ document.addEventListener('DOMContentLoaded', function() {
         closePermitStubModalBtnSecondary.addEventListener('click', closePermitModal);
     }
 
-    if (permitStubModal) { // Close modal if clicking on the overlay
+    if (permitStubModal) { 
         permitStubModal.addEventListener('click', function(event) {
             if (event.target === permitStubModal) {
                 closePermitModal();
@@ -726,10 +778,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Keyboard accessibility for modal
+    // Passed Confirmation Modal Logic
+    const viewPassedConfirmationBtn = document.getElementById('viewPassedConfirmationBtn');
+    const passedConfirmationModal = document.getElementById('passedConfirmationModal');
+    const closePassedConfirmationModalBtn = document.getElementById('closePassedConfirmationModalBtn');
+    const closePassedConfirmationModalBtnSecondary = document.getElementById('closePassedConfirmationModalBtnSecondary');
+    const printPassedConfirmationBtn = document.getElementById('printPassedConfirmationBtn');
+
+    function openPassedConfirmationModal() {
+        if (passedConfirmationModal) {
+            passedConfirmationModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closePassedConfirmationModal() {
+        if (passedConfirmationModal) {
+            passedConfirmationModal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+    
+    if (viewPassedConfirmationBtn) {
+        viewPassedConfirmationBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            openPassedConfirmationModal();
+        });
+    }
+
+    if (closePassedConfirmationModalBtn) {
+        closePassedConfirmationModalBtn.addEventListener('click', closePassedConfirmationModal);
+    }
+    if (closePassedConfirmationModalBtnSecondary) {
+        closePassedConfirmationModalBtnSecondary.addEventListener('click', closePassedConfirmationModal);
+    }
+
+    if (passedConfirmationModal) {
+        passedConfirmationModal.addEventListener('click', function(event) {
+            if (event.target === passedConfirmationModal) {
+                closePassedConfirmationModal();
+            }
+        });
+    }
+
+    // Keyboard accessibility for modals
     document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && permitStubModal && !permitStubModal.classList.contains('hidden')) {
-            closePermitModal();
+        if (event.key === 'Escape') {
+            if (permitStubModal && !permitStubModal.classList.contains('hidden')) {
+                closePermitModal();
+            }
+            if (passedConfirmationModal && !passedConfirmationModal.classList.contains('hidden')) {
+                closePassedConfirmationModal();
+            }
         }
     });
 
@@ -740,7 +840,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (printableArea) {
                 const printWindow = window.open('', '_blank', 'height=600,width=800');
                 printWindow.document.write('<html><head><title>Print Permit</title>');
-                printWindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">'); // Optional: Include Tailwind for basic print styling
+                printWindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">'); 
                 printWindow.document.write('<style>');
                 printWindow.document.write(`
                     @media print {
@@ -773,30 +873,78 @@ document.addEventListener('DOMContentLoaded', function() {
                         .flex-col { flex-direction: column !important; }
                         .text-3xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
                          h4 { font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
-                        /* Hide buttons in print view */
-                        #closePermitStubModalBtn, #closePermitStubModalBtnSecondary, #printPermitStubBtn, .no-print { display: none !important; }
+                        .no-print { display: none !important; }
                     }
                 `);
-                printWindow.document.write('</style></head><body class="p-4">'); // Added p-4 for some margin
+                printWindow.document.write('</style></head><body class="p-4">');
                 printWindow.document.write('<div class="container mx-auto">');
-                printWindow.document.write('<h3 class="text-xl font-semibold text-gray-900 mb-4">College Admission Test Permit</h3>');
+                printWindow.document.write('<h3 class="text-xl font-semibold text-gray-900 mb-4 text-center">College Admission Test Permit</h3>');
                 printWindow.document.write(printableArea.innerHTML);
                 printWindow.document.write('</div>');
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
                 
-                // Timeout to ensure content is loaded before printing, especially for images
                 setTimeout(function() {
-                    printWindow.focus(); // Gaining focus for some browsers
+                    printWindow.focus(); 
                     printWindow.print();
-                    // printWindow.close(); // Optional: close after printing
-                }, 500); // Adjust timeout as needed
+                }, 500); 
 
             } else {
                 alert("Could not find printable content.");
             }
         });
     }
+
+    if (printPassedConfirmationBtn) {
+        printPassedConfirmationBtn.addEventListener('click', function() {
+            const printableArea = document.getElementById('modalPassedConfirmationContentPrintable');
+            if (printableArea) {
+                const printWindow = window.open('', '_blank', 'height=600,width=800');
+                printWindow.document.write('<html><head><title>Passed Confirmation</title>');
+                printWindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">');
+                printWindow.document.write('<style>');
+                printWindow.document.write(`
+                    @media print {
+                        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 20px !important; }
+                        .text-5xl { font-size: 3rem !important; line-height: 1 !important; }
+                        .status-passed-color { color: #0d9488 !important; } /* Teal 600 */
+                        .text-passed-dark { color: #115e59 !important; } /* Teal 800 */
+                        .text-2xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+                        .font-semibold { font-weight: 600 !important; }
+                        .mt-1 { margin-top: 0.25rem !important; } .mt-2 { margin-top: 0.5rem !important; } .mt-6 { margin-top: 1.5rem !important; }
+                        .mb-4 { margin-bottom: 1rem !important; }
+                        .text-gray-700 { color: #374151 !important; }
+                        .text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
+                        .text-gray-500 { color: #6b7280 !important; }
+                        .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem !important; } /* Replicates space-y-2 */
+                        strong { font-weight: bold !important; } /* Tailwind strong equivalent */
+                        p { margin-bottom: 0.5rem !important; } /* Basic paragraph spacing */
+                        .text-center { text-align: center !important; }
+                        .bg-gray-50 { background-color: #f9fafb !important; }
+                        .p-4 { padding: 1rem !important; }
+                        .rounded-md { border-radius: 0.375rem !important; }
+                        .border { border: 1px solid #e5e7eb !important; } /* Tailwind border-gray-200 */
+                        .no-print { display: none !important; }
+                    }
+                `);
+                printWindow.document.write('</style></head><body class="p-4">');
+                printWindow.document.write('<div class="container mx-auto">');
+                printWindow.document.write('<h3 class="text-xl font-semibold text-gray-900 mb-4 text-center">Application Stage Passed - Confirmation</h3>');
+                printWindow.document.write(printableArea.innerHTML);
+                printWindow.document.write('</div>');
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                
+                setTimeout(function() {
+                    printWindow.focus();
+                    printWindow.print();
+                }, 500);
+            } else {
+                alert("Could not find printable content for Passed Confirmation.");
+            }
+        });
+    }
+
 });
 </script>
 </body>
