@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 
 {% block style %}
@@ -465,10 +464,10 @@ header {
 .staff-grid {
     display: flex;
     flex-wrap: nowrap;
-    justify-content: flex-start;
+    /* justify-content: flex-start; Will be controlled by JS */
     gap: 25px;
     transition: transform 0.5s ease-in-out;
-    padding-bottom: 10px;
+    padding-bottom: 10px; /* For potential scrollbars if needed, or just visual space */
 }
 
 .staff-member-card {
@@ -528,7 +527,7 @@ header {
     font-size: 1.5em;
     color: #343a40;
     cursor: pointer;
-    display: flex;
+    display: flex; /* Changed from none to flex by default, JS will hide if needed */
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease, top 0.3s ease, transform 0.3s ease; /* Added top and transform transition */
@@ -909,6 +908,8 @@ header {
 {% block head %}
     {{ super() }}
     <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+    <!-- Font Awesome for carousel icons (if not already in base.html) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <title>About Us - Padre Garcia Polytechnic College</title>
 {% endblock%}
 
@@ -1022,7 +1023,7 @@ header {
     <div class="meet-our-staff-container">
 
         <!-- Category 1: Leadership & Deans -->
-        <div class="staff-category">
+        <div class="staff-category" id="leadership-deans-category">
             <div class="staff-header-container">
                 <div class="staff-header-titles">
                     <!-- <p class="staff-section-subtitle">Padre Garcia Polytechnic College</p> -->
@@ -1275,15 +1276,15 @@ header {
     <p class="footer-connect">Connect with us</p>
 
     <div class="footer-socials">
-      <a href="https://www.facebook.com/PadreGarciaPolytechnicCollege"><i class="fab fa-facebook-f"></i></a>
+      <a href="https://www.facebook.com/PadreGarciaPolytechnicCollege" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
 
     </div>
 
     <div class="footer-divider"></div>
 
     <div class="footer-bottom">
-      <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="{{ url_for('views.home') }}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7">Brgy.Castillo, Padre Garcia, Batangas</a> | +63 (2) 8524-4611</p>
-      <p>© 2025. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home">Padre Garcia PH</a></p>
+      <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="{{ url_for('views.home') }}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7" target="_blank" rel="noopener noreferrer">Brgy.Castillo, Padre Garcia, Batangas</a> | <a href="tel:+63285244611">+63 (2) 8524-4611</a></p>
+      <p>© {{ current_year if current_year else '2025' }}. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home" target="_blank" rel="noopener noreferrer">Padre Garcia PH</a></p>
     </div>
 </footer>
 
@@ -1340,7 +1341,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const staffGrid = carouselContentWrapper.querySelector('.staff-grid');
     const staffGridWrapper = carouselContentWrapper.querySelector('.staff-grid-wrapper');
 
-    let autoSlideInterval;
+    // Identify if this is the special "Leadership & Deans" category
+    const isLeadershipCategory = staffCategoryElement.id === 'leadership-deans-category';
+    const DESKTOP_BREAKPOINT = 992; // Define desktop breakpoint
+
+    let autoSlideInterval = null; // Initialize to null
     const AUTO_SLIDE_DELAY = 4000;
 
     let touchStartX = 0;
@@ -1356,7 +1361,8 @@ document.addEventListener('DOMContentLoaded', function () {
             let currentIndex = 0;
             let cardWidthIncludingGap;
             let visibleCardsCount;
-            let maxIndex; // Max index for non-infinite scroll; still useful for calculations
+            let maxIndex;
+            let totalCardsWidth; // To store the total width of all cards + gaps
 
             function calculateMetrics() {
                 if (cards.length === 0) return;
@@ -1366,52 +1372,100 @@ document.addEventListener('DOMContentLoaded', function () {
                 cardWidthIncludingGap = cardOuterWidth + gap;
 
                 const wrapperWidth = staffGridWrapper.offsetWidth;
-                // Calculate how many full cards can be visible
                 visibleCardsCount = cardWidthIncludingGap > 0 ? Math.max(1, Math.floor((wrapperWidth + gap) / cardWidthIncludingGap)) : cards.length;
-
-                // maxIndex is the highest starting index for a "page" of cards
                 maxIndex = Math.max(0, cards.length - visibleCardsCount);
-            }
 
-            function updateButtonStates() {
-                calculateMetrics();
-                // For infinite scroll, buttons are disabled only if no scrolling is possible at all.
-                const canScrollAtAll = cards.length > visibleCardsCount;
-
-                prevButton.disabled = !canScrollAtAll;
-                nextButton.disabled = !canScrollAtAll;
-            }
-
-
-            function slide(isAutoTriggered = false) {
-                calculateMetrics(); // Ensure metrics are up-to-date
-
-                // This 'if' block is specifically for auto-slide looping
-                if (isAutoTriggered) {
-                    if (cards.length > visibleCardsCount && currentIndex > maxIndex) {
-                        // If auto-slide went past the "natural" end, loop to start
-                        currentIndex = 0;
-                    }
-                }
-                // For manual clicks, currentIndex is already adjusted before slide() is called
-
-                const offset = cardWidthIncludingGap > 0 ? -currentIndex * cardWidthIncludingGap : 0;
-                staffGrid.style.transform = `translateX(${offset}px)`;
-                updateButtonStates();
+                // Calculate total width of all cards including their gaps
+                totalCardsWidth = cards.reduce((acc, card) => acc + card.offsetWidth, 0) + (cards.length > 0 ? (cards.length - 1) * gap : 0);
             }
 
             function stopAutoSlide() {
                 clearInterval(autoSlideInterval);
+                autoSlideInterval = null;
             }
 
+            function updateCarouselAppearanceAndBehavior() {
+                calculateMetrics(); // Always get fresh metrics
+
+                const wrapperWidth = staffGridWrapper.offsetWidth;
+                const allCardsFit = totalCardsWidth <= wrapperWidth;
+                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+
+                if (isLeadershipCategory && allCardsFit && isDesktop) {
+                    staffGrid.style.justifyContent = 'center';
+                    staffGrid.style.transform = 'translateX(0px)';
+                    prevButton.style.display = 'none';
+                    nextButton.style.display = 'none';
+                    currentIndex = 0; // Reset index as no sliding is happening
+                    stopAutoSlide(); // Stop auto-slide for this specific case
+                } else {
+                    staffGrid.style.justifyContent = 'flex-start';
+                    const offset = cardWidthIncludingGap > 0 ? -currentIndex * cardWidthIncludingGap : 0;
+                    staffGrid.style.transform = `translateX(${offset}px)`;
+
+                    const canScrollAtAll = cards.length > visibleCardsCount;
+                    prevButton.style.display = canScrollAtAll ? 'flex' : 'none';
+                    nextButton.style.display = canScrollAtAll ? 'flex' : 'none';
+                    // For infinite scroll, disabled state might be always false if canScrollAtAll
+                    prevButton.disabled = !canScrollAtAll;
+                    nextButton.disabled = !canScrollAtAll;
+                }
+            }
+
+
+            function slideToIndex(newIndex, isAuto = false) {
+                calculateMetrics(); // Ensure metrics are fresh
+
+                const wrapperWidth = staffGridWrapper.offsetWidth;
+                const allCardsFit = totalCardsWidth <= wrapperWidth;
+                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+
+                if (isLeadershipCategory && allCardsFit && isDesktop) {
+                    // If leadership, all fit, and desktop, just update appearance (which centers and hides buttons)
+                    updateCarouselAppearanceAndBehavior();
+                    return; // No actual sliding logic needed
+                }
+
+                // Normal sliding logic
+                if (cards.length > visibleCardsCount) { // Only if scrolling is possible
+                    if (isAuto) { // Auto-slide logic for looping
+                        currentIndex = (newIndex >= cards.length) ? 0 : newIndex; // Loop for auto
+                        if (currentIndex > maxIndex && cards.length > visibleCardsCount) { // if auto went past "natural" end
+                             currentIndex = 0; // Loop to start
+                        }
+                    } else { // Manual navigation (buttons/swipe) with wrapping
+                        if (newIndex >= cards.length) { // From next button when at end
+                            currentIndex = 0;
+                        } else if (newIndex < 0) { // From prev button when at start
+                            currentIndex = maxIndex; // Go to the start of the last "page"
+                        } else {
+                            currentIndex = Math.min(newIndex, maxIndex); // Clamp to maxIndex for manual next
+                        }
+                         // Ensure currentIndex is not negative after manual prev from 0 to maxIndex
+                        if (currentIndex < 0) currentIndex = 0;
+                    }
+                } else { // Not enough cards to scroll
+                    currentIndex = 0;
+                }
+                updateCarouselAppearanceAndBehavior();
+            }
+
+
             function startAutoSlide() {
-                stopAutoSlide();
-                calculateMetrics();
+                stopAutoSlide(); // Clear any existing interval
+                calculateMetrics(); // Get current metrics
+
+                const wrapperWidth = staffGridWrapper.offsetWidth;
+                const allCardsFit = totalCardsWidth <= wrapperWidth;
+                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+
+                if (isLeadershipCategory && allCardsFit && isDesktop) {
+                    return; // Don't auto-slide if centered and all fit for leadership category
+                }
+
                 if (cards.length > visibleCardsCount) { // Only auto-slide if scrolling is possible
                     autoSlideInterval = setInterval(() => {
-                        currentIndex++;
-                        // Looping handled inside slide(true)
-                        slide(true);
+                        slideToIndex(currentIndex + 1, true); // Pass true for auto-slide
                     }, AUTO_SLIDE_DELAY);
                 }
             }
@@ -1421,37 +1475,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 startAutoSlide();
             }
 
+
             nextButton.addEventListener('click', () => {
-                calculateMetrics(); // Recalculate metrics, especially maxIndex
-                if (cards.length > visibleCardsCount) { // Only if scrolling is possible
-                    currentIndex++;
-                    if (currentIndex > maxIndex) { // If went past the last item's start position
-                        currentIndex = 0; // Wrap to the beginning
-                    }
-                    slide();
-                    resetAndStartAutoSlide();
-                }
+                slideToIndex(currentIndex + 1);
+                resetAndStartAutoSlide();
             });
 
             prevButton.addEventListener('click', () => {
-                calculateMetrics();
-                 if (cards.length > visibleCardsCount) { // Only if scrolling is possible
-                    currentIndex--;
-                    if (currentIndex < 0) { // If went before the first item
-                        currentIndex = maxIndex; // Wrap to the end (last possible starting index)
-                    }
-                    slide();
-                    resetAndStartAutoSlide();
+                // If currentIndex is 0, clicking prev should go to the 'end' (maxIndex)
+                let targetIndex = currentIndex - 1;
+                if (targetIndex < 0 && cards.length > visibleCardsCount) { // Wrap to end
+                    targetIndex = maxIndex;
+                } else if (targetIndex < 0) { // Not enough items to wrap, stay at 0
+                    targetIndex = 0;
                 }
+                slideToIndex(targetIndex);
+                resetAndStartAutoSlide();
             });
+
 
             function handleTouchStart(event) {
                 if (!event.touches || event.touches.length === 0) return;
+
+                calculateMetrics(); // Ensure metrics are fresh before checking conditions
+                const wrapperWidth = staffGridWrapper.offsetWidth;
+                const allCardsFit = totalCardsWidth <= wrapperWidth;
+                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+
+                if (isLeadershipCategory && allCardsFit && isDesktop) {
+                    isSwiping = false; return; // Prevent swipe if centered and all fit
+                }
+
                 touchStartX = event.touches[0].clientX;
                 touchStartY = event.touches[0].clientY;
                 isSwiping = true;
                 stopAutoSlide();
-                staffGrid.style.transition = 'none';
+                staffGrid.style.transition = 'none'; // For smooth manual drag if implemented
             }
 
             function handleTouchMove(event) {
@@ -1465,10 +1524,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const deltaX = touchCurrentX - touchStartX;
                 const deltaY = touchCurrentY - touchStartY;
 
-                if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                    if (Math.abs(deltaX) > 5) {
-                         event.preventDefault();
-                    }
+                // Prevent page scroll if horizontal swipe is significant
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                     event.preventDefault();
                 }
             }
 
@@ -1480,53 +1538,90 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 staffGrid.style.transition = 'transform 0.5s ease-in-out';
 
-                if (Math.abs(swipeDistance) > swipeThreshold) {
-                    calculateMetrics(); // Ensure maxIndex is current
-                    if (cards.length > visibleCardsCount) { // Only process swipe if scrolling is possible
-                        if (swipeDistance < 0) { // Swiped left (next)
-                            currentIndex++;
-                            if (currentIndex > maxIndex) {
-                                currentIndex = 0; // Wrap to start
-                            }
-                        } else { // Swiped right (prev)
-                            currentIndex--;
-                            if (currentIndex < 0) {
-                                currentIndex = maxIndex; // Wrap to end
-                            }
-                        }
-                    }
+                calculateMetrics(); // Ensure metrics are fresh
+                const wrapperWidth = staffGridWrapper.offsetWidth;
+                const allCardsFit = totalCardsWidth <= wrapperWidth;
+                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+
+                if (isLeadershipCategory && allCardsFit && isDesktop) {
+                    // No swipe action needed, just ensure autostart is handled
+                    resetAndStartAutoSlide();
+                    return;
                 }
-                slide();
+
+                if (Math.abs(swipeDistance) > swipeThreshold) {
+                    if (cards.length > visibleCardsCount) {
+                        let targetIndex = currentIndex;
+                        if (swipeDistance < 0) { // Swiped left (next)
+                            targetIndex++;
+                            if (targetIndex > maxIndex) targetIndex = 0; // Wrap to start
+                        } else { // Swiped right (prev)
+                            targetIndex--;
+                            if (targetIndex < 0) targetIndex = maxIndex; // Wrap to end
+                        }
+                        slideToIndex(targetIndex);
+                    } else {
+                        slideToIndex(currentIndex); // No change if not enough cards to scroll
+                    }
+                } else {
+                    // If not a significant swipe, snap back to current position
+                    slideToIndex(currentIndex);
+                }
                 resetAndStartAutoSlide();
             }
 
             const addSwipeListeners = () => {
-                staffGridWrapper.addEventListener('touchstart', handleTouchStart, { passive: true });
-                staffGridWrapper.addEventListener('touchmove', handleTouchMove, { passive: false });
-                staffGridWrapper.addEventListener('touchend', handleTouchEnd);
-                staffGridWrapper.dataset.swipeListeners = 'true';
+                if (staffGridWrapper && staffGridWrapper.dataset.swipeListeners !== 'true') {
+                    staffGridWrapper.addEventListener('touchstart', handleTouchStart, { passive: true });
+                    staffGridWrapper.addEventListener('touchmove', handleTouchMove, { passive: false });
+                    staffGridWrapper.addEventListener('touchend', handleTouchEnd);
+                    staffGridWrapper.dataset.swipeListeners = 'true';
+                }
             };
 
             const removeSwipeListeners = () => {
-                staffGridWrapper.removeEventListener('touchstart', handleTouchStart);
-                staffGridWrapper.removeEventListener('touchmove', handleTouchMove);
-                staffGridWrapper.removeEventListener('touchend', handleTouchEnd);
-                staffGridWrapper.dataset.swipeListeners = 'false';
+                 if (staffGridWrapper && staffGridWrapper.dataset.swipeListeners === 'true') {
+                    staffGridWrapper.removeEventListener('touchstart', handleTouchStart);
+                    staffGridWrapper.removeEventListener('touchmove', handleTouchMove);
+                    staffGridWrapper.removeEventListener('touchend', handleTouchEnd);
+                    staffGridWrapper.dataset.swipeListeners = 'false';
+                }
             };
 
-            if (window.innerWidth <= 768 && staffGridWrapper) {
-                addSwipeListeners();
+            function manageSwipeListeners() {
+                calculateMetrics();
+                const wrapperWidth = staffGridWrapper.offsetWidth;
+                const allCardsFit = totalCardsWidth <= wrapperWidth;
+                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+
+                if (isLeadershipCategory && allCardsFit && isDesktop) {
+                    removeSwipeListeners(); // Disable swipe for this specific case
+                } else if (window.innerWidth <= 768) { // Enable for mobile otherwise
+                    addSwipeListeners();
+                } else { // Disable for desktop if not the special leadership case but not mobile
+                    removeSwipeListeners();
+                }
             }
 
 
-            calculateMetrics();
-            slide();
-            startAutoSlide();
+            // Initial setup calls
+            updateCarouselAppearanceAndBehavior(); // Initial display setup
+            startAutoSlide(); // Start auto-slide if applicable
+            manageSwipeListeners(); // Initial swipe listener setup
 
             [carouselContentWrapper, prevButton, nextButton].forEach(element => {
                 if (element) {
                     element.addEventListener('mouseenter', stopAutoSlide);
-                    element.addEventListener('mouseleave', startAutoSlide);
+                    element.addEventListener('mouseleave', () => {
+                        // Only restart autoscroll if it's supposed to be running
+                        calculateMetrics(); // refresh metrics before check
+                        const wrapperWidth = staffGridWrapper.offsetWidth;
+                        const allCardsFit = totalCardsWidth <= wrapperWidth;
+                        const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+                        if (!(isLeadershipCategory && allCardsFit && isDesktop)) {
+                            startAutoSlide();
+                        }
+                    });
                 }
             });
 
@@ -1535,41 +1630,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(() => {
                     calculateMetrics();
-                    // Adjust currentIndex if it's now out of bounds due to resize
-                    if (cards.length > 0 && currentIndex > maxIndex) {
-                         // If it became > maxIndex, and we want to loop, this is fine.
-                         // Or, if it should clamp: currentIndex = maxIndex;
-                         // For infinite, it's better to let it be, or reset if it's totally invalid.
-                         // The slide() call will recalculate and apply transform.
-                         // If currentIndex became invalid, clamp it to a valid range or reset.
-                        if (currentIndex > maxIndex && maxIndex >=0) { // Check maxIndex validity
-                            currentIndex = maxIndex > 0 ? maxIndex : 0; // Clamp to new maxIndex or 0
-                        } else if (currentIndex < 0) {
-                            currentIndex = 0;
-                        }
+                    if (currentIndex > maxIndex && maxIndex >=0) {
+                         currentIndex = maxIndex;
+                    } else if (currentIndex < 0) {
+                         currentIndex = 0;
                     }
-                    slide();
+                    updateCarouselAppearanceAndBehavior();
                     resetAndStartAutoSlide();
-
-                    const currentlyMobile = window.innerWidth <= 768;
-                    const listenersAttached = staffGridWrapper.dataset.swipeListeners === 'true';
-
-                    if (currentlyMobile && !listenersAttached && staffGridWrapper) {
-                        addSwipeListeners();
-                    } else if (!currentlyMobile && listenersAttached && staffGridWrapper) {
-                        removeSwipeListeners();
-                    }
-
+                    manageSwipeListeners();
                 }, 250);
             });
-             if (staffGridWrapper) staffGridWrapper.dataset.swipeListeners = (window.innerWidth <= 768).toString();
 
 
-        } else {
+        } else { // No cards
             if(prevButton) { prevButton.style.display = 'none'; prevButton.disabled = true; }
             if(nextButton) { nextButton.style.display = 'none'; nextButton.disabled = true; }
         }
-    } else {
+    } else { // Essential elements missing
         if(prevButton) { prevButton.style.display = 'none'; prevButton.disabled = true; }
         if(nextButton) { nextButton.style.display = 'none'; nextButton.disabled = true; }
     }

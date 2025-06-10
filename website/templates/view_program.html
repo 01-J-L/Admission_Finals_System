@@ -1,15 +1,22 @@
 {% extends 'base.html' %}
 
+{% block head %}
+    {{ super() }} {# Includes head content from base.html #}
+    <title>{{ program.title if program else "Program Details" }} - Padre Garcia Polytechnic College</title>
+    <!-- Remixicon for icons (like the back arrow) -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+{% endblock %}
+
 {% block style %}
 <style>
     /* Ensures styles from base.html are applied, plus page-specific ones */
-    body { 
-        font-family: 'Arial', sans-serif; /* Consistent font */
+    body {
+        font-family: 'Poppins', sans-serif; /* Consistent with contact.html, assuming Poppins is preferred */
         line-height: 1.6;
         color: #333;
         background-color: #f4f4f4; /* Light background for content area */
     }
-    
+
 
     .program-hero-banner {
         position: relative;
@@ -54,6 +61,36 @@
         position: relative; /* For z-index stacking */
         z-index: 3; /* Above hero overlay */
     }
+
+    /* Back Home Button Styles */
+    .back-home-container {
+        margin-bottom: 1.5rem;
+        text-align: left; /* Align button to the left */
+    }
+
+    .back-home-button {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.6rem 1.2rem;
+        background-color: #6c757d; /* Neutral button color */
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .back-home-button:hover {
+        background-color: #5a6268; /* Darker on hover */
+        transform: translateY(-1px);
+    }
+
+    .back-home-button i {
+        margin-right: 0.5rem;
+        font-size: 1.1em; /* Adjust icon size if needed */
+    }
+    /* End Back Home Button Styles */
 
     .program-section {
         margin-bottom: 2.5rem;
@@ -180,6 +217,28 @@
         transform: translateY(-2px);
     }
 
+    /* Go Top Button Styles (relocated from inline) */
+    .go-top-btn {
+        position: fixed;
+        bottom: 70px;
+        right: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+        height: 50px;
+        width: 50px;
+        background: #fff;
+        border: 3px solid #333;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .go-top-btn img {
+        width: 20px;
+        height: 20px;
+    }
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .program-hero-banner h1 {
@@ -192,6 +251,10 @@
         .program-section h2 {
             font-size: 1.6rem;
         }
+        .back-home-button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
     }
     @media (max-width: 480px) {
         .program-hero-banner h1 {
@@ -200,30 +263,32 @@
         .course-list, .faculty-grid {
             grid-template-columns: 1fr; /* Single column on very small screens */
         }
+        .back-home-container {
+            margin-bottom: 1rem;
+        }
+        .back-home-button {
+            width: 100%; /* Make button full width for very small screens */
+            justify-content: center;
+        }
     }
 
 </style>
 {% endblock %}
 
-{% block head %}
-    {{ super() }} {# Includes head content from base.html (like the icon and navigation) #}
-    {# The 'program' object is now passed from views.py #}
-    <title>{{ program.title if program else "Program Details" }} - Padre Garcia Polytechnic College</title>
-{% endblock %}
 
 {% block body %}
-
-{# 
-  The `program` object is now passed directly from your Flask route in views.py
-  when rendering this template. The placeholder `{% set program = { ... } %}` 
-  block has been removed as it's no longer needed and was causing the syntax error.
-#}
 
 <div class="program-hero-banner" style="background-image: url('{{ program.hero_image_url }}');">
     <h1>{{ program.title }}</h1>
 </div>
 
 <div class="program-container">
+
+    <div class="back-home-container">
+        <a href="{{ url_for('views.home') }}" class="back-home-button">
+            <i class="ri-arrow-left-line"></i> Back to Home
+        </a>
+    </div>
 
     <section class="program-section">
         <h2>Program Overview</h2>
@@ -262,8 +327,6 @@
         </div>
     </section>
 
-    
-
     <section class="cta-section">
         <h2>Ready to Shape Your Future?</h2>
         <p>Join the Padre Garcia Polytechnic College and take the first step towards a rewarding career in {{ program.title }}.</p>
@@ -272,59 +335,32 @@
 
 </div>
 
+<!-- Go Top Button HTML -->
+<button class="go-top-btn" id="goTopBtn">
+    <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="arrow up" />
+</button>
+
 <script>
-          document.addEventListener('DOMContentLoaded', function () {
-            const goTopBtn = document.getElementById('goTopBtn');
-          
-            if(goTopBtn) { 
-                window.addEventListener('scroll', () => {
-                  if (window.scrollY > 200) {
-                    goTopBtn.style.display = "flex";
-                  } else {
-                    goTopBtn.style.display = "none";
-                  }
-                });
-              
-                goTopBtn.addEventListener('click', () => {
-                  window.scrollTo({
-                    top: 0,
-                    behavior: "smooth"
-                  });
-                });
-            }
-          });
-          </script>
-          
-      
-      
-      </script>
-      <style>
-      .go-top-btn {
-          position: fixed;
-          bottom: 70px; 
-          right: 35px;
-          border-radius: 50%;
-          cursor: pointer;
-          height: 50px;
-          width: 50px;
-          background: #fff;
-          border: 3px solid #333;
-          display: none; 
-          justify-content: center;
-          align-items: center;
-          z-index: 999;
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-        .go-top-btn img {
-          width: 20px;
-          height: 20px;
-        }
-        </style>
-      
-      <button class="go-top-btn" id="goTopBtn">
-        <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="arrow up" />
-      </button>
+    document.addEventListener('DOMContentLoaded', function () {
+        const goTopBtn = document.getElementById('goTopBtn');
 
+        if(goTopBtn) {
+            window.addEventListener('scroll', () => {
+              if (window.scrollY > 200) {
+                goTopBtn.style.display = "flex";
+              } else {
+                goTopBtn.style.display = "none";
+              }
+            });
 
+            goTopBtn.addEventListener('click', () => {
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            });
+        }
+    });
+</script>
 
 {% endblock %}

@@ -102,6 +102,33 @@
         transform: translate(-50%, -50%);
         line-height: 1;
     }
+    /* Gender filter radio buttons */
+    .filter-bar input[type="radio"] {
+        appearance: none; /* For Tailwind, or use a custom class if preferred for more control */
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid #d1d5db; /* gray-300 */
+        border-radius: 50%;
+        outline: none;
+        cursor: pointer;
+        margin-right: 0.25rem; /* Tailwind's mr-1 */
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+    .filter-bar input[type="radio"]:checked {
+        background-color: #4f46e5; /* primary */
+        border-color: #4f46e5; /* primary */
+    }
+    .filter-bar input[type="radio"]:checked::before {
+        content: '';
+        display: block;
+        width: 8px;
+        height: 8px;
+        margin: 2.5px; /* Adjust to center the dot for 16px circle with 1.5px border */
+        background-color: white;
+        border-radius: 50%;
+    }
+
 
 </style>
 </head>
@@ -306,7 +333,7 @@
                 </button>
             </div>
 
-            <div class="bg-gray-50 p-4 rounded shadow-inner border border-gray-200 mb-6">
+            <div class="bg-gray-50 p-4 rounded shadow-inner border border-gray-200 mb-6 filter-bar">
                 <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
                     <span class="text-sm font-medium text-gray-700">Filter by Submission Date:</span>
                     <div class="flex items-center space-x-2">
@@ -317,8 +344,23 @@
                         <label for="endDateFilter" class="text-sm text-gray-600">To:</label>
                         <input type="date" id="endDateFilter" name="endDateFilter" class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary w-auto">
                     </div>
-                    <button id="clearDateFilterBtn" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-medium !rounded-button hover:bg-gray-300 flex items-center">
-                        <i class="ri-filter-off-line mr-1"></i> Clear Dates
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-medium text-gray-700">Gender:</label>
+                        <div class="flex items-center">
+                            <input type="radio" id="genderFilterAll" name="genderFilter" value="All" checked>
+                            <label for="genderFilterAll" class="text-sm text-gray-600 ml-1 mr-3">All</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="genderFilterMale" name="genderFilter" value="Male">
+                            <label for="genderFilterMale" class="text-sm text-gray-600 ml-1 mr-3">Male</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="genderFilterFemale" name="genderFilter" value="Female">
+                            <label for="genderFilterFemale" class="text-sm text-gray-600 ml-1">Female</label>
+                        </div>
+                    </div>
+                    <button id="clearFiltersBtn" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-medium !rounded-button hover:bg-gray-300 flex items-center">
+                        <i class="ri-filter-off-line mr-1"></i> Clear Filters
                     </button>
                 </div>
             </div>
@@ -913,8 +955,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const startDateInput = document.getElementById('startDateFilter');
     const endDateInput = document.getElementById('endDateFilter');
-    const clearDateFilterBtn = document.getElementById('clearDateFilterBtn');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn'); // Renamed from clearDateFilterBtn
     const printReportBtn = document.getElementById('printReportBtn');
+
+    // Gender Filter Elements
+    const genderFilterRadios = document.querySelectorAll('input[name="genderFilter"]');
+
 
     const sidebar = document.getElementById('sidebar');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
@@ -1418,16 +1464,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const mainPageTitleElement = document.getElementById('mainPageTitle');
     const searchInput = document.getElementById('searchInput');
     const allTableRows = () => Array.from(tableBody?.querySelectorAll('tr[data-applicant-id]') || []);
+    
     function updateApplicationPageTitles() {
-        if (applicationsContentDiv.style.display === 'none') return; const startDateVal = startDateInput?.value; const endDateVal = endDateInput?.value;
-        let title = activeStatusFilter === 'All' ? 'All Applications' : `${activeStatusFilter} Applications`; if (startDateVal || endDateVal) title += " (filtered by submission date)";
-        if (pageTitleHeaderElement && applicationsContentDiv.style.display !== 'none') pageTitleHeaderElement.textContent = title; if (mainPageTitleElement) mainPageTitleElement.textContent = title;
+        if (applicationsContentDiv.style.display === 'none') return;
+        const startDateVal = startDateInput?.value;
+        const endDateVal = endDateInput?.value;
+        const selectedGenderRadio = document.querySelector('input[name="genderFilter"]:checked');
+        const selectedGender = selectedGenderRadio ? selectedGenderRadio.value : 'All';
+
+        let title = activeStatusFilter === 'All' ? 'All Applications' : `${activeStatusFilter} Applications`;
+        let filtersApplied = [];
+        if (startDateVal || endDateVal) {
+            filtersApplied.push("submission date");
+        }
+        if (selectedGender !== 'All') {
+            filtersApplied.push(`${selectedGender.toLowerCase()} applicants`);
+        }
+
+        if (filtersApplied.length > 0) {
+            title += ` (filtered by ${filtersApplied.join(' and ')})`;
+        }
+
+        if (pageTitleHeaderElement && applicationsContentDiv.style.display !== 'none') pageTitleHeaderElement.textContent = title;
+        if (mainPageTitleElement) mainPageTitleElement.textContent = title;
     }
+
     function filterTableRows() {
         if (!tableBody) return; 
         const searchTerm = searchInput.value.toLowerCase().trim(); 
         const startDateString = startDateInput?.value; 
         const endDateString = endDateInput?.value;
+        const selectedGenderRadio = document.querySelector('input[name="genderFilter"]:checked');
+        const selectedGender = selectedGenderRadio ? selectedGenderRadio.value : 'All';
+
         let filterByDate = false, startDateObj = null, endDateObj = null;
         if (startDateString) { startDateObj = new Date(startDateString); startDateObj.setHours(0, 0, 0, 0); filterByDate = true; } 
         if (endDateString) { endDateObj = new Date(endDateString); endDateObj.setHours(23, 59, 59, 999); filterByDate = true; }
@@ -1439,18 +1508,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const name = row.querySelector('.applicant-name')?.textContent.toLowerCase() || ''; 
-            const email = row.querySelector('.applicant-email')?.textContent.toLowerCase() || ''; 
-            const program = row.querySelector('.applicant-program')?.textContent.toLowerCase() || ''; 
-            const appIdText = `P2025${String(row.dataset.applicantId).padStart(4,'0')}`; 
-            const statusBadgeText = row.querySelector('.status-badge')?.textContent.trim() || '';
+            // Search logic (already case-insensitive)
+            let matchesSearch = false;
+            if (searchTerm) {
+                let combinedText = '';
+                combinedText += `p2025${String(appInRawData.applicant_id).padStart(4, '0')} `;
+                const fieldsToExcludeFromTextSearch = [ 'photo', 'shs_diploma_file', 'shs_card_file', 'birth_certificate_file', 'student_user_id', 'shs_diploma_filename', 'shs_diploma_mimetype', 'shs_card_filename', 'shs_card_mimetype', 'birth_certificate_filename', 'birth_certificate_mimetype', 'agreements' ];
+                for (const key in appInRawData) {
+                    if (appInRawData.hasOwnProperty(key) && !fieldsToExcludeFromTextSearch.includes(key)) {
+                        const value = appInRawData[key];
+                        if (value !== null && value !== undefined) {
+                            combinedText += String(value).toLowerCase() + ' ';
+                        }
+                    }
+                }
+                matchesSearch = combinedText.includes(searchTerm);
+            } else { 
+                matchesSearch = true;
+            }
             
+            const statusBadgeText = row.querySelector('.status-badge')?.textContent.trim() || '';
             const submissionDateCell = row.querySelector('.submission-date-cell'); 
             const submissionDateText = submissionDateCell?.textContent.trim(); 
             let submissionDate = null;
             if (submissionDateText && submissionDateText !== 'N/A') { try { submissionDate = new Date(submissionDateText); if (isNaN(submissionDate.getTime())) submissionDate = null; } catch (e) { submissionDate = null; }}
-            
-            const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || program.includes(searchTerm) || appIdText.includes(searchTerm);
             
             let matchesDate = true; 
             if (filterByDate) { 
@@ -1467,15 +1548,33 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (activeStatusFilter !== 'All') {
                 matchesStatus = (statusBadgeText === activeStatusFilter);
             }
+
+            let matchesGender = true;
+            if (selectedGender !== 'All' && appInRawData.sex) {
+                matchesGender = (appInRawData.sex.toLowerCase() === selectedGender.toLowerCase());
+            } else if (selectedGender !== 'All' && !appInRawData.sex) { // If filtering by gender but app has no sex data
+                matchesGender = false;
+            }
             
-            row.style.display = (matchesSearch && matchesDate && matchesStatus) ? '' : 'none';
+            row.style.display = (matchesSearch && matchesDate && matchesStatus && matchesGender) ? '' : 'none';
         });
         updateSelectAllCheckboxState(); 
         updateBulkActionsVisibility(); 
         updateApplicationPageTitles();
     }
-    searchInput?.addEventListener('input', filterTableRows); startDateInput?.addEventListener('change', filterTableRows); endDateInput?.addEventListener('change', filterTableRows);
-    clearDateFilterBtn?.addEventListener('click', () => { if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; filterTableRows(); });
+
+    searchInput?.addEventListener('input', filterTableRows);
+    startDateInput?.addEventListener('change', filterTableRows);
+    endDateInput?.addEventListener('change', filterTableRows);
+    genderFilterRadios.forEach(radio => radio.addEventListener('change', filterTableRows));
+
+    clearFiltersBtn?.addEventListener('click', () => {
+        if(startDateInput) startDateInput.value = '';
+        if(endDateInput) endDateInput.value = '';
+        if(document.getElementById('genderFilterAll')) document.getElementById('genderFilterAll').checked = true;
+        filterTableRows();
+    });
+
 
     const flaskStats = JSON.parse('{{ stats | tojson | safe }}');
     let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, /*in_review:0,*/ passed:0, failed:0, scheduled:0 })); // Removed in_review from default
@@ -1675,6 +1774,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dashboardContentDiv.style.display = 'none'; applicationsContentDiv.style.display = 'none'; addApplicationContentDiv.style.display = 'none';
         if (viewName === 'dashboard') {
             dashboardContentDiv.style.display = 'block'; if (pageTitleHeaderElement) pageTitleHeaderElement.textContent = 'Dashboard Overview'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Dashboard'; updateSidebarActiveState('dashboard'); activeStatusFilter = 'All'; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = '';
+            if(document.getElementById('genderFilterAll')) document.getElementById('genderFilterAll').checked = true; // Reset gender filter
             updateGlobalStatsDisplay(); if (window.applicationChartInstance) window.applicationChartInstance.resize(); if (window.statusChartInstance) window.statusChartInstance.resize();
         } else if (viewName === 'applications') {
             applicationsContentDiv.style.display = 'block'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Applications'; updateSidebarActiveState('applications', statusForSidebarHighlight); updateApplicationPageTitles();
@@ -1689,7 +1789,7 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebarDashboardMenuLink?.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
     sidebarAddApplicationMenuLink?.addEventListener('click', (e) => { e.preventDefault(); showView('addApplication'); });
     breadcrumbAdminHomeLink?.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
-    const setupSidebarFilterClickHandler = (linkElement, statusValueToSet) => { linkElement?.addEventListener('click', (e) => { e.preventDefault(); activeStatusFilter = statusValueToSet; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; showView('applications', statusValueToSet); filterTableRows(); }); };
+    const setupSidebarFilterClickHandler = (linkElement, statusValueToSet) => { linkElement?.addEventListener('click', (e) => { e.preventDefault(); activeStatusFilter = statusValueToSet; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; if(document.getElementById('genderFilterAll')) document.getElementById('genderFilterAll').checked = true; showView('applications', statusValueToSet); filterTableRows(); }); };
     setupSidebarFilterClickHandler(sidebarApplicationsMenuLink, 'All');
     Object.entries(sidebarFilterLinks).forEach(([statusKey, linkElement]) => { 
         if (!linkElement) return; // Skip if link element is null (e.g. inReviewFilterLink if it was removed)
@@ -1719,6 +1819,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         let reportTitleText = activeStatusFilter === 'All' ? 'ALL APPLICATIONS' : `${activeStatusFilter.toUpperCase()} APPLICATIONS`;
+        const selectedGenderRadio = document.querySelector('input[name="genderFilter"]:checked');
+        const selectedGender = selectedGenderRadio ? selectedGenderRadio.value : 'All';
+        if (selectedGender !== 'All') {
+            reportTitleText += ` (${selectedGender.toUpperCase()})`;
+        }
         
         let reportSubtitleHTML = '';
         const startDateVal = startDateInput?.value;

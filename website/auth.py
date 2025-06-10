@@ -1289,7 +1289,29 @@ def admin_dashboard():
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT a.applicant_id, a.first_name, a.last_name, a.email_address, a.program_choice, a.date_of_application, a.application_status, a.submitted_at, a.decision_date, a.exam_status, a.permit_control_no, a.permit_exam_date, a.permit_exam_time, a.permit_testing_room, su.email as student_account_email FROM applicants a LEFT JOIN student_users su ON a.student_user_id = su.id ORDER BY CASE a.application_status WHEN 'Pending' THEN 1 WHEN 'In Review' THEN 2 WHEN 'Approved' THEN 3 WHEN 'Scheduled' THEN 4 WHEN 'Passed' THEN 5 WHEN 'Failed' THEN 6 WHEN 'Rejected' THEN 7 ELSE 8 END, a.submitted_at DESC, a.applicant_id DESC")
+            # --- MODIFIED SQL QUERY ---
+            # Changed from selecting specific columns to selecting a.* to include all applicant fields for searching
+            cursor.execute("""
+                SELECT 
+                    a.*, 
+                    su.email as student_account_email 
+                FROM applicants a 
+                LEFT JOIN student_users su ON a.student_user_id = su.id 
+                ORDER BY 
+                    CASE a.application_status 
+                        WHEN 'Pending' THEN 1 
+                        WHEN 'In Review' THEN 2 
+                        WHEN 'Approved' THEN 3 
+                        WHEN 'Scheduled' THEN 4 
+                        WHEN 'Passed' THEN 5 
+                        WHEN 'Failed' THEN 6 
+                        WHEN 'Rejected' THEN 7 
+                        ELSE 8 
+                    END, 
+                    a.submitted_at DESC, 
+                    a.applicant_id DESC
+            """)
+            # --- END OF MODIFICATION ---
             applications = cursor.fetchall()
             stats['total_applications'] = len(applications)
             for app in applications:
