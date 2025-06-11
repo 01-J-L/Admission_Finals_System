@@ -556,7 +556,7 @@ def admin_login():
     username = request.form.get('username')
     password = request.form.get('password')
     ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
-    ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin')
+    ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'adminpgpc@2025')
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
         session['admin_logged_in'] = True
         flash("✅ Admin login successful!", "success")
