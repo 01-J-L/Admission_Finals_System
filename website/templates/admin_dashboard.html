@@ -1068,9 +1068,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (['Approved', 'Rejected', 'Passed', 'Failed'].includes(newStatus)) {
                          appInRawData.decision_date = new Date().toISOString(); 
-                    } else if (newStatus === 'Scheduled' || newStatus === 'Pending') { // Added Pending
+                    } else if (newStatus === 'Scheduled' || newStatus === 'Pending' || newStatus === 'In Review') { // Added In Review
                          appInRawData.decision_date = null;
                     }
+
+                    // If status moved to Pending, In Review, or Rejected, clear permit details in JS data
+                    if (['Pending', 'In Review', 'Rejected'].includes(newStatus)) {
+                        appInRawData.permit_exam_date = null;
+                        appInRawData.permit_exam_time = null;
+                        appInRawData.permit_testing_room = null;
+                    }
+                    
                     updateIsScheduledFlag(appInRawData); // Re-calculate is_scheduled
                 }
                 const targetRow = rowElement || tableBody?.querySelector(`tr[data-applicant-id="${applicantId}"]`);
@@ -1373,9 +1381,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         if (['Approved', 'Rejected', 'Passed', 'Failed'].includes(actionStatus)) {
                              appInRawData.decision_date = new Date().toISOString(); 
-                        } else if (actionStatus === 'Scheduled' || actionStatus === 'Pending') { // Added Pending
+                        } else if (actionStatus === 'Scheduled' || actionStatus === 'Pending' || actionStatus === 'In Review') { // Added In Review
                              appInRawData.decision_date = null;
                         }
+
+                        // If status moved to Pending, In Review, or Rejected, clear permit details in JS data
+                        if (['Pending', 'In Review', 'Rejected'].includes(actionStatus)) {
+                            appInRawData.permit_exam_date = null;
+                            appInRawData.permit_exam_time = null;
+                            appInRawData.permit_testing_room = null;
+                        }
+
                         updateIsScheduledFlag(appInRawData); // Re-calculate is_scheduled
 
                         const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${id}"]`); 

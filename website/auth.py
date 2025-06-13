@@ -211,7 +211,12 @@ def send_application_status_email(applicant_email, applicant_name, new_status, a
         template_name, subject_base = exam_status_map[exam_status]
         subject = f"{subject_base} - {sender_name_from_config}"
     else:
-        return False
+        # Fallback for statuses like 'Pending' or 'In Review' for which we might not typically send emails for every change,
+        # but could be triggered if exam_status changes while app_status is one of these.
+        # This part ensures we don't crash if new_status is unexpected for email but exam_status is set.
+        # However, typically emails are for more definitive changes.
+        print(f"Notice: Email not configured for application status '{new_status}' and exam status '{exam_status}'. No email sent for app {app_id_formatted}.")
+        return False # Explicitly return False if no template/subject determined
 
     try:
         html_body = render_template(template_name, **email_context)
@@ -1105,12 +1110,15 @@ def admin_update_application_status(applicant_id):
         sql_update_parts = ["application_status = %s", "last_updated_at = %s"]
         params_update = [new_status, now_dt]
 
+        # Handle decision_date
         if new_status in ['Approved', 'Rejected', 'Passed', 'Failed']:
             sql_update_parts.append("decision_date = %s")
             params_update.append(now_dt)
-        else: 
+        else: # For Pending, In Review, Scheduled
             sql_update_parts.append("decision_date = NULL") 
+            # No parameter needed for NULL literal
 
+        # Handle permit_control_no generation on Approval
         if new_status == 'Approved' and not generated_permit_control_no:
             cursor.execute("SELECT MAX(CAST(permit_control_no AS UNSIGNED)) as max_pcn FROM applicants WHERE permit_control_no REGEXP '^[0-9]+$'")
             max_pcn_row = cursor.fetchone()
@@ -1119,10 +1127,20 @@ def admin_update_application_status(applicant_id):
                 next_pcn_int = int(max_pcn_row['max_pcn']) + 1
             generated_permit_control_no = f"{next_pcn_int:04d}" 
             new_permit_control_no_generated_flag = True
-            if new_permit_control_no_generated_flag:
+            if new_permit_control_no_generated_flag: # Ensure this condition is correctly placed
                  sql_update_parts.append("permit_control_no = %s")
                  params_update.append(generated_permit_control_no)
         
+        # Handle clearing of permit details for specific statuses
+        # If status is set to Pending, In Review, or Rejected, reset schedule-related fields
+        if new_status in ['Pending', 'In Review', 'Rejected']:
+            sql_update_parts.extend([
+                "permit_exam_date = NULL", 
+                "permit_exam_time = NULL", 
+                "permit_testing_room = NULL"
+            ])
+            # No parameters needed for NULL literals in the SQL string
+
         params_update.append(applicant_id)
         
         final_sql = f"UPDATE applicants SET {', '.join(sql_update_parts)} WHERE applicant_id = %s"
@@ -1137,7 +1155,7 @@ def admin_update_application_status(applicant_id):
             email_sent = False
             permit_details_for_email = None
             if new_status in ['Approved', 'Scheduled', 'Rejected', 'Passed', 'Failed'] and email_to_notify:
-                if new_status == 'Scheduled':
+                if new_status == 'Scheduled' or (new_status == 'Approved' and new_permit_control_no_generated_flag): # Fetch details if becoming scheduled or approved (to get PCN for email)
                     details_cursor = conn.cursor(dictionary=True)
                     details_cursor.execute("SELECT permit_exam_date, permit_exam_time, permit_testing_room, permit_control_no FROM applicants WHERE applicant_id = %s", (applicant_id,))
                     permit_data = details_cursor.fetchone()
@@ -1150,7 +1168,7 @@ def admin_update_application_status(applicant_id):
                     new_status, 
                     applicant_id, 
                     app_info.get('program_choice'), 
-                    app_info.get('exam_status'),
+                    app_info.get('exam_status'), # Pass current exam_status
                     permit_details=permit_details_for_email 
                 )
             
@@ -1160,15 +1178,18 @@ def admin_update_application_status(applicant_id):
             if new_status in ['Approved', 'Scheduled', 'Rejected', 'Passed', 'Failed'] and email_to_notify:
                 msg += " Email sent." if email_sent else " Email failed."
             
+            # Determine effective_pcn for the response
             effective_pcn = generated_permit_control_no if new_permit_control_no_generated_flag else app_info.get('permit_control_no')
-            if new_status == 'Scheduled' and permit_details_for_email: 
-                effective_pcn = permit_details_for_email.get('permit_control_no', effective_pcn)
+            # If details were fetched for email (e.g. for Scheduled status), use the PCN from there if available
+            if permit_details_for_email and permit_details_for_email.get('permit_control_no'):
+                effective_pcn = permit_details_for_email.get('permit_control_no')
+
 
             return jsonify({"success": True, "message": msg, "new_status": new_status, "applicant_id": applicant_id, "permit_control_no": effective_pcn })
         else:
-            cursor.execute("SELECT 1 FROM applicants WHERE applicant_id = %s", (applicant_id,))
-            if cursor.fetchone(): return jsonify({"success": True, "message": f"Status already {new_status}.", "new_status": new_status, "applicant_id": applicant_id})
-            return jsonify({"success": False, "message": "App not found"}), 404
+            cursor.execute("SELECT 1 FROM applicants WHERE applicant_id = %s AND application_status = %s", (applicant_id, new_status)) # Check if already this status
+            if cursor.fetchone(): return jsonify({"success": True, "message": f"Status already {new_status}.", "new_status": new_status, "applicant_id": applicant_id, "permit_control_no": app_info.get('permit_control_no')}) # Return existing PCN
+            return jsonify({"success": False, "message": "App not found or status not changed"}), 404
             
     except mysql.connector.Error as db_err: 
         print(f"Database error updating status for {applicant_id}: {db_err}"); traceback.print_exc()
@@ -1178,6 +1199,8 @@ def admin_update_application_status(applicant_id):
         return jsonify({"success": False, "message": "Server error"}), 500
     finally:
         if cursor: cursor.close()
+        # Ensure update_cursor is closed if it was opened
+        # if 'update_cursor' in locals() and update_cursor: update_cursor.close() # Already closed
         if conn and conn.is_connected(): conn.close()
 
 
