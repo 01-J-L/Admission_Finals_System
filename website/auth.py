@@ -37,11 +37,11 @@ def get_db_connection():
         # print("--- End of Reading DB Environment Variables ---")
 
         # Railway specific defaults (derived from typical Railway setups and user-provided connection string)
-        RAILWAY_DEFAULT_HOST = 'crossover.proxy.rlwy.net'
+        RAILWAY_DEFAULT_HOST = 'localhost'
         RAILWAY_DEFAULT_USER = 'root'
-        RAILWAY_DEFAULT_PASSWORD = "jSFbqIMVIpKfAFdoGTampFzDSaJEkvtO"
-        RAILWAY_DEFAULT_DB_NAME = "railway" # As per user's connection string example
-        RAILWAY_DEFAULT_PORT_STR = '36284' # As per user's connection string example
+        RAILWAY_DEFAULT_PASSWORD = "anime951827"
+        RAILWAY_DEFAULT_DB_NAME = "expired" # As per user's connection string example
+        RAILWAY_DEFAULT_PORT_STR = '3306' # As per user's connection string example
         
         db_host = env_db_host_from_os
         if env_db_host_from_os and env_db_host_from_os.lower() == 'localhost':

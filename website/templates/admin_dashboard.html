@@ -158,7 +158,7 @@
                     <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-checkbox-circle-line"></i></div>
                     Approved <span class="ml-auto bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full" id="approvedCountSide">{{ stats.approved if stats else '0' }}</span>
                 </a>
-                <a href="#" id="scheduledFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-gray-50 rounded ml-4"> 
+                <a href="#" id="scheduledFilterLink" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-gray-50 rounded"> <!-- No longer needs ml-4, it's a primary filter now -->
                     <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-calendar-schedule-line"></i></div>
                     Scheduled <span class="ml-auto bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-0.5 rounded-full" id="scheduledCountSide">{{ stats.scheduled if stats else '0' }}</span>
                 </a>
@@ -254,11 +254,22 @@
                 <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-gray-500 text-sm">Approved</p>
+                            <p class="text-gray-500 text-sm">Approved (Awaiting Schedule)</p>
                             <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsApproved">{{ stats.approved if stats else '0' }}</h2>
                         </div>
                         <div class="w-10 h-10 flex items-center justify-center bg-green-100 text-green-600 rounded-lg">
                             <i class="ri-check-line ri-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm">Scheduled for Exam</p>
+                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsScheduled">{{ stats.scheduled if stats else '0' }}</h2>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-indigo-100 text-indigo-700 rounded-lg">
+                            <i class="ri-calendar-schedule-line ri-lg"></i>
                         </div>
                     </div>
                 </div>
@@ -273,7 +284,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- REMOVED In Review Stats Card -->
                 <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
@@ -293,17 +303,6 @@
                         </div>
                         <div class="w-10 h-10 flex items-center justify-center bg-orange-100 text-orange-600 rounded-lg">
                             <i class="ri-shield-cross-line ri-lg"></i>
-                        </div>
-                    </div>
-                </div>
-                 <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-500 text-sm">Scheduled for Exam</p>
-                            <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsScheduled">{{ stats.scheduled if stats else '0' }}</h2>
-                        </div>
-                        <div class="w-10 h-10 flex items-center justify-center bg-indigo-100 text-indigo-700 rounded-lg">
-                            <i class="ri-calendar-schedule-line ri-lg"></i>
                         </div>
                     </div>
                 </div>
@@ -552,21 +551,28 @@
                                 </td>
                                 <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap status-cell">
                                     {% set status_class = 'bg-gray-100 text-gray-800' %}
-                                    {% set current_status = app.application_status | lower | replace(' ', '_') %}
-                                    {% if current_status == 'approved' %}{% set status_class = 'bg-green-100 text-green-800' %}
-                                    {% elif current_status == 'rejected' %}{% set status_class = 'bg-red-100 text-red-800' %}
-                                    {% elif current_status == 'in_review' %}{% set status_class = 'bg-blue-100 text-blue-800' %}
-                                    {% elif current_status == 'pending' %}{% set status_class = 'bg-yellow-100 text-yellow-800' %}
-                                    {% elif current_status == 'passed' %}{% set status_class = 'bg-teal-100 text-teal-800' %}
-                                    {% elif current_status == 'failed' %}{% set status_class = 'bg-orange-100 text-orange-800' %}
+                                    {% set current_status_db = app.application_status | lower | replace(' ', '_') %}
+                                    
+                                    {# Determine effective status for display #}
+                                    {% set has_permit_details = app.permit_exam_date and app.permit_exam_time and app.permit_testing_room %}
+                                    {% set effective_status_display = current_status_db %}
+                                    {% if current_status_db == 'approved' and has_permit_details %}
+                                        {% set effective_status_display = 'scheduled' %}
                                     {% endif %}
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge {{ status_class }}">{{ app.application_status or 'N/A' }}</span>
+
+                                    {% if effective_status_display == 'approved' %}{% set status_class = 'bg-green-100 text-green-800' %}
+                                    {% elif effective_status_display == 'scheduled' %}{% set status_class = 'bg-indigo-100 text-indigo-800' %}
+                                    {% elif effective_status_display == 'rejected' %}{% set status_class = 'bg-red-100 text-red-800' %}
+                                    {% elif effective_status_display == 'in_review' %}{% set status_class = 'bg-blue-100 text-blue-800' %}
+                                    {% elif effective_status_display == 'pending' %}{% set status_class = 'bg-yellow-100 text-yellow-800' %}
+                                    {% elif effective_status_display == 'passed' %}{% set status_class = 'bg-teal-100 text-teal-800' %}
+                                    {% elif effective_status_display == 'failed' %}{% set status_class = 'bg-orange-100 text-orange-800' %}
+                                    {% endif %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge {{ status_class }}">{{ effective_status_display | replace('_', ' ') | title  }}</span>
                                 </td>
                                 <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                                     <div class="flex space-x-1 justify-end items-center">
                                         <button class="text-gray-500 hover:text-primary p-0.5 sm:p-1 action-view" title="View Details" data-id="{{ app.applicant_id }}"><i class="ri-eye-line ri-lg"></i></button>
-                                        
-                                        <!-- REMOVED Edit Application Button -->
                                         
                                         <a href="{{ url_for('auth.admin_print_application_form', applicant_id=app.applicant_id) }}" target="_blank" class="text-gray-500 hover:text-green-500 p-0.5 sm:p-1 action-print" title="Print Application Form">
                                             <i class="ri-printer-line ri-lg"></i>
@@ -580,14 +586,13 @@
                                             </button>
                                             <div class="dropdown-content w-36 text-left">
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Approved">Approve</a>
+                                                <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Scheduled">Set Scheduled</a>
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Rejected">Reject</a>
-                                                <!-- REMOVED In Review status change option -->
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Pending">Set Pending</a>
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Passed">Set Passed</a>
                                                 <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status" data-id="{{ app.applicant_id }}" data-status="Failed">Set Failed</a>
                                             </div>
                                         </div>
-                                        <!-- REMOVED Delete Application Button -->
                                     </div>
                                 </td>
                             </tr>
@@ -851,13 +856,19 @@ const PGPC_LOGO_URL_JS = "{{ url_for('static', filename='logopgpc.png') }}";
 const BAYAN_LOGO_URL_JS = "{{ url_for('static', filename='images/bayan_padre_garcia_logo.png') }}"; 
 
 document.addEventListener('DOMContentLoaded', function() {
-    const rawApplicationsData = ({{ applications | tojson | safe if applications else [] | tojson | safe }}).map(app => {
-        app.is_scheduled = (
-            app.application_status === 'Approved' &&
-            app.permit_exam_date &&
-            app.permit_exam_time && String(app.permit_exam_time).trim() !== '' &&
-            app.permit_testing_room && String(app.permit_testing_room).trim() !== ''
+    
+    function updateIsScheduledFlag(appObject) {
+        if (!appObject) return;
+        const hasFullPermitDetails = (
+            appObject.permit_exam_date &&
+            appObject.permit_exam_time && String(appObject.permit_exam_time).trim() !== '' &&
+            appObject.permit_testing_room && String(appObject.permit_testing_room).trim() !== ''
         );
+        appObject.is_scheduled = (appObject.application_status === 'Scheduled') || (appObject.application_status === 'Approved' && hasFullPermitDetails);
+    }
+
+    const rawApplicationsData = ({{ applications | tojson | safe if applications else [] | tojson | safe }}).map(app => {
+        updateIsScheduledFlag(app); // Initial calculation of is_scheduled
         return app;
     });
 
@@ -875,7 +886,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebarBackToHomeLink = document.getElementById('sidebarBackToHomeLink'); 
     const sidebarFilterLinks = {
         pending: document.getElementById('pendingFilterLink'),
-        // inReview: document.getElementById('inReviewFilterLink'), // Removed
         approved: document.getElementById('approvedFilterLink'),
         scheduled: document.getElementById('scheduledFilterLink'), 
         rejected: document.getElementById('rejectedFilterLink'),
@@ -955,10 +965,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const startDateInput = document.getElementById('startDateFilter');
     const endDateInput = document.getElementById('endDateFilter');
-    const clearFiltersBtn = document.getElementById('clearFiltersBtn'); // Renamed from clearDateFilterBtn
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn'); 
     const printReportBtn = document.getElementById('printReportBtn');
 
-    // Gender Filter Elements
     const genderFilterRadios = document.querySelectorAll('input[name="genderFilter"]');
 
 
@@ -1015,24 +1024,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    function updateStatusBadge(row, newStatus) {
+    function updateStatusBadge(row, newStatus, isScheduledFlag = false) { // isScheduledFlag added
         const badge = row.querySelector('.status-badge');
         if (!badge) return;
 
-        badge.textContent = newStatus;
+        let displayStatus = newStatus;
         let statusClass = 'bg-gray-100 text-gray-800';
-        if (newStatus === 'Approved') statusClass = 'bg-green-100 text-green-800';
-        else if (newStatus === 'Rejected') statusClass = 'bg-red-100 text-red-800';
-        // else if (newStatus === 'In Review') statusClass = 'bg-blue-100 text-blue-800'; // Removed
-        else if (newStatus === 'Pending') statusClass = 'bg-yellow-100 text-yellow-800';
-        else if (newStatus === 'Passed') statusClass = 'bg-teal-100 text-teal-800';
-        else if (newStatus === 'Failed') statusClass = 'bg-orange-100 text-orange-800';
 
-
+        if (newStatus === 'Approved' && isScheduledFlag) {
+            displayStatus = 'Scheduled'; // Override display
+        }
+        
+        // Determine class based on displayStatus
+        if (displayStatus === 'Approved') statusClass = 'bg-green-100 text-green-800';
+        else if (displayStatus === 'Scheduled') statusClass = 'bg-indigo-100 text-indigo-800';
+        else if (displayStatus === 'Rejected') statusClass = 'bg-red-100 text-red-800';
+        else if (displayStatus === 'Pending') statusClass = 'bg-yellow-100 text-yellow-800';
+        else if (displayStatus === 'Passed') statusClass = 'bg-teal-100 text-teal-800';
+        else if (displayStatus === 'Failed') statusClass = 'bg-orange-100 text-orange-800';
+        
+        badge.textContent = displayStatus.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         badge.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge ${statusClass} status-flash-animation`;
         setTimeout(() => badge.classList.remove('status-flash-animation'), 600);
-        // updateGlobalStatsOnStatusChange(); // Called after successful API response instead
     }
+
 
     async function handleUpdateStatus(applicantId, newStatus, rowElement) {
         try {
@@ -1047,24 +1062,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast(result.message, 'success');
                 const appInRawData = rawApplicationsData.find(app => app.applicant_id == applicantId);
                 if (appInRawData) {
-                    appInRawData.application_status = newStatus;
+                    appInRawData.application_status = newStatus; // This is the DB status
                     if (result.permit_control_no !== undefined) { 
                         appInRawData.permit_control_no = result.permit_control_no;
                     }
-                    appInRawData.is_scheduled = (
-                        appInRawData.application_status === 'Approved' &&
-                        appInRawData.permit_exam_date &&
-                        appInRawData.permit_exam_time && String(appInRawData.permit_exam_time).trim() !== '' &&
-                        appInRawData.permit_testing_room && String(appInRawData.permit_testing_room).trim() !== ''
-                    );
+                    if (['Approved', 'Rejected', 'Passed', 'Failed'].includes(newStatus)) {
+                         appInRawData.decision_date = new Date().toISOString(); 
+                    } else if (newStatus === 'Scheduled' || newStatus === 'Pending') { // Added Pending
+                         appInRawData.decision_date = null;
+                    }
+                    updateIsScheduledFlag(appInRawData); // Re-calculate is_scheduled
                 }
-                if (rowElement) updateStatusBadge(rowElement, newStatus);
-                else {
-                    const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${applicantId}"]`);
-                    if(rowToUpdate) updateStatusBadge(rowToUpdate, newStatus);
+                const targetRow = rowElement || tableBody?.querySelector(`tr[data-applicant-id="${applicantId}"]`);
+                if (targetRow && appInRawData) {
+                     updateStatusBadge(targetRow, appInRawData.application_status, appInRawData.is_scheduled);
                 }
                 updateGlobalStatsOnStatusChange(); 
-                filterTableRows();
+                filterTableRows(); 
             } else {
                 showToast(result.message || 'Failed to update status.', 'error');
             }
@@ -1073,6 +1087,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error("Error updating status:", error);
         }
     }
+
 
     async function executeDelete(ids) {
         const idArray = Array.isArray(ids) ? ids : [ids];
@@ -1109,10 +1124,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const target = event.target;
             const actionView = target.closest('.action-view');
             const actionUpdateStatus = target.closest('.action-update-status');
-            // const actionDeleteSingle = target.closest('.action-delete-single'); // Removed
             const actionAdminNotes = target.closest('.action-admin-notes');
             const actionPermitDetails = target.closest('.action-permit-details');
-            // const actionEditAdmin = target.closest('.action-edit-admin'); // Removed
             const actionPrint = target.closest('.action-print'); 
 
 
@@ -1172,14 +1185,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 handleUpdateStatus(actionUpdateStatus.dataset.id, actionUpdateStatus.dataset.status, actionUpdateStatus.closest('tr'));
                 toggleDropdown(actionUpdateStatus.closest('.action-status-dropdown'), false);
             } 
-            // else if (actionDeleteSingle) { // Removed
-            //     event.preventDefault();
-            //     itemToDelete = parseInt(actionDeleteSingle.dataset.id);
-            //     deleteModalTitle.textContent = "Delete Application";
-            //     deleteModalMessage.textContent = `Are you sure you want to delete application P2025${String(itemToDelete).padStart(4, '0')}? This action cannot be undone.`;
-            //     openModal(deleteConfirmationModal, deleteModalBackdrop);
-            // } 
-            else if (actionPrint) { // Kept print logic
+            else if (actionPrint) { 
                 // Default link behavior
             }
         });
@@ -1189,7 +1195,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (viewModalTitleJS) viewModalTitleJS.textContent = `Application Details: P2025${String(data.applicant_id).padStart(4, '0')}`;
         let contentHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">`;
         const fieldOrder = [
-            'applicant_id', 'student_account_email', 'first_name', 'last_name', 'middle_name', 'email_address', 'mobile_number', 'program_choice', 'application_status', 'submitted_at', 'date_of_application', 'date_of_birth', 'place_of_birth', 'sex', 'civil_status', 'religion', 'citizenship', 'permanent_address_street_barangay', 'permanent_address_city_municipality', 'permanent_address_province', 'permanent_address_postal_code', 'cultural_minority_group', 'physical_disability', 'academic_year', 'average_family_income', 'father_name', 'father_occupation', 'father_company_address', 'father_contact_number', 'mother_maiden_name', 'mother_occupation', 'mother_company_address', 'mother_contact_number', 'guardian_name', 'guardian_occupation', 'guardian_company_address', 'guardian_contact_number', 'senior_high_school', 'senior_high_school_address', 'senior_high_school_track_strand', 'senior_high_school_year_from', 'senior_high_school_year_to', 'tertiary_school', 'tertiary_school_address', 'tertiary_course', 'tertiary_year_from', 'tertiary_year_to', 'agreements', 'final_submission_date', 'decision_date', 'last_updated_at'
+            'applicant_id', 'student_account_email', 'first_name', 'last_name', 'middle_name', 'email_address', 'mobile_number', 'program_choice', 'application_status', 'exam_status', 'submitted_at', 'date_of_application', 'date_of_birth', 'place_of_birth', 'sex', 'civil_status', 'religion', 'citizenship', 'permanent_address_street_barangay', 'permanent_address_city_municipality', 'permanent_address_province', 'permanent_address_postal_code', 'cultural_minority_group', 'physical_disability', 'academic_year', 'average_family_income', 'father_name', 'father_occupation', 'father_company_address', 'father_contact_number', 'mother_maiden_name', 'mother_occupation', 'mother_company_address', 'mother_contact_number', 'guardian_name', 'guardian_occupation', 'guardian_company_address', 'guardian_contact_number', 'senior_high_school', 'senior_high_school_address', 'senior_high_school_track_strand', 'senior_high_school_year_from', 'senior_high_school_year_to', 'tertiary_school', 'tertiary_school_address', 'tertiary_course', 'tertiary_year_from', 'tertiary_year_to', 'agreements', 'final_submission_date', 'decision_date', 'last_updated_at'
         ];
         for (const key of fieldOrder) {
             if (data.hasOwnProperty(key) && key !== 'photo' && key !== 'admin_notes' && !key.startsWith('permit_') && key !== 'control_number' && !key.endsWith('_file') && !key.endsWith('_filename') && !key.endsWith('_mimetype')) {
@@ -1290,13 +1296,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         appInRaw.permit_exam_date = result.data.permit_exam_date;
                         appInRaw.permit_exam_time = result.data.permit_exam_time;
                         appInRaw.permit_testing_room = result.data.permit_testing_room;
-                        appInRaw.is_scheduled = (
-                            appInRaw.application_status === 'Approved' &&
-                            appInRaw.permit_exam_date &&
-                            appInRaw.permit_exam_time && String(appInRaw.permit_exam_time).trim() !== '' &&
-                            appInRaw.permit_testing_room && String(appInRaw.permit_testing_room).trim() !== ''
-                        );
                     }
+                    updateIsScheduledFlag(appInRaw); // Recalculate is_scheduled
+                    
+                    const targetRow = tableBody?.querySelector(`tr[data-applicant-id="${currentViewingApplicantId}"]`);
+                    if (targetRow) updateStatusBadge(targetRow, appInRaw.application_status, appInRaw.is_scheduled);
+                    
                     updateGlobalStatsOnStatusChange(); 
                     filterTableRows(); 
                 }
@@ -1345,7 +1350,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('bulkRejectBtn')?.addEventListener('click', () => handleBulkAction('Rejected'));
     document.getElementById('bulkPassBtn')?.addEventListener('click', () => handleBulkAction('Passed'));
     document.getElementById('bulkFailBtn')?.addEventListener('click', () => handleBulkAction('Failed'));
-    document.getElementById('bulkDeleteBtn')?.addEventListener('click', () => { const selectedIds = getSelectedIds(); if (selectedIds.length > 0) { itemToDelete = selectedIds; deleteModalTitle.textContent = `Delete ${selectedIds.length} Application(s)`; deleteModalMessage.textContent = `Are you sure you want to delete ${selectedIds.length} selected application(s)? This action cannot be undone.`; openModal(deleteConfirmationModal, deleteModalBackdrop); } else { showToast('No applications selected for deletion.', 'info'); }});
+    // Bulk Delete was removed from UI, but if re-added, this is the handler:
+    // document.getElementById('bulkDeleteBtn')?.addEventListener('click', () => { const selectedIds = getSelectedIds(); if (selectedIds.length > 0) { itemToDelete = selectedIds; deleteModalTitle.textContent = `Delete ${selectedIds.length} Application(s)`; deleteModalMessage.textContent = `Are you sure you want to delete ${selectedIds.length} selected application(s)? This action cannot be undone.`; openModal(deleteConfirmationModal, deleteModalBackdrop); } else { showToast('No applications selected for deletion.', 'info'); }});
     document.getElementById('closeBulkActions')?.addEventListener('click', () => { if (!bulkActionsBar || !tableBody || !selectAllCheckbox) return; bulkActionsBar.style.display = 'none'; selectAllCheckbox.checked = false; tableBody.querySelectorAll('.row-checkbox:checked').forEach(cb => { cb.checked = false; cb.closest('tr').classList.remove('selected'); }); });
 
     async function handleBulkAction(actionStatus) {
@@ -1361,19 +1367,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     successCount++; 
                     const appInRawData = rawApplicationsData.find(app => app.applicant_id == id); 
                     if (appInRawData) {
-                        appInRawData.application_status = actionStatus;
+                        appInRawData.application_status = actionStatus; // DB status
                         if (result.permit_control_no !== undefined) { 
                             appInRawData.permit_control_no = result.permit_control_no;
                         }
-                        appInRawData.is_scheduled = (
-                            appInRawData.application_status === 'Approved' &&
-                            appInRawData.permit_exam_date &&
-                            appInRawData.permit_exam_time && String(appInRawData.permit_exam_time).trim() !== '' &&
-                            appInRawData.permit_testing_room && String(appInRawData.permit_testing_room).trim() !== ''
-                        );
+                        if (['Approved', 'Rejected', 'Passed', 'Failed'].includes(actionStatus)) {
+                             appInRawData.decision_date = new Date().toISOString(); 
+                        } else if (actionStatus === 'Scheduled' || actionStatus === 'Pending') { // Added Pending
+                             appInRawData.decision_date = null;
+                        }
+                        updateIsScheduledFlag(appInRawData); // Re-calculate is_scheduled
+
+                        const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${id}"]`); 
+                        if(rowToUpdate) updateStatusBadge(rowToUpdate, appInRawData.application_status, appInRawData.is_scheduled); 
                     }
-                    const rowToUpdate = tableBody?.querySelector(`tr[data-applicant-id="${id}"]`); 
-                    if(rowToUpdate) updateStatusBadge(rowToUpdate, actionStatus); 
                 } else { 
                     failCount++; 
                     showToast(`Failed P2025${String(id).padStart(4,'0')}: ${result.message || 'Unknown error'}`, 'error');
@@ -1391,7 +1398,6 @@ document.addEventListener('DOMContentLoaded', function() {
         filterTableRows();
     }
 
-    // Bulk Set Permit Details Logic
     if (bulkSetPermitDetailsBtn) {
         bulkSetPermitDetailsBtn.addEventListener('click', () => {
             const selectedIds = getSelectedIds();
@@ -1452,17 +1458,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (result.success) {
                     successCount++;
                     const appInRaw = rawApplicationsData.find(app => app.applicant_id == id);
-                    if (appInRaw && result.data) { 
-                        appInRaw.permit_control_no = result.data.permit_control_no; 
-                        appInRaw.permit_exam_date = result.data.permit_exam_date;
-                        appInRaw.permit_exam_time = result.data.permit_exam_time;
-                        appInRaw.permit_testing_room = result.data.permit_testing_room;
-                        appInRaw.is_scheduled = (
-                            appInRaw.application_status === 'Approved' &&
-                            appInRaw.permit_exam_date &&
-                            appInRaw.permit_exam_time && String(appInRaw.permit_exam_time).trim() !== '' &&
-                            appInRaw.permit_testing_room && String(appInRaw.permit_testing_room).trim() !== ''
-                        );
+                    if (appInRaw) { 
+                        if(result.data){
+                            appInRaw.permit_control_no = result.data.permit_control_no; 
+                            appInRaw.permit_exam_date = result.data.permit_exam_date;
+                            appInRaw.permit_exam_time = result.data.permit_exam_time;
+                            appInRaw.permit_testing_room = result.data.permit_testing_room;
+                        } else { // Fallback if result.data is not present (though it should be)
+                            appInRaw.permit_exam_date = permitDetailsToSet.exam_date;
+                            appInRaw.permit_exam_time = permitDetailsToSet.exam_time;
+                            appInRaw.permit_testing_room = permitDetailsToSet.testing_room;
+                        }
+                        updateIsScheduledFlag(appInRaw); // Recalculate is_scheduled
+                         const targetRow = tableBody?.querySelector(`tr[data-applicant-id="${id}"]`);
+                         if (targetRow) updateStatusBadge(targetRow, appInRaw.application_status, appInRaw.is_scheduled);
                     }
                 } else {
                     failCount++;
@@ -1501,6 +1510,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedGender = selectedGenderRadio ? selectedGenderRadio.value : 'All';
 
         let title = activeStatusFilter === 'All' ? 'All Applications' : `${activeStatusFilter} Applications`;
+         if (activeStatusFilter === 'Approved') {
+            title = 'Approved (Awaiting Schedule) Applications';
+        }
+
         let filtersApplied = [];
         if (startDateVal || endDateVal) {
             filtersApplied.push("submission date");
@@ -1535,8 +1548,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.style.display = 'none';
                 return;
             }
+            updateIsScheduledFlag(appInRawData); // Ensure is_scheduled is fresh
 
-            // Search logic (already case-insensitive)
             let matchesSearch = false;
             if (searchTerm) {
                 let combinedText = '';
@@ -1555,7 +1568,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 matchesSearch = true;
             }
             
-            const statusBadgeText = row.querySelector('.status-badge')?.textContent.trim() || '';
             const submissionDateCell = row.querySelector('.submission-date-cell'); 
             const submissionDateText = submissionDateCell?.textContent.trim(); 
             let submissionDate = null;
@@ -1571,25 +1583,37 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             let matchesStatus = true;
-            if (activeStatusFilter === 'Scheduled') {
+            if (activeStatusFilter === 'Approved') {
+                matchesStatus = (appInRawData.application_status === 'Approved' && !appInRawData.is_scheduled);
+            } else if (activeStatusFilter === 'Scheduled') {
                 matchesStatus = appInRawData.is_scheduled;
             } else if (activeStatusFilter !== 'All') {
-                matchesStatus = (statusBadgeText === activeStatusFilter);
+                // For other statuses, match directly against application_status
+                // This ensures an "Approved" app that is "is_scheduled" won't show up if filtering for "Approved"
+                // but WILL show up if filtering for its actual DB status when activeStatusFilter is e.g. "Passed"
+                matchesStatus = (appInRawData.application_status === activeStatusFilter);
             }
+
 
             let matchesGender = true;
             if (selectedGender !== 'All' && appInRawData.sex) {
                 matchesGender = (appInRawData.sex.toLowerCase() === selectedGender.toLowerCase());
-            } else if (selectedGender !== 'All' && !appInRawData.sex) { // If filtering by gender but app has no sex data
+            } else if (selectedGender !== 'All' && !appInRawData.sex) { 
                 matchesGender = false;
             }
             
             row.style.display = (matchesSearch && matchesDate && matchesStatus && matchesGender) ? '' : 'none';
+             // Update status badge display after filtering logic
+            const statusBadgeElement = row.querySelector('.status-badge');
+            if (statusBadgeElement) {
+                updateStatusBadge(row, appInRawData.application_status, appInRawData.is_scheduled);
+            }
         });
         updateSelectAllCheckboxState(); 
         updateBulkActionsVisibility(); 
         updateApplicationPageTitles();
     }
+
 
     searchInput?.addEventListener('input', filterTableRows);
     startDateInput?.addEventListener('change', filterTableRows);
@@ -1605,10 +1629,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     const flaskStats = JSON.parse('{{ stats | tojson | safe }}');
-    let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, /*in_review:0,*/ passed:0, failed:0, scheduled:0 })); // Removed in_review from default
+    let currentJsStats = JSON.parse(JSON.stringify(flaskStats || {total_applications:0, pending:0, approved:0, rejected:0, passed:0, failed:0, scheduled:0 })); 
     
     function getApplicationTrends(applicationsInputData, numMonths = 7) {
-        const trends = { labels: [], totals: new Array(numMonths).fill(0), approved: new Array(numMonths).fill(0) };
+        const trends = { 
+            labels: [], 
+            submittedInMonth: new Array(numMonths).fill(0),
+            progressedApplicationsInMonth: new Array(numMonths).fill(0) 
+        };
         const now = new Date();
         for (let i = 0; i < numMonths; i++) {
             const dateForLabel = new Date(now.getFullYear(), now.getMonth() - (numMonths - 1 - i), 1);
@@ -1623,9 +1651,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!isNaN(appDate.getTime())) {
                         const appYear = appDate.getFullYear();
                         const appMonth = appDate.getMonth();
-                        if (appYear === targetYear && appMonth === targetMonth) {
-                            trends.totals[i]++;
-                            if (app.application_status === 'Approved') trends.approved[i]++;
+                        if (appYear === targetYear && appMonth === targetMonth) { 
+                            trends.submittedInMonth[i]++;
+                            if (['Approved', 'Passed', 'Failed'].includes(app.application_status)) {
+                                trends.progressedApplicationsInMonth[i]++;
+                            }
                         }
                     }
                 }
@@ -1637,57 +1667,76 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateGlobalStatsDisplay() {
         document.getElementById('statsTotal').textContent = currentJsStats.total_applications || 0; 
         document.getElementById('statsPending').textContent = currentJsStats.pending || 0; 
-        document.getElementById('statsApproved').textContent = currentJsStats.approved || 0; 
-        document.getElementById('statsScheduled').textContent = currentJsStats.scheduled || 0; // Added for dashboard card
+        document.getElementById('statsApproved').textContent = currentJsStats.approved || 0; // Label this as "Approved (Awaiting Schedule)"
+        document.getElementById('statsScheduled').textContent = currentJsStats.scheduled || 0; 
         document.getElementById('statsRejected').textContent = currentJsStats.rejected || 0; 
-        // document.getElementById('statsInReview').textContent = currentJsStats.in_review || 0; // Removed
         document.getElementById('statsPassed').textContent = currentJsStats.passed || 0;
         document.getElementById('statsFailed').textContent = currentJsStats.failed || 0;
 
         document.getElementById('pendingCountSide').textContent = currentJsStats.pending || 0; 
-        document.getElementById('approvedCountSide').textContent = currentJsStats.approved || 0; 
+        document.getElementById('approvedCountSide').textContent = currentJsStats.approved || 0; // Label this as "Approved (Awaiting Schedule)"
         document.getElementById('scheduledCountSide').textContent = currentJsStats.scheduled || 0; 
         document.getElementById('rejectedCountSide').textContent = currentJsStats.rejected || 0; 
-        // document.getElementById('inReviewCountSide').textContent = currentJsStats.in_review || 0; // Removed
         document.getElementById('passedCountSide').textContent = currentJsStats.passed || 0;
         document.getElementById('failedCountSide').textContent = currentJsStats.failed || 0;
 
-        if (window.applicationChartInstance) { const trendData = getApplicationTrends(rawApplicationsData, 7); window.applicationChartInstance.setOption({ xAxis: { data: trendData.labels }, series: [{ name: 'Total Applications', data: trendData.totals }, { name: 'Approved', data: trendData.approved }] }); }
+        if (window.applicationChartInstance) { 
+            const trendData = getApplicationTrends(rawApplicationsData, 7); 
+            window.applicationChartInstance.setOption({ 
+                xAxis: { data: trendData.labels }, 
+                series: [
+                    { name: 'Applications Submitted', data: trendData.submittedInMonth }, 
+                    { name: 'Approved / Subsequently Passed or Failed', data: trendData.progressedApplicationsInMonth }
+                ] 
+            }); 
+        }
         if (window.statusChartInstance) { window.statusChartInstance.setOption({ series: [{ data: [
-            { value: currentJsStats.approved || 0, name: 'Approved', itemStyle: { color: '#16a34a' } },
+            { value: currentJsStats.approved || 0, name: 'Approved (Awaiting Sch.)', itemStyle: { color: '#16a34a' } },
+            { value: currentJsStats.scheduled || 0, name: 'Scheduled', itemStyle: { color: '#4338ca' } },
             { value: currentJsStats.rejected || 0, name: 'Rejected', itemStyle: { color: '#dc2626' } },
             { value: currentJsStats.pending || 0, name: 'Pending', itemStyle: { color: '#ca8a04' } },
-            // { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } }, // Removed
             { value: currentJsStats.passed || 0, name: 'Passed', itemStyle: { color: '#0d9488' } },
-            { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } },
-            { value: currentJsStats.scheduled || 0, name: 'Scheduled', itemStyle: { color: '#4338ca' } } // Added to pie
+            { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } }
         ].filter(item => item.value > 0) }] }); }
     }
 
+
     function updateGlobalStatsOnStatusChange() { 
-        currentJsStats.pending = 0; /*currentJsStats.in_review = 0;*/ currentJsStats.approved = 0; 
-        currentJsStats.rejected = 0; currentJsStats.passed = 0; currentJsStats.failed = 0;
+        currentJsStats.pending = 0; 
+        currentJsStats.approved = 0; 
+        currentJsStats.rejected = 0; 
+        currentJsStats.passed = 0; 
+        currentJsStats.failed = 0;
         currentJsStats.scheduled = 0; 
 
         (rawApplicationsData || []).forEach(app => { 
             const status = app.application_status; 
-            if (status === 'Pending') currentJsStats.pending++; 
-            // else if (status === 'In Review') currentJsStats.in_review++; // Removed
-            else if (status === 'Approved') {
-                currentJsStats.approved++;
-                if (app.is_scheduled) { 
+            updateIsScheduledFlag(app); // Crucial: ensure app.is_scheduled is up-to-date before counting
+
+            if (status === 'Pending') {
+                currentJsStats.pending++;
+            } else if (status === 'Approved') {
+                if (app.is_scheduled) { // If 'Approved' AND effectively scheduled
                     currentJsStats.scheduled++;
+                } else { // If 'Approved' but NOT effectively scheduled
+                    currentJsStats.approved++;
                 }
-            } 
-            else if (status === 'Rejected') currentJsStats.rejected++; 
-            else if (status === 'Passed') currentJsStats.passed++; 
-            else if (status === 'Failed') currentJsStats.failed++; 
+            } else if (status === 'Scheduled') { // Explicitly 'Scheduled'
+                currentJsStats.scheduled++;
+            } else if (status === 'Rejected') {
+                currentJsStats.rejected++;
+            } else if (status === 'Passed') {
+                currentJsStats.passed++;
+            } else if (status === 'Failed') {
+                currentJsStats.failed++;
+            }
         });
         currentJsStats.total_applications = (rawApplicationsData || []).length; 
         updateGlobalStatsDisplay();
     }
+
     function updateGlobalStatsOnDelete(count) { 
-        updateGlobalStatsOnStatusChange(); 
+        updateGlobalStatsOnStatusChange(); // Recalculates all stats based on remaining rawApplicationsData
     }
 
 
@@ -1762,7 +1811,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (link) { 
                 link.classList.remove('text-primary', 'bg-primary/5'); 
                 if (link === sidebarFilterLinks.pending) link.classList.add('text-yellow-600'); 
-                // else if (link === sidebarFilterLinks.inReview) link.classList.add('text-blue-600'); // Removed
                 else if (link === sidebarFilterLinks.approved) link.classList.add('text-green-600'); 
                 else if (link === sidebarFilterLinks.scheduled) link.classList.add('text-indigo-700'); 
                 else if (link === sidebarFilterLinks.rejected) link.classList.add('text-red-600'); 
@@ -1787,7 +1835,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 let targetFilterLink; 
                 switch(activeStatus.toLowerCase()) { 
                     case 'pending': targetFilterLink = sidebarFilterLinks.pending; break; 
-                    // case 'in review': targetFilterLink = sidebarFilterLinks.inReview; break; // Removed
                     case 'approved': targetFilterLink = sidebarFilterLinks.approved; break; 
                     case 'scheduled': targetFilterLink = sidebarFilterLinks.scheduled; break; 
                     case 'rejected': targetFilterLink = sidebarFilterLinks.rejected; break; 
@@ -1801,14 +1848,29 @@ document.addEventListener('DOMContentLoaded', function() {
     function showView(viewName, statusForSidebarHighlight = null) {
         dashboardContentDiv.style.display = 'none'; applicationsContentDiv.style.display = 'none'; addApplicationContentDiv.style.display = 'none';
         if (viewName === 'dashboard') {
-            dashboardContentDiv.style.display = 'block'; if (pageTitleHeaderElement) pageTitleHeaderElement.textContent = 'Dashboard Overview'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Dashboard'; updateSidebarActiveState('dashboard'); activeStatusFilter = 'All'; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = '';
-            if(document.getElementById('genderFilterAll')) document.getElementById('genderFilterAll').checked = true; // Reset gender filter
-            updateGlobalStatsDisplay(); if (window.applicationChartInstance) window.applicationChartInstance.resize(); if (window.statusChartInstance) window.statusChartInstance.resize();
+            dashboardContentDiv.style.display = 'block'; 
+            if (pageTitleHeaderElement) pageTitleHeaderElement.textContent = 'Dashboard Overview'; 
+            if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Dashboard'; 
+            updateSidebarActiveState('dashboard'); 
+            activeStatusFilter = 'All'; 
+            if(startDateInput) startDateInput.value = ''; 
+            if(endDateInput) endDateInput.value = '';
+            if(document.getElementById('genderFilterAll')) document.getElementById('genderFilterAll').checked = true; 
+            updateGlobalStatsDisplay(); 
+            if (window.applicationChartInstance) window.applicationChartInstance.resize(); 
+            if (window.statusChartInstance) window.statusChartInstance.resize();
         } else if (viewName === 'applications') {
-            applicationsContentDiv.style.display = 'block'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Applications'; updateSidebarActiveState('applications', statusForSidebarHighlight); updateApplicationPageTitles();
-            const applicationsContentElement = document.getElementById('applicationsContent'); if (applicationsContentElement) applicationsContentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            applicationsContentDiv.style.display = 'block'; 
+            if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Applications'; 
+            updateSidebarActiveState('applications', statusForSidebarHighlight); 
+            updateApplicationPageTitles(); // Will use activeStatusFilter
+            const applicationsContentElement = document.getElementById('applicationsContent'); 
+            if (applicationsContentElement) applicationsContentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else if (viewName === 'addApplication') {
-            addApplicationContentDiv.style.display = 'block'; if (pageTitleHeaderElement) pageTitleHeaderElement.textContent = 'Add New Application'; if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Add New Application'; updateSidebarActiveState('addApplication');
+            addApplicationContentDiv.style.display = 'block'; 
+            if (pageTitleHeaderElement) pageTitleHeaderElement.textContent = 'Add New Application'; 
+            if (breadcrumbCurrentPageElement) breadcrumbCurrentPageElement.textContent = 'Add New Application'; 
+            updateSidebarActiveState('addApplication');
              const today = new Date().toISOString().split('T')[0];
              if(adminDateOfApplicationInput) adminDateOfApplicationInput.value = today;
              if(adminFinalSubmissionDateInput) adminFinalSubmissionDateInput.value = today;
@@ -1817,26 +1879,66 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebarDashboardMenuLink?.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
     sidebarAddApplicationMenuLink?.addEventListener('click', (e) => { e.preventDefault(); showView('addApplication'); });
     breadcrumbAdminHomeLink?.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
-    const setupSidebarFilterClickHandler = (linkElement, statusValueToSet) => { linkElement?.addEventListener('click', (e) => { e.preventDefault(); activeStatusFilter = statusValueToSet; if(startDateInput) startDateInput.value = ''; if(endDateInput) endDateInput.value = ''; if(document.getElementById('genderFilterAll')) document.getElementById('genderFilterAll').checked = true; showView('applications', statusValueToSet); filterTableRows(); }); };
+    
+    const setupSidebarFilterClickHandler = (linkElement, statusValueToSet) => { 
+        linkElement?.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            activeStatusFilter = statusValueToSet; 
+            if(startDateInput) startDateInput.value = ''; 
+            if(endDateInput) endDateInput.value = ''; 
+            if(document.getElementById('genderFilterAll')) document.getElementById('genderFilterAll').checked = true; 
+            showView('applications', statusValueToSet); 
+            filterTableRows(); 
+        }); 
+    };
     setupSidebarFilterClickHandler(sidebarApplicationsMenuLink, 'All');
     Object.entries(sidebarFilterLinks).forEach(([statusKey, linkElement]) => { 
-        if (!linkElement) return; // Skip if link element is null (e.g. inReviewFilterLink if it was removed)
+        if (!linkElement) return; 
         let statusValue = statusKey.charAt(0).toUpperCase() + statusKey.slice(1); 
-        // if (statusKey === 'inReview') statusValue = 'In Review'; // No longer needed
         setupSidebarFilterClickHandler(linkElement, statusValue); 
     });
 
     const applicationChartDom = document.getElementById('applicationChart');
-    if (applicationChartDom && typeof echarts !== 'undefined') { window.applicationChartInstance = echarts.init(applicationChartDom); const applicationOption = { tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, legend: { data: ['Total Applications', 'Approved'], top: '5%' }, grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true }, xAxis: { type: 'category', data: [] }, yAxis: { type: 'value' }, series: [ { name: 'Total Applications', type: 'bar', barWidth: '30%', color: '#4f46e5', data: [] }, { name: 'Approved', type: 'bar', barWidth: '30%', color: '#16a34a', data: [] } ]}; window.applicationChartInstance.setOption(applicationOption); window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.applicationChartInstance) window.applicationChartInstance.resize(); }); }
+    if (applicationChartDom && typeof echarts !== 'undefined') { 
+        window.applicationChartInstance = echarts.init(applicationChartDom); 
+        const applicationOption = { 
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, 
+            legend: { 
+                data: ['Applications Submitted', 'Approved / Subsequently Passed or Failed'], 
+                top: '5%' 
+            }, 
+            grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true }, 
+            xAxis: { type: 'category', data: [] }, 
+            yAxis: { type: 'value' }, 
+            series: [ 
+                { 
+                    name: 'Applications Submitted', 
+                    type: 'bar', 
+                    barWidth: '30%', 
+                    color: '#4f46e5', 
+                    data: [] 
+                }, 
+                { 
+                    name: 'Approved / Subsequently Passed or Failed', 
+                    type: 'bar', 
+                    barWidth: '30%', 
+                    color: '#16a34a', 
+                    data: [] 
+                } 
+            ]
+        }; 
+        window.applicationChartInstance.setOption(applicationOption); 
+        window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.applicationChartInstance) window.applicationChartInstance.resize(); }); 
+    }
+
     const statusChartDom = document.getElementById('statusChart');
     if (statusChartDom && typeof echarts !== 'undefined') { window.statusChartInstance = echarts.init(statusChartDom); const statusOption = { tooltip: { trigger: 'item' }, legend: { top: 'bottom', left: 'center' }, series: [{ name: 'Application Status', type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'], avoidLabelOverlap: false, itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 }, label: { show: false, position: 'center' }, emphasis: { label: { show: true, fontSize: '14', fontWeight: 'bold' } }, labelLine: { show: false }, data: [
-        { value: currentJsStats.approved || 0, name: 'Approved', itemStyle: { color: '#16a34a' } },
+        { value: currentJsStats.approved || 0, name: 'Approved (Awaiting Sch.)', itemStyle: { color: '#16a34a' } }, // Updated label
+        { value: currentJsStats.scheduled || 0, name: 'Scheduled', itemStyle: { color: '#4338ca' } },
         { value: currentJsStats.rejected || 0, name: 'Rejected', itemStyle: { color: '#dc2626' } },
         { value: currentJsStats.pending || 0, name: 'Pending', itemStyle: { color: '#ca8a04' } },
-        // { value: currentJsStats.in_review || 0, name: 'In Review', itemStyle: { color: '#3b82f6' } }, // Removed
         { value: currentJsStats.passed || 0, name: 'Passed', itemStyle: { color: '#0d9488' } },
-        { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } },
-        { value: currentJsStats.scheduled || 0, name: 'Scheduled', itemStyle: { color: '#4338ca' } } 
+        { value: currentJsStats.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } }
     ].filter(item => item.value > 0) }]}; window.statusChartInstance.setOption(statusOption); window.addEventListener('resize', () => { if (dashboardContentDiv.style.display !== 'none' && window.statusChartInstance) window.statusChartInstance.resize(); }); }
 
     function generateAndPrintReport() {
@@ -1847,6 +1949,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         let reportTitleText = activeStatusFilter === 'All' ? 'ALL APPLICATIONS' : `${activeStatusFilter.toUpperCase()} APPLICATIONS`;
+        if (activeStatusFilter === 'Approved') reportTitleText = 'APPROVED (AWAITING SCHEDULE) APPLICATIONS';
+
         const selectedGenderRadio = document.querySelector('input[name="genderFilter"]:checked');
         const selectedGender = selectedGenderRadio ? selectedGenderRadio.value : 'All';
         if (selectedGender !== 'All') {
@@ -2079,12 +2183,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     const newApp = result.application_data; 
                     if (newApp) {
-                        newApp.is_scheduled = ( 
-                            newApp.application_status === 'Approved' &&
-                            newApp.permit_exam_date &&
-                            newApp.permit_exam_time && String(newApp.permit_exam_time).trim() !== '' &&
-                            newApp.permit_testing_room && String(newApp.permit_testing_room).trim() !== ''
-                        );
+                        updateIsScheduledFlag(newApp); // Calculate is_scheduled for new app
                         rawApplicationsData.unshift(newApp); 
                     }
                     updateGlobalStatsOnStatusChange(); 
