@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 
 {% block title %}Application Status{% endblock %}
@@ -138,7 +139,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-800 truncate" title="{{ (application.first_name + ' ' + application.last_name) if application else session.get('student_email', 'Student') }}">
-                                {{ application.first_name if application else 'Student' }}
+                                {{ application.first_name if application else (session.get('student_email', 'Student')) }}
                             </p>
                             <p class="text-xs text-gray-500">Applicant</p>
                         </div>
@@ -316,7 +317,7 @@
                                 </div>
                                 {% endif %}
                             </div>
-                             <p class="mt-4 text-sm text-gray-600 leading-relaxed">{{ status_message_detail | safe }}</p>
+                             <p class="mt-4 text-sm text-gray-600 leading-relaxed break-words">{{ status_message_detail | safe }}</p>
                             
                             {% if show_enroll_button %}
                             <div class="mt-6 flex flex-wrap gap-3">
@@ -372,7 +373,7 @@
                                             {% endif %}
                                             {{ application.last_name }}
                                         </p>
-                                        <p><strong class="text-gray-600">Email:</strong> {{ application.email_address }}</p>
+                                        <p><strong class="text-gray-600">Email:</strong> <span class="break-all">{{ application.email_address }}</span></p>
                                         <p><strong class="text-gray-600">Mobile:</strong> {{ application.mobile_number }}</p>
                                         <p><strong class="text-gray-600">Birth Date:</strong> {{ application.date_of_birth.strftime('%B %d, %Y') if application.date_of_birth else 'N/A' }}</p>
                                         <p><strong class="text-gray-600">Place of Birth:</strong> {{ application.place_of_birth or 'N/A' }}</p>
@@ -481,7 +482,7 @@
                         <div class="space-y-4 text-sm"> 
                             <div class="flex items-start">
                                 <i class="ri-information-line text-primary mr-3 mt-1 shrink-0 text-lg"></i>
-                                <p class="text-gray-600 leading-relaxed">Application status updates will be sent to your registered email address. Please check your inbox regularly (including spam/junk folders).</p>
+                                <p class="text-gray-600 leading-relaxed break-words">Application status updates will be sent to your registered email address. Please check your inbox regularly (including spam/junk folders).</p>
                             </div>
                             <div class="flex items-start">
                                 <i class="ri-calendar-todo-line text-primary mr-3 mt-1 shrink-0 text-lg"></i>
@@ -507,7 +508,7 @@
                                 <i class="ri-mail-line text-gray-500 mr-3 mt-1 shrink-0 text-lg"></i>
                                 <div>
                                     <p class="font-medium text-gray-700">Email Support</p>
-                                    polytechniccollegepadregarcia@gmail.com
+                                    <p class="text-gray-600 break-all hover:text-primary transition-colors">polytechniccollegepadregarcia@gmail.com</p>
                                 </div>
                             </div>
                             <div class="flex items-start">
