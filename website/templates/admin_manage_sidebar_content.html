@@ -1,0 +1,277 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Manage Sidebar Content{% endblock %}
+{% block page_title %}Student Portal Sidebar{% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ url_for('auth.admin_manage_content') }}" class="text-gray-500 hover:text-primary">Content</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<span>Sidebar & Status</span>
+{% endblock %}
+
+{% block content %}
+<!-- 1. Start of Main Form -->
+<form method="POST" class="space-y-8 max-w-4xl mx-auto">
+    
+    <!-- Important Information Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Important Information Section</h3>
+        
+        <div class="grid grid-cols-1 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Section Title</label>
+                <input type="text" name="sidebar_info_title" value="{{ content.sidebar_info_title or 'Important Information' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Point 1 (Email Notification)</label>
+                <textarea name="sidebar_info_1" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.sidebar_info_1 or '' }}</textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Point 2 (Accuracy)</label>
+                <textarea name="sidebar_info_2" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.sidebar_info_2 or '' }}</textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Point 3 (Data Privacy)</label>
+                <textarea name="sidebar_info_3" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.sidebar_info_3 or '' }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Admissions Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Contact Admissions Section</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">Section Title</label>
+                <input type="text" name="sidebar_contact_title" value="{{ content.sidebar_contact_title or 'Contact Admissions' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+
+            <!-- Phone -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Phone Label</label>
+                <input type="text" name="sidebar_phone_label" value="{{ content.sidebar_phone_label or 'Phone Support' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            <div class="flex items-end pb-2">
+                <p class="text-xs text-gray-500">Value uses Global Contact Phone</p>
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Email Label</label>
+                <input type="text" name="sidebar_email_label" value="{{ content.sidebar_email_label or 'Email Support' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Admissions Email</label>
+                <input type="text" name="sidebar_email_value" value="{{ content.sidebar_email_value or 'admissions@pgpc.edu' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+
+            <!-- Hours -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Hours Label</label>
+                <input type="text" name="sidebar_hours_label" value="{{ content.sidebar_hours_label or 'Office Hours' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Admissions Office Hours</label>
+                <input type="text" name="sidebar_hours_value" value="{{ content.sidebar_hours_value or 'Mon-Fri 8 AM - 5 PM' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Messages & Requirements Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Status Messages, Requirements & Files</h3>
+        
+        <!-- Global Header for Requirements -->
+        <div class="mb-6 bg-gray-50 p-4 rounded border">
+            <label class="block text-sm font-medium text-gray-700">Requirements Header Text</label>
+            <input type="text" name="requirements_header_text" value="{{ content.requirements_header_text or 'Please prepare the following:' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary sm:text-sm">
+            <p class="text-xs text-gray-500 mt-1">This bold text appears above the bullet list (e.g., "Please prepare:", "Things to bring:").</p>
+        </div>
+
+        <div class="space-y-8">
+            {% set statuses = [
+                ('status_msg_pending', 'Pending'),
+                ('status_msg_review', 'In Review'),
+                ('status_msg_approved', 'Approved'),
+                ('status_msg_scheduled', 'Scheduled'),
+                ('status_msg_passed', 'Passed'),
+                ('status_msg_rejected', 'Rejected'),
+                ('status_msg_failed', 'Failed'),
+                ('status_msg_enrolling', 'Enrolling'),
+                ('status_msg_enrolled', 'Enrolled'),
+                ('status_msg_dropped', 'Dropped'),
+                ('status_msg_not_enrolled', 'Not Enrolled')
+            ] %}
+
+            {% for key, label in statuses %}
+            <div class="border-b pb-6 last:border-0">
+                <div class="mb-3">
+                    <label class="block text-base font-medium text-gray-800">{{ label }} Message</label>
+                    <textarea name="{{ key }}" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary sm:text-sm">{{ content[key] or '' }}</textarea>
+                </div>
+
+                <!-- Requirements Management for this Status -->
+                <div class="bg-gray-50 p-3 rounded-md border border-gray-200 mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Bulleted Requirements for {{ label }}</label>
+                    
+                    <!-- List Existing -->
+                    <ul class="list-disc list-inside space-y-1 mb-3">
+                        {% if requirements[key] %}
+                            {% for req in requirements[key] %}
+                            <li class="text-sm text-gray-700 flex justify-between items-center group">
+                                <span>{{ req.requirement_text }}</span>
+                                <!-- Delete button uses formaction to override main form action -->
+                                <button type="submit" formaction="{{ url_for('auth.admin_delete_requirement', req_id=req.id) }}" class="text-red-400 hover:text-red-600 px-2 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete Item">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="text-sm text-gray-400 italic">No requirements added yet.</li>
+                        {% endif %}
+                    </ul>
+
+                    <!-- Add New -->
+                    <div class="flex gap-2">
+                        <input type="text" name="new_req_{{ key }}" id="new_req_{{ key }}" placeholder="Add new requirement..." class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary sm:text-xs h-8">
+                        <!-- We use a type="button" here to trigger JS -->
+                        <button type="button" onclick="submitRequirement('{{ key }}')" class="bg-green-600 text-white px-3 py-1 rounded-md text-xs hover:bg-green-700">Add</button>
+                    </div>
+                </div>
+
+                <!-- File Uploads Section for this Status -->
+                <div class="bg-blue-50 p-3 rounded-md border border-blue-100">
+                    <label class="block text-xs font-bold text-blue-600 uppercase mb-2">Attachments / Downloads for {{ label }}</label>
+                    
+                    <!-- List Existing Files -->
+                    <ul class="space-y-2 mb-3">
+                        {% if uploads[key] %}
+                            {% for file in uploads[key] %}
+                            <li class="text-sm text-gray-700 flex items-center justify-between bg-white p-2 rounded border">
+                                <div class="flex items-center gap-2">
+                                    <i class="ri-{{ 'image' if file.file_type == 'image' else 'file-pdf' }}-line text-gray-500"></i>
+                                    <span class="font-medium">{{ file.display_name }}</span>
+                                    <span class="text-xs text-gray-400">
+                                        ({{ 'All Programs' if not file.program_id else file.program_title }})
+                                    </span>
+                                    <a href="{{ url_for('auth.download_status_file', filename=file.file_filename) }}" class="text-blue-500 hover:underline text-xs" target="_blank">View</a>
+                                </div>
+                                <button type="button" onclick="deleteFile({{ file.id }})" class="text-red-400 hover:text-red-600" title="Delete File">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="text-xs text-gray-400 italic">No files uploaded.</li>
+                        {% endif %}
+                    </ul>
+
+                    <!-- Upload Form -->
+                    <div class="border-t border-blue-200 pt-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+                            <!-- Display Name -->
+                            <div class="sm:col-span-4">
+                                <input type="text" id="name_{{ key }}" placeholder="Label (e.g. Download Form)" class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8">
+                            </div>
+                            
+                            <!-- Program Filter -->
+                            <div class="sm:col-span-3">
+                                <select id="prog_{{ key }}" class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8 p-1">
+                                    <option value="">All Programs</option>
+                                    {% for prog in programs %}
+                                    <option value="{{ prog.program_id }}">{{ prog.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- File Input -->
+                            <div class="sm:col-span-4">
+                                <input type="file" id="file_{{ key }}" class="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-white file:text-blue-700 hover:file:bg-blue-50">
+                            </div>
+
+                            <!-- Add Button -->
+                            <div class="sm:col-span-1">
+                                <button type="button" onclick="uploadFile('{{ key }}')" class="w-full bg-blue-600 text-white px-2 py-1 rounded-md text-xs hover:bg-blue-700 h-8">
+                                    <i class="ri-upload-2-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Main Save Button -->
+    <div class="flex justify-end pt-4">
+        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md shadow-sm hover:bg-primary/90">Save All Content</button>
+    </div>
+</form> <!-- 2. End of Main Form -->
+
+<!-- 3. Hidden Forms for JS Actions -->
+<div class="hidden">
+    <form id="addReqForm" method="POST" action="{{ url_for('auth.admin_add_requirement') }}">
+        <input type="hidden" name="status_key" id="hidden_status_key">
+        <input type="hidden" name="requirement_text" id="hidden_req_text">
+    </form>
+
+    <form id="uploadFileForm" method="POST" action="{{ url_for('auth.admin_upload_status_file') }}" enctype="multipart/form-data">
+        <input type="hidden" name="status_key" id="upload_status_key">
+        <input type="hidden" name="display_name" id="upload_display_name">
+        <input type="hidden" name="program_id" id="upload_program_id">
+        <input type="file" name="file" id="upload_file_input">
+    </form>
+
+    <form id="deleteFileForm" method="POST" action="">
+        <!-- Action URL set by JS -->
+    </form>
+</div>
+
+<script>
+function submitRequirement(statusKey) {
+    const input = document.getElementById('new_req_' + statusKey);
+    const val = input.value.trim();
+    if(!val) return;
+
+    document.getElementById('hidden_status_key').value = statusKey;
+    document.getElementById('hidden_req_text').value = val;
+    document.getElementById('addReqForm').submit();
+}
+
+function uploadFile(statusKey) {
+    const nameVal = document.getElementById('name_' + statusKey).value;
+    const progVal = document.getElementById('prog_' + statusKey).value;
+    const fileInput = document.getElementById('file_' + statusKey);
+
+    if(!nameVal || !fileInput.files.length) {
+        alert("Please provide a label and select a file.");
+        return;
+    }
+
+    // Transfer data to hidden form
+    document.getElementById('upload_status_key').value = statusKey;
+    document.getElementById('upload_display_name').value = nameVal;
+    document.getElementById('upload_program_id').value = progVal;
+    
+    // Transfer file (Using DataTransfer to simulate drop)
+    const hiddenInput = document.getElementById('upload_file_input');
+    const dt = new DataTransfer();
+    dt.items.add(fileInput.files[0]);
+    hiddenInput.files = dt.files;
+
+    document.getElementById('uploadFileForm').submit();
+}
+
+function deleteFile(fileId) {
+    if(confirm("Delete this file?")) {
+        const form = document.getElementById('deleteFileForm');
+        form.action = `/admin/status-file/delete/${fileId}`;
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

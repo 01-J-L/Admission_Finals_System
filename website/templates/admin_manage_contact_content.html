@@ -1,0 +1,260 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}General & Contact Settings{% endblock %}
+{% block page_title %}General & Contact Settings{% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ url_for('auth.admin_manage_content') }}" class="text-gray-500 hover:text-primary">Content</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<span>Settings</span>
+{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" class="space-y-8 max-w-4xl mx-auto">
+
+    <!-- System Controls Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 border-l-blue-500">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">System Controls</h3>
+        
+        <!-- Account Creation Toggle -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-900">Student Account Creation</label>
+                <p class="text-sm text-gray-500">Toggle whether new students can create accounts.</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="registration_open" value="true" class="sr-only peer" {% if content.registration_open %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <span class="ml-3 text-sm font-medium text-gray-900 status-label">
+                    {% if content.registration_open %}Enabled{% else %}Disabled{% endif %}
+                </span>
+            </label>
+        </div>
+
+        <!-- Student Email Trigger Toggle -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-900">Student Email Notifications</label>
+                <p class="text-sm text-gray-500">Send automatic emails to students (Status updates, Grades, etc).</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="email_trigger_student" value="true" class="sr-only peer" {% if content.email_trigger_student %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <!-- Admin Email Trigger Toggle -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-900">Admin Email Notifications</label>
+                <p class="text-sm text-gray-500">Receive emails when new students apply (Pending).</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="email_trigger_admin" value="true" class="sr-only peer" {% if content.email_trigger_admin %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <!-- Admin Note Email Trigger Toggle -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-900">Admin Note Notifications</label>
+                <p class="text-sm text-gray-500">Send an email to the student when you add a note to their application.</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="email_trigger_notes" value="true" class="sr-only peer" {% if content.email_trigger_notes %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <!-- Announcement Email Trigger Toggle -->
+        <div class="flex items-center justify-between">
+            <div>
+                <label class="block text-sm font-medium text-gray-900">Announcement Notifications</label>
+                <p class="text-sm text-gray-500">Blast an email to ALL students when a new announcement is posted.</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="email_trigger_announcements" value="true" class="sr-only peer" {% if content.email_trigger_announcements %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+    </div>
+
+    <!-- Social Media Links Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Social Media Links</h3>
+        
+        <!-- List Existing Links -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Active Links</label>
+            {% if social_links %}
+            <div class="space-y-2">
+                {% for link in social_links %}
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded border">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                            <i class="{{ link.icon_class }}"></i>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-bold text-gray-800">{{ link.platform_name }}</span>
+                            <a href="{{ link.url }}" target="_blank" class="text-xs text-gray-500 hover:underline">{{ link.url }}</a>
+                        </div>
+                    </div>
+                    <!-- Delete button needs its own form context or formaction -->
+                    <button type="submit" formaction="{{ url_for('auth.admin_delete_social_media', link_id=link.id) }}" class="text-red-500 hover:text-red-700 p-1" onclick="return confirm('Delete this link?');" title="Delete Link">
+                        <i class="ri-delete-bin-line text-xl"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500 italic">No social media links added yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Add New Link Form -->
+        <div class="bg-blue-50 p-4 rounded-md border border-blue-100">
+            <h4 class="text-sm font-bold text-blue-800 mb-3">Add New Link</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Platform</label>
+                    <select name="platform" class="w-full rounded-md border-gray-300 shadow-sm text-sm h-10">
+                        <option value="" disabled selected>Select Platform</option>
+                        <option value="Facebook">Facebook</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="Twitter">Twitter / X</option>
+                        <option value="YouTube">YouTube</option>
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="TikTok">TikTok</option>
+                        <option value="Website">Website</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">URL</label>
+                    <input type="url" name="url" placeholder="https://..." class="w-full rounded-md border-gray-300 shadow-sm text-sm h-10">
+                </div>
+                <div>
+                    <!-- This button triggers a different route -->
+                    <button type="submit" formaction="{{ url_for('auth.admin_add_social_media') }}" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700 text-sm h-10">
+                        <i class="ri-add-line mr-1"></i> Add Link
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Branding Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Footer Branding</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">College Name (Footer Title)</label>
+                <input type="text" name="footer_title"
+                    value="{{ content.footer_title or 'Padre Garcia Polytechnic College' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Slogan (Subtitle)</label>
+                <input type="text" name="footer_subtitle"
+                    value="{{ content.footer_subtitle or 'THE FUTURE BEGINS HERE.' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Connect Text</label>
+                <input type="text" name="footer_connect_text"
+                    value="{{ content.footer_connect_text or 'Connect with us' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">Footer Logo</label>
+                <div class="mt-2 flex items-center gap-4">
+                    {% if content.footer_logo_image %}
+                    <img src="{{ url_for('static', filename='images/uploads/' + content.footer_logo_image) }}"
+                        class="h-16 w-16 object-contain bg-gray-800 rounded p-1">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='logopgpc.png') }}"
+                        class="h-16 w-16 object-contain bg-gray-800 rounded p-1">
+                    {% endif %}
+                    <input type="file" name="footer_logo_image" accept="image/png, image/jpeg"
+                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Upload a transparent PNG for best results.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Info Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Contact Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                <input type="email" name="contact_email" value="{{ content.contact_email or '' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input type="text" name="contact_phone" value="{{ content.contact_phone or '' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">Complete Address</label>
+                <input type="text" name="contact_address" value="{{ content.contact_address or '' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Office Hours</label>
+                <input type="text" name="contact_hours" value="{{ content.contact_hours or '' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Google Map</h3>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Map Embed URL</label>
+            <textarea name="contact_map_url" rows="3"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm font-mono text-xs">{{ content.contact_map_url or '' }}</textarea>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Application Form Settings</h3>
+
+        <div class="grid grid-cols-1 gap-6">
+            <!-- Consent -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Consent Title</label>
+                <input type="text" name="consent_title" value="{{ content.consent_title or 'CONSENT' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Consent Text</label>
+                <textarea name="consent_text" rows="6"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.consent_text or '' }}</textarea>
+            </div>
+
+            <!-- Oath -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Oath Title</label>
+                <input type="text" name="oath_title" value="{{ content.oath_title or 'OATH' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Oath Text</label>
+                <textarea name="oath_text" rows="3"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.oath_text or '' }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex justify-end">
+        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md shadow-sm hover:bg-primary/90">Save All Settings</button>
+    </div>
+</form>
+{% endblock %}

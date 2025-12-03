@@ -1,0 +1,150 @@
+{% extends base_template %}
+{% block title %}Record Payment{% endblock %}
+{% block page_title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- LEFT COLUMN: Student Details & History -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Student Info Card -->
+        <div class="bg-white rounded-card shadow-sm p-6 border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Student Details</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                    <p class="text-xs text-gray-500">Name</p>
+                    <p class="font-semibold text-lg">{{ student.last_name }}, {{ student.first_name }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Student ID</p>
+                    <p class="font-semibold">{{ student.student_id }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Course</p>
+                    <p class="font-semibold">{{ student.course }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Year & Section</p>
+                    <p class="font-semibold">{{ student.year_level }} - {{ student.section }}</p>
+                </div>
+                <div class="col-span-2 md:col-span-1">
+                    <p class="text-xs text-gray-500">Email</p>
+                    <p class="font-semibold truncate">{{ student.email or 'N/A' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessments List (Statement of Account) -->
+        <div class="bg-white rounded-card shadow-sm p-6 border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Statement of Account</h3>
+            {% if assessments %}
+                <div class="space-y-4">
+                    {% for assessment in assessments %}
+                    <div class="border rounded-lg p-4 {% if assessment.status == 'paid' %}bg-green-50 border-green-200{% elif assessment.status == 'partial' %}bg-yellow-50 border-yellow-200{% else %}bg-gray-50 border-gray-200{% endif %}">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-gray-800">{{ assessment.description }}</p>
+                                <p class="text-xs text-gray-500">Date: {{ assessment.created_at.strftime('%Y-%m-%d') }}</p>
+                                {% if assessment.batch_id %}
+                                    <span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">Batch Assessment</span>
+                                {% endif %}
+                            </div>
+                            <span class="text-xs font-bold uppercase px-2 py-1 rounded-full 
+                                {% if assessment.status == 'paid' %}bg-green-200 text-green-800{% elif assessment.status == 'partial' %}bg-yellow-200 text-yellow-800{% else %}bg-gray-200 text-gray-800{% endif %}">
+                                {{ assessment.status }}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 mt-4 text-sm text-center">
+                            <div>
+                                <p class="text-xs text-gray-500">Total Fee</p>
+                                <p class="font-medium text-gray-700">₱{{ "{:,.2f}".format(assessment.total_amount) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Amount Paid</p>
+                                <p class="font-medium text-green-700">₱{{ "{:,.2f}".format(assessment.amount_paid) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Current Balance</p>
+                                <p class="font-bold text-red-600">₱{{ "{:,.2f}".format(assessment.balance) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <p class="text-gray-500">No assessments found for this student.</p>
+                    <p class="text-xs text-gray-400 mt-1">Use "Batch Assessment" in the dashboard to add fees.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Payment Form Only -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-card shadow-sm p-6 border border-gray-100 sticky top-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Record Payment</h3>
+            
+            <form method="POST" action="{{ url_for('auth.update_payment', student_id_db=student.student_id) }}" class="space-y-4">
+                
+                <!-- Assessment Dropdown -->
+                <div>
+                    <label for="assessment_id" class="block text-sm font-medium text-gray-700 mb-1">Select Assessment</label>
+                    <select id="assessment_id" name="assessment_id" required class="w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-sm">
+                        <option value="">-- Select Item to Pay --</option>
+                        {% for assessment in assessments if assessment.status != 'paid' %}
+                            <option value="{{ assessment.id }}">
+                                {{ assessment.description }} (Bal: ₱{{ "{:,.2f}".format(assessment.balance) }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if not assessments or assessments|selectattr('status', '!=', 'paid')|list|length == 0 %}
+                        <p class="text-xs text-red-500 mt-1">No pending balances to pay.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Amount -->
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount Received (₱)</label>
+                    <input type="number" id="amount" name="amount" step="0.01" placeholder="0.00" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                </div>
+
+                <!-- Date -->
+                <div>
+                    <label for="payment_date" class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+                    <input type="date" id="payment_date" name="payment_date" value="{{ today_date }}" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                </div>
+
+                <!-- Method -->
+                <div>
+                    <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                    <select id="payment_method" name="payment_method" required class="w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                        <option value="Cash">Cash</option>
+                        <option value="GCash">GCash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Check">Check</option>
+                    </select>
+                </div>
+
+                <!-- Remark -->
+                <div>
+                    <label for="remark" class="block text-sm font-medium text-gray-700 mb-1">Remark / Term</label>
+                    <select id="remark" name="remark" class="w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                        <option value="">-- Optional --</option>
+                        <option value="Down Payment">Down Payment</option>
+                        <option value="Prelim">Prelim</option>
+                        <option value="Midterm">Midterm</option>
+                        <option value="Finals">Finals</option>
+                        <option value="Full Payment">Full Payment</option>
+                    </select>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-button shadow-sm text-sm font-bold text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                        <i class="ri-secure-payment-line mr-2 text-lg"></i> Process Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

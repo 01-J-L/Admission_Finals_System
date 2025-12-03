@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - PGPC</title>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#4f46e5', secondary: '#6366f1', teal: { 100: '#ccfbf1', 600: '#0d9488', 800: '#115e59' }, orange: { 100: '#ffedd5', 600: '#ea580c', 800: '#9a3412' }, indigo: { 100: '#e0e7ff', 700: '#4338ca', 200: '#c7d2fe' }, yellow: { 100: '#fef9c3', 700: '#a16207' }, purple: { 100: '#f5f3ff', 500: '#8b5cf6', 800: '#6d28d9' } }, borderRadius: { 'none': '0px', 'sm': '4px', DEFAULT: '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px', '3xl': '32px', 'full': '9999px', 'button': '8px' } } } }</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+        }
+
+        tr.selected {
+            background-color: #eff6ff !important;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(107, 114, 128, 0.5);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            display: none;
+            z-index: 50;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            max-width: 90%;
+            width: auto;
+            min-width: 320px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: none;
+            z-index: 51;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -4px rgba(0, 0, 0, .1);
+        }
+
+        .modal.show,
+        .modal-backdrop.show {
+            display: block;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        .custom-checkbox {
+            position: relative;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            height: 18px;
+            width: 18px;
+            background-color: white;
+            border: 1.5px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-checkbox input:checked~.checkmark {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+
+        .checkmark:after {
+            content: "";
+            display: none;
+        }
+
+        .custom-checkbox input:checked~.checkmark:after {
+            display: block;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+            margin-bottom: 2px;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 144px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 50;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            right: 0;
+            top: 100%;
+            margin-top: 4px;
+        }
+
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
+
+        .action-status-dropdown.active {
+            z-index: 51;
+        }
+
+        .bulk-actions {
+            display: none;
+        }
+
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.3s ease-in-out;
+            font-size: 0.875rem;
+            transform: translateY(-20px);
+        }
+
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-notification.success {
+            background-color: #28a745;
+        }
+
+        .toast-notification.error {
+            background-color: #dc3545;
+        }
+
+        .toast-notification.info {
+            background-color: #17a2b8;
+        }
+
+        @keyframes status-flash {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.15);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .status-flash-animation {
+            animation: status-flash 0.6s ease-in-out;
+        }
+
+        .document-link {
+            color: #4f46e5;
+            text-decoration: underline;
+        }
+
+        .document-link:hover {
+            color: #4338ca;
+        }
+
+        #addApplicationContent input[type="radio"],
+        .filter-bar input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            margin-right: 0.25rem;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        #addApplicationContent input[type="radio"]:checked,
+        .filter-bar input[type="radio"]:checked {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+
+        #addApplicationContent input[type="radio"]:checked::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            margin: 2.5px;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .filter-bar input[type="radio"]:checked::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            margin: 2.5px;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        #addApplicationContent input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            margin-right: 0.25rem;
+            display: inline-block;
+            vertical-align: middle;
+            position: relative;
+        }
+
+        #addApplicationContent input[type="checkbox"]:checked {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+
+        #addApplicationContent input[type="checkbox"]:checked::before {
+            content: "✓";
+            font-size: 12px;
+            color: white;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            line-height: 1;
+        }
+
+        .sidebar-link.active {
+            background-color: #eef2ff;
+            color: #4f46e5;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body class="flex">
+
+    <aside id="sidebar"
+        class="w-64 h-screen bg-white border-r border-gray-200 flex-shrink-0 fixed left-0 transition-transform duration-300 ease-in-out transform -translate-x-full sm:translate-x-0 z-40">
+        <div class="h-16 border-b border-gray-200 flex items-center px-6">
+            <div class="text-2xl font-['Pacifico'] text-primary">PGPC Admin</div>
+        </div>
+        <nav class="p-4 space-y-1 h-[calc(100vh-4rem-1px-4rem)] overflow-y-auto custom-scrollbar">
+            
+            {% if session.user_role == 'president' %}
+                <!-- PRESIDENT ROLE -->
+                <a href="{{ url_for('auth.president_dashboard') }}" id="sidebarDashboardMenuLink"
+                    class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'dashboard' %}active{% endif %}">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-dashboard-line"></i></div>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('auth.admin_passed_applications') }}" id="passedFilterLink"
+                    class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'passed' %}active{% endif %}">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-shield-check-line"></i></div>
+                    Passed Students
+                </a>
+
+            {% else %}
+                <!-- ADMIN, REGISTRAR, GUIDANCE, OSA ROLES -->
+
+                <!-- 1. DASHBOARD & ADMISSIONS (Admin & Registrar Only) -->
+                {% if session.user_role in ['admin', 'registrar'] %}
+                    <a href="{{ url_for('auth.admin_dashboard') }}" id="sidebarDashboardMenuLink"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'dashboard' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-dashboard-line"></i></div>
+                        Dashboard
+                    </a>
+
+                    <!-- ADMISSION SECTION -->
+                    <div class="pt-4 pb-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Admission</div>
+                    <a href="{{ url_for('auth.admin_all_applications') }}" id="applicationsMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page in ['all_applications', 'pending', 'approved', 'scheduled', 'rejected', 'passed', 'failed', 'not_taken'] %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-file-list-line"></i></div>
+                        Applications
+                    </a>
+                    <div class="ml-12 space-y-1">
+                        <a href="{{ url_for('auth.admin_pending_applications') }}" id="pendingFilterLink"
+                            class="sidebar-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'pending' %}active{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-time-line text-yellow-500"></i></div>
+                            Pending <span class="ml-auto bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full" id="pendingCountSide">{{ stats.pending if stats else '0' }}</span>
+                        </a>
+                        <a href="{{ url_for('auth.admin_approved_applications') }}" id="approvedFilterLink"
+                            class="sidebar-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'approved' %}active{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-checkbox-circle-line text-green-500"></i></div>
+                            Approved <span class="ml-auto bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full" id="approvedCountSide">{{ stats.approved if stats else '0' }}</span>
+                        </a>
+                        <a href="{{ url_for('auth.admin_scheduled_applications') }}" id="scheduledFilterLink"
+                            class="sidebar-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'scheduled' %}active{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-calendar-schedule-line text-indigo-500"></i></div>
+                            Scheduled <span class="ml-auto bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-0.5 rounded-full" id="scheduledCountSide">{{ stats.scheduled if stats else '0' }}</span>
+                        </a>
+                        <a href="{{ url_for('auth.admin_not_taken_applications') }}" id="notTakenFilterLink"
+                            class="sidebar-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'not_taken' %}active{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-user-unfollow-line text-gray-500"></i></div>
+                            Did Not Attend <span class="ml-auto bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full" id="notTakenCountSide">{{ stats.not_taken if stats else '0' }}</span>
+                        </a>
+                        <a href="{{ url_for('auth.admin_rejected_applications') }}" id="rejectedFilterLink"
+                            class="sidebar-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'rejected' %}active{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-close-circle-line text-red-500"></i></div>
+                            Rejected <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full" id="rejectedCountSide">{{ stats.rejected if stats else '0' }}</span>
+                        </a>
+                        <a href="{{ url_for('auth.admin_passed_applications') }}" id="passedFilterLink"
+                            class="sidebar-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'passed' %}active{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-shield-check-line text-teal-500"></i></div>
+                            Passed <span class="ml-auto bg-teal-100 text-teal-800 text-xs font-medium px-2 py-0.5 rounded-full" id="passedCountSide">{{ stats.passed if stats else '0' }}</span>
+                        </a>
+                        <a href="{{ url_for('auth.admin_failed_applications') }}" id="failedFilterLink"
+                            class="sidebar-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'failed' %}active{% endif %}">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-shield-cross-line text-orange-500"></i></div>
+                            Failed <span class="ml-auto bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded-full" id="failedCountSide">{{ stats.failed if stats else '0' }}</span>
+                        </a>
+                    </div>
+                    <a href="{{ url_for('auth.admin_add_application_page') }}" id="sidebarAddApplicationMenuLink"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'add_application' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-user-add-line"></i></div>
+                        Add New Application
+                    </a>
+                {% endif %}
+
+                <!-- 2. ENROLLMENT SECTION (Visibility Logic) -->
+                <div class="pt-4 pb-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Enrollment</div>
+                
+                {% if session.user_role in ['admin', 'registrar'] %}
+                    <a href="{{ url_for('auth.admin_eligible_applications') }}" id="eligibleMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'eligible' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-calendar-check-line"></i></div>
+                        Eligible for Enrollment
+                        <span class="ml-auto bg-purple-50 text-purple-600 text-xs font-medium px-2 py-0.5 rounded-full border border-purple-200" id="eligibleCountSide">{{ stats.eligible_for_enrollment if stats else '0' }}</span>
+                    </a>
+                    <a href="{{ url_for('auth.admin_enrolling_applications') }}" id="enrollmentMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'enrolling' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-user-follow-line"></i></div>
+                        Enrolling Students
+                        <span class="ml-auto bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full" id="enrollingCountSide">{{ stats.enrolling if stats else '0' }}</span>
+                    </a>
+                {% endif %}
+
+                <!-- ENROLLED: Visible to Admin, Registrar, Guidance, OSA -->
+                {% if session.user_role in ['admin', 'registrar', 'guidance', 'osa'] %}
+                    <a href="{{ url_for('auth.admin_enrolled_applications') }}" id="enrolledMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'enrolled' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-book-read-line"></i></div>
+                        Enrolled Students
+                        <span class="ml-auto bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full" id="enrolledCountSide">{{ stats.enrolled if stats else '' }}</span>
+                    </a>
+                {% endif %}
+
+                {% if session.user_role in ['admin', 'registrar'] %}
+                    <a href="{{ url_for('auth.admin_dropped_applications') }}" id="droppedMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'dropped' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-user-unfollow-line"></i></div>
+                        Dropped Students
+                        <span class="ml-auto bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full" id="droppedCountSide">{{ stats.dropped if stats else '0' }}</span>
+                    </a>
+                    <a href="{{ url_for('auth.admin_not_enrolled_applications') }}" id="notEnrolledMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'not_enrolled' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-user-search-line"></i></div>
+                        Not Enrolled
+                        <span class="ml-auto bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded-full" id="notEnrolledCountSide">{{ stats.not_enrolled if stats else '0' }}</span>
+                    </a>
+
+                    <!-- MANAGEMENT SECTION (Admin & Registrar Only) -->
+                    <div class="pt-4 pb-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Management</div>
+                    <a href="{{ url_for('auth.admin_manage_content') }}" id="contentMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page in ['manage_content', 'manage_programs', 'manage_news', 'manage_faculty', 'manage_announcements'] %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-settings-3-line"></i></div>
+                        Manage Content
+                    </a>
+                    <a href="{{ url_for('auth.admin_manage_academic_term') }}" id="schoolYearMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'manage_academic_term' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-calendar-event-line"></i></div>
+                        Academic Term
+                    </a>
+                    <a href="{{ url_for('auth.admin_manage_sections') }}" id="sectionsMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'manage_sections' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-layout-grid-line"></i></div>
+                        Manage Sections
+                    </a>
+                {% endif %}
+
+                <!-- 3. USER MANAGEMENT (Admin Only) -->
+                {% if session.user_role == 'admin' %}
+                    <a href="{{ url_for('auth.admin_manage_users') }}" id="usersMenu"
+                        class="sidebar-link flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded {% if active_page == 'manage_users' %}active{% endif %}">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3"><i class="ri-user-settings-line"></i></div>
+                        User Management
+                    </a>
+                {% endif %}
+
+            {% endif %}
+        </nav>
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+            <a href="{{ url_for('auth.logout') }}"
+                class="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-button border border-gray-300 w-full">
+                <div class="w-5 h-5 flex items-center justify-center mr-2"><i class="ri-logout-box-r-line"></i></div>
+                Logout
+            </a>
+        </div>
+    </aside>
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/30 z-30 hidden sm:hidden"></div>
+
+    <div class="flex-1 sm:ml-64 transition-all duration-300 ease-in-out" id="mainContentArea">
+        <header class="bg-white shadow-sm">
+            <div class="flex items-center justify-between px-4 sm:px-6 h-16 border-b border-gray-200">
+                <div class="flex items-center">
+                    <button id="sidebarToggle"
+                        class="text-gray-500 hover:text-primary mr-2 sm:mr-4 p-2 -ml-2 sm:ml-0 block sm:hidden">
+                        <div class="w-6 h-6 flex items-center justify-center"><i class="ri-menu-line"></i></div>
+                    </button>
+                    {% if session.user_role in ['admin', 'registrar', 'guidance', 'osa'] %}
+                    <div class="relative w-full">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <div class="w-5 h-5 flex items-center justify-center text-gray-400"><i
+                                    class="ri-search-line"></i></div>
+                        </div>
+                        <input type="text" id="searchInput"
+                            class="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded text-sm focus:ring-primary focus:border-primary"
+                            placeholder="Search applications...">
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="flex items-center space-x-2 sm:space-x-4 ml-2 sm:ml-0">
+                    <span class="text-sm text-gray-500 hidden sm:inline-block">Logged in as: <strong>{{ session.user_role|title }}</strong></span>
+                    <a href="{{ url_for('auth.logout') }}" class="text-gray-500 hover:text-primary" title="Logout">
+                        <div class="w-6 h-6 flex items-center justify-center"><i class="ri-logout-box-line"></i></div>
+                    </a>
+                </div>
+            </div>
+            <div class="px-4 sm:px-6 py-2 bg-white border-b border-gray-200 flex flex-wrap items-center text-sm">
+                <!-- Change home link based on role -->
+                <a href="{{ url_for('auth.admin_dashboard') if session.user_role in ['admin', 'registrar'] else (url_for('auth.admin_enrolled_applications') if session.user_role in ['guidance', 'osa'] else url_for('auth.president_dashboard')) }}"
+                    class="text-gray-500 hover:text-primary">Admin Home</a>
+                <div class="w-4 h-4 flex items-center justify-center text-gray-400 mx-1">
+                    <i class="ri-arrow-right-s-line"></i>
+                </div>
+                <span id="breadcrumbCurrentPage" class="text-primary font-medium">{% block breadcrumb %}Dashboard{%
+                    endblock %}</span>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                <div class="p-4 rounded-md 
+                        {% if category == 'success' %} bg-green-100 text-green-800 
+                        {% elif category == 'danger' %} bg-red-100 text-red-800 
+                        {% elif category == 'info' %} bg-blue-100 text-blue-800
+                        {% else %} bg-yellow-100 text-yellow-800 {% endif %}" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="mb-6">
+                <h1 id="mainPageTitle" class="text-2xl font-bold text-gray-900">{% block page_title %}Dashboard
+                    Overview{% endblock %}</h1>
+            </div>
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Modals are included in the base for all pages to use -->
+    <div id="deleteConfirmationModal" class="modal">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"><i
+                    class="ri-error-warning-line ri-xl text-red-600"></i></div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-3" id="deleteModalTitle">Delete Application(s)
+            </h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500" id="deleteModalMessage">Are you sure you want to delete the selected
+                    application(s)? This action cannot be undone.</p>
+            </div>
+            <div class="items-center px-4 py-3 space-x-2">
+                <button id="confirmDeleteBtn"
+                    class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">Delete</button>
+                <button id="cancelDeleteBtn"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="deleteModalBackdrop" class="modal-backdrop"></div>
+
+    <div id="adminNotesModal" class="modal w-full max-w-lg">
+        <div class="flex justify-between items-center pb-3 border-b">
+            <h3 class="text-xl font-semibold text-gray-900" id="adminNotesModalTitle">Admin Notes</h3>
+            <button id="closeAdminNotesModalIcon" class="text-gray-400 hover:text-gray-600"><i
+                    class="ri-close-line ri-lg"></i></button>
+        </div>
+        <div class="mt-4">
+            <label for="adminNotesTextareaModal" class="block text-sm font-medium text-gray-700">Notes for Application
+                <span id="adminNotesAppId" class="font-semibold"></span>:</label>
+            <textarea id="adminNotesTextareaModal" name="admin_notes_modal" rows="4"
+                class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-primary focus:border-primary p-2"></textarea>
+        </div>
+        <div class="mt-4 flex justify-end space-x-2">
+            <button id="cancelAdminNotesBtn"
+                class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300">Cancel</button>
+            <button id="saveAdminNotesModalBtn"
+                class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90">Save
+                Notes</button>
+        </div>
+    </div>
+    <div id="adminNotesModalBackdrop" class="modal-backdrop"></div>
+    <div id="adminPermitDetailsModal" class="modal w-full max-w-xl">
+        <div class="flex justify-between items-center pb-3 border-b">
+            <h3 class="text-xl font-semibold text-gray-900" id="adminPermitDetailsModalTitle">Admission Test Permit
+                Details</h3>
+            <button id="closeAdminPermitDetailsModalIcon" class="text-gray-400 hover:text-gray-600"><i
+                    class="ri-close-line ri-lg"></i></button>
+        </div>
+        <div class="mt-4 space-y-4">
+            <p class="text-sm text-gray-600">For Application <span id="adminPermitAppId" class="font-semibold"></span>:
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div><label for="permitControlNoModal" class="block text-xs font-medium text-gray-700">Permit Control
+                        No.</label><input type="text" id="permitControlNoModal"
+                        class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 bg-gray-100 cursor-not-allowed"
+                        readonly title="Permit Control Number is auto-generated upon approval."></div>
+                <div><label for="permitExamDateModal" class="block text-xs font-medium text-gray-700">Date of
+                        Examination</label><input type="date" id="permitExamDateModal"
+                        class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div>
+                <div><label for="permitExamTimeModal" class="block text-xs font-medium text-gray-700">Time</label><input
+                        type="text" id="permitExamTimeModal" placeholder="e.g., 09:00 AM"
+                        class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div>
+                <div><label for="permitTestingRoomModal" class="block text-xs font-medium text-gray-700">Testing
+                        Room</label><input type="text" id="permitTestingRoomModal"
+                        class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div>
+            </div>
+        </div>
+        <div class="mt-6 flex justify-end space-x-2">
+            <button id="cancelAdminPermitDetailsBtn"
+                class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300">Cancel</button>
+            <button id="saveAdminPermitDetailsModalBtn"
+                class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90">Save
+                Permit Details</button>
+        </div>
+    </div>
+    <div id="adminPermitDetailsModalBackdrop" class="modal-backdrop"></div>
+    <div id="bulkPermitDetailsModal" class="modal w-full max-w-md">
+        <div class="flex justify-between items-center pb-3 border-b">
+            <h3 class="text-xl font-semibold text-gray-900" id="bulkPermitDetailsModalTitle">Set Permit Details for
+                Selected</h3>
+            <button id="closeBulkPermitDetailsModalIcon" class="text-gray-400 hover:text-gray-600"><i
+                    class="ri-close-line ri-lg"></i></button>
+        </div>
+        <div class="mt-4 space-y-4">
+            <p class="text-sm text-gray-600">Enter common permit details to apply to all selected applications.</p>
+            <div><label for="bulkPermitExamDate" class="block text-xs font-medium text-gray-700">Date of
+                    Examination</label><input type="date" id="bulkPermitExamDate"
+                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div>
+            <div><label for="bulkPermitExamTime" class="block text-xs font-medium text-gray-700">Time</label><input
+                    type="text" id="bulkPermitExamTime" placeholder="e.g., 09:00 AM"
+                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div>
+            <div><label for="bulkPermitTestingRoom" class="block text-xs font-medium text-gray-700">Testing
+                    Room</label><input type="text" id="bulkPermitTestingRoom"
+                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"></div>
+            <p class="text-xs text-gray-500">Note: Permit Control No. is auto-generated upon approval and set
+                individually.</p>
+        </div>
+        <div class="mt-6 flex justify-end space-x-2">
+            <button id="cancelBulkPermitDetailsBtn"
+                class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300">Cancel</button>
+            <button id="saveBulkPermitDetailsBtn"
+                class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90">Apply
+                to Selected</button>
+        </div>
+    </div>
+    <div id="bulkPermitDetailsModalBackdrop" class="modal-backdrop"></div>
+    <!-- New Modal for Editing Student IDs -->
+    <div id="editStudentIdModal" class="modal w-full max-w-md">
+        <div class="flex justify-between items-center pb-3 border-b">
+            <h3 class="text-xl font-semibold text-gray-900">Edit Student IDs</h3>
+            <button id="closeEditStudentIdModalIcon" class="text-gray-400 hover:text-gray-600"><i
+                    class="ri-close-line ri-lg"></i></button>
+        </div>
+        <div class="mt-4 space-y-4">
+            <p class="text-sm text-gray-600">For Application <span id="editStudentIdAppId"
+                    class="font-semibold"></span>:</p>
+            <div>
+                <label for="editOldStudentIdInput" class="block text-xs font-medium text-gray-700">Old Student ID (for
+                    transferees/returnees)</label>
+                <input type="text" id="editOldStudentIdInput"
+                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+            </div>
+            <div>
+                <label for="editControlNoInput" class="block text-xs font-medium text-gray-700">Control Number (for new
+                    students)</label>
+                <input type="text" id="editControlNoInput"
+                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+            </div>
+            <p class="text-xs text-red-600 bg-red-50 p-2 rounded-md"><i
+                    class="ri-error-warning-line mr-1"></i><strong>Warning:</strong> Changing these values can affect
+                student records. Ensure accuracy.</p>
+        </div>
+        <div class="mt-6 flex justify-end space-x-2">
+            <button id="cancelEditStudentIdBtn"
+                class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300">Cancel</button>
+            <button id="saveEditStudentIdBtn"
+                class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90">Save
+                IDs</button>
+        </div>
+    </div>
+    <div id="editStudentIdModalBackdrop" class="modal-backdrop"></div>
+
+
+    <div id="toast-container" class="fixed top-5 right-5 z-[1000] w-auto max-w-xs space-y-2"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const PGPC_LOGO_URL_JS = "{{ url_for('static', filename='logopgpc.png') }}";
+            const BAYAN_LOGO_URL_JS = "{{ url_for('static', filename='garcia.png') }}";
+
+            const applicationsTable = document.getElementById('applicationsTable');
+            const searchInput = document.getElementById('searchInput');
+            const editStudentIdBtn = document.getElementById('editStudentIdBtn');
+
+
+            function showToast(message, type = 'info', duration = 3000) {
+                const container = document.getElementById('toast-container');
+                if (!container) return;
+                const toast = document.createElement('div');
+                toast.className = `toast-notification ${type}`;
+                toast.textContent = message;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.classList.add('show');
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => toast.remove(), 500);
+                    }, duration);
+                }, 100);
+            }
+
+            function openModal(modalId) { document.getElementById(modalId)?.classList.add('show'); document.getElementById(modalId + 'Backdrop')?.classList.add('show'); document.body.style.overflow = 'hidden'; }
+            function closeModal(modalId) { document.getElementById(modalId)?.classList.remove('show'); document.getElementById(modalId + 'Backdrop')?.classList.remove('show'); document.body.style.overflow = ''; }
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+            if (sidebarToggle) { sidebarToggle.addEventListener('click', () => { sidebar.classList.toggle('-translate-x-full'); sidebarBackdrop.classList.toggle('hidden'); }); }
+            if (sidebarBackdrop) { sidebarBackdrop.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); sidebarBackdrop.classList.add('hidden'); }); }
+
+            document.body.addEventListener('click', function (e) {
+                const isDropdownButton = e.target.closest('.dropdown > button');
+                document.querySelectorAll('.dropdown.active').forEach(dropdown => {
+                    if (!isDropdownButton || dropdown !== isDropdownButton.parentElement) { dropdown.classList.remove('active'); }
+                });
+                if (isDropdownButton) { isDropdownButton.parentElement.classList.toggle('active'); }
+            });
+
+            async function updateStatus(appId, newStatus) {
+                const formData = new FormData();
+                formData.append('status', newStatus);
+                const response = await fetch(`/admin/application/${appId}/status`, { method: 'POST', body: formData });
+                return response.json();
+            }
+
+            async function updateExamStatus(appId, newExamStatus) {
+                const formData = new FormData();
+                formData.append('exam_status', newExamStatus);
+                const response = await fetch(`/admin/application/${appId}/exam-status`, { method: 'POST', body: formData });
+                return response.json();
+            }
+
+            async function setPermitDetails(appId, details) {
+                const formData = new FormData();
+                formData.append('permit_exam_date', details.permit_exam_date || '');
+                formData.append('permit_exam_time', details.permit_exam_time || '');
+                formData.append('permit_testing_room', details.permit_testing_room || '');
+                const response = await fetch(`/admin/application/${appId}/permit-details`, { method: 'POST', body: formData });
+                return response.json();
+            }
+
+            if (applicationsTable) {
+                applicationsTable.addEventListener('click', (e) => {
+                    const target = e.target;
+                    const actionNotes = target.closest('.action-admin-notes');
+                    const actionPermit = target.closest('.action-permit-details');
+                    const actionUpdateStatus = target.closest('.action-update-status');
+                    const actionUpdateExamStatus = target.closest('.action-update-exam-status');
+
+                    if (actionNotes) {
+                        const appId = actionNotes.dataset.id;
+                        document.getElementById('adminNotesAppId').textContent = `${String(appId).padStart(4, '0')}`;
+                        document.getElementById('saveAdminNotesModalBtn').dataset.id = appId;
+                        document.getElementById('adminNotesTextareaModal').value = 'Loading...';
+                        openModal('adminNotesModal');
+                        fetch(`/admin/application/${appId}/notes`).then(res => res.json()).then(data => {
+                            document.getElementById('adminNotesTextareaModal').value = data.notes || '';
+                        });
+                    } else if (actionPermit) {
+                        const appId = actionPermit.dataset.id;
+                        document.getElementById('adminPermitAppId').textContent = `${String(appId).padStart(4, '0')}`;
+                        document.getElementById('saveAdminPermitDetailsModalBtn').dataset.id = appId;
+                        openModal('adminPermitDetailsModal');
+                        fetch(`/admin/application/${appId}/details`).then(res => res.json()).then(response => {
+                            if (response.success) {
+                                const data = response.data;
+                                document.getElementById('permitControlNoModal').value = data.permit_control_no || 'Auto-generated on Approval';
+                                document.getElementById('permitExamDateModal').value = data.permit_exam_date ? data.permit_exam_date.split('T')[0] : '';
+                                document.getElementById('permitExamTimeModal').value = data.permit_exam_time || '';
+                                document.getElementById('permitTestingRoomModal').value = data.permit_testing_room || '';
+                            }
+                        });
+                    } else if (actionUpdateStatus) {
+                        e.preventDefault();
+                        const appId = actionUpdateStatus.dataset.id;
+                        const newStatus = actionUpdateStatus.dataset.status;
+                        updateStatus(appId, newStatus).then(data => {
+                            if (data.success) { showToast(data.message, 'success'); setTimeout(() => window.location.reload(), 1200); }
+                            else { showToast(data.message || `Failed to update status.`, 'error'); }
+                        });
+                    } else if (actionUpdateExamStatus) {
+                        e.preventDefault();
+                        const appId = actionUpdateExamStatus.dataset.id;
+                        const newExamStatus = actionUpdateExamStatus.dataset.status;
+                        updateExamStatus(appId, newExamStatus).then(data => {
+                            if (data.success) { showToast(data.message, 'success'); setTimeout(() => window.location.reload(), 1200); }
+                            else { showToast(data.message || `Failed to update exam status.`, 'error'); }
+                        });
+                    }
+                });
+            }
+
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+            const bulkActionsBar = document.getElementById('bulkActions');
+            const selectedCountSpan = document.getElementById('selectedCount');
+
+            function updateBulkActionsBar() {
+                if (!bulkActionsBar) return;
+                const selectedIds = Array.from(rowCheckboxes).filter(cb => cb.checked).map(cb => cb.dataset.id);
+                if (selectedIds.length > 0) {
+                    bulkActionsBar.style.display = 'flex';
+                    selectedCountSpan.textContent = `${selectedIds.length} item(s) selected`;
+                } else {
+                    bulkActionsBar.style.display = 'none';
+                }
+                document.querySelectorAll('tr[data-applicant-id]').forEach(row => {
+                    const checkbox = row.querySelector('.row-checkbox');
+                    if (checkbox && checkbox.checked) { row.classList.add('selected'); }
+                    else { row.classList.remove('selected'); }
+                });
+            }
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', () => {
+                    rowCheckboxes.forEach(cb => {
+                        const tr = cb.closest('tr');
+                        if (tr && tr.style.display !== 'none') { cb.checked = selectAllCheckbox.checked; }
+                    });
+                    updateBulkActionsBar();
+                });
+            }
+            rowCheckboxes.forEach(cb => { cb.addEventListener('change', updateBulkActionsBar); });
+            document.getElementById('closeBulkActions')?.addEventListener('click', () => { rowCheckboxes.forEach(cb => cb.checked = false); if (selectAllCheckbox) selectAllCheckbox.checked = false; updateBulkActionsBar(); });
+
+            async function handleBulkAction(action, type = 'status') {
+                const selectedIds = Array.from(rowCheckboxes).filter(cb => cb.checked).map(cb => cb.dataset.id);
+                if (selectedIds.length === 0) { showToast('No applications selected.', 'info'); return; }
+                const payload = { ids: selectedIds, action: action, type: type };
+                const response = await fetch('/admin/applications/bulk-update-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                showToast(data.message, data.success ? 'success' : 'error');
+                if (data.success) setTimeout(() => window.location.reload(), 1500);
+            }
+            document.getElementById('bulkApproveBtn')?.addEventListener('click', () => handleBulkAction('Approved'));
+            document.getElementById('bulkRejectBtn')?.addEventListener('click', () => handleBulkAction('Rejected'));
+            document.getElementById('bulkPendingBtn')?.addEventListener('click', () => handleBulkAction('Pending'));
+            document.getElementById('bulkPassBtn')?.addEventListener('click', () => handleBulkAction('Passed'));
+            document.getElementById('bulkFailBtn')?.addEventListener('click', () => handleBulkAction('Failed'));
+            document.getElementById('bulkNotTakenBtn')?.addEventListener('click', () => handleBulkAction('Not Taken', 'exam_status'));
+            document.getElementById('bulkEnrollingBtn')?.addEventListener('click', () => handleBulkAction('Enrolling'));
+            document.getElementById('bulkEnrolledBtn')?.addEventListener('click', () => handleBulkAction('Enrolled'));
+            document.getElementById('bulkDroppedBtn')?.addEventListener('click', () => handleBulkAction('Dropped'));
+            document.getElementById('bulkNotEnrolledBtn')?.addEventListener('click', () => handleBulkAction('Not Enrolled'));
+
+            ['adminNotesModal', 'adminPermitDetailsModal', 'bulkPermitDetailsModal', 'editStudentIdModal'].forEach(id => {
+                document.getElementById(`close${id.charAt(0).toUpperCase() + id.slice(1)}Icon`)?.addEventListener('click', () => closeModal(id));
+                document.getElementById(`${id}Backdrop`)?.addEventListener('click', () => closeModal(id));
+            });
+            document.getElementById('cancelAdminNotesBtn')?.addEventListener('click', () => closeModal('adminNotesModal'));
+            document.getElementById('cancelAdminPermitDetailsBtn')?.addEventListener('click', () => closeModal('adminPermitDetailsModal'));
+            document.getElementById('cancelBulkPermitDetailsBtn')?.addEventListener('click', () => closeModal('bulkPermitDetailsModal'));
+            document.getElementById('cancelEditStudentIdBtn')?.addEventListener('click', () => closeModal('editStudentIdModal'));
+
+
+            document.getElementById('saveAdminNotesModalBtn')?.addEventListener('click', function () {
+                const appId = this.dataset.id;
+                const notes = document.getElementById('adminNotesTextareaModal').value;
+                fetch(`/admin/application/${appId}/notes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes: notes })
+                }).then(res => res.json()).then(data => {
+                    if (data.success) { showToast('Notes saved!', 'success'); closeModal('adminNotesModal'); }
+                    else { showToast(data.message || 'Error saving notes.', 'error'); }
+                });
+            });
+
+            document.getElementById('saveAdminPermitDetailsModalBtn')?.addEventListener('click', async function () {
+                const appId = this.dataset.id;
+                const details = {
+                    permit_exam_date: document.getElementById('permitExamDateModal').value,
+                    permit_exam_time: document.getElementById('permitExamTimeModal').value,
+                    permit_testing_room: document.getElementById('permitTestingRoomModal').value
+                };
+                const permitResult = await setPermitDetails(appId, details);
+                if (permitResult.success) {
+                    const statusResult = await updateStatus(appId, 'Scheduled');
+                    showToast(statusResult.message || permitResult.message, statusResult.success ? 'success' : 'error');
+                    closeModal('adminPermitDetailsModal');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast(permitResult.message || 'Error saving permit details.', 'error');
+                }
+            });
+
+            document.getElementById('bulkSetPermitDetailsBtn')?.addEventListener('click', () => openModal('bulkPermitDetailsModal'));
+            document.getElementById('saveBulkPermitDetailsBtn')?.addEventListener('click', async () => {
+                const selectedIds = Array.from(rowCheckboxes).filter(cb => cb.checked).map(cb => cb.dataset.id);
+                if (selectedIds.length === 0) { showToast('No applications selected.', 'info'); return; }
+                const payload = {
+                    ids: selectedIds,
+                    details: {
+                        date: document.getElementById('bulkPermitExamDate').value,
+                        time: document.getElementById('bulkPermitExamTime').value,
+                        room: document.getElementById('bulkPermitTestingRoom').value,
+                    }
+                };
+                const response = await fetch('/admin/applications/bulk-permit-update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                showToast(data.message, data.success ? 'success' : 'error');
+                if (data.success) { closeModal('bulkPermitDetailsModal'); setTimeout(() => window.location.reload(), 1500); }
+            });
+
+            if (editStudentIdBtn) {
+                editStudentIdBtn.addEventListener('click', () => {
+                    const appId = editStudentIdBtn.dataset.applicantId;
+                    const oldStudentIdInput = document.getElementById('editOldStudentIdInput');
+                    const controlNoInput = document.getElementById('editControlNoInput');
+                    const saveBtn = document.getElementById('saveEditStudentIdBtn');
+
+                    fetch(`/admin/application/${appId}/details`)
+                        .then(res => res.json())
+                        .then(response => {
+                            if (response.success) {
+                                const data = response.data;
+                                document.getElementById('editStudentIdAppId').textContent = `${String(appId).padStart(4, '0')}`;
+                                oldStudentIdInput.value = data.old_student_id || '';
+                                controlNoInput.value = data.control_number || '';
+                                saveBtn.dataset.id = appId;
+                                openModal('editStudentIdModal');
+                            } else {
+                                showToast('Could not fetch student details.', 'error');
+                            }
+                        })
+                        .catch(() => showToast('Network error fetching details.', 'error'));
+                });
+            }
+
+            document.getElementById('saveEditStudentIdBtn')?.addEventListener('click', async function () {
+                const appId = this.dataset.id;
+                const oldStudentId = document.getElementById('editOldStudentIdInput').value;
+                const controlNumber = document.getElementById('editControlNoInput').value;
+                const formData = new FormData();
+                formData.append('old_student_id', oldStudentId);
+                formData.append('control_number', controlNumber);
+                try {
+                    const response = await fetch(`/admin/application/${appId}/update-ids`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    showToast(data.message, data.success ? 'success' : 'error');
+                    if (data.success) {
+                        closeModal('editStudentIdModal');
+                        setTimeout(() => window.location.reload(), 1500);
+                    }
+                } catch (error) {
+                    showToast('An error occurred while saving.', 'error');
+                }
+            });
+
+
+            const pageContextContainer = document.getElementById('applicationsContent');
+            const pageContext = pageContextContainer?.dataset.pageContext;
+            const dateFilterLabel = document.getElementById('dateFilterLabel');
+            if (dateFilterLabel) {
+                dateFilterLabel.textContent = (pageContext === 'scheduled' || pageContext === 'not_taken') ? 'Filter by Exam Date:' : 'Filter by Submission Date:';
+            }
+
+            const startDateFilter = document.getElementById('startDateFilter');
+            const endDateFilter = document.getElementById('endDateFilter');
+            const genderFilters = document.querySelectorAll('input[name="genderFilter"]');
+            const programFilter = document.getElementById('programFilter');
+            const locationFilters = document.querySelectorAll('input[name="locationFilter"]');
+            const yearLevelFilter = document.getElementById('yearLevelFilter');
+            const semesterFilter = document.getElementById('semesterFilter');
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            const schoolYearFilter = document.getElementById('schoolYearFilter');
+            const tableRows = document.querySelectorAll('#applicationsTable tbody tr[data-applicant-id]');
+
+            if (schoolYearFilter) {
+                schoolYearFilter.addEventListener('change', () => {
+                    const selectedYear = schoolYearFilter.value;
+                    const currentUrl = new URL(window.location.href);
+                    if (selectedYear) {
+                        currentUrl.searchParams.set('sy', selectedYear);
+                    } else {
+                        currentUrl.searchParams.delete('sy');
+                    }
+                    window.location.href = currentUrl.toString();
+                });
+            }
+
+            function applyAllFilters() {
+                if (!tableRows || tableRows.length === 0) return;
+                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+                const startDate = startDateFilter?.value;
+                const endDate = endDateFilter?.value;
+                const gender = document.querySelector('input[name="genderFilter"]:checked')?.value;
+                const program = programFilter?.value;
+                const location = document.querySelector('input[name="locationFilter"]:checked')?.value;
+                const yearLevel = yearLevelFilter?.value;
+                const semester = semesterFilter?.value;
+                let visibleCount = 0;
+                const tableBody = document.querySelector('#applicationsTable tbody');
+
+                tableRows.forEach(row => {
+                    const searchMatch = (
+                        (row.dataset.searchString || '').toLowerCase().includes(searchTerm) ||
+                        (row.querySelector('.applicant-name')?.textContent.toLowerCase() || '').includes(searchTerm) ||
+                        (row.querySelector('.applicant-email')?.textContent.toLowerCase() || '').includes(searchTerm) ||
+                        `p2025${(row.dataset.applicantId || '').padStart(4, '0')}`.toLowerCase().includes(searchTerm) ||
+                        (row.dataset.oldStudentId || '').toLowerCase().includes(searchTerm)
+                    );
+
+                    let dateMatch = true;
+                    if (startDateFilter) {
+                        const dateToFilter = (pageContext === 'scheduled' || pageContext === 'not_taken') ? row.dataset.examDate : row.dataset.submissionDate;
+                        if (startDate || endDate) {
+                            if (!dateToFilter) { dateMatch = false; }
+                            else {
+                                if (startDate && dateToFilter < startDate) dateMatch = false;
+                                if (endDate && dateToFilter > endDate) dateMatch = false;
+                            }
+                        }
+                    }
+
+                    let genderMatch = true;
+                    if (gender && gender !== 'All') {
+                        if ((row.dataset.gender || '').toLowerCase() !== gender.toLowerCase()) {
+                            genderMatch = false;
+                        }
+                    }
+
+                    let programMatch = true;
+                    if (programFilter && program && program !== 'all') {
+                        if (row.dataset.program !== program) { programMatch = false; }
+                    }
+
+                    let locationMatch = true;
+                    if (location && location !== 'All') {
+                        const address = row.dataset.address || '';
+                        const isGarciano = address.includes('padre garcia');
+                        if (location === 'Garciano' && !isGarciano) {
+                            locationMatch = false;
+                        } else if (location === 'Non-Garciano' && isGarciano) {
+                            locationMatch = false;
+                        }
+                    }
+
+                    let yearLevelMatch = true;
+                    if (yearLevelFilter && yearLevel && yearLevel !== 'all') {
+                        if (row.dataset.yearLevel !== yearLevel) { yearLevelMatch = false; }
+                    }
+
+                    let semesterMatch = true;
+                    if (semesterFilter && semester && semester !== 'all') {
+                        if (row.dataset.semester !== semester) { semesterMatch = false; }
+                    }
+
+                    if (searchMatch && dateMatch && genderMatch && programMatch && locationMatch && yearLevelMatch && semesterMatch) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                let noResultsRow = tableBody.querySelector('.no-results-message');
+                if (noResultsRow) noResultsRow.remove();
+                if (visibleCount === 0) {
+                    const colspan = tableBody.parentElement.querySelector('thead th').length;
+                    const newRow = tableBody.insertRow();
+                    newRow.className = 'no-results-message';
+                    newRow.innerHTML = `<td colspan="${colspan}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No applications match the current search/filters.</td>`;
+                }
+            }
+
+            if (searchInput) searchInput.addEventListener('input', applyAllFilters);
+            if (startDateFilter) startDateFilter.addEventListener('change', applyAllFilters);
+            if (endDateFilter) endDateFilter.addEventListener('change', applyAllFilters);
+            if (programFilter) programFilter.addEventListener('change', applyAllFilters);
+            genderFilters.forEach(radio => radio.addEventListener('change', applyAllFilters));
+            locationFilters.forEach(radio => radio.addEventListener('change', applyAllFilters));
+            if (yearLevelFilter) yearLevelFilter.addEventListener('change', applyAllFilters);
+            if (semesterFilter) semesterFilter.addEventListener('change', applyAllFilters);
+
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', () => {
+                    if (searchInput) searchInput.value = '';
+                    if (startDateFilter) startDateFilter.value = '';
+                    if (endDateFilter) endDateFilter.value = '';
+                    if (document.getElementById('genderFilterAll')) document.getElementById('genderFilterAll').checked = true;
+                    if (programFilter) programFilter.value = 'all';
+                    if (document.getElementById('locationFilterAll')) document.getElementById('locationFilterAll').checked = true;
+                    if (yearLevelFilter) yearLevelFilter.value = 'all';
+                    if (semesterFilter) semesterFilter.value = 'all';
+                    applyAllFilters();
+                });
+            }
+
+            document.getElementById('printReportBtn')?.addEventListener('click', () => {
+                const table = document.getElementById('applicationsTable');
+                const pageTitle = document.getElementById('mainPageTitle')?.textContent || 'Application Report';
+                if (!table) return;
+
+                const visibleRows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none' && !row.classList.contains('no-results-message'));
+
+                if (visibleRows.length === 0) {
+                    showToast('No data to print.', 'info');
+                    return;
+                }
+
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write('<html><head><title>Print Report</title>');
+                printWindow.document.write('<style>body{font-family:Arial,sans-serif;margin:20px}table{width:100%;border-collapse:collapse;font-size:10pt}th,td{border:1px solid #ddd;padding:8px;text-align:left;word-break:break-word;}th{background-color:#f2f2f2}h1,h2{text-align:center;margin:0;padding:0;}.header-container{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:20px}.header-container img{height:60px} tr { page-break-inside: avoid; }</style></head><body>');
+                printWindow.document.write(`<div class="header-container"><img src="${PGPC_LOGO_URL_JS}" alt="Logo"><div style="text-align: center;"><h2>Padre Garcia Polytechnic College</h2><h1>${pageTitle}</h1></div><img src="${BAYAN_LOGO_URL_JS}" alt="Logo"></div>`);
+
+                let reportTableHTML = '<table><thead><tr><th>Student ID</th><th>Applicant Name</th><th>Program</th><th>Submission Date</th><th>Status</th></tr></thead><tbody>';
+
+                visibleRows.forEach(row => {
+                    // MODIFIED ID LOGIC: Read directly from the new data attribute
+                    const studentIdForReport = row.dataset.displayId || 'N/A';
+
+                    const name = row.querySelector('.applicant-name')?.textContent.trim() || 'N/A';
+                    const programId = (row.dataset.program || 'N/A');
+                    const submissionDate = row.querySelector('.submission-date-cell')?.textContent.trim() || (row.dataset.submissionDate ? new Date(row.dataset.submissionDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A');
+                    const status = row.querySelector('.status-badge')?.textContent.trim() || 'N/A';
+
+                    reportTableHTML += `<tr>
+                    <td>${studentIdForReport}</td>
+                    <td>${name}</td>
+                    <td>${programId}</td> 
+                    <td>${submissionDate}</td>
+                    <td>${status}</td> 
+                </tr>`;
+                });
+
+                reportTableHTML += '</tbody></table>';
+                printWindow.document.write(reportTableHTML);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 250);
+            });
+        });
+    </script>
+
+</body>
+
+</html>

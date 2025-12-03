@@ -1,0 +1,74 @@
+{% extends base_template %}
+{% block title %}Student Records{% endblock %}
+{% block page_title %}Student Records{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-card shadow-soft p-6">
+    
+    <!-- Filters -->
+    <form method="GET" action="{{ url_for('auth.student_records') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="relative">
+            <i class="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
+            <input type="text" name="query" placeholder="Search Name or Student ID..." value="{{ query or '' }}" class="w-full bg-gray-50 border-none text-gray-600 text-sm rounded-lg pl-9 p-2.5">
+        </div>
+        <div class="flex">
+            <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark">Search</button>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-blue-50/50 text-left">
+                    <th class="px-6 py-3 text-primary font-semibold rounded-l-lg">Student Name</th>
+                    <th class="px-6 py-3 text-primary font-semibold">Course Details</th>
+                    <th class="px-6 py-3 text-primary font-semibold">Status</th>
+                    <th class="px-6 py-3 text-primary font-semibold">Balance</th>
+                    <th class="px-6 py-3 text-primary font-semibold text-center rounded-r-lg">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for student in students %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                {{ student.first_name[0] }}{{ student.last_name[0] }}
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-800">{{ student.last_name }}, {{ student.first_name }}</div>
+                                <div class="text-xs text-gray-400">{{ student.student_id }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600">
+                        <div>{{ student.course }}</div>
+                        <div class="text-xs text-gray-400">{{ student.year_level }} - {{ student.section }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if student.payment_status == 'Fully Paid' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Paid</span>
+                        {% elif student.payment_status == 'Partial Payment' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Partial</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Unpaid</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 font-semibold {% if student.total_balance > 0 %}text-red-500{% else %}text-green-500{% endif %}">
+                        ₱{{ "{:,.2f}".format(student.total_balance) }}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <a href="{{ url_for('auth.update_payment', student_id_db=student.id) }}" class="text-white bg-primary hover:bg-blue-600 px-3 py-1.5 rounded text-xs font-medium transition-colors">
+                            <i class="ri-bank-card-line mr-1"></i> Pay
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="px-6 py-10 text-center text-gray-400">No enrolled students found matching search.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Manage Announcements{% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ url_for('auth.admin_manage_content') }}" class="text-gray-500 hover:text-primary">Manage Content</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<span>Announcements</span>
+{% endblock %}
+
+{% block page_title %}Manage Announcements{% endblock %}
+
+{% block content %}
+<style>
+    /* Custom styles for the toggle switch */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 22px;
+        cursor: pointer;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 22px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #4f46e5; /* Primary color */
+    }
+    input:checked + .slider:before {
+        transform: translateX(18px);
+    }
+    .toggle-switch.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .toggle-switch.disabled .slider {
+        background-color: #e5e7eb;
+    }
+</style>
+
+<div class="flex justify-end mb-4">
+    <a href="{{ url_for('auth.admin_announcement_form') }}" class="inline-flex items-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-md hover:bg-primary/90">
+        <i class="ri-add-line mr-2"></i> Add New Announcement
+    </a>
+</div>
+
+<div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for announcement in announcements %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <img src="{{ url_for('static', filename='images/uploads/' + announcement.image_filename) if announcement.image_filename else url_for('static', filename='images/default_announcement.jpg') }}" alt="{{ announcement.title }}" class="w-16 h-10 object-cover rounded">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ announcement.title }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ announcement.created_at.strftime('%Y-%m-%d') if announcement.created_at }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="flex flex-col items-center">
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="status-toggle" data-id="{{ announcement.id }}" {% if announcement.is_active %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                            <span class="text-xs mt-1 status-text-{{ announcement.id }} {% if announcement.is_active %}text-green-600{% else %}text-gray-500{% endif %}">
+                                {% if announcement.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <a href="{{ url_for('auth.admin_announcement_form', announcement_id=announcement.id) }}" class="text-indigo-600 hover:text-indigo-900" title="Edit">
+                            <i class="ri-pencil-line"></i>
+                        </a>
+                        <form action="{{ url_for('auth.admin_delete_announcement', announcement_id=announcement.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this announcement?');">
+                            <button type="submit" class="text-red-600 hover:text-red-900" title="Delete">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No announcements found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const statusToggles = document.querySelectorAll('.status-toggle');
+
+    // Debounce function to prevent multiple rapid clicks
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    statusToggles.forEach(toggle => {
+        const toggleSwitch = toggle.closest('.toggle-switch');
+
+        const handleToggle = debounce(async function () {
+            // Disable toggle to prevent multiple clicks
+            toggle.disabled = true;
+            toggleSwitch.classList.add('disabled');
+
+            const announcementId = toggle.dataset.id;
+            const statusText = document.querySelector(`.status-text-${announcementId}`);
+            const originalChecked = toggle.checked;
+
+            try {
+                const response = await fetch(`/admin/announcement/toggle/${announcementId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    statusText.textContent = data.is_active ? 'Active' : 'Inactive';
+                    statusText.classList.toggle('text-green-600', data.is_active);
+                    statusText.classList.toggle('text-gray-500', !data.is_active);
+                    showToast('Status updated successfully!', 'success');
+                    // Refresh the page after successful update
+                    setTimeout(() => location.reload(), 500); // Small delay to show toast
+                } else {
+                    toggle.checked = !originalChecked; // Revert toggle
+                    showToast(data.message || 'Failed to update status.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                toggle.checked = !originalChecked; // Revert toggle
+                showToast('An error occurred.', 'error');
+            } finally {
+                // Re-enable toggle after request completes
+                toggle.disabled = false;
+                toggleSwitch.classList.remove('disabled');
+            }
+        }, 300); // 300ms debounce delay
+
+        toggle.addEventListener('change', handleToggle);
+    });
+});
+</script>
+{% endblock %}

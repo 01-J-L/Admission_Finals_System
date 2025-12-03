@@ -1,0 +1,74 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Manage About Page Content{% endblock %}
+{% block page_title %}About Page Content{% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ url_for('auth.admin_manage_content') }}" class="text-gray-500 hover:text-primary">Content</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<span>About Page</span>
+{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" class="space-y-8 max-w-4xl mx-auto">
+    
+    <!-- Community Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Meet Our Community Section</h3>
+        
+        <div class="grid grid-cols-1 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Section Title</label>
+                <input type="text" name="community_title" value="{{ content.community_title or 'Meet Our Community' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Description Text</label>
+                <textarea name="community_text" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.community_text or '' }}</textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Side Image</label>
+                {% if content.community_image %}
+                    <img src="{{ url_for('static', filename='images/uploads/' + content.community_image) }}" class="h-24 w-auto object-cover rounded mb-2 border">
+                {% endif %}
+                <input type="file" name="community_image" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+            </div>
+        </div>
+    </div>
+
+    <!-- President Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">College President Profile</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">President's Name</label>
+                <input type="text" name="president_name" value="{{ content.president_name or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Role / Title</label>
+                <input type="text" name="president_role" value="{{ content.president_role or 'College President' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">Description / Bio</label>
+                <textarea name="president_desc" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.president_desc or '' }}</textarea>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">President's Photo</label>
+                {% if content.president_image %}
+                    <img src="{{ url_for('static', filename='images/uploads/' + content.president_image) }}" class="h-24 w-24 object-cover rounded mb-2 border">
+                {% endif %}
+                <input type="file" name="president_image" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+            </div>
+        </div>
+    </div>
+
+    <div class="flex justify-end">
+        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md shadow-sm hover:bg-primary/90">Save Changes</button>
+    </div>
+</form>
+{% endblock %}

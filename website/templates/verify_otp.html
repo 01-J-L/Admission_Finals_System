@@ -102,9 +102,13 @@
                 </p>
                  <p class="mt-2 text-center md:text-left text-sm text-gray-600">
                     Need to create a different account?
-                    <a href="{{ url_for('auth.create_student_account_page') }}" class="font-medium text-blue-600 hover:text-blue-500">
-                        Create Account
-                    </a>
+                    {% if global_content.registration_open == 'true' %}
+                        <a href="{{ url_for('auth.create_student_account_page') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                            Create Account
+                        </a>
+                    {% else %}
+                        <span class="text-gray-400 cursor-not-allowed">Registration Closed</span>
+                    {% endif %}
                 </p>
             </div>
         </div>

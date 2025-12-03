@@ -1,0 +1,248 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Manage Sections{% endblock %}
+
+{% block page_title %}Manage Sections{% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ url_for('auth.admin_manage_content') }}" class="text-gray-500 hover:text-primary">Management</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<span>Manage Sections</span>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Generate Sections Form -->
+    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100 mb-8">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Generate Sections</h3>
+        <form action="{{ url_for('auth.admin_manage_sections') }}" method="POST" class="space-y-4">
+            <input type="hidden" name="action" value="generate">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label for="program_id" class="block text-sm font-medium text-gray-700">Program</label>
+                    <select name="program_id" id="program_id" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        <option value="">Select Program...</option>
+                        {% for program in programs %}
+                        <option value="{{ program.program_id }}">{{ program.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="year_level" class="block text-sm font-medium text-gray-700">Year Level</label>
+                    <select name="year_level" id="year_level" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        <option value="">Select Year...</option>
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                        <option value="5th Year">5th Year</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="num_sections" class="block text-sm font-medium text-gray-700">Number of Sections (A, B,
+                        C...)</label>
+                    <input type="number" name="num_sections" id="num_sections" value="3" min="1" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                </div>
+                <div>
+                    <label for="max_students" class="block text-sm font-medium text-gray-700">Max Students per
+                        Section</label>
+                    <input type="number" name="max_students" id="max_students" value="60" min="1" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                </div>
+            </div>
+            <div class="pt-5">
+                <button type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700">
+                    Generate Sections
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- REMOVED: "Distribute Unassigned Students" Form -->
+
+    <!-- List of Sections -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            {% if sections_by_program_year %}
+            {% for program_title, years_data in sections_by_program_year.items() %}
+            <div class="mb-6 last:mb-0">
+
+                <!-- Program Header (No Button Here) -->
+                <h3 class="bg-blue-500 text-white px-6 py-3 text-lg font-semibold tracking-wider">{{ program_title }}
+                </h3>
+
+                {% for year_level, sections in years_data.items() %}
+                <div class="py-4 px-6 border-b border-gray-200 last:border-b-0">
+
+                    <!-- Year Level Header WITH BUTTON -->
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-md font-semibold text-gray-800">Year {{ year_level }}</h4>
+
+                        <form action="{{ url_for('auth.admin_manage_sections') }}" method="POST" class="inline-block">
+                            <input type="hidden" name="action" value="distribute_year_level">
+                            <input type="hidden" name="program_title" value="{{ program_title }}">
+                            <input type="hidden" name="year_level" value="{{ year_level }}"> <!-- e.g. "1st Year" -->
+                            <button type="submit"
+                                class="bg-green-100 text-green-700 hover:bg-green-200 font-bold py-1 px-3 rounded text-xs shadow flex items-center transition-colors border border-green-300"
+                                title="Distribute unassigned students equally for this year only">
+                                <i class="ri-group-line mr-1"></i> Equalize {{ year_level }}
+                            </button>
+                        </form>
+                    </div>
+                    <!-- END Year Level Header -->
+
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col"
+                                    class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider">Section
+                                    Name</th>
+                                <th scope="col"
+                                    class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider">Max
+                                    Students</th>
+                                <th scope="col"
+                                    class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider">Current
+                                    Students</th>
+                                <th scope="col"
+                                    class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider">Status
+                                </th>
+                                <th scope="col"
+                                    class="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider">Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for section in sections %}
+                            <tr>
+                                <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{{
+                                    section.section_name }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">{{ section.max_students }}
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">{{
+                                    section.current_students }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-sm">
+                                    {% if section.is_active %}
+                                    <span
+                                        class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                    {% else %}
+                                    <span
+                                        class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
+                                    <button type="button"
+                                        class="text-indigo-600 hover:text-indigo-900 mx-1 edit-section-btn"
+                                        data-id="{{ section.id }}" data-max-students="{{ section.max_students }}"
+                                        data-is-active="{{ 'true' if section.is_active else 'false' }}"
+                                        data-section-name="{{ section.section_name }}"
+                                        title="Edit section">Edit</button>
+                                    <form action="{{ url_for('auth.admin_manage_sections') }}" method="POST"
+                                        class="inline"
+                                        onsubmit="return confirm('Are you sure you want to delete section {{ section.section_name }}?');">
+                                        <input type="hidden" name="action" value="delete_section">
+                                        <input type="hidden" name="section_id" value="{{ section.id }}">
+                                        <button type="submit" class="text-red-500 hover:text-red-700 mx-1"
+                                            title="Delete section">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="px-6 py-4 text-center text-gray-500">No sections found. Generate some sections to get started.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Section Modal -->
+<div id="editSectionModal"
+    class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl flex flex-col w-full max-w-sm">
+        <div class="flex-shrink-0 bg-gray-100 p-3 flex justify-between items-center border-b">
+            <h3 class="text-lg font-semibold text-gray-800">Edit Section: <span id="modalSectionName"></span></h3>
+            <button id="closeEditSectionModalBtn" class="text-gray-500 hover:text-gray-800">
+                <i class="ri-close-line text-2xl"></i>
+            </button>
+        </div>
+        <form action="{{ url_for('auth.admin_manage_sections') }}" method="POST" class="p-4 space-y-4">
+            <input type="hidden" name="action" value="edit_section">
+            <input type="hidden" name="section_id" id="editSectionId">
+            <div>
+                <label for="max_students_edit" class="block text-sm font-medium text-gray-700">Max Students</label>
+                <input type="number" name="max_students_edit" id="max_students_edit" min="1" required
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" name="is_active_edit" id="is_active_edit"
+                    class="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary">
+                <label for="is_active_edit" class="ml-2 block text-sm text-gray-900">Is Active</label>
+            </div>
+            <div class="flex justify-end space-x-2 pt-4 border-t">
+                <button type="button" id="cancelEditSectionModalBtn"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300">Cancel</button>
+                <button type="submit"
+                    class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md hover:bg-primary/90">Save
+                    Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const editSectionModal = document.getElementById('editSectionModal');
+        const closeEditSectionModalBtn = document.getElementById('closeEditSectionModalBtn');
+        const cancelEditSectionModalBtn = document.getElementById('cancelEditSectionModalBtn');
+        const editSectionBtns = document.querySelectorAll('.edit-section-btn');
+
+        function openModal(sectionId, sectionName, maxStudents, isActive) {
+            document.getElementById('modalSectionName').textContent = sectionName;
+            document.getElementById('editSectionId').value = sectionId;
+            document.getElementById('max_students_edit').value = maxStudents;
+            document.getElementById('is_active_edit').checked = (isActive === 'true');
+            editSectionModal.classList.remove('hidden');
+            editSectionModal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            editSectionModal.classList.add('hidden');
+            editSectionModal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        editSectionBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.dataset.id;
+                const name = this.dataset.sectionName;
+                const max = this.dataset.maxStudents;
+                const active = this.dataset.isActive;
+                openModal(id, name, max, active);
+            });
+        });
+
+        if (closeEditSectionModalBtn) closeEditSectionModalBtn.addEventListener('click', closeModal);
+        if (cancelEditSectionModalBtn) cancelEditSectionModalBtn.addEventListener('click', closeModal);
+        editSectionModal.addEventListener('click', function (e) {
+            if (e.target === editSectionModal) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === "Escape" && !editSectionModal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+    });
+</script>
+{% endblock %}

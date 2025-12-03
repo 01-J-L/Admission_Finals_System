@@ -10,3 +10,5 @@ itsdangerous
 click
 blinker
 whitenoise
+pandas
+openpyxl

@@ -1,0 +1,134 @@
+
+
+{% extends "accounting_base.html" %}
+{% block title %}Journal Entries{% endblock %}
+{% block page_title %}Journal Entries{% endblock %}
+{% block card_title %}General Journal{% endblock %}
+
+{% block card_content %}
+<!-- Control Bar (Print & Filters) -->
+<div class="no-print px-6 pt-4 pb-2">
+    
+    <!-- DATE FILTER FORM -->
+    <form method="GET" action="{{ url_for('auth.journal_entries') }}" class="flex flex-wrap items-end gap-4 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">From Date</label>
+            <input type="date" name="start_date" value="{{ start_date or '' }}" 
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-primary focus:border-primary">
+        </div>
+        
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">To Date</label>
+            <input type="date" name="end_date" value="{{ end_date or '' }}" 
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-primary focus:border-primary">
+        </div>
+
+        <div class="flex gap-2">
+            <button type="submit" class="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors flex items-center gap-2">
+                <i class="ri-filter-3-line"></i> Filter
+            </button>
+            
+            {% if start_date or end_date %}
+            <a href="{{ url_for('auth.journal_entries') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors flex items-center gap-2">
+                <i class="ri-close-circle-line"></i> Clear
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="ml-auto">
+            <button onclick="window.print()" class="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-button text-sm font-medium hover:bg-gray-700 transition-colors">
+                <i class="ri-printer-line"></i><span>Print Journal</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Print Header (Print Only) -->
+<div class="hidden print-header px-6 pt-4 mb-4 text-center">
+    <h2 class="text-xl font-bold text-gray-900">Padre Garcia Polytechnic College</h2>
+    <h3 class="text-lg font-semibold text-gray-700">General Journal Report</h3>
+    <p class="text-sm text-gray-500 mt-1">
+        {% if start_date and end_date %}
+            Period: {{ start_date }} to {{ end_date }}
+        {% else %}
+            Generated on: <span id="print-date"></span>
+        {% endif %}
+    </p>
+    <div class="border-b-2 border-gray-300 mt-4"></div>
+</div>
+
+<!-- TABLE STARTS HERE -->
+<div class="overflow-x-auto">
+    <table class="w-full text-sm text-left text-gray-600">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-3">Date</th>
+                <th scope="col" class="px-6 py-3">Description</th>
+                <th scope="col" class="px-6 py-3">Account</th>
+                <th scope="col" class="px-6 py-3 text-right">Debit</th>
+                <th scope="col" class="px-6 py-3 text-right">Credit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <!-- Journal Entry Header Row -->
+            <tr class="bg-gray-50 border-b border-gray-200 font-medium text-gray-900 break-inside-avoid">
+                <td class="px-6 py-3 align-top whitespace-nowrap">{{ entry.entry_date.strftime('%Y-%m-%d') }}</td>
+                <td class="px-6 py-3 align-top" colspan="4">
+                    <span class="uppercase font-bold">#{{ entry.id }}</span> - {{ entry.description }}
+                </td>
+            </tr>
+            
+            <!-- Journal Entry Lines -->
+            {% for line in entry.lines %}
+            <tr class="bg-white border-b border-gray-100 hover:bg-gray-50 break-inside-avoid">
+                <td class="px-6 py-2 border-r border-gray-100"></td> <!-- Empty Date Column -->
+                <td class="px-6 py-2 border-r border-gray-100"></td> <!-- Empty Desc Column -->
+                <td class="px-6 py-2 {% if line.credit > 0 %}pl-12{% endif %}">
+                    {{ line.account_name }} 
+                    <span class="text-xs text-gray-400 ml-1">({{ line.account_code }})</span>
+                </td>
+                <td class="px-6 py-2 text-right font-mono text-gray-800">
+                    {% if line.debit > 0 %}₱{{ "{:,.2f}".format(line.debit) }}{% endif %}
+                </td>
+                <td class="px-6 py-2 text-right font-mono text-gray-800">
+                    {% if line.credit > 0 %}₱{{ "{:,.2f}".format(line.credit) }}{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            
+            <!-- Spacer Row -->
+            <tr class="bg-white border-b-2 border-gray-200">
+                <td colspan="5" class="py-2"></td>
+            </tr>
+
+            {% else %}
+            <tr>
+                <td colspan="5" class="px-6 py-10 text-center text-gray-500 italic">No journal entries found for this date range.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Print Footer -->
+<div class="hidden print-footer mt-8 pt-8 border-t border-gray-300 flex justify-between text-sm text-gray-600">
+    <div>Prepared by: __________________</div>
+    <div>Approved by: __________________</div>
+</div>
+
+<script>
+    document.getElementById('print-date').textContent = new Date().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    });
+</script>
+
+<style>
+    @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        tr.break-inside-avoid { break-inside: avoid; }
+        .print-footer { display: flex !important; }
+        .no-print { display: none !important; }
+    }
+</style>
+{% endblock %}

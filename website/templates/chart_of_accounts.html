@@ -1,0 +1,83 @@
+
+{% extends "accounting_base.html" %}
+{% block title %}Chart of Accounts{% endblock %}
+{% block page_title %}Chart of Accounts{% endblock %}
+{% block card_title %}Accounts List{% endblock %}
+
+{% block extra_content %}
+<div class="col-span-12 lg:col-span-4">
+    <div class="bg-white rounded-card p-6 shadow-sm border border-gray-100 h-full">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Account</h3>
+        <form action="{{ url_for('auth.add_account') }}" method="POST" class="space-y-4">
+            <div>
+                <label for="account_code" class="block text-sm font-medium text-gray-700">Account Code</label>
+                <input type="text" name="account_code" id="account_code" placeholder="e.g. 1010" required 
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+            </div>
+            <div>
+                <label for="account_name" class="block text-sm font-medium text-gray-700">Account Name</label>
+                <input type="text" name="account_name" id="account_name" placeholder="e.g. Cash on Hand" required 
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+            </div>
+            <div>
+                <label for="type" class="block text-sm font-medium text-gray-700">Account Type</label>
+                <select name="type" id="type" required 
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                    <option value="Asset">Asset</option>
+                    <option value="Liability">Liability</option>
+                    <option value="Equity">Equity</option>
+                    <option value="Revenue">Revenue</option>
+                    <option value="Expense">Expense</option>
+                </select>
+            </div>
+            <div class="pt-2">
+                <button type="submit" class="w-full inline-flex justify-center py-2.5 px-4 border border-transparent rounded-button shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-colors">
+                    <i class="ri-add-circle-line mr-2"></i> Add Account
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block card_content %}
+<div class="overflow-x-auto">
+    <table class="w-full text-sm text-left text-gray-600">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-3">Code</th>
+                <th scope="col" class="px-6 py-3">Account Name</th>
+                <th scope="col" class="px-6 py-3">Type</th>
+                <th scope="col" class="px-6 py-3 text-center">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+            <tr class="bg-white border-b hover:bg-gray-50 group">
+                <td class="px-6 py-4 font-mono text-gray-800 font-semibold">{{ account.account_code }}</td>
+                <td class="px-6 py-4 font-medium text-gray-900">{{ account.account_name }}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide
+                        {% if account.type == 'Asset' %}bg-green-100 text-green-800
+                        {% elif account.type == 'Liability' %}bg-red-100 text-red-800
+                        {% elif account.type == 'Equity' %}bg-blue-100 text-blue-800
+                        {% elif account.type == 'Revenue' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ account.type }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <form action="{{ url_for('auth.delete_account', id=account.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete {{ account.account_name }}? This action cannot be undone.');" class="inline-block">
+                        <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors p-1 rounded hover:bg-red-50" title="Delete Account">
+                            <i class="ri-delete-bin-line text-lg"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="px-6 py-10 text-center text-gray-500 italic">No accounts found in the chart.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

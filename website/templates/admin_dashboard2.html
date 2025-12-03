@@ -1,0 +1,298 @@
+
+{% extends "admin_base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+<div id="dashboardContent">
+    <!-- Active School Year Banner -->
+    <div class="bg-gradient-to-r from-blue-500 to-primary text-white p-4 sm:p-5 rounded-lg shadow-lg mb-8 flex justify-between items-center">
+        <div class="flex items-center">
+            <i class="ri-calendar-check-line text-3xl mr-4"></i>
+            <div>
+                <p class="text-sm uppercase tracking-wider">Active Academic Term</p>
+                <h2 class="text-2xl font-bold">{{ active_school_year }}</h2>
+            </div>
+        </div>
+        <a href="{{ url_for('auth.admin_manage_academic_term') }}" class="px-4 py-2 bg-white/20 text-white rounded text-xs font-semibold hover:bg-white/30 transition-colors">Manage</a>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Applications</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsTotal">{{ stats.total_applications if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg"><i class="ri-file-list-3-line ri-lg"></i></div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending Review</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsPending">{{ stats.pending if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-yellow-100 text-yellow-600 rounded-lg"><i class="ri-time-line ri-lg"></i></div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Approved (Awaiting Schedule)</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsApproved">{{ stats.approved if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-green-100 text-green-600 rounded-lg"><i class="ri-check-line ri-lg"></i></div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Scheduled for Exam</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsScheduled">{{ stats.scheduled if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-indigo-100 text-indigo-700 rounded-lg"><i class="ri-calendar-schedule-line ri-lg"></i></div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Did Not Attend Exam</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsNotTaken">{{ stats.not_taken if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-600 rounded-lg"><i class="ri-user-unfollow-line ri-lg"></i></div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Rejected</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsRejected">{{ stats.rejected if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-red-100 text-red-600 rounded-lg">
+                    <i class="ri-close-line ri-lg"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Passed</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsPassed">{{ stats.passed if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-teal-100 text-teal-600 rounded-lg">
+                    <i class="ri-shield-check-line ri-lg"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Failed</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1" id="statsFailed">{{ stats.failed if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-orange-100 text-orange-600 rounded-lg">
+                    <i class="ri-shield-cross-line ri-lg"></i>
+                </div>
+            </div>
+        </div>
+        <!-- New Enrollment Stats Cards -->
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Enrolling</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1">{{ stats.enrolling if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-purple-100 text-purple-600 rounded-lg"><i class="ri-user-follow-line ri-lg"></i></div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Enrolled</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1">{{ stats.enrolled if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-green-100 text-green-600 rounded-lg"><i class="ri-book-read-line ri-lg"></i></div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Dropped</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1">{{ stats.dropped if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-600 rounded-lg"><i class="ri-user-unfollow-line ri-lg"></i></div>
+            </div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Not Enrolled</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mt-1">{{ stats.not_enrolled if stats else '0' }}</h2>
+                </div>
+                <div class="w-10 h-10 flex items-center justify-center bg-orange-100 text-orange-600 rounded-lg"><i class="ri-user-search-line ri-lg"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Application Trends (Last 7 Months)</h3>
+            <div id="applicationChart" style="width: 100%; height: 300px;"></div>
+        </div>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Application Status Breakdown</h3>
+            <div id="statusChart" style="width: 100%; height: 300px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // **IMPORTANT**: The 'applications' and 'stats' variables MUST be passed from your Flask route to this template.
+    // The 'applications' data should be a list of application objects.
+    // Each application object *must* contain date fields like 'submitted_at' and 'last_updated_at' or 'decision_date'
+    // in a format JavaScript can parse (e.g., ISO 8601 string: "2024-05-21T10:00:00").
+    
+    const applicationsDataForCharts = {{ applications | tojson | safe if applications else '[]' }};
+    const statsDataForCharts = {{ stats | tojson | safe if stats else '{}' }};
+
+    // DEBUGGING: Check if application data is available in the browser.
+    // Open Developer Tools (F12) -> Console to see this output.
+    console.log(`Chart data loaded. Found ${applicationsDataForCharts.length} applications.`);
+    if (applicationsDataForCharts.length > 0) {
+        console.log("First application's date fields for charting:", {
+            submitted_at: applicationsDataForCharts[0].submitted_at,
+            date_of_application: applicationsDataForCharts[0].date_of_application,
+            decision_date: applicationsDataForCharts[0].decision_date,
+            last_updated_at: applicationsDataForCharts[0].last_updated_at
+        });
+    }
+
+    /**
+     * Calculates application trends for submissions vs. processed applications over the last few months.
+     * This robust version correctly counts processed applications based on their decision or update date.
+     */
+    function getApplicationTrends(applicationsInputData, numMonths = 7) {
+        const trends = { 
+            labels: [], 
+            submittedInMonth: new Array(numMonths).fill(0),
+            processedInMonth: new Array(numMonths).fill(0)
+        };
+        const now = new Date();
+        
+        for (let i = 0; i < numMonths; i++) {
+            // Loop backwards from the current month
+            const dateForLabel = new Date(now.getFullYear(), now.getMonth() - (numMonths - 1 - i), 1);
+            trends.labels.push(dateForLabel.toLocaleString('default', { month: 'short' }));
+
+            const targetYear = dateForLabel.getFullYear();
+            const targetMonth = dateForLabel.getMonth();
+
+            applicationsInputData.forEach(app => {
+                // 1. Count SUBMITTED applications for this month
+                const submissionDateStr = app.submitted_at || app.date_of_application;
+                if (submissionDateStr) {
+                    const submissionDate = new Date(submissionDateStr);
+                    // Check if the date is valid and falls into the target month/year
+                    if (!isNaN(submissionDate.getTime()) && submissionDate.getFullYear() === targetYear && submissionDate.getMonth() === targetMonth) {
+                        trends.submittedInMonth[i]++;
+                    }
+                }
+                
+                // 2. Count PROCESSED applications for this month
+                // A "processed" application has a final status beyond 'Pending'.
+                const isProcessed = ['Approved', 'Scheduled', 'Rejected', 'Passed', 'Failed'].includes(app.application_status);
+                
+                if (isProcessed) {
+                    // Use the most reliable date available: decision_date is ideal, last_updated_at is a good fallback.
+                    const processDateStr = app.decision_date || app.last_updated_at;
+                    
+                    if (processDateStr) {
+                        const processDate = new Date(processDateStr);
+                        // Check if the date is valid and falls into the target month/year
+                        if (!isNaN(processDate.getTime()) && processDate.getFullYear() === targetYear && processDate.getMonth() === targetMonth) {
+                            trends.processedInMonth[i]++;
+                        }
+                    }
+                }
+            });
+        }
+        return trends;
+    }
+
+    // Application Trend Chart (Bar Chart)
+    const applicationChartDom = document.getElementById('applicationChart');
+    if (applicationChartDom && typeof echarts !== 'undefined') { 
+        const applicationChartInstance = echarts.init(applicationChartDom);
+        const trendData = getApplicationTrends(applicationsDataForCharts);
+        const applicationOption = { 
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, 
+            legend: { 
+                data: ['Submitted', 'Processed'], 
+                top: '5%' 
+            }, 
+            grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true }, 
+            xAxis: { type: 'category', data: trendData.labels }, 
+            yAxis: { type: 'value', minInterval: 1 }, // Ensure y-axis shows whole numbers
+            series: [ 
+                { 
+                    name: 'Submitted', 
+                    type: 'bar', 
+                    barWidth: '30%', 
+                    color: '#4f46e5', // primary color
+                    data: trendData.submittedInMonth
+                }, 
+                { 
+                    name: 'Processed', 
+                    type: 'bar', 
+                    barWidth: '30%', 
+                    color: '#16a34a', // green
+                    data: trendData.processedInMonth
+                } 
+            ]
+        }; 
+        applicationChartInstance.setOption(applicationOption); 
+        window.addEventListener('resize', () => { applicationChartInstance.resize(); }); 
+    }
+
+    // Status Breakdown Chart (Pie Chart)
+    const statusChartDom = document.getElementById('statusChart');
+    if (statusChartDom && typeof echarts !== 'undefined') { 
+        const statusChartInstance = echarts.init(statusChartDom);
+        const statusOption = { 
+            tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' }, 
+            legend: { top: 'bottom', left: 'center' }, 
+            series: [{ 
+                name: 'Application Status', 
+                type: 'pie', 
+                radius: ['40%', '70%'], 
+                center: ['50%', '45%'], 
+                avoidLabelOverlap: false, 
+                itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 }, 
+                label: { show: false, position: 'center' }, 
+                emphasis: { label: { show: true, fontSize: '14', fontWeight: 'bold' } }, 
+                labelLine: { show: false }, 
+                data: [
+                    { value: statsDataForCharts.approved || 0, name: 'Approved', itemStyle: { color: '#16a34a' } },
+                    { value: statsDataForCharts.scheduled || 0, name: 'Scheduled', itemStyle: { color: '#4338ca' } },
+                    { value: statsDataForCharts.rejected || 0, name: 'Rejected', itemStyle: { color: '#dc2626' } },
+                    { value: statsDataForCharts.pending || 0, name: 'Pending', itemStyle: { color: '#ca8a04' } },
+                    { value: statsDataForCharts.passed || 0, name: 'Passed', itemStyle: { color: '#0d9488' } },
+                    { value: statsDataForCharts.failed || 0, name: 'Failed', itemStyle: { color: '#ea580c' } },
+                    { value: statsDataForCharts.not_taken || 0, name: 'Did Not Attend', itemStyle: { color: '#6b7280' } }
+                ].filter(item => item.value > 0) 
+            }]
+        }; 
+        statusChartInstance.setOption(statusOption); 
+        window.addEventListener('resize', () => { statusChartInstance.resize(); }); 
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,427 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Manage Grades for {{ student.first_name }} {{ student.last_name }}{% endblock %}
+
+{% block page_title %}Manage Student Grades{% endblock %}
+
+{% block breadcrumb %}
+    {% if student.application_status == 'Enrolling' %}
+        <a href="{{ url_for('auth.admin_enrolling_applications') }}" class="text-gray-500 hover:text-primary">Enrolling Applications</a>
+    {% elif student.application_status == 'Enrolled' %}
+        <a href="{{ url_for('auth.admin_enrolled_applications') }}" class="text-gray-500 hover:text-primary">Enrolled Students</a>
+    {% elif student.application_status == 'Dropped' %}
+        <a href="{{ url_for('auth.admin_dropped_applications') }}" class="text-gray-500 hover:text-primary">Dropped Students</a>
+    {% elif student.application_status == 'Not Enrolled' %}
+        <a href="{{ url_for('auth.admin_not_enrolled_applications') }}" class="text-gray-500 hover:text-primary">Not Enrolled Applications</a>
+    {% else %}
+         <a href="{{ url_for('auth.admin_all_applications') }}" class="text-gray-500 hover:text-primary">All Applications</a>
+    {% endif %}
+    <i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+    <span>Manage Grades</span>
+{% endblock %}
+
+{% block content %}
+<style>
+@media print {
+    body { background-color: #fff; }
+    .no-print, header, aside#sidebar, #sidebarBackdrop, .breadcrumb, #mainPageTitle, .swal2-container, .flex.justify-end a { display: none !important; }
+    #mainContentArea { margin-left: 0 !important; padding: 0 !important; }
+    .bg-white.p-6.rounded-lg { box-shadow: none; border: none; padding: 0; }
+    h3, h4 { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    table, th, td { border: 1px solid #ccc; }
+    input, select { border: none !important; box-shadow: none !important; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: transparent !important; padding: 2px; }
+    input:disabled, select:disabled { color: #999; }
+    form button[type="submit"] { display: none; }
+    .print-only { display: block !important; }
+}
+.print-only { display: none; }
+</style>
+
+<div class="bg-white p-6 rounded-lg shadow-md border border-gray-100 max-w-5xl mx-auto">
+    <!-- Header Section -->
+    <div class="flex items-start justify-between pb-4 border-b">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">{{ student.first_name }} {{ student.last_name }}</h2>
+            <p class="text-sm text-gray-500">Student ID: <span class="font-medium">
+                    {% if student.old_student_id %}
+                    {{ student.old_student_id }}
+                    {% else %}
+                    S-{{ "%05d" | format(student.student_user_id) }}
+                    {% endif %}
+                </span></p>
+            <p class="text-sm text-gray-500">Program: <span class="font-medium text-primary">{{ student.program_choice }}</span></p>
+            <p class="text-sm text-gray-500 mt-1">
+                Marks:
+                {% if student_academic_status == 'Regular' %}
+                <span class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Regular</span>
+                {% else %}
+                <span class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Irregular</span>
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            {# If user is Guidance/OSA OR the student is already Enrolled, go to Enrolled List #}
+            {% if session.user_role in ['guidance', 'osa'] or student.application_status == 'Enrolled' %}
+                <a href="{{ url_for('auth.admin_enrolled_applications') }}"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300 no-print">Back to List</a>
+            {% else %}
+                {# Otherwise (Admin/Registrar working on an Enrolling student), go to Enrolling List #}
+                <a href="{{ url_for('auth.admin_enrolling_applications') }}"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300 no-print">Back to List</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filter and Action Controls -->
+    <div class="my-6 p-4 bg-gray-50 rounded-lg border flex flex-wrap items-center gap-4 no-print">
+        <label for="yearLevelFilter" class="text-sm font-medium text-gray-700">Filter by Year Level:</label>
+        <select id="yearLevelFilter" class="border-gray-300 rounded-md shadow-sm sm:text-sm">
+            <option value="all">All Years</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+            <option value="5">5th Year</option>
+        </select>
+        <label for="semesterLevelFilter" class="text-sm font-medium text-gray-700">and Semester:</label>
+        <select id="semesterLevelFilter" class="border-gray-300 rounded-md shadow-sm sm:text-sm">
+            <option value="all">All Semesters</option>
+            <option value="1">1st Semester</option>
+            <option value="2">2nd Semester</option>
+            <option value="3">Summer / Midyear</option>
+        </select>
+        
+        <div class="flex-grow"></div>
+
+        <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden">
+        <button type="button" id="importExcelBtn" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700 flex items-center">
+            <i class="ri-file-upload-line mr-2"></i> Import
+        </button>
+
+        <a href="{{ url_for('auth.admin_export_grades', student_user_id=student.student_user_id) }}" id="exportExcelBtn"
+           class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 flex items-center">
+            <i class="ri-file-download-line mr-2"></i> Export
+        </a>
+
+        <button type="button" id="printGradesBtn" class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-gray-700 flex items-center">
+            <i class="ri-printer-line mr-2"></i> Print
+        </button>
+    </div>
+
+    <div id="print-header" class="print-only">
+        <h2 id="print-title" class="text-xl font-bold text-center my-4"></h2>
+    </div>
+
+    <form id="gradesForm" class="mt-6">
+        {% for year, semesters in subjects_by_year.items() %}
+        <div class="mb-8 year-section" data-year-level="{{ year }}">
+            <h3 class="text-xl font-semibold text-gray-800 mb-3 p-2 bg-gray-100 rounded">Year {{ year }}</h3>
+            {% for semester, subjects in semesters.items() %}
+            
+            <!-- Calculate Total Units -->
+            {% set total_sem_units = subjects | sum(attribute='units') %}
+            
+            <div class="mb-6 semester-section" data-semester-level="{{ semester }}">
+                <div class="flex justify-between items-center mb-2 border-b pb-1">
+                    <h4 class="text-md font-medium text-gray-700">
+                        {% if semester == 1 %}1st Semester
+                        {% elif semester == 2 %}2nd Semester
+                        {% else %}Summer / Midyear
+                        {% endif %}
+                    </h4>
+                    <!-- NEW: Unit Counter -->
+                    <div class="text-sm mr-2">
+                        <span class="font-semibold {{ 'text-red-600' if total_sem_units > max_units_allowed else 'text-green-600' }}">
+                            Total Units: {{ total_sem_units }}
+                        </span>
+                        <span class="text-gray-500"> / Max: {{ max_units_allowed }}</span>
+                        {% if total_sem_units > max_units_allowed %}
+                            <span class="text-xs text-red-500 ml-2"><i class="ri-error-warning-fill"></i> Overload!</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left font-medium text-gray-600">Code</th>
+                                <th class="px-4 py-2 text-left font-medium text-gray-600 w-1/3">Subject Title</th>
+                                <th class="px-4 py-2 text-center font-medium text-gray-600">Units</th>
+                                <th class="px-4 py-2 text-center font-medium text-gray-600">Grade</th>
+                                <th class="px-4 py-2 text-left font-medium text-gray-600">Remarks</th>
+                                <th class="px-4 py-2 text-left font-medium text-gray-600">Availability</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for subject in subjects %}
+                            {% set grade_info = student_grades.get(subject.id) %}
+                            {% set is_disabled = subject.id in disabled_subjects_info %}
+                            {% set reason = disabled_subjects_info.get(subject.id) %}
+                            
+                            <tr class="{{ 'bg-gray-100 opacity-60 cursor-not-allowed' if is_disabled else '' }}"
+                                title="{{ reason if is_disabled else '' }}">
+                                <td class="px-4 py-2 whitespace-nowrap font-mono">{{ subject.subject_code }}</td>
+                                <td class="px-4 py-2">{{ subject.subject_title }}</td>
+                                <td class="px-4 py-2 text-center text-gray-500">{{ subject.units }}</td>
+                                
+                                <!-- Grade Input -->
+                                <td class="px-4 py-2 text-center">
+                                    <input type="number" step="0.01" name="grade_{{ subject.id }}"
+                                        value="{{ grade_info.grade if grade_info else '' }}"
+                                        class="w-24 border-gray-300 rounded-md shadow-sm sm:text-sm grade-input text-center"
+                                        data-subject-id="{{ subject.id }}" {{ 'disabled' if is_disabled }}>
+                                </td>
+                                
+                                <!-- Remarks Dropdown -->
+                                <td class="px-4 py-2">
+                                    <select name="remarks_{{ subject.id }}"
+                                        class="border-gray-300 rounded-md shadow-sm sm:text-sm w-full" {{ 'disabled'
+                                        if is_disabled }}>
+                                        <option value="" {% if not grade_info %}selected{% endif %}>-</option>
+                                        <option value="Passed" {% if grade_info and grade_info.remarks=='Passed'
+                                            %}selected{% endif %}>Passed</option>
+                                        <option value="Failed" {% if grade_info and grade_info.remarks=='Failed'
+                                            %}selected{% endif %}>Failed</option>
+                                        <option value="Incomplete" {% if grade_info and grade_info.remarks=='Incomplete'
+                                            %}selected{% endif %}>Incomplete</option>
+                                        <option value="Withdrawn" {% if grade_info and grade_info.remarks=='Withdrawn'
+                                            %}selected{% endif %}>Withdrawn</option>
+                                    </select>
+                                </td>
+
+                                <!-- Hidden Inputs -->
+                                <input type="hidden" name="academic_year_{{ subject.id }}"
+                                    value="{{ grade_info.academic_year if grade_info else active_school_year if active_school_year else '2025-2026' }}">
+                                <input type="hidden" name="semester_taken_{{ subject.id }}"
+                                    value="{{ grade_info.semester if grade_info else ('1st Semester' if semester == 1 else ('2nd Semester' if semester == 2 else 'Summer / Midyear')) }}">
+
+                                <!-- Availability Status -->
+                                <td class="px-4 py-2 whitespace-nowrap">
+                                    {% if is_disabled %}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                            Unavailable
+                                        </span>
+                                    {% else %}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Available
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-gray-50 p-8 text-center rounded-lg border border-gray-200">
+            <p class="text-gray-500">No subjects found for this student's program. Please configure the curriculum first.</p>
+        </div>
+        {% endfor %}
+
+        <div class="mt-8 pt-6 border-t flex justify-end no-print">
+            <button type="submit"
+                class="px-6 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary/90 transition-colors">
+                <i class="ri-save-line mr-2"></i> Save Grades
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const gradesForm = document.getElementById('gradesForm');
+        const gradeInputs = document.querySelectorAll('.grade-input');
+        const studentName = "{{ student.first_name }} {{ student.last_name }}";
+
+        function updateRemarks(gradeInput) {
+            const grade = parseFloat(gradeInput.value);
+            const subjectId = gradeInput.dataset.subjectId;
+            const remarksSelect = document.querySelector(`select[name="remarks_${subjectId}"]`);
+
+            if (isNaN(grade) || gradeInput.value.trim() === '') {
+                // remarksSelect.value = "Incomplete"; // Optional: auto-set
+            } else if (grade >= 1.00 && grade <= 3.00) {
+                remarksSelect.value = "Passed";
+            } else if (grade > 3.00 && grade <= 5.00) {
+                remarksSelect.value = "Failed";
+            } else {
+                remarksSelect.value = "";
+            }
+        }
+
+        function formatGrade(gradeInput) {
+            const value = gradeInput.value;
+            if (value.trim() !== '' && !isNaN(value)) {
+                const num = parseFloat(value);
+                gradeInput.value = num.toFixed(2);
+            }
+        }
+
+        gradeInputs.forEach(input => {
+            input.addEventListener('input', function () { updateRemarks(this); });
+            input.addEventListener('blur', function () { formatGrade(this); });
+            if (input.value) { formatGrade(input); }
+        });
+
+        gradesForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const gradesData = [];
+            const allGradeInputsOnSubmit = document.querySelectorAll('.grade-input');
+
+            allGradeInputsOnSubmit.forEach(input => {
+                if (input.disabled) return;
+                const subjectId = input.dataset.subjectId;
+                const gradeValue = input.value.trim();
+                const grade = gradeValue === '' ? null : parseFloat(gradeValue);
+                const remarks = document.querySelector(`select[name="remarks_${subjectId}"]`).value;
+                const academicYear = document.querySelector(`input[name="academic_year_${subjectId}"]`).value;
+                const semesterTaken = document.querySelector(`input[name="semester_taken_${subjectId}"]`).value;
+                
+                // Only send if there is data to save (grade or remarks)
+                if (grade !== null || (remarks && remarks.trim() !== '')) {
+                    gradesData.push({ subject_id: subjectId, grade: grade, remarks: remarks, academic_year: academicYear, semester: semesterTaken });
+                }
+            });
+
+            try {
+                const response = await fetch("{{ url_for('auth.admin_save_grades', student_user_id=student.student_user_id) }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ grades: gradesData })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire({ title: 'Success!', text: data.message, icon: 'success', confirmButtonText: 'OK' })
+                    .then(() => { window.location.reload(); });
+                } else {
+                    throw new Error(data.message || 'An unknown error occurred.');
+                }
+            } catch (error) {
+                Swal.fire('Error!', error.message, 'error');
+            }
+        });
+
+        // --- Filter, Export, Print Logic ---
+        const yearLevelFilter = document.getElementById('yearLevelFilter');
+        const semesterLevelFilter = document.getElementById('semesterLevelFilter');
+        const printBtn = document.getElementById('printGradesBtn');
+        const exportBtn = document.getElementById('exportExcelBtn');
+        const baseExportUrl = "{{ url_for('auth.admin_export_grades', student_user_id=student.student_user_id) }}";
+
+        function filterGrades(selectedYear, selectedSemester) {
+            const yearSections = gradesForm.querySelectorAll('.year-section');
+            
+            yearSections.forEach(yearSection => {
+                const yearLevel = yearSection.dataset.yearLevel;
+                const yearMatch = selectedYear === 'all' || yearLevel === selectedYear;
+                
+                if (yearMatch) {
+                    yearSection.style.display = '';
+                    let yearHasVisibleSemesters = false;
+                    const semesterSections = yearSection.querySelectorAll('.semester-section');
+
+                    semesterSections.forEach(semesterSection => {
+                        const semesterLevel = semesterSection.dataset.semesterLevel;
+                        const semesterMatch = selectedSemester === 'all' || semesterLevel === selectedSemester;
+                        
+                        if (semesterMatch) {
+                            semesterSection.style.display = '';
+                            yearHasVisibleSemesters = true;
+                        } else {
+                            semesterSection.style.display = 'none';
+                        }
+                    });
+
+                    if (!yearHasVisibleSemesters) {
+                        yearSection.style.display = 'none';
+                    }
+                } else {
+                    yearSection.style.display = 'none';
+                }
+            });
+
+            // Update Export Link
+            const newExportUrl = new URL(baseExportUrl, window.location.origin);
+            newExportUrl.searchParams.set('year', selectedYear);
+            newExportUrl.searchParams.set('semester', selectedSemester);
+            if(exportBtn) exportBtn.href = newExportUrl.toString();
+        }
+
+        function applyFilters() {
+            filterGrades(yearLevelFilter.value, semesterLevelFilter.value);
+        }
+
+        if(yearLevelFilter) yearLevelFilter.addEventListener('change', applyFilters);
+        if(semesterLevelFilter) semesterLevelFilter.addEventListener('change', applyFilters);
+
+        if(printBtn) {
+            printBtn.addEventListener('click', () => {
+                const printTitleEl = document.getElementById('print-title');
+                if(printTitleEl) printTitleEl.textContent = `Grades for ${studentName}`;
+                window.print();
+            });
+        }
+
+        window.addEventListener('afterprint', () => {
+            const printTitleEl = document.getElementById('print-title');
+            if(printTitleEl) printTitleEl.textContent = '';
+        });
+
+        // --- Import Logic ---
+        const importBtn = document.getElementById('importExcelBtn');
+        const importInput = document.getElementById('importExcelInput');
+
+        if(importBtn && importInput) {
+            importBtn.addEventListener('click', () => {
+                importInput.click();
+            });
+
+            importInput.addEventListener('change', async function() {
+                if (this.files.length === 0) return;
+
+                const file = this.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const originalText = importBtn.innerHTML;
+                importBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i> Importing...';
+                importBtn.disabled = true;
+
+                try {
+                    const response = await fetch("{{ url_for('auth.admin_import_grades', student_user_id=student.student_user_id) }}", {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Grades imported successfully.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('Import Failed', data.message, 'error');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire('Error', 'An unexpected error occurred during import.', 'error');
+                } finally {
+                    importBtn.innerHTML = originalText;
+                    importBtn.disabled = false;
+                    importInput.value = '';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

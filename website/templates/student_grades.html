@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}My Grades{% endblock %}
+
+{% block style %}
+<style>
+    body {
+        background-color: #f9fafb;
+    }
+    .term-header {
+        background-color: #eef2ff;
+        color: #4338ca;
+        padding: 0.75rem 1rem;
+        border-left: 4px solid #4f46e5;
+    }
+    @media print {
+        body {
+            background-color: #fff;
+        }
+        .no-print, header, footer {
+            display: none !important;
+        }
+        .print-container {
+            box-shadow: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .print-title {
+            display: block !important;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        thead {
+            background-color: #f3f4f6 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .term-header {
+            background-color: #eef2ff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+    .print-only {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<body class="min-h-screen">
+    
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg print-container">
+            <!-- Header for both screen and print -->
+            <div class="text-center mb-6 print-title">
+                <h1 class="text-2xl font-bold text-gray-900">Transcript of Records</h1>
+                <p class="text-gray-600">Student: {{ student.first_name }} {{ student.last_name }}</p>
+                <p class="text-gray-600">Student ID: {{ student.old_student_id or ('S-' ~ '%05d'|format(student.student_user_id)) }}</p>
+                <p class="text-gray-600">Program: {{ student.program_choice }}</p>
+            </div>
+
+            <!-- Action Buttons (No Print) -->
+            <div class="flex justify-between items-center mb-6 no-print">
+                <a href="{{ url_for('views.application_status_page') }}" class="inline-flex items-center text-sm font-medium text-blue-600 hover:underline">
+                    <i class="ri-arrow-left-line mr-1"></i> Back to Status
+                </a>
+                <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-md hover:bg-primary/90">
+                    <i class="ri-printer-line mr-2"></i> Print Grades
+                </button>
+            </div>
+
+            <!-- MODIFIED: Grades Content - Loop through terms -->
+            {% if grades_by_term %}
+                <div class="space-y-8">
+                    {% for term, grades in grades_by_term.items() %}
+                    <div class="term-section">
+                        <h2 class="text-lg font-semibold mb-3 term-header rounded-md">
+                            {{ term }}
+                        </h2>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full border-collapse border border-gray-300">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="border border-gray-300 p-3 text-left text-sm font-semibold text-gray-700">Subject Code</th>
+                                        <th class="border border-gray-300 p-3 text-left text-sm font-semibold text-gray-700">Subject Title</th>
+                                        <th class="border border-gray-300 p-3 text-center text-sm font-semibold text-gray-700">Grade</th>
+                                        <th class="border border-gray-300 p-3 text-left text-sm font-semibold text-gray-700">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for grade in grades %}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="border border-gray-300 p-3 font-mono">{{ grade.subject_code }}</td>
+                                        <td class="border border-gray-300 p-3">{{ grade.subject_title }}</td>
+                                        <td class="border border-gray-300 p-3 text-center font-semibold">
+                                            {% if grade.grade and grade.grade > 0 %}
+                                                {{ '%.2f'|format(grade.grade) }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td class="border border-gray-300 p-3">{{ grade.remarks or 'Incomplete' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 italic mt-4 text-center">No grades have been recorded for your account yet.</p>
+            {% endif %}
+        </div>
+    </main>
+</body>
+{% endblock %}

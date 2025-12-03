@@ -1,0 +1,108 @@
+{% extends base_template %}
+{% block title %}Cashier Dashboard{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<!-- ... (rest of the file remains exactly the same) ... -->
+    <!-- Stats Cards -->
+    <div class="bg-white p-6 rounded-card shadow-soft border border-gray-100">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-500 text-xs uppercase font-bold">Today's Collection</p>
+                <h3 class="text-2xl font-bold text-gray-800 mt-1">₱{{ "{:,.2f}".format(stats.today_collections) }}</h3>
+            </div>
+            <div class="p-2 bg-green-100 text-green-600 rounded-lg"><i class="ri-money-dollar-circle-line text-xl"></i></div>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-card shadow-soft border border-gray-100">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-500 text-xs uppercase font-bold">Monthly Collection</p>
+                <h3 class="text-2xl font-bold text-gray-800 mt-1">₱{{ "{:,.2f}".format(stats.monthly_collections) }}</h3>
+            </div>
+            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg"><i class="ri-calendar-check-line text-xl"></i></div>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-card shadow-soft border border-gray-100">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-500 text-xs uppercase font-bold">Enrolled Students</p>
+                <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ stats.total_students }}</h3>
+            </div>
+            <div class="p-2 bg-purple-100 text-purple-600 rounded-lg"><i class="ri-group-line text-xl"></i></div>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-card shadow-soft border border-gray-100">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-500 text-xs uppercase font-bold">Local Residents</p>
+                <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ stats.padre_garcia_students }}</h3>
+            </div>
+            <div class="p-2 bg-orange-100 text-orange-600 rounded-lg"><i class="ri-map-pin-user-line text-xl"></i></div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Recent Transactions -->
+    <div class="lg:col-span-2 bg-white rounded-card shadow-soft border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Recent Payments</h3>
+            <a href="{{ url_for('auth.student_records') }}" class="text-sm text-primary hover:underline">View All</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 uppercase bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3">Student</th>
+                        <th class="px-6 py-3">Amount</th>
+                        <th class="px-6 py-3">Remark</th>
+                        <th class="px-6 py-3">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for activity in recent_activities %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-3 font-medium text-gray-900">{{ activity.student.last_name }}, {{ activity.student.first_name }}</td>
+                        <td class="px-6 py-3 text-green-600 font-bold">₱{{ "{:,.2f}".format(activity.amount_paid) }}</td>
+                        <td class="px-6 py-3">{{ activity.remark }}</td>
+                        <td class="px-6 py-3 text-gray-500">{{ activity.payment_date.strftime('%b %d') if activity.payment_date else 'Today' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No recent payments.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-card shadow-soft border border-gray-100 p-6">
+        <h3 class="font-bold text-gray-800 mb-4">Quick Actions</h3>
+        <div class="space-y-3">
+            <a href="{{ url_for('auth.student_records') }}" class="block p-3 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-colors group">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-100 text-blue-600 rounded-md group-hover:bg-blue-200"><i class="ri-secure-payment-line"></i></div>
+                    <div>
+                        <p class="font-semibold text-gray-800 text-sm">Record Payment</p>
+                        <p class="text-xs text-gray-500">Accept tuition or fees</p>
+                    </div>
+                </div>
+            </a>
+            <a href="{{ url_for('auth.create_batch_assessment') }}" class="block p-3 border border-gray-200 rounded-lg hover:bg-purple-50 hover:border-purple-200 transition-colors group">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-purple-100 text-purple-600 rounded-md group-hover:bg-purple-200"><i class="ri-file-add-line"></i></div>
+                    <div>
+                        <p class="font-semibold text-gray-800 text-sm">Add Assessment</p>
+                        <p class="text-xs text-gray-500">Create fees for students</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

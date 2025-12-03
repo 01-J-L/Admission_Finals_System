@@ -1,0 +1,360 @@
+
+
+{% extends "admin_base.html" %}
+
+{% block title %}All Applications{% endblock %}
+{% block page_title %}All Applications{% endblock %}
+{% block breadcrumb %}All Applications{% endblock %}
+
+{% block content %}
+<div id="applicationsContent" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100"
+    data-page-context="{{ active_page }}">
+    
+    <!-- Fixed Header Layout -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h3 id="mainPageTitle" class="text-xl font-semibold text-gray-800">{{ page_title }}</h3>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('auth.admin_export_applications_list', export_type='all') }}"
+                class="px-4 py-2 bg-green-600 text-white rounded text-sm font-medium !rounded-button flex items-center hover:bg-green-700 transition-colors">
+                <i class="ri-file-excel-2-line mr-2"></i>Export Excel
+            </a>
+            <button id="printReportBtn"
+                class="px-4 py-2 bg-primary text-white rounded text-sm font-medium !rounded-button flex items-center hover:bg-primary/90 transition-colors">
+                <i class="ri-printer-line mr-2"></i>Print Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="bg-gray-50 p-4 rounded shadow-inner border border-gray-200 mb-6 filter-bar">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 items-end">
+            <!-- School Year Filter -->
+            <div class="col-span-1 md:col-span-2 lg:col-span-1">
+                <label for="schoolYearFilter" class="text-sm font-medium text-gray-700">School Year:</label>
+                <select id="schoolYearFilter"
+                    class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    <option value="">All Years</option>
+                    {% for sy in all_school_years %}
+                    <option value="{{ sy.year_name }}" {% if selected_school_year==sy.year_name %}selected{% endif %}>{{
+                        sy.year_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Date Filters -->
+            <div class="col-span-1 md:col-span-2 lg:col-span-2">
+                <span id="dateFilterLabel" class="text-sm font-medium text-gray-700 mb-2 block">Filter by Submission
+                    Date:</span>
+                <div class="flex items-center space-x-4">
+                    <div class="flex-1"><label for="startDateFilter" class="text-xs text-gray-600">From:</label><input
+                            type="date" id="startDateFilter" name="startDateFilter"
+                            class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    </div>
+                    <div class="flex-1"><label for="endDateFilter" class="text-xs text-gray-600">To:</label><input
+                            type="date" id="endDateFilter" name="endDateFilter"
+                            class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Program Filter -->
+            <div class="col-span-1">
+                <label for="programFilter" class="text-sm font-medium text-gray-700">Program:</label>
+                <select id="programFilter" name="programFilter"
+                    class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    <option value="all">All Programs</option>
+                    {% for program in programs %}
+                    <option value="{{ program.title }}">{{ program.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Gender Filter -->
+            <div class="col-span-1">
+                <label class="text-sm font-medium text-gray-700 block mb-2">Gender:</label>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center"><input type="radio" id="genderFilterAll" name="genderFilter"
+                            value="All" checked><label for="genderFilterAll"
+                            class="text-sm text-gray-600 ml-1">All</label></div>
+                    <div class="flex items-center"><input type="radio" id="genderFilterMale" name="genderFilter"
+                            value="Male"><label for="genderFilterMale" class="text-sm text-gray-600 ml-1">Male</label>
+                    </div>
+                    <div class="flex items-center"><input type="radio" id="genderFilterFemale" name="genderFilter"
+                            value="Female"><label for="genderFilterFemale"
+                            class="text-sm text-gray-600 ml-1">Female</label></div>
+                </div>
+            </div>
+
+            <!-- Location Filter -->
+            <div class="col-span-1">
+                <label class="text-sm font-medium text-gray-700 block mb-2">Location:</label>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center"><input type="radio" id="locationFilterAll" name="locationFilter"
+                            value="All" checked><label for="locationFilterAll"
+                            class="text-sm text-gray-600 ml-1">All</label></div>
+                    <div class="flex items-center"><input type="radio" id="locationFilterGarciano" name="locationFilter"
+                            value="Garciano"><label for="locationFilterGarciano"
+                            class="text-sm text-gray-600 ml-1">Garciano</label></div>
+                    <div class="flex items-center"><input type="radio" id="locationFilterNonGarciano"
+                            name="locationFilter" value="Non-Garciano"><label for="locationFilterNonGarciano"
+                            class="text-sm text-gray-600 ml-1">Non-Garciano</label></div>
+                </div>
+            </div>
+
+            <!-- Clear Button -->
+            <div class="col-span-1 flex items-end">
+                <button id="clearFiltersBtn"
+                    class="w-full px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-medium !rounded-button hover:bg-gray-300 flex items-center justify-center">
+                    <i class="ri-filter-off-line mr-1"></i> Clear All Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="overflow-x-auto custom-scrollbar">
+        <table class="min-w-full divide-y divide-gray-200" id="applicationsTable">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ID</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Applicant</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                        Program</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        Submission Date</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider no-print">
+                        Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% if applications %}
+                {% for app in applications %}
+                {% set display_id = app.old_student_id or app.control_number or ('App #' ~ app.applicant_id) %}
+                <tr class="hover:bg-gray-50" data-applicant-id="{{ app.applicant_id }}"
+                    data-gender="{{ app.sex or '' }}"
+                    data-submission-date="{{ (app.submitted_at or app.date_of_application).strftime('%Y-%m-%d') if (app.submitted_at or app.date_of_application) else '' }}"
+                    data-exam-date="{{ app.permit_exam_date.strftime('%Y-%m-%d') if app.permit_exam_date else '' }}"
+                    data-program="{{ app.program_choice }}" data-program-id="{{ app.program_id | default('N/A') }}"
+                    data-address="{{ app.permanent_address_city_municipality | lower | e if app.permanent_address_city_municipality else '' }}"
+                    data-old-student-id="{{ app.old_student_id or '' }}"
+                    data-control-number="{{ app.control_number or '' }}" data-display-id="{{ display_id }}"
+                    data-search-string="{{ [
+                        app.first_name, app.last_name, 'p2025' ~ '%04d'|format(app.applicant_id), app.old_student_id, app.control_number,
+                        app.citizenship, app.civil_status, app.religion,
+                        app.permanent_address_street_barangay, app.permanent_address_city_municipality, app.permanent_address_province,
+                        app.father_name, app.mother_maiden_name, app.senior_high_school,
+                        app.average_family_income, app.senior_high_school_track_strand
+                    ] | join(' ') | lower | e }}">
+
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                        {{ display_id }}
+                    </td>
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div
+                                class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-medium">{{ app.first_name[0] if app.first_name else 'N' }}{{
+                                    app.last_name[0] if app.last_name else 'A' }}</span>
+                            </div>
+                            <div class="ml-3">
+                                <!-- CHANGED: Name Format -->
+                                <p class="text-sm font-medium text-gray-900 applicant-name">
+                                    {{ app.last_name | title }}, {{ app.first_name | title }} {% if app.middle_name %}{{ app.middle_name[0]|upper }}.{% endif %}
+                                </p>
+                                <p class="text-xs sm:text-sm text-gray-500 applicant-email">{{ app.student_account_email
+                                    or app.email_address or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td
+                        class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 applicant-program hidden sm:table-cell">
+                        {{ app.program_choice or 'N/A' }}</td>
+                    <td
+                        class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 submission-date-cell hidden md:table-cell">
+                        {{ app.submitted_at.strftime('%b %d, %Y %I:%M %p') if app.submitted_at else
+                        (app.date_of_application.strftime('%b %d, %Y') if app.date_of_application else 'N/A') }}
+                    </td>
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap status-cell">
+                        {% set has_permit_details = app.permit_exam_date and app.permit_exam_time and
+                        app.permit_testing_room %}
+                        {% set db_status = app.application_status | lower | replace(' ', '_') %}
+                        {% set effective_status_display = 'scheduled' if (db_status == 'approved' and
+                        has_permit_details) or db_status == 'scheduled' else db_status %}
+
+                        {% if effective_status_display == 'approved' %}{% set status_class = 'bg-green-100
+                        text-green-800' %}
+                        {% elif effective_status_display == 'scheduled' %}{% set status_class = 'bg-indigo-100
+                        text-indigo-800' %}
+                        {% elif effective_status_display == 'rejected' %}{% set status_class = 'bg-red-100 text-red-800'
+                        %}
+                        {% elif db_status == 'in_review' %}{% set status_class = 'bg-blue-100 text-blue-800' %}
+                        {% elif effective_status_display == 'pending' %}{% set status_class = 'bg-yellow-100
+                        text-yellow-800' %}
+                        {% elif effective_status_display == 'passed' %}{% set status_class = 'bg-teal-100 text-teal-800'
+                        %}
+                        {% elif effective_status_display == 'failed' %}{% set status_class = 'bg-orange-100
+                        text-orange-800' %}
+                        {% elif effective_status_display == 'eligible_for_enrollment' %}{% set status_class =
+                        'bg-purple-50 text-purple-600 border border-purple-200' %}
+                        {% elif effective_status_display == 'enrolling' %}{% set status_class = 'bg-purple-100
+                        text-purple-800' %}
+                        {% elif effective_status_display == 'enrolled' %}{% set status_class = 'bg-green-100
+                        text-green-800' %}
+                        {% elif effective_status_display == 'dropped' %}{% set status_class = 'bg-gray-100
+                        text-gray-800' %}
+                        {% else %}{% set status_class = 'bg-gray-100 text-gray-800' %}{% endif %}
+
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge {{ status_class }}">{{
+                            effective_status_display | replace('_', ' ') | title }}</span>
+                    </td>
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-500 text-right no-print">
+                        <div class="flex space-x-1 justify-end items-center">
+                            <a href="{{ url_for('auth.admin_view_application_page', applicant_id=app.applicant_id) }}"
+                                class="text-gray-500 hover:text-blue-600 p-0.5 sm:p-1" title="View Full Page"><i
+                                    class="ri-external-link-line ri-lg"></i></a>
+                            <a href="{{ url_for('auth.admin_print_application_form', applicant_id=app.applicant_id) }}"
+                                target="_blank" class="text-gray-500 hover:text-green-500 p-0.5 sm:p-1 action-print"
+                                title="Print Application Form"><i class="ri-printer-line ri-lg"></i></a>
+                            <button class="text-gray-500 hover:text-yellow-600 p-0.5 sm:p-1 action-admin-notes"
+                                title="Admin Notes" data-id="{{ display_id }}"><i
+                                    class="ri-sticky-note-line ri-lg"></i></button>
+                            <button class="text-gray-500 hover:text-teal-600 p-0.5 sm:p-1 action-permit-details"
+                                title="Permit Details" data-id="{{ display_id }}"><i
+                                    class="ri-ticket-line ri-lg"></i></button>
+
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No
+                        applications found.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- JavaScript block from base remains valid -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const startDateFilter = document.getElementById('startDateFilter');
+        const endDateFilter = document.getElementById('endDateFilter');
+        const programFilter = document.getElementById('programFilter');
+        const genderFilters = document.querySelectorAll('input[name="genderFilter"]');
+        const locationFilters = document.querySelectorAll('input[name="locationFilter"]');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        const tableRows = document.querySelectorAll('#applicationsTable tbody tr[data-applicant-id]');
+        const schoolYearFilter = document.getElementById('schoolYearFilter');
+        
+        if (schoolYearFilter) {
+            schoolYearFilter.addEventListener('change', () => {
+                const selectedYear = schoolYearFilter.value;
+                const currentUrl = new URL(window.location.href);
+                if (selectedYear) { currentUrl.searchParams.set('sy', selectedYear); } 
+                else { currentUrl.searchParams.delete('sy'); }
+                window.location.href = currentUrl.toString();
+            });
+        }
+
+        function applyAllFilters() {
+            if (!tableRows || tableRows.length === 0) return;
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            const startDate = startDateFilter?.value;
+            const endDate = endDateFilter?.value;
+            const program = programFilter?.value;
+            const gender = document.querySelector('input[name="genderFilter"]:checked')?.value;
+            const location = document.querySelector('input[name="locationFilter"]:checked')?.value;
+            
+            let visibleCount = 0;
+            const tableBody = document.querySelector('#applicationsTable tbody');
+
+            tableRows.forEach(row => {
+                const searchMatch = (
+                        (row.dataset.searchString || '').toLowerCase().includes(searchTerm) ||
+                        (row.querySelector('.applicant-name')?.textContent.toLowerCase() || '').includes(searchTerm) ||
+                        (row.querySelector('.applicant-email')?.textContent.toLowerCase() || '').includes(searchTerm) ||
+                        `p2025${(row.dataset.applicantId || '').padStart(4, '0')}`.toLowerCase().includes(searchTerm) ||
+                        (row.dataset.oldStudentId || '').toLowerCase().includes(searchTerm)
+                    );
+
+                let dateMatch = true;
+                if (startDate || endDate) {
+                     const subDate = row.dataset.submissionDate;
+                     if (!subDate) dateMatch = false;
+                     else {
+                        if (startDate && subDate < startDate) dateMatch = false;
+                        if (endDate && subDate > endDate) dateMatch = false;
+                     }
+                }
+
+                let programMatch = true;
+                if (program && program !== 'all') {
+                    if (row.dataset.program !== program) programMatch = false;
+                }
+
+                let genderMatch = true;
+                if (gender && gender !== 'All') {
+                     if ((row.dataset.gender || '').toLowerCase() !== gender.toLowerCase()) genderMatch = false;
+                }
+
+                let locationMatch = true;
+                if (location && location !== 'All') {
+                    const address = row.dataset.address || '';
+                    const isGarciano = address.includes('padre garcia');
+                    if (location === 'Garciano' && !isGarciano) locationMatch = false;
+                    else if (location === 'Non-Garciano' && isGarciano) locationMatch = false;
+                }
+
+                if (searchMatch && dateMatch && programMatch && genderMatch && locationMatch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            let noResultsRow = tableBody.querySelector('.no-results-message');
+            if (noResultsRow) noResultsRow.remove();
+            if (visibleCount === 0) {
+                const colspan = tableBody.parentElement.querySelector('thead th').length;
+                const newRow = tableBody.insertRow();
+                newRow.className = 'no-results-message';
+                newRow.innerHTML = `<td colspan="${colspan}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No applications match the current filters.</td>`;
+            }
+        }
+
+        if (searchInput) searchInput.addEventListener('input', applyAllFilters);
+        if (startDateFilter) startDateFilter.addEventListener('change', applyAllFilters);
+        if (endDateFilter) endDateFilter.addEventListener('change', applyAllFilters);
+        if (programFilter) programFilter.addEventListener('change', applyAllFilters);
+        genderFilters.forEach(r => r.addEventListener('change', applyAllFilters));
+        locationFilters.forEach(r => r.addEventListener('change', applyAllFilters));
+
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => {
+                if (searchInput) searchInput.value = '';
+                if (startDateFilter) startDateFilter.value = '';
+                if (endDateFilter) endDateFilter.value = '';
+                if (programFilter) programFilter.value = 'all';
+                document.getElementById('genderFilterAll').checked = true;
+                document.getElementById('locationFilterAll').checked = true;
+                applyAllFilters();
+            });
+        }
+    });
+</script>
+{% endblock %}

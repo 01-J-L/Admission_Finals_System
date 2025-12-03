@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt #{{ payment.receipt_number }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;700&display=swap');
+
+        :root {
+            --width: 4.1in;
+            --height: 8.1in;
+            --border-color: #000;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #525659;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+        }
+
+        .receipt-container {
+            width: var(--width);
+            height: var(--height);
+            background: white;
+            margin: 20px;
+            box-sizing: border-box;
+            border: 1px solid transparent; /* Hidden border for screen */
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            color: #000;
+        }
+
+        /* General Utilities */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-bold { font-weight: bold; }
+        .uppercase { text-transform: uppercase; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-1 { flex: 1; }
+        
+        /* Borders */
+        .border-all { border: 1px solid var(--border-color); }
+        .border-b { border-bottom: 1px solid var(--border-color); }
+        .border-t { border-top: 1px solid var(--border-color); }
+        .border-l { border-left: 1px solid var(--border-color); }
+        .border-r { border-right: 1px solid var(--border-color); }
+
+        /* HEADER SECTION */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 5px;
+            font-size: 10px;
+        }
+        .header-text {
+            text-align: center;
+            flex: 1;
+        }
+        .logo-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .form-no {
+            font-size: 8px;
+            font-style: italic;
+        }
+
+        /* META SECTION (Receipt No, Date) */
+        .meta-grid {
+            display: flex;
+        }
+        .meta-left {
+            width: 50%;
+            padding: 2px 5px;
+            font-size: 8px;
+            border-right: 1px solid var(--border-color);
+        }
+        .meta-right {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+        }
+        .receipt-label {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            background: #eee; /* Slight shading like original */
+            border-bottom: 1px solid var(--border-color);
+        }
+        .receipt-value {
+            text-align: center;
+            font-size: 14px;
+            color: #d00; /* Red receipt number */
+            font-weight: bold;
+            padding: 4px;
+        }
+        .date-box {
+            display: flex;
+            border-top: 1px solid var(--border-color);
+        }
+        .date-label {
+            font-size: 8px;
+            padding: 2px 5px;
+            border-right: 1px solid var(--border-color);
+            width: 40px;
+        }
+        .date-value {
+            font-size: 10px;
+            padding: 2px 5px;
+            font-weight: bold;
+            flex: 1;
+            text-align: center;
+        }
+
+        /* PAYOR SECTION */
+        .payor-section {
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 5px;
+        }
+        .payor-label { font-size: 8px; color: #555; }
+        .payor-name { 
+            font-size: 11px; 
+            font-weight: bold; 
+            text-align: center; 
+            padding: 2px 0;
+        }
+
+        /* TABLE SECTION */
+        .collection-table {
+            display: flex;
+            flex-direction: column;
+            flex: 1; /* Takes available space */
+        }
+        .table-header {
+            display: flex;
+            font-size: 8px;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .col-nature { width: 50%; border-right: 1px solid var(--border-color); padding: 2px; }
+        .col-code { width: 20%; border-right: 1px solid var(--border-color); padding: 2px; }
+        .col-amount { width: 30%; padding: 2px; }
+
+        .table-body {
+            display: flex;
+            flex: 1; /* Stretches down */
+            position: relative;
+        }
+        /* Vertical lines for table body */
+        .line-nature { width: 50%; border-right: 1px solid var(--border-color); height: 100%; }
+        .line-code { width: 20%; border-right: 1px solid var(--border-color); height: 100%; }
+        .line-amount { width: 30%; height: 100%; }
+
+        /* Absolute positioning for data to overlay grid lines */
+        .table-data-row {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            display: flex;
+            font-size: 10px;
+        }
+        .data-nature { width: 50%; padding-left: 5px; font-weight: bold; }
+        .data-code { width: 20%; text-align: center; }
+        .data-amount { width: 30%; text-align: right; padding-right: 5px; font-weight: bold;}
+
+        /* TOTALS */
+        .amount-words-section {
+            border-top: 1px solid var(--border-color);
+            padding: 5px;
+            min-height: 30px;
+        }
+        .words-label { font-size: 8px; }
+        .words-value { font-size: 10px; font-style: italic; text-align: center; margin-top: 2px; }
+
+        /* FOOTER */
+        .footer {
+            display: flex;
+            border-top: 1px solid var(--border-color);
+            height: 150px; /* Fixed height for footer area */
+        }
+        .footer-left {
+            width: 50%;
+            border-right: 1px solid var(--border-color);
+            padding: 5px;
+            font-size: 8px;
+        }
+        .footer-right {
+            width: 50%;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+        .checkbox-box {
+            width: 8px;
+            height: 8px;
+            border: 1px solid #000;
+            margin-right: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+        }
+
+        .payment-details {
+            margin-top: 10px;
+            font-size: 8px;
+        }
+        .payment-line {
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 8px;
+            padding-bottom: 1px;
+        }
+
+        .signatory-title { font-size: 8px; margin-bottom: 25px; text-align: center; }
+        .signatory-name { font-size: 10px; font-weight: bold; text-decoration: underline; }
+        .signatory-role { font-size: 8px; margin-bottom: 20px; }
+
+        /* Action Buttons */
+        .actions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-print { background: #000; color: white; }
+        .btn-back { background: #fff; color: #000; }
+
+        @media print {
+            @page {
+                size: 4.1in 8.1in;
+                margin: 0;
+            }
+            body {
+                background: none;
+                display: block;
+            }
+            .receipt-container {
+                margin: 0;
+                box-shadow: none;
+                border: none; /* Remove outer border for print */
+                width: 100%;
+                height: 100%;
+            }
+            .actions { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="actions">
+        <a href="{{ url_for('auth.update_payment', student_id_db=payment.student_id) }}" class="btn btn-back">Back</a>
+        <button onclick="window.print()" class="btn btn-print">Print Receipt</button>
+    </div>
+
+    <!-- MAIN RECEIPT CONTAINER -->
+    <div class="receipt-container border-all">
+        
+        <!-- HEADER -->
+        <div class="header border-b">
+            <!-- Generic Seal Left -->
+            <img src="{{ url_for('static', filename='pgpc_logo.png') }}" class="logo-placeholder">
+            
+            <div class="header-text">
+                <div class="uppercase font-bold" style="font-size: 14px;">Official Receipt</div>
+                <div style="font-size: 9px;">Republic of the Philippines</div>
+                <div style="font-size: 9px;">Province of Batangas</div>
+                <div style="font-size: 9px; font-weight: bold;">OFFICE OF THE TREASURER</div>
+                <div class="uppercase font-bold" style="margin-top: 5px; font-size: 11px;">PADRE GARCIA</div>
+                <div style="font-size: 8px; margin-top: 2px;">MUNICIPALITY</div>
+            </div>
+
+            <!-- Generic Seal Right -->
+            <img src="{{ url_for('static', filename='pgpc_logo.png') }}" class="logo-placeholder">
+        </div>
+
+        <!-- META DATA -->
+        <div class="meta-grid border-b">
+            <div class="meta-left">
+                <div>Accountable Form No. 51</div>
+                <div class="form-no">Revised January, 1992</div>
+            </div>
+            <div class="meta-right">
+                <div class="receipt-label">ORIGINAL</div>
+                <div class="receipt-value">No. BTG {{ payment.receipt_number.split('-')[-1] }}</div> <!-- Shows only last sequence -->
+                <div class="date-box">
+                    <div class="date-label">DATE</div>
+                    <div class="date-value">{{ payment.payment_date.strftime('%m/%d/%y') }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAYOR -->
+        <div class="payor-section">
+            <div class="payor-label">PAYOR</div>
+            <div class="payor-name uppercase">{{ payment.student.last_name }}, {{ payment.student.first_name }}</div>
+        </div>
+
+        <!-- COLLECTION TABLE -->
+        <div class="collection-table">
+            <div class="table-header">
+                <div class="col-nature">NATURE OF COLLECTION</div>
+                <div class="col-code">FUND AND<br>ACCOUNT<br>CODE</div>
+                <div class="col-amount">AMOUNT</div>
+            </div>
+            
+            <div class="table-body">
+                <!-- Vertical Lines -->
+                <div class="line-nature"></div>
+                <div class="line-code"></div>
+                <div class="line-amount"></div>
+
+                <!-- Data (Overlay) -->
+                <div class="table-data-row">
+                    <div class="data-nature uppercase">
+                        {{ payment.assessment.description if payment.assessment else 'School Fees' }}
+                        {% if payment.remark %}
+                        <br><span style="font-weight: normal; font-size: 9px;">({{ payment.remark }})</span>
+                        {% endif %}
+                    </div>
+                    <div class="data-code">
+                        <!-- Placeholder Code -->
+                    </div>
+                    <div class="data-amount">
+                        {{ "{:,.2f}".format(payment.amount_paid) }}
+                    </div>
+                </div>
+
+                 <!-- Total Row Overlay (Positioned at bottom of table area) -->
+                 <div style="position: absolute; bottom: 5px; width: 100%; display: flex; font-weight: bold; font-size: 10px;">
+                    <div style="width: 70%; text-align: right; padding-right: 5px;">TOTAL</div>
+                    <div style="width: 30%; text-align: right; padding-right: 5px;">{{ "{:,.2f}".format(payment.amount_paid) }}</div>
+                 </div>
+            </div>
+        </div>
+
+        <!-- AMOUNT IN WORDS -->
+        <div class="amount-words-section border-t">
+            <div class="words-label">AMOUNT IN WORDS</div>
+            <div class="words-value">{{ payment.amount_paid | to_words }}</div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <!-- Payment Types -->
+            <div class="footer-left">
+                <div class="checkbox-row">
+                    <div class="checkbox-box">{% if payment.payment_method == 'Cash' %}&#10003;{% endif %}</div> 
+                    <span>Cash</span>
+                </div>
+                <div class="checkbox-row">
+                    <div class="checkbox-box"></div> 
+                    <span>Treasury Warrant</span>
+                </div>
+                <div class="checkbox-row">
+                    <div class="checkbox-box">{% if payment.payment_method == 'Check' %}&#10003;{% endif %}</div> 
+                    <span>Check</span>
+                </div>
+                <div class="checkbox-row">
+                    <div class="checkbox-box"></div> 
+                    <span>Money Order</span>
+                </div>
+
+                <div class="payment-details">
+                    <div class="payment-line">Treasury Warrant, Check, Money Order Number: <br> 
+                        <span class="font-bold">{{ 'N/A' if payment.payment_method == 'Cash' else 'See Ref' }}</span>
+                    </div>
+                    <div class="payment-line" style="border: none;">Date of Treasury Warrant, Check, Money Order: <br>
+                        <span class="font-bold">{{ payment.payment_date.strftime('%m/%d/%y') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signatories -->
+            <div class="footer-right">
+                <div class="signatory-title">Received the Amount Stated Above.</div>
+                
+                <!-- Issued By -->
+                <div style="margin-top: auto; text-align: center;">
+                    <div style="font-size: 8px; font-weight: bold; margin-bottom: 5px;">ISSUED BY:</div>
+                    
+                    <!-- Specific names from your image -->
+                    <div class="signatory-name">NICKY JANE A. SOLIS</div>
+                    <div class="signatory-role">Admin. Aide IV</div> <!-- Guessed role or blank -->
+
+                    <div class="signatory-name" style="margin-top: 15px;">RONNIE J. BOLAÑOS</div>
+                    <div class="signatory-role" style="margin-bottom: 0;">MUNICIPAL TREASURER</div>
+                    <div style="font-size: 8px; margin-top: 5px; border-top: 1px solid #000; width: 100%;">Collecting Officer</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer note -->
+        <div style="font-size: 6px; text-align: center; padding: 2px;">
+            Note: Write the number and date of this receipt on the back of treasury warrant, check or money order received.
+        </div>
+
+    </div>
+
+    <script>
+        // Auto print logic
+        window.onload = function() {
+            setTimeout(function() {
+                // window.print(); // Uncomment to auto-print
+            }, 500);
+        }
+    </script>
+</body>
+</html>

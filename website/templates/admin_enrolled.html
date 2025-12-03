@@ -1,0 +1,402 @@
+
+
+{% extends "admin_base.html" %}
+
+{% block title %}Enrolled Students{% endblock %}
+{% block page_title %}Enrolled Students{% endblock %}
+{% block breadcrumb %}Enrolled Students{% endblock %}
+
+{% block content %}
+<div id="applicationsContent" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100"
+    data-page-context="{{ active_page }}">
+    
+    <!-- Fixed Header Layout -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h3 id="mainPageTitle" class="text-xl font-semibold text-gray-800">{{ page_title }}</h3>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('auth.admin_export_applications_list', export_type='enrolled') }}"
+                class="px-4 py-2 bg-green-600 text-white rounded text-sm font-medium !rounded-button flex items-center hover:bg-green-700 transition-colors">
+                <i class="ri-file-excel-2-line mr-2"></i>Export Excel
+            </a>
+            <button id="printReportBtn"
+                class="px-4 py-2 bg-primary text-white rounded text-sm font-medium !rounded-button flex items-center hover:bg-primary/90 transition-colors">
+                <i class="ri-printer-line mr-2"></i>Print Report
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-gray-50 p-4 rounded shadow-inner border border-gray-200 mb-6 filter-bar">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-4 items-end">
+            
+            <!-- Date Filters -->
+            <div class="col-span-1 md:col-span-2 lg:col-span-2"><span id="dateFilterLabel"
+                    class="text-sm font-medium text-gray-700 mb-2 block">Filter by Submission Date:</span>
+                <div class="flex items-center space-x-4">
+                    <div class="flex-1"><label for="startDateFilter" class="text-xs text-gray-600">From:</label><input
+                            type="date" id="startDateFilter" name="startDateFilter"
+                            class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    </div>
+                    <div class="flex-1"><label for="endDateFilter" class="text-xs text-gray-600">To:</label><input
+                            type="date" id="endDateFilter" name="endDateFilter"
+                            class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Program Filter -->
+            <div class="col-span-1"><label for="programFilter"
+                    class="text-sm font-medium text-gray-700">Program:</label><select id="programFilter"
+                    name="programFilter"
+                    class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    <option value="all">All Programs</option>{% for program in programs %}<option
+                        value="{{ program.title }}">{{ program.title }}</option>{% endfor %}
+                </select>
+            </div>
+
+            <!-- NEW: Section Filter -->
+            <div class="col-span-1">
+                <label for="sectionFilter" class="text-sm font-medium text-gray-700">Section:</label>
+                <select id="sectionFilter" name="sectionFilter" class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    <option value="all">All Sections</option>
+                    <option value="Unassigned">Unassigned</option>
+                    {% for section in sections %}
+                    <option value="{{ section.section_name }}">{{ section.section_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-span-1"><label for="yearLevelFilter" class="text-sm font-medium text-gray-700">Year
+                    Level:</label><select id="yearLevelFilter"
+                    class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    <option value="all">All Year Levels</option>
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year">3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                    <option value="5th Year">5th Year</option>
+                </select></div>
+            
+            <div class="col-span-1"><label for="semesterFilter"
+                    class="text-sm font-medium text-gray-700">Semester:</label><select id="semesterFilter"
+                    class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    <option value="all">All Semesters</option>
+                    <option value="1st Semester">1st Semester</option>
+                    <option value="2nd Semester">2nd Semester</option>
+                    <option value="3rd Semester">3rd Semester</option>
+                    <option value="Summer">Summer</option>
+                </select></div>
+            
+            <div class="col-span-1"><label class="text-sm font-medium text-gray-700 block mb-2">Gender:</label>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center"><input type="radio" id="genderFilterAll" name="genderFilter"
+                            value="All" checked><label for="genderFilterAll"
+                            class="text-sm text-gray-600 ml-1">All</label></div>
+                    <div class="flex items-center"><input type="radio" id="genderFilterMale" name="genderFilter"
+                            value="Male"><label for="genderFilterMale" class="text-sm text-gray-600 ml-1">Male</label>
+                    </div>
+                    <div class="flex items-center"><input type="radio" id="genderFilterFemale" name="genderFilter"
+                            value="Female"><label for="genderFilterFemale"
+                            class="text-sm text-gray-600 ml-1">Female</label></div>
+                </div>
+            </div>
+
+            <div class="col-span-1"><label class="text-sm font-medium text-gray-700 block mb-2">Location:</label>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center"><input type="radio" id="locationFilterAll" name="locationFilter"
+                            value="All" checked><label for="locationFilterAll"
+                            class="text-sm text-gray-600 ml-1">All</label></div>
+                    <div class="flex items-center"><input type="radio" id="locationFilterGarciano" name="locationFilter"
+                            value="Garciano"><label for="locationFilterGarciano"
+                            class="text-sm text-gray-600 ml-1">Garciano</label></div>
+                    <div class="flex items-center"><input type="radio" id="locationFilterNonGarciano"
+                            name="locationFilter" value="Non-Garciano"><label for="locationFilterNonGarciano"
+                            class="text-sm text-gray-600 ml-1">Non-Garciano</label></div>
+                </div>
+            </div>
+            
+            <div class="col-span-1 flex items-end"><button id="clearFiltersBtn"
+                    class="w-full px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-medium !rounded-button hover:bg-gray-300 flex items-center justify-center"><i
+                        class="ri-filter-off-line mr-1"></i> Clear All Filters</button></div>
+        </div>
+    </div>
+
+    <!-- Bulk Action Bar -->
+    <div id="bulkActions"
+        class="bulk-actions bg-blue-50 p-3 rounded-md border border-blue-200 mb-6 flex-wrap items-center gap-y-2">
+        <span id="selectedCount" class="text-sm font-medium text-blue-700 mr-4">0 items selected</span>
+        <div class="flex flex-wrap gap-2">
+            <button id="bulkEnrollingBtn"
+                class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-purple-200"><i
+                    class="ri-arrow-go-back-line mr-1"></i> Revert to Enrolling</button>
+            <button id="bulkDroppedBtn"
+                class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-gray-300"><i
+                    class="ri-user-unfollow-line mr-1"></i> Set Dropped</button>
+            <button id="bulkNotEnrolledBtn"
+                class="px-3 py-1.5 bg-orange-100 text-orange-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-orange-200"><i
+                    class="ri-error-warning-line mr-1"></i> Set Not Enrolled</button>
+        </div>
+        <button id="closeBulkActions" class="ml-auto text-gray-500 hover:text-gray-700 p-1"><i
+                class="ri-close-line ri-lg"></i></button>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="overflow-x-auto custom-scrollbar">
+        <table class="min-w-full divide-y divide-gray-200" id="applicationsTable">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <label class="custom-checkbox"><input type="checkbox" id="selectAll"><span
+                                class="checkmark"></span></label></th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Student ID</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Applicant</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                        Program / Section</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        Enrolled For</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% if applications %}
+                {% for app in applications %}
+                {% set display_id = app.old_student_id or app.control_number or ('App #' ~ app.applicant_id) %}
+                
+                <tr class="hover:bg-gray-50" data-applicant-id="{{ app.applicant_id }}"
+                    data-gender="{{ app.sex or '' }}"
+                    data-submission-date="{{ (app.submitted_at or app.date_of_application).strftime('%Y-%m-%d') if (app.submitted_at or app.date_of_application) else '' }}"
+                    data-program="{{ app.program_choice }}" data-program-id="{{ app.program_id | default('N/A') }}"
+                    data-section="{{ app.section_name or 'Unassigned' }}"
+                    data-address="{{ app.permanent_address_city_municipality | lower | e if app.permanent_address_city_municipality else '' }}"
+                    data-year-level="{{ app.enrollment_year_level }}" data-semester="{{ app.enrollment_semester }}"
+                    data-student-type="{{ app.enrollment_student_type }}"
+                    data-old-student-id="{{ app.old_student_id or '' }}"
+                    data-control-number="{{ app.control_number or '' }}" data-display-id="{{ display_id }}"
+                    data-search-string="{{ [
+                'p2025' ~ '%04d'|format(app.applicant_id),
+                app.first_name, app.last_name, app.student_account_email, app.email_address,
+                app.mobile_number, app.senior_high_school, app.enrollment_student_type, app.old_student_id
+            ] | join(' ') | lower | e }}">
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                        <label class="custom-checkbox"><input type="checkbox" class="row-checkbox"
+                                data-id="{{ app.applicant_id }}"><span class="checkmark"></span></label>
+                    </td>
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                        {{ display_id }}
+                    </td>
+
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div
+                                class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-medium">{{ app.first_name[0] if app.first_name else 'N' }}{{
+                                    app.last_name[0] if app.last_name else 'A' }}</span>
+                            </div>
+                            <div class="ml-3">
+                                <!-- MODIFIED: Name Format to Lastname, Firstname M. with Title Case -->
+                                <p class="text-sm font-medium text-gray-900 applicant-name">
+                                    {{ app.last_name | title }}, {{ app.first_name | title }} {% if app.middle_name %}{{ app.middle_name[0]|upper }}.{% endif %}
+                                </p>
+                                <p class="text-xs text-gray-500 applicant-email">{{ app.student_account_email or app.email_address or
+                                    'N/A' }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td
+                        class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 applicant-program hidden sm:table-cell">
+                        <div class="font-medium">{{ app.program_choice or 'N/A' }}</div>
+                        {% if app.section_name %}
+                        <div class="text-xs text-blue-600 font-semibold mt-0.5">{{ app.section_name }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                        <div>{{ app.enrollment_year_level or 'N/A' }}</div>
+                        <div class="text-xs text-gray-500">{{ app.enrollment_semester or 'N/A' }}</div>
+                    </td>
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap status-cell">
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge bg-green-100 text-green-800">Enrolled</span>
+                    </td>
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                        <div class="flex space-x-1 justify-end items-center">
+                            {% if app.student_user_id %}
+                            <a href="{{ url_for('auth.admin_manage_grades_page', student_user_id=app.student_user_id) }}"
+                                class="inline-flex items-center px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-md hover:bg-blue-200"
+                                title="Manage Grades">
+                                <i class="ri-graduation-cap-line mr-1"></i> Grades
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('auth.admin_view_application_page', applicant_id=app.applicant_id) }}"
+                                class="text-gray-500 hover:text-blue-600 p-0.5 sm:p-1" title="View Full Page"><i
+                                    class="ri-external-link-line ri-lg"></i></a>
+                            <a href="{{ url_for('auth.admin_print_inventory_form', applicant_id=app.applicant_id) }}"
+                                target="_blank" class="text-gray-500 hover:text-green-500 p-0.5 sm:p-1"
+                                title="Print Inventory Form"><i class="ri-printer-line ri-lg"></i></a>
+                            <button class="text-gray-500 hover:text-yellow-600 p-0.5 sm:p-1 action-admin-notes"
+                                title="Admin Notes" data-id="{{ app.applicant_id }}"><i
+                                    class="ri-sticky-note-line ri-lg"></i></button>
+                            <div class="dropdown relative action-status-dropdown">
+                                <button class="text-gray-500 hover:text-primary p-0.5 sm:p-1" title="Change Status"><i
+                                        class="ri-arrow-down-s-fill ri-lg"></i></button>
+                                <div class="dropdown-content w-40 text-left">
+                                    <a href="#"
+                                        class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status"
+                                        data-id="{{ app.applicant_id }}" data-status="Enrolling">Revert to Enrolling</a>
+                                    <a href="#"
+                                        class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 action-update-status"
+                                        data-id="{{ app.applicant_id }}" data-status="Dropped">Drop Student</a>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No enrolled
+                        students found.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const startDateFilter = document.getElementById('startDateFilter');
+        const endDateFilter = document.getElementById('endDateFilter');
+        const programFilter = document.getElementById('programFilter');
+        const sectionFilter = document.getElementById('sectionFilter'); // NEW
+        const yearLevelFilter = document.getElementById('yearLevelFilter');
+        const semesterFilter = document.getElementById('semesterFilter');
+        const genderFilters = document.querySelectorAll('input[name="genderFilter"]');
+        const locationFilters = document.querySelectorAll('input[name="locationFilter"]');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        const tableRows = document.querySelectorAll('#applicationsTable tbody tr[data-applicant-id]');
+
+        function applyAllFilters() {
+            if (!tableRows || tableRows.length === 0) return;
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            const startDate = startDateFilter?.value;
+            const endDate = endDateFilter?.value;
+            const program = programFilter?.value;
+            const section = sectionFilter?.value; // NEW
+            const yearLevel = yearLevelFilter?.value;
+            const semester = semesterFilter?.value;
+            const gender = document.querySelector('input[name="genderFilter"]:checked')?.value;
+            const location = document.querySelector('input[name="locationFilter"]:checked')?.value;
+            
+            let visibleCount = 0;
+            const tableBody = document.querySelector('#applicationsTable tbody');
+
+            tableRows.forEach(row => {
+                const searchMatch = (
+                        (row.dataset.searchString || '').toLowerCase().includes(searchTerm) ||
+                        (row.querySelector('.applicant-name')?.textContent.toLowerCase() || '').includes(searchTerm) ||
+                        (row.querySelector('.applicant-email')?.textContent.toLowerCase() || '').includes(searchTerm) ||
+                        `p2025${(row.dataset.applicantId || '').padStart(4, '0')}`.toLowerCase().includes(searchTerm) ||
+                        (row.dataset.oldStudentId || '').toLowerCase().includes(searchTerm)
+                    );
+
+                let dateMatch = true;
+                if (startDate || endDate) {
+                     const subDate = row.dataset.submissionDate;
+                     if (!subDate) dateMatch = false;
+                     else {
+                        if (startDate && subDate < startDate) dateMatch = false;
+                        if (endDate && subDate > endDate) dateMatch = false;
+                     }
+                }
+
+                let programMatch = true;
+                if (program && program !== 'all') {
+                    if (row.dataset.program !== program) programMatch = false;
+                }
+
+                // NEW: Section Match Logic
+                let sectionMatch = true;
+                if (section && section !== 'all') {
+                    if ((row.dataset.section || 'Unassigned') !== section) sectionMatch = false;
+                }
+
+                let yearLevelMatch = true;
+                if (yearLevel && yearLevel !== 'all') {
+                    if (row.dataset.yearLevel !== yearLevel) yearLevelMatch = false;
+                }
+
+                let semesterMatch = true;
+                if (semester && semester !== 'all') {
+                    if (row.dataset.semester !== semester) semesterMatch = false;
+                }
+                
+                let genderMatch = true;
+                if (gender && gender !== 'All') {
+                     if ((row.dataset.gender || '').toLowerCase() !== gender.toLowerCase()) genderMatch = false;
+                }
+
+                let locationMatch = true;
+                if (location && location !== 'All') {
+                    const address = row.dataset.address || '';
+                    const isGarciano = address.includes('padre garcia');
+                    if (location === 'Garciano' && !isGarciano) locationMatch = false;
+                    else if (location === 'Non-Garciano' && isGarciano) locationMatch = false;
+                }
+
+                if (searchMatch && dateMatch && programMatch && sectionMatch && yearLevelMatch && semesterMatch && genderMatch && locationMatch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            let noResultsRow = tableBody.querySelector('.no-results-message');
+            if (noResultsRow) noResultsRow.remove();
+            if (visibleCount === 0) {
+                const colspan = tableBody.parentElement.querySelector('thead th').length;
+                const newRow = tableBody.insertRow();
+                newRow.className = 'no-results-message';
+                newRow.innerHTML = `<td colspan="${colspan}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No applications match the current filters.</td>`;
+            }
+        }
+
+        if (searchInput) searchInput.addEventListener('input', applyAllFilters);
+        if (startDateFilter) startDateFilter.addEventListener('change', applyAllFilters);
+        if (endDateFilter) endDateFilter.addEventListener('change', applyAllFilters);
+        if (programFilter) programFilter.addEventListener('change', applyAllFilters);
+        if (sectionFilter) sectionFilter.addEventListener('change', applyAllFilters); // NEW
+        if (yearLevelFilter) yearLevelFilter.addEventListener('change', applyAllFilters);
+        if (semesterFilter) semesterFilter.addEventListener('change', applyAllFilters);
+        genderFilters.forEach(r => r.addEventListener('change', applyAllFilters));
+        locationFilters.forEach(r => r.addEventListener('change', applyAllFilters));
+
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => {
+                if (searchInput) searchInput.value = '';
+                if (startDateFilter) startDateFilter.value = '';
+                if (endDateFilter) endDateFilter.value = '';
+                if (programFilter) programFilter.value = 'all';
+                if (sectionFilter) sectionFilter.value = 'all'; // NEW
+                if (yearLevelFilter) yearLevelFilter.value = 'all';
+                if (semesterFilter) semesterFilter.value = 'all';
+                document.getElementById('genderFilterAll').checked = true;
+                document.getElementById('locationFilterAll').checked = true;
+                applyAllFilters();
+            });
+        }
+    });
+</script>
+{% endblock %}

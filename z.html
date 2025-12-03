@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iStudent - Student Dashboard</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#6366f1',secondary:'#8b5cf6'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <style>
+        :where([class^="ri-"])::before { 
+            content: "\f3c2"; 
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        .progress-bg {
+            background: #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-100 px-6 py-4">
+        <div class="flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <div class="w-4 h-4 bg-white" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%)"></div>
+                </div>
+                <span class="text-xl font-semibold text-gray-900">iStudent</span>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="flex-1 max-w-md mx-8">
+                <div class="relative">
+                    <div class="w-5 h-5 flex items-center justify-center absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="ri-search-line text-sm"></i>
+                    </div>
+                    <input type="text" placeholder="Search Files..." class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+            </div>
+            
+            <!-- Right Actions -->
+            <div class="flex items-center space-x-4">
+                <button class="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 !rounded-button whitespace-nowrap">
+                    <span class="text-sm">Filter</span>
+                    <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-arrow-down-s-line text-sm"></i>
+                    </div>
+                </button>
+                <div class="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900 cursor-pointer">
+                    <i class="ri-notification-3-line text-lg"></i>
+                </div>
+                <img src="https://readdy.ai/api/search-image?query=professional%20young%20student%20portrait%20headshot%20with%20friendly%20smile%20natural%20lighting%20clean%20background&width=40&height=40&seq=profile1&orientation=squarish" alt="Profile" class="w-10 h-10 rounded-full object-cover">
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-gray-100 p-6">
+            <!-- Balance Card -->
+            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 mb-6">
+                <div class="text-sm text-gray-600 mb-1">Balance</div>
+                <div class="text-2xl font-bold text-gray-900">$12,577.00</div>
+                <div class="w-6 h-6 flex items-center justify-center absolute top-4 right-4 text-gray-400">
+                    <i class="ri-more-fill"></i>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="space-y-2">
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-shopping-cart-line text-lg"></i>
+                    </div>
+                    <span class="text-sm">Buy a course</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-calendar-line text-lg"></i>
+                    </div>
+                    <span class="text-sm">Semester Info</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-user-line text-lg"></i>
+                    </div>
+                    <span class="text-sm">Account</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-exchange-line text-lg"></i>
+                    </div>
+                    <span class="text-sm">Change Subjects</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-settings-3-line text-lg"></i>
+                    </div>
+                    <span class="text-sm">Setting</span>
+                </a>
+            </nav>
+            
+            <!-- Logout -->
+            <div class="mt-auto pt-6">
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-logout-box-line text-lg"></i>
+                    </div>
+                    <span class="text-sm">Log Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 overflow-auto">
+            <div class="max-w-7xl mx-auto">
+                <!-- Welcome Section -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h1 class="text-2xl font-bold text-gray-900">Welcome back Shakir!</h1>
+                        <div class="w-6 h-6 flex items-center justify-center text-gray-400 cursor-pointer">
+                            <i class="ri-more-fill"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Instructors -->
+                    <div class="grid grid-cols-4 gap-6">
+                        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                            <div class="flex flex-col items-center text-center">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20female%20english%20literature%20teacher%20portrait%20with%20glasses%20warm%20smile%20academic%20background&width=60&height=60&seq=teacher1&orientation=squarish" alt="Teacher" class="w-15 h-15 rounded-full mb-3 object-cover">
+                                <h3 class="font-semibold text-gray-900 text-sm mb-1">English Literature</h3>
+                                <p class="text-xs text-gray-500 mb-3">You have a class in 32 min</p>
+                                <div class="flex space-x-2">
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center cursor-pointer">
+                                        <i class="ri-phone-line text-green-600 text-sm"></i>
+                                    </div>
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center cursor-pointer">
+                                        <i class="ri-message-3-line text-blue-600 text-sm"></i>
+                                    </div>
+                                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center cursor-pointer">
+                                        <i class="ri-video-line text-purple-600 text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                            <div class="flex flex-col items-center text-center">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20male%20mathematics%20teacher%20portrait%20with%20friendly%20expression%20classroom%20background&width=60&height=60&seq=teacher2&orientation=squarish" alt="Teacher" class="w-15 h-15 rounded-full mb-3 object-cover">
+                                <h3 class="font-semibold text-gray-900 text-sm mb-1">Mathematics</h3>
+                                <p class="text-xs text-gray-500 mb-3">Next class tomorrow</p>
+                                <div class="flex space-x-2">
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center cursor-pointer">
+                                        <i class="ri-phone-line text-green-600 text-sm"></i>
+                                    </div>
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center cursor-pointer">
+                                        <i class="ri-message-3-line text-blue-600 text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                            <div class="flex flex-col items-center text-center">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20female%20history%20teacher%20portrait%20with%20confident%20smile%20library%20background&width=60&height=60&seq=teacher3&orientation=squarish" alt="Teacher" class="w-15 h-15 rounded-full mb-3 object-cover">
+                                <h3 class="font-semibold text-gray-900 text-sm mb-1">History of America</h3>
+                                <p class="text-xs text-gray-500 mb-3">Class starts at 2 PM</p>
+                                <div class="flex space-x-2">
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center cursor-pointer">
+                                        <i class="ri-phone-line text-green-600 text-sm"></i>
+                                    </div>
+                                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center cursor-pointer">
+                                        <i class="ri-video-line text-purple-600 text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                            <div class="flex flex-col items-center text-center">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20female%20art%20teacher%20portrait%20with%20creative%20expression%20studio%20background&width=60&height=60&seq=teacher4&orientation=squarish" alt="Teacher" class="w-15 h-15 rounded-full mb-3 object-cover">
+                                <h3 class="font-semibold text-gray-900 text-sm mb-1">Touch & Culture</h3>
+                                <p class="text-xs text-gray-500 mb-3">Weekly workshop</p>
+                                <div class="flex space-x-2">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center cursor-pointer">
+                                        <i class="ri-message-3-line text-blue-600 text-sm"></i>
+                                    </div>
+                                    <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center cursor-pointer">
+                                        <i class="ri-calendar-line text-orange-600 text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-8">
+                    <!-- Left Column -->
+                    <div class="col-span-2 space-y-8">
+                        <!-- Course Results -->
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-xl font-bold text-gray-900">Course Result</h2>
+                                <div class="w-6 h-6 flex items-center justify-center text-gray-400 cursor-pointer">
+                                    <i class="ri-more-fill"></i>
+                                </div>
+                            </div>
+                            <div id="courseChart" class="h-64"></div>
+                        </div>
+
+                        <!-- AI Feature Card -->
+                        <div class="bg-gradient-to-br from-orange-400 to-red-400 rounded-xl p-6 text-white relative overflow-hidden">
+                            <div class="relative z-10">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-16 h-16 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                                        <i class="ri-robot-line text-2xl text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold mb-1">Try the AI feature</h3>
+                                        <p class="text-sm text-orange-100 mb-3">Enhance your learning with AI-powered tools</p>
+                                        <button class="bg-white text-orange-500 px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-50 transition-colors !rounded-button whitespace-nowrap">
+                                            Get Started
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -translate-y-8 translate-x-8"></div>
+                            <div class="absolute bottom-0 right-0 w-20 h-20 bg-white bg-opacity-10 rounded-full translate-y-4 translate-x-4"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-8">
+                        <!-- Books Section -->
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-xl font-bold text-gray-900">Books</h2>
+                                <div class="flex space-x-2">
+                                    <button class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
+                                        <i class="ri-arrow-left-s-line text-gray-600"></i>
+                                    </button>
+                                    <button class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
+                                        <i class="ri-arrow-right-s-line text-gray-600"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-4 text-white relative overflow-hidden h-32">
+                                    <div class="relative z-10">
+                                        <p class="text-xs text-purple-200 mb-1">PROF. STANLEY</p>
+                                        <h3 class="text-sm font-bold">History of Religions</h3>
+                                    </div>
+                                    <div class="absolute top-2 right-2 w-8 h-8 bg-yellow-400 rounded-full"></div>
+                                    <div class="absolute bottom-0 right-0 w-16 h-16 bg-white bg-opacity-10 rounded-full translate-x-4 translate-y-4"></div>
+                                </div>
+                                <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl p-4 text-white relative overflow-hidden h-32">
+                                    <div class="relative z-10">
+                                        <p class="text-xs text-indigo-200 mb-1">21ST CENTURY</p>
+                                        <h3 class="text-sm font-bold">E-Myth Revisited</h3>
+                                    </div>
+                                    <div class="absolute top-2 right-2">
+                                        <div class="w-2 h-2 bg-yellow-400 rounded-full mb-1"></div>
+                                        <div class="w-1 h-1 bg-yellow-300 rounded-full"></div>
+                                    </div>
+                                    <div class="absolute bottom-2 right-2 text-yellow-400">
+                                        <i class="ri-leaf-line text-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Today's Progress -->
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-xl font-bold text-gray-900">Today's Progress</h2>
+                                <button class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white hover:bg-primary/90 transition-colors">
+                                    <i class="ri-play-fill text-lg"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <div class="bg-gray-50 rounded-xl p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h3 class="font-semibold text-gray-900 text-sm">Project Management 3</h3>
+                                        <span class="text-xs text-gray-500">In Progress</span>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-lg font-bold text-gray-900">89%</span>
+                                        <div class="flex-1 h-2 progress-bg rounded-full overflow-hidden">
+                                            <div class="h-full progress-bar rounded-full" style="width: 89%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-xl p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h3 class="font-semibold text-gray-900 text-sm">Project Management 3</h3>
+                                        <span class="text-xs text-gray-500">In Progress</span>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-lg font-bold text-gray-900">14%</span>
+                                        <div class="flex-1 h-2 progress-bg rounded-full overflow-hidden">
+                                            <div class="h-full progress-bar rounded-full" style="width: 14%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script id="courseChart">
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartDom = document.getElementById('courseChart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                animation: false,
+                grid: {
+                    left: 0,
+                    right: 0,
+                    top: 20,
+                    bottom: 0,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Literature', 'Geography', 'History', 'Algebra'],
+                    axisLine: {
+                        show: false
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    axisLabel: {
+                        color: '#6b7280',
+                        fontSize: 12
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    show: false
+                },
+                series: [{
+                    data: [
+                        { value: 69, itemStyle: { color: 'rgba(87, 181, 231, 0.8)', borderRadius: [4, 4, 0, 0] }},
+                        { value: 82, itemStyle: { color: 'rgba(141, 211, 199, 0.8)', borderRadius: [4, 4, 0, 0] }},
+                        { value: 69, itemStyle: { color: 'rgba(251, 191, 114, 0.8)', borderRadius: [4, 4, 0, 0] }},
+                        { value: 99, itemStyle: { color: '#6366f1', borderRadius: [4, 4, 0, 0] }}
+                    ],
+                    type: 'bar',
+                    barWidth: '60%'
+                }]
+            };
+            
+            myChart.setOption(option);
+        });
+    </script>
+</body>
+</html>

@@ -15,6 +15,14 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'a_default_fallback_secret_key')
     app.debug = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
 
+    # --- File Upload Configuration ---
+    # Create the folder if it doesn't exist
+    upload_folder = os.path.join(app.root_path, 'static', 'images', 'uploads')
+    os.makedirs(upload_folder, exist_ok=True)
+    app.config['UPLOAD_FOLDER'] = upload_folder
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16 MB max upload size
+
+
     # --- Email Configuration ---
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
     app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587)) # Ensure port is integer
@@ -65,4 +73,4 @@ if __name__ == '__main__':
     # This part is usually for running directly with `python main.py`
     # If using `flask run`, it uses the app factory pattern (create_app)
     app_instance = create_app()
-    app_instance.run(host='0.0.0.0', port=5000) # Port 5000 to match FLASK_SERVER_NAME
+    app_instance.run(host='0.0.0.0', port=5000)

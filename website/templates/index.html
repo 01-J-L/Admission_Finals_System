@@ -2,487 +2,1195 @@
 
 {% block style %}
 <style>
-/* General Styles */
-html {
-  scroll-behavior: smooth;
-}
+    /* --- General Styles & Theme Variables (Inspired by z.html) --- */
+    :root {
+        --primary: #1e40af;
+        --secondary: #3b82f6;
+        --text-dark: #111827;
+        --text-medium: #4b5563;
+        --text-light: #6b7280;
+        --bg-light-gray: #f9fafb;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 24px;
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
 
-/* Header Styles (remain largely the same) */
-header {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 15px 5%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 1000;
-    /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */ /* Optional: remove shadow if pure overlay on hero */
-    transition: background-color 0.3s ease;
-}
+    html {
+        scroll-behavior: smooth;
+    }
 
-.header-left {
-    display: flex;
-    align-items: center;
-}
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #fff;
+        color: var(--text-medium);
+    }
 
-.header-left .logo {
-    font-size: 1.4em;
-    color: #fff; /* Default to white for better visibility on hero images */
-    margin-left: 15px;
-    white-space: nowrap;
-    transition: color 0.3s ease;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Add shadow for readability */
-}
-.header-left img {
-    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3)); /* Slight shadow for logo image */
-}
+    /* --- Keyframe Animations --- */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
 
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-.navigation a {
-    position: relative;
-    font-size: 1.1em;
-    color: #fff; /* Default to white for better visibility on hero images */
-    text-decoration: none;
-    font-weight: 500;
-    margin-left: 30px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Add shadow for readability */
-}
-.navigation a.no-underline {
-    text-decoration: none;
-}
-
-.navigation .btnLogin-popup {
-    /* Desktop specific adjustments if any */
-    /* Ensure button stands out, consider default white text and a contrasting background or border */
-}
-
-
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    justify-content: space-around;
-    width: 30px;
-    height: 25px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    z-index: 1100;
-    margin-left: 20px;
-}
-
-.menu-toggle span {
-    display: block;
-    width: 100%;
-    height: 3px;
-    background-color: #fff; /* Default to white for hamburger lines on hero */
-    border-radius: 3px;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0 0 2px rgba(0,0,0,0.5);
-}
-
-/* --- NEW Hero Slider Styles --- */
-.hero-slider {
-    position: relative;
-    width: 100%;
-    height: 100vh; /* Full viewport height */
-    min-height: 500px; /* Minimum height */
-    overflow: hidden;
-    background-color: #333; /* Fallback background */
-}
-
-.hero-slider .slides-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
-.hero-slider .slide {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 1s ease-in-out, visibility 0s 1s; /* Fade transition */
-    display: flex;
-    align-items: center; /* Vertically center content */
-    justify-content: flex-start; /* Align content to the left */
-}
-
-.hero-slider .slide.active {
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 1s ease-in-out, visibility 0s 0s;
-    z-index: 1;
-}
-
-.hero-slider .slide::before { /* Dark overlay for text readability */
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%);
-    /* Adjust gradient as needed */
-    z-index: 1;
-}
-
-.hero-slider .slide-content {
-    position: relative;
-    z-index: 2;
-    color: #fff;
-    padding-left: 5%; /* Match header padding */
-    padding-right: 5%;
-    max-width: 650px; /* Limit width of text content */
-    margin-top: 60px; /* Adjust if header overlaps significantly */
-}
-
-.hero-slider .intro-text {
-    font-size: 0.9em;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    opacity: 0.8;
-}
-
-.hero-slider .slide-number-display { /* Changed from .slide-number */
-    margin-left: 10px;
-    font-weight: bold;
-}
-
-.hero-slider .slide-content h1 {
-    font-size: 3.2em;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 25px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-}
-
-.hero-slider .slide-content .highlight {
-    color: #ffd700; /* Example highlight color - gold */
-}
-
-.hero-slider .slide-actions {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.hero-slider .btn-get-started {
-    background-color: #162938; /* Reddish button */
-    color: white;
-    padding: 12px 25px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.hero-slider .btn-get-started:hover {
-    background-color: #2c485d;
-}
-
-/* REMOVED .hero-slider .btn-play-video styles as button is removed */
-
-.hero-slider .slider-nav {
-    position: absolute;
-    z-index: 3; /* Above slides, below header potentially */
-    bottom: 30px;
-    right: 30px;
-    background-color: rgba(0, 0, 0, 0.3);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 50%;
-    width: 45px;
-    height: 45px;
-    font-size: 1.5em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s ease;
-}
-.hero-slider .slider-nav:hover {
-    background-color: rgba(0, 0, 0, 0.6);
-}
-
-.hero-slider .slider-nav.prev {
-    right: 85px; /* Position next to the next button */
-}
-
-/* Mobile Navigation Styles & Adjustments */
-@media (max-width: 992px) {
+    /* --- Header & Footer Styles (Maintained from original index.html) --- */
     header {
-        padding: 10px 3%;
-        background-color: #162938; /* Solid background for mobile header */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 15px 5%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        transition: background-color 0.3s ease;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+    }
+
+    .header-left .logo {
+        font-size: 1.4em;
+        color: #fff;
+        margin-left: 15px;
+        white-space: nowrap;
+        transition: color 0.3s ease;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
     }
 
     .header-left img {
-        width: 60px; /* Adjusted size */
-        height: auto;
-        filter: none; /* Remove filter if header is solid */
-    }
-
-    .header-left .logo {
-        font-size: 0.9em; /* Adjusted for smaller screens */
-        margin-left: 8px; /* Reduced margin */
-        color: #fff; /* Ensure visible on dark background */
-        text-shadow: none; /* Remove shadow if header is solid */
-    }
-
-    .menu-toggle span {
-        background-color: #ffffff; /* Hamburger lines color for dark header */
-        box-shadow: none;
-    }
-
-    .navigation {
-        position: absolute;
-        top: 100%; /* Position below header */
-        right: 0;
-        width: 250px; /* Width of the mobile menu */
-        background-color: #162938; /* Dark background for nav */
-        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-        flex-direction: column;
-        align-items: stretch;
-        display: none; /* Hidden by default */
-        z-index: 1050;
-        border-top: 1px solid #2a3f54; /* Separator */
-        max-height: calc(100vh - 60px); /* Adjust based on actual header height on mobile */
-        overflow-y: auto;
-    }
-
-    .navigation.active {
-        display: flex; /* Show when active */
+        filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
     }
 
     .navigation a {
-        display: block;
-        padding: 12px 20px;
-        margin-left: 0;
-        text-align: left;
-        color: #f0f0f0; /* Light text color for links */
-        border-bottom: 1px solid #2a3f54; /* Separator for links */
+        position: relative;
+        font-size: 1.1em;
+        color: #fff;
         text-decoration: none;
-        text-shadow: none;
-    }
-    .navigation a:last-child {
-        border-bottom: none;
-    }
-    .navigation a:hover {
-        background-color: #22333f; /* Hover effect */
+        font-weight: 500;
+        margin-left: 30px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
     }
 
-    .navigation a .btnLogin-popup {
-        width: calc(100% - 10px); /* Full width button inside nav */
-        margin: 5px;
-        padding: 10px 15px;
-        font-size: 1em;
-        text-align: center;
-        display: block;
-        height: auto;
-        box-sizing: border-box;
-    }
-    .navigation a .btnLogin-popup[style*="background-color: #d9534f"] { /* Logout button */
-        margin-top: 5px;
+    .navigation a.no-underline {
+        text-decoration: none;
     }
 
     .menu-toggle {
-        display: flex; /* Show hamburger */
+        display: none;
+        flex-direction: column;
+        justify-content: space-around;
+        width: 30px;
+        height: 25px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        z-index: 1100;
+        margin-left: 20px;
     }
 
-    .menu-toggle.active span:nth-child(1) {
-        transform: translateY(9px) rotate(45deg);
-    }
-    .menu-toggle.active span:nth-child(2) {
-        opacity: 0;
-    }
-    .menu-toggle.active span:nth-child(3) {
-        transform: translateY(-9px) rotate(-45deg);
+    .menu-toggle span {
+        display: block;
+        width: 100%;
+        height: 3px;
+        background-color: #fff;
+        border-radius: 3px;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
     }
 
-    /* Adjust Hero Slider for Mobile */
-    .hero-slider {
-        height: 60vh; /* Shorter height on mobile */
-        min-height: 400px;
-    }
-    .hero-slider .slide-content {
-        padding-left: 4%;
-        padding-right: 4%;
-        text-align: center; /* Center text on mobile */
-        max-width: 100%;
-        margin-top: 50px; /* Adjust if header overlaps */
-        align-items: center; /* Center content block itself */
-        justify-content: center;
+    .footer {
+        position: relative;
         display: flex;
         flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem;
+        text-align: center;
+        color: white;
+        overflow: hidden;
     }
-    .hero-slider .slide-content h1 {
-        font-size: 2.2em; /* Smaller heading for mobile */
+
+    .footer::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat fixed;
+        z-index: 0;
+        opacity: 0.3;
     }
+
+    .footer::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(22, 41, 56, 0.442);
+        z-index: 1;
+    }
+
+    .footer * {
+        position: relative;
+        z-index: 2;
+    }
+
+    .footer-logo {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 1rem;
+    }
+
+    .footer-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .footer-subtitle {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-top: 0.5rem;
+    }
+
+    .footer-connect {
+        margin-top: 1rem;
+        font-size: 1rem;
+    }
+
+    .footer-socials {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        font-size: 1.25rem;
+    }
+
+    .footer-socials a {
+        color: white;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .footer-socials a:hover {
+        color: #0987d0;
+    }
+
+    .footer-divider {
+        border-top: 1px solid white;
+        width: 25%;
+        margin: 2rem 0;
+    }
+
+    .footer-bottom {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        max-width: 700px;
+    }
+
+    .footer-bottom p {
+        margin-bottom: 0.5rem;
+    }
+
+    .footer-bottom a {
+        color: white;
+        text-decoration: none;
+    }
+
+    .footer-bottom a:hover {
+        text-decoration: underline;
+    }
+
+
+    /* --- Hero Slider Styles (Redesigned like z.html) --- */
+    .hero-slider {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        min-height: 600px;
+        overflow: hidden;
+        background-color: #e0e0e0;
+    }
+
+    .hero-slider .slides-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .hero-slider .slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 1.2s ease-in-out, visibility 0s 1.2s;
+        display: flex;
+        align-items: center;
+    }
+
+    .hero-slider .slide.active {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 1.2s ease-in-out, visibility 0s 0s;
+        z-index: 1;
+    }
+
+    .hero-slider .slide::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to right, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 40%, transparent 70%);
+        z-index: 1;
+    }
+
+    .hero-slider .slide-content {
+        position: relative;
+        z-index: 2;
+        padding: 0 5%;
+        max-width: 750px;
+    }
+
+    /* Hero content animation */
+    .slide.active .intro-text {
+        animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .slide.active .slide-content h1 {
+        animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+
+    .slide.active .slide-actions {
+        animation: fadeInUp 0.6s ease-out 0.6s both;
+    }
+
     .hero-slider .intro-text {
-        font-size: 0.8em;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+        display: inline-block;
+        background-color: rgba(30, 64, 175, 0.1);
+        padding: 8px 16px;
+        border-radius: 9999px;
     }
-     .hero-slider .slide-actions {
-        justify-content: center; /* Center buttons */
+
+    .hero-slider .slide-content h1 {
+        font-size: 4rem;
+        font-weight: 800;
+        line-height: 1.1;
+        color: var(--text-dark);
+        margin-bottom: 2rem;
+        letter-spacing: -0.025em;
     }
+
+    .hero-slider .slide-content .highlight {
+        background: linear-gradient(45deg, var(--primary), var(--secondary));
+        background-size: 200% 200%;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: gradient-shift 4s ease infinite;
+    }
+
+    @keyframes gradient-shift {
+        0% {
+            background-position: 0% 50%
+        }
+
+        50% {
+            background-position: 100% 50%
+        }
+
+        100% {
+            background-position: 0% 50%
+        }
+    }
+
+    .hero-slider .slide-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
     .hero-slider .btn-get-started {
-        padding: 10px 20px;
-        font-size: 0.9em;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        color: white;
+        padding: 16px 32px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px rgba(30, 64, 175, 0.3);
     }
-    /* REMOVED .hero-slider .btn-play-video styles as button is removed */
+
+    .hero-slider .btn-get-started:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(30, 64, 175, 0.4);
+    }
 
     .hero-slider .slider-nav {
-        bottom: 15px;
-        right: 15px;
-        width: 40px;
-        height: 40px;
-        font-size: 1.2em;
+        position: absolute;
+        z-index: 3;
+        bottom: 30px;
+        right: 30px;
+        background-color: rgba(0, 0, 0, 0.3);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        font-size: 1.5em;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.3s ease;
     }
+
+    .hero-slider .slider-nav:hover {
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
     .hero-slider .slider-nav.prev {
-        right: 65px;
+        right: 85px;
     }
-}
-@media (max-width: 480px) {
-    .hero-slider .slide-content h1 {
-        font-size: 1.8em;
+
+    /* --- General Section Styling & Decorative Elements --- */
+    .section-container {
+        padding: 100px 20px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
     }
-    .hero-slider .intro-text {
-        font-size: 0.75em;
-    }
-     .hero-slider .slide-actions {
-        flex-direction: column; /* Stack buttons on very small screens */
-        gap: 10px;
-        width: 100%;
-        align-items: stretch;
-    }
-    .hero-slider .btn-get-started /*, .hero-slider .btn-play-video (removed) */ {
-        width: 80%;
+
+    .section-title-wrapper {
+        text-align: center;
+        margin-bottom: 4rem;
+        max-width: 800px;
         margin-left: auto;
         margin-right: auto;
     }
-    .header-left .logo {
-        font-size: 0.8em; /* Further adjust logo size on very small screens */
+
+    .section-kicker {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
-}
 
-/* --- Video Modal Styles (Commented out as video button is removed) --- */
-/*
-.video-modal {
-    display: none; 
-    position: fixed;
-    z-index: 2000; 
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto; 
-    background-color: rgba(0,0,0,0.85); 
-    justify-content: center;
-    align-items: center;
-    padding: 20px; 
-    box-sizing: border-box;
-}
+    .section-title {
+        font-size: 2.8rem;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+        font-weight: 800;
+    }
 
-.video-modal-content {
-    position: relative;
-    background-color: #000;
-    margin: auto;
-    padding: 0;
-    border: none; 
-    width: 90%;
-    max-width: 853px; 
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
-    animation-name: animatetopModal; 
-    animation-duration: 0.4s;
-}
+    .section-subtitle {
+        font-size: 1.125rem;
+        color: var(--text-medium);
+        line-height: 1.7;
+        max-width: 700px;
+        margin: 0 auto;
+    }
 
-@keyframes animatetopModal {
-    from {transform: translateY(-50px); opacity:0}
-    to {transform: translateY(0); opacity:1}
-}
-
-.video-modal-close {
-    color: white;
-    position: absolute;
-    top: -30px; 
-    right: -5px; 
-    font-size: 40px;
-    font-weight: bold;
-    z-index: 2010;
-    cursor: pointer;
-    line-height: 1;
-    background: none;
-    border: none;
-    padding: 0;
-}
-@media (max-width: 600px) {
-    .video-modal-close {
-        top: 5px; 
-        right: 10px;
-        color: #fff;
-        background-color: rgba(0,0,0,0.5); 
+    .section-container::before,
+    .section-container::after {
+        content: '';
+        position: absolute;
         border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        font-size: 25px;
-        line-height: 30px;
+        filter: blur(120px);
+        z-index: -1;
+        opacity: 0.1;
+        pointer-events: none;
+    }
+
+    .programs::before {
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, var(--secondary) 0%, var(--primary) 100%);
+        top: -150px;
+        left: -150px;
+    }
+
+    .announcements::before {
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, var(--primary) 0%, var(--secondary) 100%);
+        bottom: -100px;
+        right: -120px;
+    }
+
+    .news::after {
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, var(--secondary) 0%, var(--primary) 100%);
+        top: 50%;
+        left: -250px;
+        transform: translateY(-50%);
+    }
+
+    .admission-process::before {
+        width: 450px;
+        height: 450px;
+        background: radial-gradient(circle, var(--primary) 0%, var(--secondary) 100%);
+        bottom: -200px;
+        left: -150px;
+    }
+
+    .faq-section::after {
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, var(--secondary) 0%, var(--primary) 100%);
+        top: -100px;
+        right: -150px;
+    }
+
+    /* --- Programs & Announcements Section --- */
+    .programs,
+    .announcements {
+        background-color: var(--bg-light-gray);
+    }
+
+    .programs .programs-slider,
+    .announcements .announcements-slider {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px 50px 15px;
+    }
+
+    .programs .swiper-slide,
+    .announcements .swiper-slide {
+        height: auto;
+        display: flex;
+        justify-content: center;
+    }
+
+    .programs .card,
+    .announcements .card {
+        background-color: #fff;
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+        transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 350px;
+        height: 100%;
+        border: 1px solid #e5e7eb;
+        border-bottom: 4px solid transparent;
+    }
+
+    .programs .card:hover,
+    .announcements .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.15);
+        border-color: var(--primary);
+    }
+
+    .programs .card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .programs .card-content {
+        padding: 24px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+
+    .programs .card-content h3 {
+        font-size: 1.25rem;
+        color: var(--text-dark);
+        margin: 0 0 8px 0;
+        font-weight: 700;
+        line-height: 1.3;
+    }
+
+    .programs .card-content p {
+        color: var(--text-medium);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin: 0 0 20px 0;
+        flex-grow: 1;
+        min-height: 90px;
+    }
+
+    .programs .program-button-link {
+        margin-top: auto;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        color: var(--primary);
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .programs .program-button-link:hover {
+        color: var(--secondary);
+    }
+
+    .programs .program-button-link .icon {
+        margin-left: 8px;
+        transition: transform 0.3s ease;
+    }
+
+    .programs .program-button-link:hover .icon {
+        transform: translateX(4px);
+    }
+
+    .programs .swiper-pagination {
+        bottom: 10px !important;
+    }
+
+    .programs .swiper-pagination-bullet {
+        width: 10px;
+        height: 10px;
+        background-color: var(--primary);
+        opacity: 0.5;
+    }
+
+    .programs .swiper-pagination-bullet-active {
+        opacity: 1;
+    }
+
+    /* Announcements Cards */
+    .announcements .card img {
+        width: 100%;
+        height: 350px;
+        object-fit: cover;
+    }
+
+    .announcements .card-content {
+        padding: 1.5rem;
+    }
+
+    .announcements .announcement-meta {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .announcements .announcement-tag {
+        background-color: var(--primary);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .announcements .announcement-date {
+        color: var(--text-light);
+        font-size: 0.875rem;
+        margin-left: 0.75rem;
+    }
+
+    .announcements .card-content h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .announcements .card-content p {
+        color: var(--text-medium);
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .announcements .swiper-pagination {
+        bottom: 10px !important;
+    }
+
+    .announcements .swiper-pagination-bullet {
+        width: 10px;
+        height: 10px;
+        background-color: var(--primary);
+        opacity: 0.5;
+    }
+
+    .announcements .swiper-pagination-bullet-active {
+        opacity: 1;
+    }
+
+
+    /* --- News & Features Section --- */
+    .news {
+        background-color: #fff;
+    }
+
+    .news .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 80px 2rem;
+    }
+
+    .news .featured-article-wrapper {
+        margin-bottom: 4rem;
+    }
+
+    .news .featured-article {
+        background-color: #fff;
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+        display: grid;
+        grid-template-columns: 1fr;
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .news .featured-article:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    }
+
+    @media (min-width: 1024px) {
+        .news .featured-article {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .news .featured-image {
+        position: relative;
+        height: 320px;
+    }
+
+    @media (min-width: 1024px) {
+        .news .featured-image {
+            height: auto;
+        }
+    }
+
+    .news .featured-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .news .featured-content {
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    @media (min-width: 768px) {
+        .news .featured-content {
+            padding: 3rem;
+        }
+    }
+
+    .news .featured-content .news-date {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        margin-bottom: 1rem;
+    }
+
+    .news .featured-content .news-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        line-height: 1.2;
+        margin-bottom: 1rem;
+    }
+
+    .news .featured-content .news-description {
+        color: var(--text-medium);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .news .news-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+        .news .news-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .news .news-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .news .news-card {
+        background-color: #fff;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+        transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+        border: 1px solid #e5e7eb;
+        border-bottom: 4px solid transparent;
+    }
+
+    .news .news-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary);
+    }
+
+    .news .news-image {
+        width: 100%;
+        height: 12rem;
+        object-fit: cover;
+    }
+
+    .news .news-content {
+        padding: 1.5rem;
+    }
+
+    .news .news-card .news-title {
+        font-size: 1.25rem;
+        color: var(--text-dark);
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .news .news-card .news-date {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        margin-bottom: 1rem;
+    }
+
+    .news .news-card .news-description {
+        color: var(--text-medium);
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+
+    .news .read-more {
+        display: inline-flex;
+        align-items: center;
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .news .read-more:hover {
+        color: var(--secondary);
+    }
+
+    .news .read-more .icon {
+        margin-left: 8px;
+        transition: transform 0.3s ease;
+    }
+
+    .news .read-more:hover .icon {
+        transform: translateX(4px);
+    }
+
+    /* --- Admission & FAQ Sections --- */
+    .admission-process {
+        background-color: var(--bg-light-gray);
+    }
+
+    .admission-steps-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    @media (min-width: 768px) {
+        .admission-steps-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .admission-steps-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    .admission-step {
         text-align: center;
     }
-}
 
+    .admission-step .step-number {
+        width: 80px;
+        height: 80px;
+        background-color: var(--primary);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem auto;
+        font-size: 2rem;
+        font-weight: bold;
+    }
 
-.video-modal-close:hover,
-.video-modal-close:focus {
-    color: #bbb;
-    text-decoration: none;
-}
+    .admission-step h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 1rem;
+    }
 
-.video-modal .video-container {
-    position: relative;
-    padding-bottom: 56.25%; 
-    height: 0;
-    overflow: hidden;
-    background-color: #000; 
-}
+    .admission-step p {
+        color: var(--text-medium);
+        line-height: 1.6;
+    }
 
-.video-modal .video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 0; 
-}
-*/
+    .faq-section {
+        background-color: #fff;
+    }
+
+    .faq-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background-color: #fff;
+        border-radius: var(--radius-xl);
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (min-width: 768px) {
+        .faq-container {
+            padding: 3rem;
+        }
+    }
+
+    .faq-container h3 {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 2.5rem;
+    }
+
+    .faq-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+        .faq-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .faq-item h4 {
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .faq-item p {
+        color: var(--text-medium);
+        line-height: 1.6;
+    }
+
+    /* --- Pagination & Go-Top Button --- */
+    .news .pagination-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-top: 3rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .news .pagination-btn {
+        border: none;
+        background-color: var(--primary);
+        color: #fff;
+        padding: 8px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .news .pagination-btn:hover:not(:disabled) {
+        background-color: var(--secondary);
+    }
+
+    .news .pagination-btn:disabled {
+        background-color: #e9ecef;
+        border-color: #e9ecef;
+        color: #adb5bd;
+        cursor: not-allowed;
+    }
+
+    .news .page-number {
+        border: none;
+        background-color: transparent;
+        color: var(--primary);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .news .page-number.active {
+        background-color: var(--primary);
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .news .page-number:hover:not(.active) {
+        background-color: #dee2e6;
+    }
+
+    .go-top-btn {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 48px;
+        height: 48px;
+        background-color: var(--primary);
+        color: white;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s ease;
+    }
+
+    .go-top-btn:hover {
+        background-color: var(--secondary);
+        transform: scale(1.1);
+    }
+
+    .go-top-btn i {
+        font-size: 1.5rem;
+    }
+
+    .reveal-on-scroll {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1);
+        will-change: opacity, transform;
+    }
+
+    .reveal-on-scroll.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .reveal-on-scroll.stagger-1 {
+        transition-delay: 0.1s;
+    }
+
+    .reveal-on-scroll.stagger-2 {
+        transition-delay: 0.2s;
+    }
+
+    .reveal-on-scroll.stagger-3 {
+        transition-delay: 0.3s;
+    }
+
+    .reveal-on-scroll.stagger-4 {
+        transition-delay: 0.4s;
+    }
+
+    /* --- Mobile Adjustments --- */
+    @media (max-width: 992px) {
+        header {
+            padding: 10px 3%;
+            background-color: #162938;
+        }
+
+        .header-left img {
+            width: 60px;
+            height: auto;
+            filter: none;
+        }
+
+        .header-left .logo {
+            font-size: 0.9em;
+            margin-left: 8px;
+            color: #fff;
+            text-shadow: none;
+        }
+
+        .menu-toggle span {
+            background-color: #ffffff;
+            box-shadow: none;
+        }
+
+        .navigation {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 250px;
+            background-color: #162938;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            flex-direction: column;
+            align-items: stretch;
+            display: none;
+            z-index: 1050;
+            border-top: 1px solid #2a3f54;
+            max-height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+
+        .navigation.active {
+            display: flex;
+        }
+
+        .navigation a {
+            display: block;
+            padding: 12px 20px;
+            margin-left: 0;
+            text-align: left;
+            color: #f0f0f0;
+            border-bottom: 1px solid #2a3f54;
+            text-decoration: none;
+            text-shadow: none;
+        }
+
+        .navigation a:last-child {
+            border-bottom: none;
+        }
+
+        .navigation a:hover {
+            background-color: #22333f;
+        }
+
+        .navigation a .btnLogin-popup {
+            width: calc(100% - 10px);
+            margin: 5px;
+            padding: 10px 15px;
+            font-size: 1em;
+            text-align: center;
+            display: block;
+            height: auto;
+            box-sizing: border-box;
+        }
+
+        .menu-toggle {
+            display: flex;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: translateY(9px) rotate(45deg);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: translateY(-9px) rotate(-45deg);
+        }
+
+        .hero-slider {
+            height: 70vh;
+            min-height: 500px;
+        }
+
+        .hero-slider .slide-content {
+            max-width: 100%;
+            padding: 0 4%;
+        }
+
+        .hero-slider .slide-content h1 {
+            font-size: 2.8em;
+        }
+
+        .hero-slider .intro-text {
+            font-size: 0.9em;
+        }
+
+        .hero-slider .btn-get-started {
+            padding: 12px 24px;
+            font-size: 1em;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .hero-slider .slide-content h1 {
+            font-size: 2.2em;
+        }
+
+        .hero-slider .intro-text {
+            font-size: 0.8em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-slider .slide-actions {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .section-title {
+            font-size: 2rem;
+        }
+    }
 </style>
 {% endblock %}
 
-
 {% block head %}
-    {{ super() }} <!-- If base.html has a head block -->
-    <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
-    <!-- Font Awesome for social icons in footer -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <title>Padre Garcia Polytechnic College - Home</title> <!-- Set a default title or make it dynamic -->
-{% endblock%}
-
+{{ super() }}
+<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+<title>Padre Garcia Polytechnic College - Home</title>
+{% endblock %}
 
 {% block body %}
-
 <header>
     <div class="header-left">
-        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College Logo" width="80" height="auto" ></a>
+        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}"
+                alt="Padre Garcia Polytechnic College Logo" width="80" height="auto"></a>
         <h2 class="logo">Padre Garcia Polytechnic College</h2>
     </div>
 
@@ -496,878 +1204,458 @@ header {
         <a href="{{ url_for('views.home') }}">Home</a>
         <a href="{{ url_for('views.about') }}">About</a>
         <a href="#programs">Programs</a>
+
         <a href="#news">News</a>
         <a href="{{ url_for('views.contact_page') }}">Contact</a>
         {% if student_logged_in %}
-            <a href="{{ url_for('views.application_status_page') }}">
-                <button class="btnLogin-popup">My Application</button>
-            </a>
-            <a href="{{ url_for('auth.logout') }}">
-                 <button class="btnLogin-popup" style="background-color: #d9534f;">Logout</button>
-            </a>
+        <a href="{{ url_for('views.application_status_page') }}">
+            <button class="btnLogin-popup">My Application</button>
+        </a>
+        <a href="{{ url_for('auth.logout') }}">
+            <button class="btnLogin-popup" style="background-color: #d9534f;">Logout</button>
+        </a>
         {% else %}
-            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
-              <button class="btnLogin-popup">Apply now</button>
-            </a>
+        <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
+            <button class="btnLogin-popup">Apply now</button>
+        </a>
         {% endif %}
     </nav>
 </header>
 
-<!-- New Hero Slider Section -->
 <section class="hero-slider">
     <div class="slides-container">
+        {% if hero_slides %}
+        {% for slide in hero_slides %}
+        <div class="slide"
+            data-img="{{ url_for('static', filename='images/uploads/' + slide.image_filename) if slide.image_filename else url_for('static', filename='images/img1.jpg') }}">
+            <div class="slide-content">
+                {% if slide.intro_text %}
+                <p class="intro-text">{{ slide.intro_text }}</p>
+                {% endif %}
+
+                <h1>
+                    {% if slide.highlight_text and slide.highlight_text in slide.title_text %}
+                    {{ slide.title_text | replace(slide.highlight_text, '<span class="highlight">' +
+                        slide.highlight_text + '</span>') | safe }}
+                    {% else %}
+                    {{ slide.title_text }}
+                    {% endif %}
+                </h1>
+
+                <div class="slide-actions">
+                    <a href="{{ slide.button_link }}" class="btn-get-started">{{ slide.button_text }}</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <!-- Fallback static slides if DB is empty -->
         <div class="slide" data-img="{{ url_for('static', filename='images/img1.jpg') }}">
             <div class="slide-content">
-                <p class="intro-text">Empowering Futures </p>
+                <p class="intro-text">🎓 Empowering Futures</p>
                 <h1>Padre Garcia <span class="highlight">Polytechnic</span> College</h1>
                 <div class="slide-actions">
                     <a href="{{ url_for('views.existing_or_not') }}" class="btn-get-started">Apply Now</a>
-                    <!-- Play video button removed -->
                 </div>
             </div>
         </div>
         <div class="slide" data-img="{{ url_for('static', filename='images/img2.jpg') }}">
             <div class="slide-content">
-                <p class="intro-text">Innovation & Excellence </p>
+                <p class="intro-text">🎓 Innovation & Excellence</p>
                 <h1>Discover Your <span class="highlight">Potential</span> With Us</h1>
                 <div class="slide-actions">
-                     <a href="#programs" class="btn-get-started">Our Programs</a>
-                    <!-- Play video button removed -->
+                    <a href="#programs" class="btn-get-started">Our Programs</a>
                 </div>
             </div>
         </div>
         <div class="slide" data-img="{{ url_for('static', filename='images/img3.jpg') }}">
             <div class="slide-content">
-                <p class="intro-text">Community Focused </p>
+                <p class="intro-text">🎓 Community Focused</p>
                 <h1>Building <span class="highlight">Leaders</span> For Tomorrow</h1>
-                 <div class="slide-actions">
+                <div class="slide-actions">
                     <a href="{{ url_for('views.about') }}" class="btn-get-started">About PGPC</a>
-                    <!-- Play video button removed -->
                 </div>
             </div>
         </div>
-         <div class="slide" data-img="{{ url_for('static', filename='images/img4.jpg') }}">
+        <div class="slide" data-img="{{ url_for('static', filename='images/img4.jpg') }}">
             <div class="slide-content">
-                <p class="intro-text">Quality Education </p>
+                <p class="intro-text">🎓 Quality Education</p>
                 <h1>Your Journey To <span class="highlight">Success</span> Starts Here</h1>
-                 <div class="slide-actions">
+                <div class="slide-actions">
                     <a href="{{ url_for('views.contact_page') }}" class="btn-get-started">Contact Us</a>
-                    <!-- Play video button removed -->
                 </div>
             </div>
         </div>
-        <div class="slide" data-img="{{ url_for('static', filename='images/img6.jpg') }}"> <!-- Assuming img5 was a typo and img6 is intended -->
+        <div class="slide" data-img="{{ url_for('static', filename='images/img6.jpg') }}">
             <div class="slide-content">
-                <p class="intro-text">Join Our Family </p>
+                <p class="intro-text">🎓 Join Our Family</p>
                 <h1>Experience <span class="highlight">PGPC</span> Pride</h1>
-                 <div class="slide-actions">
+                <div class="slide-actions">
                     <a href="{{ url_for('views.home') }}#news" class="btn-get-started">Latest News</a>
-                    <!-- Play video button removed -->
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
     <button class="slider-nav prev" aria-label="Previous slide">❮</button>
     <button class="slider-nav next" aria-label="Next slide">❯</button>
 </section>
-<!-- End New Hero Slider Section -->
 
-
-<!-- Programs Section (Original Structure and Styles) -->
-<div class="programs">
-  <style>
-      .programs {
-          padding: 40px 20px;
-          background-color: #e3e3e3;
-          font-family: Arial, sans-serif;
-      }
-
-      .programs h1 { /* This targets the h1 directly inside .programs */
-          text-align: center;
-          font-size: 2.5rem;
-          color: #162938;
-          margin-bottom: 2rem;
-      }
-
-      .grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 20px;
-      }
-
-      .card {
-          background-color: #fff;
-          border-radius: 10px;
-          overflow: hidden;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-          transition: transform 0.3s ease;
-          display: flex;
-          flex-direction: column;
-      }
-
-      .card:hover {
-          transform: translateY(-5px);
-      }
-
-      .card img {
-          width: 100%;
-          height: 200px;
-          object-fit: cover;
-      }
-
-      .relative { /* This class was on the div wrapping img and overlay in original */
-          position: relative;
-      }
-
-      .card .overlay {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-          color: white;
-          padding: 1rem;
-      }
-
-      .card .overlay h2 {
-          margin: 0;
-          font-size: 1.25rem;
-      }
-
-      .p-4 { /* This is the content area below the image */
-          padding: 1rem;
-          flex-grow: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-      }
-
-      .p-4 p {
-          color: #555;
-          margin-bottom: 1rem;
-          flex-grow: 1;
-      }
-
-      .p-4 .program-button-link button {
-          background-color: #1f2937;
-          color: white;
-          padding: 0.5rem 1rem;
-          border: none;
-          border-radius: 9999px;
-          cursor: pointer;
-          width: 100%;
-          margin-top: auto;
-      }
-
-      .p-4 .program-button-link button:hover {
-          background-color: #374151;
-      }
-    </style>
-
-
-  <h1><div class="programs" id="programs"> <!-- Original H1 structure with inner div having id -->
-    PROGRAMS</div></h1>
-  <div class="grid">
-      <!-- Bachelor of Science (B.S.) in Computer Science -->
-      <div class="card">
-          <div class="relative">
-              <img src="{{ url_for('static', filename='images/bscs.jpg') }}" alt="Computer Science Program">
-              <div class="overlay">
-                  <h2>BACHELOR OF SCIENCE IN COMPUTER SCIENCE</h2>
-              </div>
-          </div>
-          <div class="p-4">
-              <p>
-                  A <b>Bachelor of Science (B.S.) in Computer Science</b> is a degree program that focuses on the study of computing, programming,...
-              </p>
-              <a href="{{ url_for('views.view_program_page', program_id='bscs') }}" class="program-button-link">
-                  <button>View Program Details</button>
-              </a>
-          </div>
-      </div>
-      <!-- College of Criminology -->
-      <div class="card">
-          <div class="relative">
-              <img src="{{ url_for('static', filename='images/criminology.jpg') }}" alt="Criminology Program">
-              <div class="overlay">
-                  <h2>BACHELOR OF SCIENCE IN CRIMINOLOGY</h2>
-              </div>
-          </div>
-          <div class="p-4">
-              <p>
-                  A <b>Criminology</b> degree is the study of crime, criminal behavior, and the criminal justice system. It is an interdisciplinary field...
-              </p>
-              <a href="{{ url_for('views.view_program_page', program_id='criminology') }}" class="program-button-link">
-                  <button>View Program Details</button>
-              </a>
-          </div>
-      </div>
-      <!-- Bachelor of Science in Management Accounting (BSMA) -->
-      <div class="card">
-          <div class="relative">
-              <img src="{{ url_for('static', filename='images/bsma.jpg') }}" alt="Management Accounting Program">
-              <div class="overlay">
-                  <h2>BACHELOR OF SCIENCE IN MANAGEMENT ACCOUNTING</h2>
-              </div>
-          </div>
-          <div class="p-4">
-              <p>
-               A <b>Bachelor of Science in Management Accounting (BSMA)</b> is a degree program that combines principles of accounting, finance, and management...
-              </p>
-              <a href="{{ url_for('views.view_program_page', program_id='bsma') }}" class="program-button-link">
-                 <button>View Program Details</button>
-              </a>
-          </div>
-      </div>
-      <!-- Bachelor of Public Administration (BPA) -->
-      <div class="card">
-          <div class="relative">
-              <img src="{{ url_for('static', filename='images/bpa.jpg') }}" alt="Public Administration Program">
-              <div class="overlay">
-                  <h2>BACHELOR OF PUBLIC ADMINISTRATION</h2>
-              </div>
-          </div>
-          <div class="p-4">
-              <p>
-                  A <b>Bachelor of Public Administration (BPA)</b> is a degree program focused on preparing students for careers in public service and governance...
-              </p>
-              <a href="{{ url_for('views.view_program_page', program_id='bpa') }}" class="program-button-link">
-                  <button>View Program Details</button>
-              </a>
-          </div>
-      </div>
-  </div>
+<!-- Programs Section (CAROUSEL) -->
+<div class="programs section-container" id="programs">
+    <div class="section-title-wrapper reveal-on-scroll">
+        <p class="section-kicker">Explore Our Offerings</p>
+        <h1 class="section-title">Our Academic Programs</h1>
+        <p class="section-subtitle">Discover a wide range of programs designed to equip you with the skills for a
+            successful future.</p>
+    </div>
+    <div class="swiper programs-slider">
+        <div class="swiper-wrapper">
+            {% for program in programs %}
+            <div class="swiper-slide reveal-on-scroll">
+                <div class="card">
+                    <img src="{{ url_for('static', filename='images/uploads/' + program.hero_image_filename) if program.hero_image_filename else url_for('static', filename='images/default_program_hero.jpg') }}"
+                        alt="{{ program.title }}">
+                    <div class="card-content">
+                        <h3>{{ program.title }}</h3>
+                        <p>
+                            {{ program.description[:150] }}{% if program.description|length > 150 %}...{% endif %}
+                        </p>
+                        <a href="{{ url_for('views.view_program_page', program_id=program.program_id) }}"
+                            class="program-button-link">
+                            View Program Details <i class="ri-arrow-right-line icon"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p style="text-align: center; width: 100%;">No programs are currently available.</p>
+            {% endfor %}
+        </div>
+        <div class="swiper-pagination"></div>
+    </div>
 </div>
-<!-- End Programs Section -->
 
-<!-- News & Features Section (Original Structure and Styles) -->
-<div class="news">
-<style>
 
-.container { /* This style from original news might conflict if not scoped.
-                Assuming it was intended for this section. */
-max-width: 1200px;
-margin: 0 auto;
-padding: 2rem;
-}
-
-.section-title { /* This style from original news. */
-font-size: 2rem;
-color: #162938;
-text-align: center;
-margin-bottom: 2rem;
-font-weight: bold;
-}
-
-.news-grid { /* This style from original news. */
-display: grid;
-grid-template-columns: 1fr;
-gap: 1.5rem;
-}
-
-@media (min-width: 768px) {
-.news-grid {
-  grid-template-columns: repeat(2, 1fr);
-}
-}
-
-@media (min-width: 1024px) {
-.news-grid {
-  grid-template-columns: repeat(3, 1fr);
-}
-}
-
-.news-card { /* This style from original news. */
-background-color: #fff;
-border-radius: 0.5rem;
-overflow: hidden;
-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-transition: transform 0.3s ease;
-}
-
-.news-card:hover {
-transform: scale(1.03);
-}
-
-.news-image {
-width: 100%;
-height: 12rem;
-object-fit: cover;
-}
-
-.news-content {
-padding: 1rem;
-}
-
-.news-title {
-font-size: 1.25rem;
-color: #162938;
-font-weight: bold;
-margin-bottom: 0.5rem;
-}
-
-.news-date {
-font-size: 0.9rem;
-color: #6b7280;
-margin-bottom: 1rem;
-}
-
-.news-description {
-color: #374151;
-margin-bottom: 1rem;
-}
-
-.read-more {
-display: inline-block;
-color: #162938;
-font-weight: 600;
-text-decoration: none;
-}
-
-.read-more:hover {
-text-decoration: underline;
-}
-</style>
-
-<div class="container">
-  <h1 class="section-title"><div class="news" id="news">NEWS & FEATURES</div></h1> <!-- Original H1 structure -->
-  <div class="news-grid">
-
-    <!-- News Item 1 -->
-    <div class="news-card">
-      <img src="{{ url_for('static', filename='images/pgpcsportfest.jpg') }}"
-           alt="Carmela Lanesca Berania Wins National Champion" class="news-image">
-      <div class="news-content">
-        <h2 class="news-title">
-          Sportsfest of Padre Garcia Polytechnic College PGPC Royal Bos, the Crown of Excellence Season 1.
-        </h2>
-        <p class="news-date">April 1, 2025</p>
-        <p class="news-description">
-          This year's Sportsfest is a celebration of athleticism, teamwork, and school spirit. Our goal is to provide a platform for every student to showcase their skills and represent their respective teams with pride.
-          Events will range from individual and team sports to fun games, and each competition is designed to highlight the importance of discipline, hard work, and sportsmanship.
-        </p>
-        <a href="https://www.facebook.com/share/v/1KZg28vVT9/" class="read-more" target="_blank" rel="noopener noreferrer">Watch here →</a>
-      </div>
+<!-- Admission Process Section -->
+<section class="admission-process section-container">
+    <div class="section-title-wrapper reveal-on-scroll">
+        <p class="section-kicker">Get Started</p>
+        <h2 class="section-title">Simple Admission Process</h2>
+        <p class="section-subtitle">Follow these easy steps to begin your academic journey with us.</p>
     </div>
-
-    <!-- News Item 2 -->
-    <div class="news-card">
-      <img src="{{ url_for('static', filename='images/cottilion.jpg') }}"
-           alt="UB Dream Schoolers Excel at BCPRISA 2025" class="news-image">
-      <div class="news-content">
-        <h2 class="news-title">PGPC First Acquaintance Party
-      </h2>
-        <p class="news-date">April 5, 2025</p>
-        <p class="news-description">
-          This event is organized to help students, faculty, and staff get to know each other and build connections at the start of the school year.
-           It’s a great opportunity to socialize and make new friends within the PGPC community. The event will feature activities such as music, dancing, games, and refreshments.
-           Whether you’re a first-year student or returning, this is your chance to meet fellow PGPCians, enjoy the festivities, and kick off the school year with fun and excitement.
-        </p>
-        <a href="https://www.facebook.com/share/v/19KJck19NG/" class="read-more" target="_blank" rel="noopener noreferrer">Watch here →</a>
-      </div>
+    <div class="admission-steps-grid">
+        {% if admission_steps %}
+        {% for step in admission_steps %}
+        <div class="admission-step reveal-on-scroll stagger-{{ loop.index if loop.index <= 4 else 4 }}">
+            <div class="step-number">{{ step.step_number }}</div>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.description }}</p>
+        </div>
+        {% endfor %}
+        {% else %}
+        <!-- Fallback if database is empty -->
+        <p class="text-center col-span-4">Admission steps are being updated. Please check back later.</p>
+        {% endif %}
     </div>
+</section>
 
-    <!-- News Item 3 -->
-    <div class="news-card">
-      <img src="{{ url_for('static', filename='images/sinag.jpg') }}"
-           alt="Urban Green Hub Launch" class="news-image">
-      <div class="news-content">
-        <h2 class="news-title">
-          PADRE GARCIA POLYTECHNIC COLLEGE (PGPC) SINAG 1 - Leadership Training and Survival Team Building 2025
-        </h2>
-        <p class="news-date">March 26, 2025</p>
-        <p class="news-description">
-          A leader is best when people barely know they exists, when their work is done, aim fulfilled, they will say: we did it ourselves.
-          Become the kind of leader that people would follow voluntarily even if you had no title or position.
+<!-- Announcements Section -->
+<div class="announcements section-container" id="announcements">
+    <div class="section-title-wrapper reveal-on-scroll">
+        <p class="section-kicker">Stay Informed</p>
+        <h1 class="section-title">Latest Announcements</h1>
+        <p class="section-subtitle">Keep up to date with important news, events, and deadlines from the administration.
         </p>
-        <a href="https://www.facebook.com/share/v/1AJmqwNyQN/" class="read-more" target="_blank" rel="noopener noreferrer">Watch here →</a>
-      </div>
     </div>
-  </div>
+    <div class="swiper announcements-slider">
+        <div class="swiper-wrapper">
+            {% for announcement in announcements %}
+            <div class="swiper-slide reveal-on-scroll">
+                <div class="card">
+                    <img src="{{ url_for('static', filename='images/uploads/' + announcement.image_filename) if announcement.image_filename else url_for('static', filename='images/default_announcement.jpg') }}"
+                        alt="{{ announcement.title }}">
+                    <div class="card-content">
+                        <div class="announcement-meta">
+                            <span class="announcement-tag">Announcement</span>
+                            <span class="announcement-date">{{ announcement.created_at.strftime('%B %d, %Y') if
+                                announcement.created_at }}</span>
+                        </div>
+                        <h3>{{ announcement.title }}</h3>
+                        <p>{{ announcement.content | striptags }}</p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p style="text-align: center; width: 100%;">No announcements are currently available.</p>
+            {% endfor %}
+        </div>
+        <div class="swiper-pagination"></div>
+    </div>
 </div>
-</div><!-- Closing original .news div -->
 
-<!-- News number 2 (Original Structure and Styles) -->
-<div class="news2">
-  <style>
-  /* Scoping styles to .news2 to avoid conflicts */
-  .news2 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-
-  .news2 .section-title {
-    font-size: 2rem;
-    color: #162938;
-    text-align: center;
-    margin-bottom: 2rem;
-    font-weight: bold;
-  }
-
-  .news2 .news-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  @media (min-width: 768px) {
-    .news2 .news-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .news2 .news-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  .news2 .news-card {
-    background-color: #fff;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-  }
-
-  .news2 .news-card:hover {
-    transform: scale(1.03);
-  }
-
-  .news2 .news-image {
-    width: 100%;
-    height: 12rem;
-    object-fit: cover;
-  }
-
-  .news2 .news-content {
-    padding: 1rem;
-  }
-
-  .news2 .news-title {
-    font-size: 1.25rem;
-    color: #162938;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-  }
-
-  .news2 .news-date {
-    font-size: 0.9rem;
-    color: #6b7280;
-    margin-bottom: 1rem;
-  }
-
-  .news2 .news-description {
-    color: #374151;
-    margin-bottom: 1rem;
-  }
-
-  .news2 .read-more {
-    display: inline-block;
-    color: #162938;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .news2 .read-more:hover {
-    text-decoration: underline;
-  }
-  </style>
-
-  <div class="container"> <!-- This container is within .news2 -->
-      <div class="news-grid">
-        <!-- News Item 1 (from original news2) -->
-        <div class="news-card">
-          <img src="{{ url_for('static', filename='images/firedrill.jpg') }}"
-               alt="PGPC Fire and Earthquake Drill" class="news-image">
-          <div class="news-content">
-            <h2 class="news-title">
-              PGPC Fire and Earthquake Drill last March 15, 2025
-            </h2>
-            <p class="news-date">March 15, 2025</p>
-            <p class="news-description">
-              The fire and earthquake drill is in compliance with Republic Act 9514, otherwise known as the Fire Code of the Philippines of 2008, which mandates educating people on fire safety procedures and protocols.
-              With preparedness in PGPC as our priority, our PGPC Emergency Response Team actively participated in the drill to enhance response capabilities and ensure readiness in the event of an earthquake.
-              Disaster preparedness starts with awareness and action! Let’s continue to stay vigilant and proactive in building a safer and more resilient community.
-            </p>
-            <a href="https://www.facebook.com/share/v/1Hu9avf2DY/" class="read-more" target="_blank" rel="noopener noreferrer">Watch here →</a>
-          </div>
+<!-- News & Features Section -->
+<div class="news section-container" id="news">
+    <div class="container" style="padding:0;">
+        <div class="section-title-wrapper reveal-on-scroll">
+            <p class="section-kicker">Campus Stories</p>
+            <h1 class="section-title">News & Features</h1>
+            <p class="section-subtitle">Explore the latest stories, achievements, and highlights from our vibrant campus
+                community.</p>
         </div>
 
-        <!-- News Item 2 (from original news2) -->
-        <div class="news-card">
-          <img src="{{ url_for('static', filename='images/crimrites.jpg') }}"
-               alt="PGPC Criminology Reception Rites" class="news-image">
-          <div class="news-content">
-            <h2 class="news-title">PGPC CRIMINOLOGY RECEPTION RITES
-          </h2>
-            <p class="news-date">March 11, 2025</p>
-            <p class="news-description">
-              This event marks the official welcome and orientation for incoming students of the Criminology program at Padre Garcia Polytechnic College. It is designed to introduce students to the Criminology department, its faculty, and the academic expectations for the program.
-              During this event, new students will learn about the courses, activities, and resources available to them throughout their studies.
-               It is also an opportunity to connect with fellow criminology students, faculty members, and department staff. The Reception Rites aim to provide a smooth transition into the program and set the stage for their journey in the field of criminal justice and criminology.
-            </p>
-            <a href="https://www.facebook.com/share/v/1Bfe4MnCSj/" class="read-more" target="_blank" rel="noopener noreferrer">Watch here →</a>
-          </div>
+        {% if news_articles %}
+        <div class="featured-article-wrapper reveal-on-scroll">
+            <article class="featured-article">
+                <div class="featured-image">
+                    <img src="{{ url_for('static', filename='images/uploads/' + news_articles[0].image_filename) if news_articles[0].image_filename else url_for('static', filename='images/default_news.jpg') }}"
+                        alt="{{ news_articles[0].title }}">
+                </div>
+                <div class="featured-content">
+                    <p class="news-date">{{ news_articles[0].publish_date.strftime('%B %d, %Y') if
+                        news_articles[0].publish_date }}</p>
+                    <h2 class="news-title">{{ news_articles[0].title }}</h2>
+                    <p class="news-description">{{ news_articles[0].description }}</p>
+                    {% if news_articles[0].read_more_link %}
+                    <a href="{{ news_articles[0].read_more_link }}" class="read-more" target="_blank"
+                        rel="noopener noreferrer">
+                        View more <i class="ri-arrow-right-line icon"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </article>
         </div>
 
-        <!-- News Item 3 (from original news2) -->
-        <div class="news-card">
-          <img src="{{ url_for('static', filename='images/event.jpg') }}"
-               alt="Statement by Gob Mike" class="news-image">
-          <div class="news-content">
-            <h2 class="news-title">
-              "Strengthening the PGPCian Discipline, Values, Attitude, Servant Leadership"
-            </h2>
-            <p class="news-date">May 28, 2025</p>
-            <p class="news-description">
-             First lecture series for PGPC students entitled "Strengthening the PGPCian Discipline, Values, Attitude, Servant Leadership" and "Launching of Tanglaw ng Pangarap"
-Building stronger PGPCians starts with discipline, values, the right attitude, and a heart to serve. 
-We're shaping leaders who lead by example—grounded in respect, driven by purpose, and always ready to serve others.
-Tanglaw ng Pangarap symbolizes hope, inspiration, and guidance towards achieveing one’s dreams and aspirations.
-            </p>
-            <a href="https://www.facebook.com/share/1Ay7awmdkm/" class="read-more" target="_blank" rel="noopener noreferrer">Read more →</a>
-          </div>
+        <div class="news-grid">
+            {% for article in news_articles[1:] %}
+            <div class="news-card reveal-on-scroll"
+                data-publish-date="{{ article.publish_date.isoformat() if article.publish_date else '' }}">
+                <img src="{{ url_for('static', filename='images/uploads/' + article.image_filename) if article.image_filename else url_for('static', filename='images/default_news.jpg') }}"
+                    alt="{{ article.title }}" class="news-image">
+                <div class="news-content">
+                    <h2 class="news-title">{{ article.title }}</h2>
+                    <p class="news-date">{{ article.publish_date.strftime('%B %d, %Y') if article.publish_date }}</p>
+                    <p class="news-description">{{ article.description }}</p>
+                    {% if article.read_more_link %}
+                    <a href="{{ article.read_more_link }}" class="read-more" target="_blank" rel="noopener noreferrer">
+                        Watch Here <i class="ri-arrow-right-line icon"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
         </div>
-      </div>
+        {% else %}
+        <p style="text-align: center;">No news articles available at the moment.</p>
+        {% endif %}
+
+        <div class="pagination-controls"></div>
     </div>
-</div><!-- Closing original .news2 div -->
-<!-- End News & Features Section -->
+</div>
 
 
-<!-- Go Top Button (Original Style) -->
-<style>
-.go-top-btn {
-    position: fixed;
-    bottom: 70px;
-    right: 35px;
-    border-radius: 50%;
-    cursor: pointer;
-    height: 50px;
-    width: 50px;
-    background: #fff;
-    border: 3px solid #333;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-.go-top-btn img {
-    width: 20px;
-    height: 20px;
-}
-</style>
-<button class="go-top-btn" id="goTopBtn">
-    <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="arrow up" />
+<!-- FAQ Section -->
+<section class="faq-section section-container">
+    <div class="faq-container reveal-on-scroll">
+        <h3>Frequently Asked Questions</h3>
+        <div class="faq-grid">
+            {% if faqs %}
+            {% for faq in faqs %}
+            <div class="faq-item">
+                <h4>{{ faq.question }}</h4>
+                <p>{{ faq.answer }}</p>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-center col-span-2">No FAQs available at the moment.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<script>
+    (function () { if (!window.chatbase || window.chatbase("getState") !== "initialized") { window.chatbase = (...arguments) => { if (!window.chatbase.q) { window.chatbase.q = [] } window.chatbase.q.push(arguments) }; window.chatbase = new Proxy(window.chatbase, { get(target, prop) { if (prop === "q") { return target.q } return (...args) => target(prop, ...args) } }) } const onLoad = function () { const script = document.createElement("script"); script.src = "https://www.chatbase.co/embed.min.js"; script.id = "MGHKRRouiIubTplvl2PXZ"; script.domain = "www.chatbase.co"; document.body.appendChild(script) }; if (document.readyState === "complete") { onLoad() } else { window.addEventListener("load", onLoad) } })();
+</script>
+
+<button class="go-top-btn" id="goTopBtn" title="Go to top">
+    <i class="ri-arrow-up-line"></i>
 </button>
 
-
-<!-- Footer (Original Style) -->
-<style>
-.footer {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem 1rem;
-    text-align: center;
-    color: white;
-    overflow: hidden;
-}
-
-.footer::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat;
-    z-index: 0;
-    opacity: 0.3;
-}
-
-.footer::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(22, 41, 56, 0.442);
-    z-index: 1;
-}
-
-.footer * {
-    position: relative;
-    z-index: 2;
-}
-
-.footer-logo {
-    width: 100px;
-    height: 100px;
-    margin-bottom: 1rem;
-}
-
-.footer-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-.footer-subtitle {
-    font-size: 1.25rem;
-    font-weight: bold;
-    margin-top: 0.5rem;
-}
-
-.footer-connect {
-    margin-top: 1rem;
-    font-size: 1rem;
-}
-
-.footer-socials {
-    display: flex;
-    gap: 1rem;
-    margin-top: 0.5rem;
-    font-size: 1.25rem;
-}
-
-.footer-socials a {
-    color: white;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.footer-socials a:hover {
-    color: #0987d0;
-}
-
-.footer-divider {
-    border-top: 1px solid white;
-    width: 25%;
-    margin: 2rem 0;
-}
-
-.footer-bottom {
-    font-size: 0.875rem;
-    line-height: 1.6;
-    max-width: 700px;
-}
-.footer-bottom p {
-    margin-bottom: 0.5rem; 
-}
-.footer-bottom a { 
-    color: white; 
-    text-decoration: none;
-}
-.footer-bottom a:hover {
-    text-decoration: underline; 
-}
-</style>
-
 <footer class="footer">
-    <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
+    <!-- Dynamic Logo -->
+    <img src="{{ url_for('static', filename='images/uploads/' + global_content.footer_logo_image) if global_content.footer_logo_image else url_for('static', filename='logopgpc.png') }}"
+        alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
 
-    <h1 class="footer-title">Padre Garcia Polytechnic College</h1>
-    <h2 class="footer-subtitle">THE FUTURE BEGINS HERE.</h2>
+    <!-- Dynamic Title & Slogan -->
+    <h1 class="footer-title">{{ global_content.footer_title or 'Padre Garcia Polytechnic College' }}</h1>
+    <h2 class="footer-subtitle">{{ global_content.footer_subtitle or 'THE FUTURE BEGINS HERE.' }}</h2>
 
-    <p class="footer-connect">Connect with us</p>
+    <!-- Dynamic Connect Text & Socials -->
+    <p class="footer-connect">{{ global_content.footer_connect_text or 'Connect with us' }}</p>
     <div class="footer-socials">
-      <a href="https://www.facebook.com/PadreGarciaPolytechnicCollege" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        {% if global_socials %}
+            {% for link in global_socials %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ link.platform_name }}">
+                    <i class="{{ link.icon_class }}"></i>
+                </a>
+            {% endfor %}
+        {% else %}
+            <!-- Fallback for old static link if no dynamic links exist -->
+            {% if global_content.footer_facebook_link %}
+                <a href="{{ global_content.footer_facebook_link }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            {% endif %}
+        {% endif %}
     </div>
 
     <div class="footer-divider"></div>
 
+    <!-- Dynamic Links & Contact Info -->
     <div class="footer-bottom">
-      <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7" target="_blank" rel="noopener noreferrer">Brgy.Castillo, Padre Garcia, Batangas</a> | <a href="tel:+63285244611">+63 (2) 8524-4611</a></p>
-      <p>© {{ current_year if current_year else '2025' }}. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home" target="_blank" rel="noopener noreferrer">Padre Garcia PH</a></p>
+        <p>
+            <a href="{{ url_for('views.about') }}">About</a> |
+            <a href="{{ url_for('views.contact_page') }}">Contact us</a> |
+            <a href="{{ url_for('views.home') }}#programs">Programs</a> |
+            <a href="{{ url_for('views.home') }}">Admission</a> |
+            <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7" target="_blank" rel="noopener noreferrer">{{
+                global_content.contact_address }}</a> |
+            <a href="tel:{{ global_content.contact_phone }}">{{ global_content.contact_phone }}</a>
+        </p>
+        <p>© {{ current_year if current_year else '2025' }}. All Rights Reserved {{ global_content.footer_title }} | <a
+                href="https://www.padregarcia.gov.ph/home" target="_blank" rel="noopener noreferrer">Padre Garcia PH</a>
+        </p>
     </div>
 </footer>
 
-<!-- Video Modal HTML (Commented out as video button is removed) -->
-<!--
-<div id="videoModal" class="video-modal" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
-    <div class="video-modal-content">
-        <button class="video-modal-close" aria-label="Close video modal">×</button>
-        <div id="videoModalTitle" style="display:none;">Facebook Video</div>
-        <div class="video-container">
-            <iframe id="facebookVideoPlayer" 
-                    title="Facebook Video Player"
-                    style="border:none;overflow:hidden" 
-                    scrolling="no" 
-                    frameborder="0" 
-                    allowTransparency="true" 
-                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" 
-                    allowfullscreen="true"></iframe>
-        </div>
-    </div>
-</div>
--->
-
-
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Go Top Button (Original JS logic)
-    const goTopBtn = document.getElementById('goTopBtn');
-    if(goTopBtn) {
-        window.addEventListener('scroll', () => {
-          if (window.scrollY > 200) { // Original threshold was 200
-            goTopBtn.style.display = "flex";
-          } else {
-            goTopBtn.style.display = "none";
-          }
-        });
-        goTopBtn.addEventListener('click', () => {
-          window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-          });
-        });
-    }
-
-    // Mobile Menu Toggle
-    const menuToggle = document.querySelector('.menu-toggle');
-    const navigation = document.getElementById('main-navigation');
-    if (menuToggle && navigation) {
-        menuToggle.addEventListener('click', function() {
-            navigation.classList.toggle('active');
-            menuToggle.classList.toggle('active');
-            const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
-            menuToggle.setAttribute('aria-expanded', !isExpanded);
-        });
-    }
-
-    // Hero Slider Logic
-    const slider = document.querySelector('.hero-slider');
-    if (slider) {
-        const slidesContainer = slider.querySelector('.slides-container');
-        const slides = Array.from(slidesContainer.querySelectorAll('.slide'));
-        const nextBtn = slider.querySelector('.slider-nav.next');
-        const prevBtn = slider.querySelector('.slider-nav.prev');
-        let currentSlide = 0;
-        let autoSlideInterval;
-        const SLIDE_INTERVAL_TIME = 6000; // 6 seconds (Changed from 5000)
-
-        function updateSlideNumber(slideElement, index, total) {
-            const numberDisplay = slideElement.querySelector('.slide-number-display');
-            if (numberDisplay) {
-                numberDisplay.textContent = `${String(index + 1).padStart(2, '0')}/${String(total).padStart(2, '0')}`;
-            }
-        }
-        
-        function loadSlideImage(slideElement) {
-            const imgUrl = slideElement.dataset.img;
-            if (imgUrl && !slideElement.style.backgroundImage) { // Check if already loaded
-                 slideElement.style.backgroundImage = `url(${imgUrl})`;
-            }
+    document.addEventListener('DOMContentLoaded', function () {
+        const goTopBtn = document.getElementById('goTopBtn');
+        if (goTopBtn) {
+            window.addEventListener('scroll', () => { goTopBtn.style.display = (window.scrollY > 300) ? "flex" : "none"; });
+            goTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: "smooth" }); });
         }
 
-        function showSlide(index) {
-            slides.forEach((slide, i) => {
-                slide.classList.remove('active');
-                if (i === index) {
-                    loadSlideImage(slide); 
-                    updateSlideNumber(slide, i, slides.length);
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navigation = document.getElementById('main-navigation');
+        if (menuToggle && navigation) {
+            menuToggle.addEventListener('click', function () {
+                navigation.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+        }
+
+        const slider = document.querySelector('.hero-slider');
+        if (slider) {
+            const slides = Array.from(slider.querySelectorAll('.slide'));
+            const nextBtn = slider.querySelector('.slider-nav.next');
+            const prevBtn = slider.querySelector('.slider-nav.prev');
+            let currentSlide = 0;
+            let autoSlideInterval;
+            const SLIDE_INTERVAL_TIME = 6000;
+
+            const loadSlideImage = (slide) => {
+                const imgUrl = slide.dataset.img;
+                if (imgUrl && !slide.style.backgroundImage) { slide.style.backgroundImage = `url(${imgUrl})`; }
+            };
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => slide.classList.remove('active'));
+                const newSlide = slides[index];
+                if (newSlide) {
+                    loadSlideImage(newSlide);
+                    newSlide.classList.add('active');
                 }
-            });
-            if (slides[index]) { // Ensure slide exists
-                slides[index].classList.add('active');
+                currentSlide = index;
             }
-            currentSlide = index;
-        }
 
-        function nextSlide() {
-            if (slides.length === 0) return;
-            let newIndex = (currentSlide + 1) % slides.length;
-            showSlide(newIndex);
-        }
+            const nextSlide = () => showSlide((currentSlide + 1) % slides.length);
+            const prevSlide = () => showSlide((currentSlide - 1 + slides.length) % slides.length);
 
-        function prevSlide() {
-            if (slides.length === 0) return;
-            let newIndex = (currentSlide - 1 + slides.length) % slides.length;
-            showSlide(newIndex);
-        }
+            const startAutoSlide = () => {
+                stopAutoSlide();
+                if (slides.length > 1) { autoSlideInterval = setInterval(nextSlide, SLIDE_INTERVAL_TIME); }
+            };
+            const stopAutoSlide = () => clearInterval(autoSlideInterval);
 
-        function startAutoSlide() {
-            stopAutoSlide(); 
-            if (slides.length > 1) { // Only start if more than one slide
-                autoSlideInterval = setInterval(nextSlide, SLIDE_INTERVAL_TIME);
+            if (slides.length > 0) {
+                showSlide(0);
+                if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); startAutoSlide(); });
+                if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); startAutoSlide(); });
+                slider.addEventListener('mouseenter', stopAutoSlide);
+                slider.addEventListener('mouseleave', startAutoSlide);
+                startAutoSlide();
+            } else {
+                if (nextBtn) nextBtn.style.display = 'none';
+                if (prevBtn) prevBtn.style.display = 'none';
             }
         }
 
-        function stopAutoSlide() {
-            clearInterval(autoSlideInterval);
+        if (typeof Swiper !== 'undefined') {
+            const createSlider = (selector) => {
+                const el = document.querySelector(selector);
+                if (el && el.querySelectorAll('.swiper-slide').length > 0) {
+                    new Swiper(selector, {
+                        loop: el.querySelectorAll('.swiper-slide').length > 3,
+                        grabCursor: true, spaceBetween: 30,
+                        pagination: { el: el.querySelector('.swiper-pagination'), clickable: true },
+                        breakpoints: { 640: { slidesPerView: 1, spaceBetween: 20 }, 768: { slidesPerView: 2, spaceBetween: 30 }, 1024: { slidesPerView: 3, spaceBetween: 30 } }
+                    });
+                }
+            };
+            createSlider('.programs-slider');
+            createSlider('.announcements-slider');
         }
 
-        if (slides.length > 0) {
-            loadSlideImage(slides[0]);
-            updateSlideNumber(slides[0], 0, slides.length);
-            slides[0].classList.add('active');
+        const newsSection = document.querySelector('.news');
+        if (newsSection) {
+            const newsGrid = newsSection.querySelector('.news-grid');
+            const newsCards = newsGrid ? Array.from(newsGrid.querySelectorAll('.news-card')) : [];
+            const paginationContainer = newsSection.querySelector('.pagination-controls');
+            const CARDS_PER_PAGE = 6;
 
+            if (newsCards.length > 0) {
+                newsCards.sort((a, b) => (b.dataset.publishDate || '').localeCompare(a.dataset.publishDate || ''));
+                newsCards.forEach(card => newsGrid.appendChild(card));
+            }
 
-            if (nextBtn) {
-                nextBtn.addEventListener('click', () => {
-                    nextSlide();
-                    startAutoSlide(); 
+            if (newsCards.length > CARDS_PER_PAGE && paginationContainer) {
+                let currentPage = 1;
+                const totalPages = Math.ceil(newsCards.length / CARDS_PER_PAGE);
+                const displayPage = (page) => {
+                    currentPage = page;
+                    const start = (page - 1) * CARDS_PER_PAGE;
+                    const end = start + CARDS_PER_PAGE;
+                    newsCards.forEach((card, i) => card.style.display = (i >= start && i < end) ? 'block' : 'none');
+                    updatePaginationUI();
+                };
+                const updatePaginationUI = () => {
+                    paginationContainer.querySelectorAll('.page-number').forEach(btn => btn.classList.toggle('active', parseInt(btn.dataset.page) === currentPage));
+                    paginationContainer.querySelector('.prev-page').disabled = (currentPage === 1);
+                    paginationContainer.querySelector('.next-page').disabled = (currentPage === totalPages);
+                };
+
+                let paginationHTML = `<button class="pagination-btn prev-page">&laquo; Previous</button>`;
+                for (let i = 1; i <= totalPages; i++) { paginationHTML += `<button class="page-number" data-page="${i}">${i}</button>`; }
+                paginationHTML += `<button class="pagination-btn next-page">Next &raquo;</button>`;
+                paginationContainer.innerHTML = paginationHTML;
+
+                paginationContainer.addEventListener('click', (e) => {
+                    const target = e.target;
+                    if (target.matches('.page-number')) displayPage(parseInt(target.dataset.page));
+                    else if (target.matches('.prev-page') && currentPage > 1) displayPage(currentPage - 1);
+                    else if (target.matches('.next-page') && currentPage < totalPages) displayPage(currentPage + 1);
                 });
+                displayPage(1);
             }
-            if (prevBtn) {
-                prevBtn.addEventListener('click', () => {
-                    prevSlide();
-                    startAutoSlide(); 
-                });
-            }
-
-            slider.addEventListener('mouseenter', stopAutoSlide);
-            slider.addEventListener('mouseleave', startAutoSlide);
-            
-            startAutoSlide();
-        } else {
-            if(nextBtn) nextBtn.style.display = 'none';
-            if(prevBtn) prevBtn.style.display = 'none';
         }
-    }
 
-    // Video Modal Logic (Commented out as video button is removed)
-    /*
-    const videoModal = document.getElementById('videoModal');
-    const videoPlayer = document.getElementById('facebookVideoPlayer');
-    const closeModalBtn = document.querySelector('.video-modal-close');
-    const playVideoBtns = document.querySelectorAll('.hero-slider .btn-play-video'); // This would be empty now
-
-    const facebookVideoEmbedUrlBase = "https://www.facebook.com/plugins/video.php?href=";
-    const specificVideoUrl = "https://www.facebook.com/PadreGarciaPolytechnicCollege/videos/1032612065407691/"; 
-
-    if (videoModal && videoPlayer && closeModalBtn && playVideoBtns.length > 0) { // This condition will likely be false
-        playVideoBtns.forEach(btn => {
-            btn.addEventListener('click', function(event) {
-                event.preventDefault(); 
-                
-                const encodedVideoUrl = encodeURIComponent(specificVideoUrl);
-                videoPlayer.src = `${facebookVideoEmbedUrlBase}${encodedVideoUrl}&show_text=false&width=780&autoplay=1`;
-                videoModal.style.display = 'flex'; 
-                document.body.style.overflow = 'hidden'; 
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('is-visible');
             });
-        });
-
-        const closeVideoModal = () => {
-            videoModal.style.display = 'none';
-            videoPlayer.src = ''; 
-            document.body.style.overflow = ''; 
-        };
-
-        closeModalBtn.addEventListener('click', closeVideoModal);
-
-        videoModal.addEventListener('click', function(event) {
-            if (event.target === videoModal) { 
-                closeVideoModal();
-            }
-        });
-
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && videoModal.style.display === 'flex') {
-                closeVideoModal();
-            }
-        });
-    }
-    */
-});
+        }, { rootMargin: '0px 0px -50px 0px', threshold: 0.1 });
+        document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+    });
 </script>
 
-{% endblock%}
+{% endblock %}

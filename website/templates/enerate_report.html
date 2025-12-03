@@ -1,0 +1,161 @@
+{% extends base_template %}
+{% block title %}Generate Report{% endblock %}
+{% block page_title %}Generate Report{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-card shadow-lg p-6 border border-gray-100">
+    <div class="no-print flex flex-wrap gap-4 justify-between items-center mb-6">
+        <h3 class="text-lg font-semibold text-gray-900">Financial Report</h3>
+        <button onclick="window.print()" class="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-button text-sm font-medium hover:bg-gray-700">
+            <i class="ri-printer-line"></i><span>Print Report</span>
+        </button>
+    </div>
+
+    <!-- PRINT HEADER -->
+    <div class="hidden print-header">Financial Report</div>
+    <div class="hidden print-meta">
+        <div><strong>Date Generated:</strong> {{ report_date }}</div>
+        <div><strong>Filter Type:</strong> {{ active_filter_display or 'Custom' }}</div>
+    </div>
+
+    <!-- FILTER FORM -->
+    <form method="GET" action="{{ url_for('auth.generate_report') }}" class="no-print grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 items-end bg-gray-50 p-4 rounded-lg">
+        
+        <!-- Quick Filter Type -->
+        <div class="md:col-span-2 lg:col-span-1">
+            <label class="block text-xs text-gray-500 mb-1">Quick Filter</label>
+            <select name="filter_type" class="w-full bg-white border border-gray-300 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+                <option value="">Custom Date Range</option>
+                <option value="daily" {% if filter=='daily' %}selected{% endif %}>Daily Sales</option>
+                <option value="weekly" {% if filter=='weekly' %}selected{% endif %}>Last 7 Days</option>
+                <option value="monthly" {% if filter=='monthly' %}selected{% endif %}>Current Month</option>
+            </select>
+        </div>
+
+        <!-- Course -->
+        <select name="course" id="courseSelect" onchange="updateSections()" class="w-full bg-white border border-gray-300 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            <option value="">All Courses</option>
+            <option value="Bachelor of Science in Computer Science" {% if course=='Bachelor of Science in Computer Science' %}selected{% endif %}>BSCS</option>
+            <option value="Bachelor of Science in Criminology" {% if course=='Bachelor of Science in Criminology' %}selected{% endif %}>BSCrim</option>
+            <option value="Bachelor of Science in Public Administration" {% if course=='Bachelor of Science in Public Administration' %}selected{% endif %}>BSPA</option>
+            <option value="Bachelor of Science in Management Accountancy" {% if course=='Bachelor of Science in Management Accountancy' %}selected{% endif %}>BSMA</option>
+        </select>
+
+        <!-- Year Level -->
+        <select name="year_level" class="w-full bg-white border border-gray-300 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            <option value="">All Years</option>
+            <option value="1st Year" {% if request.args.get('year_level')=='1st Year' %}selected{% endif %}>1st Year</option>
+            <option value="2nd Year" {% if request.args.get('year_level')=='2nd Year' %}selected{% endif %}>2nd Year</option>
+            <option value="3rd Year" {% if request.args.get('year_level')=='3rd Year' %}selected{% endif %}>3rd Year</option>
+            <option value="4th Year" {% if request.args.get('year_level')=='4th Year' %}selected{% endif %}>4th Year</option>
+        </select>
+
+        <!-- Section -->
+        <select name="section" id="sectionSelect" class="w-full bg-white border border-gray-300 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            <option value="">All Sections</option>
+            <!-- JS populated -->
+        </select>
+
+        <!-- Dates -->
+        <div class="md:col-span-2 lg:col-span-1">
+            <label class="block text-xs text-gray-500 mb-1">From</label>
+            <input type="date" name="start_date" value="{{ start_date or '' }}" class="w-full bg-white border border-gray-300 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+        </div>
+        <div class="md:col-span-2 lg:col-span-1">
+            <label class="block text-xs text-gray-500 mb-1">To</label>
+            <input type="date" name="end_date" value="{{ end_date or '' }}" class="w-full bg-white border border-gray-300 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+        </div>
+
+        <div class="flex gap-2 md:col-span-1 lg:col-span-2">
+            <button type="submit" class="flex-1 bg-primary text-white p-2.5 rounded-lg font-medium hover:bg-primary-dark"><i class="ri-filter-3-line"></i> Generate</button>
+            <a href="{{ url_for('auth.clear_filters') }}" class="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300"><i class="ri-refresh-line"></i></a>
+        </div>
+    </form>
+
+    <!-- Total Summary -->
+    <div class="bg-blue-50 border-l-4 border-primary p-4 rounded-md mb-6 flex justify-between items-center no-print-bg">
+        <div>
+            <p class="text-sm text-gray-600">Total Amount</p>
+            <p class="text-2xl font-bold text-gray-800">₱{{ total }}</p>
+        </div>
+        <div class="text-right text-sm text-gray-500">
+            <p>{{ reports|length }} transactions</p>
+        </div>
+    </div>
+    
+    <div class="hidden print-meta" style="margin: 10px 0; font-size: 14px;">
+        <strong>Total Collected:</strong> ₱{{ total }}
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-600">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                    <th>Date</th>
+                    <th>Student Name</th>
+                    <th>Amount</th>
+                    <th>Course & Sec</th>
+                    <th>Semester</th>
+                    <th>Remark</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td>{{ r.payment_date.strftime('%m/%d/%Y') }}</td>
+                    <td class="font-medium text-gray-900">{{ r.student.last_name }}, {{ r.student.first_name }}</td>
+                    <td class="font-bold text-gray-800">₱{{ "{:,.2f}".format(r.amount_paid) }}</td>
+                    <td>{{ r.student.course }} ({{ r.student.section }})</td>
+                    <td>{{ r.student.semester }}</td>
+                    <td>{{ r.remark }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center py-4">No transactions found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const sectionMap = {
+        "Bachelor of Science in Computer Science": ["A", "B", "C"],
+        "Bachelor of Science in Criminology": ["A", "B", "C", "D", "E"],
+        "Bachelor of Science in Public Administration": ["A", "B"],
+        "Bachelor of Science in Management Accountancy": ["A", "B", "C"]
+    };
+
+    function updateSections() {
+        const courseSelect = document.getElementById("courseSelect");
+        const sectionSelect = document.getElementById("sectionSelect");
+        const selectedCourse = courseSelect.value;
+        const currentSection = "{{ section }}";
+
+        sectionSelect.innerHTML = '<option value="">All Sections</option>';
+
+        if (selectedCourse && sectionMap[selectedCourse]) {
+            sectionSelect.disabled = false;
+            sectionMap[selectedCourse].forEach(section => {
+                const option = document.createElement("option");
+                option.value = section;
+                option.text = "Section " + section;
+                if (section === currentSection) option.selected = true;
+                sectionSelect.appendChild(option);
+            });
+        } else if (selectedCourse) {
+             ["A", "B", "C", "D", "E", "1", "2", "3"].forEach(section => {
+                const option = document.createElement("option");
+                option.value = section;
+                option.text = "Section " + section;
+                 if (section === currentSection) option.selected = true;
+                sectionSelect.appendChild(option);
+            });
+        } else {
+            sectionSelect.disabled = true;
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() { updateSections(); });
+</script>
+{% endblock %}

@@ -1,0 +1,128 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Printable Inventory Form - {{ application.first_name }} {{ application.last_name }}</title>
+<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<style>
+    body { font-family: Arial, sans-serif; font-size: 10pt; margin: 0; padding: 0; color: #000; background-color: #fff; }
+    .page { width: 210mm; min-height: 297mm; padding: 10mm; margin: 10mm auto; border: 1px solid #d3d3d3; background: white; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+    td, th { border: 1px solid black; padding: 3px; vertical-align: top; font-size: 9pt; }
+    .no-border td, .no-border th { border: none; }
+    .header-table td { vertical-align: middle; text-align: center; }
+    .header-table img { max-height: 60px; vertical-align: middle; }
+    .main-title { text-align: center; font-size: 14pt; font-weight: bold; margin-top: 5px; margin-bottom: 5px; }
+    .sub-title { text-align: center; font-size: 11pt; font-weight: bold; margin-bottom: 10px; }
+    .section-header { font-weight: bold; margin-top: 8px; margin-bottom: 3px; font-size: 9pt; background-color: #f2f2f2; padding: 4px; border-left: 3px solid #333;}
+    .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; border: 1px solid black; padding: 5px; margin-top: 5px; }
+    .data-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 1rem; border: 1px solid black; padding: 5px; margin-top: 5px; }
+    .grid-item { padding: 2px 0; }
+    .full-width { grid-column: 1 / -1; }
+    .field-label { font-weight: bold; display: inline-block; min-width: 150px; }
+    .field-value { display: inline; }
+    .no-print { display: block; text-align: center; margin-top: 20px; }
+
+    @media print {
+        .no-print { display: none; }
+        body { margin: 0; padding: 0; font-size: 9pt; }
+        .page { border: none; box-shadow: none; margin: 0; width: auto; min-height: auto; page-break-inside: avoid; padding: 5mm; }
+    }
+</style>
+</head>
+<body>
+<div class="page">
+    <table class="no-border header-table" style="width:100%; margin-bottom: 2px;">
+        <tr>
+            <td style="width:15%; text-align:left; padding:0; vertical-align: middle;"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="PGPC Logo" style="max-height:55px; display: block;"></td>
+            <td style="text-align:center; padding:0; vertical-align: middle;">
+                <div style="font-size:9pt;">Republic of the Philippines</div>
+                <div style="font-weight:bold; font-size:11pt;">PADRE GARCIA POLYTECHNIC COLLEGE (PGPC)</div>
+                <div style="font-size:9pt;">Brgy. Castillo, Padre Garcia, Batangas 4224</div>
+            </td>
+            <td style="width:15%; padding:0; vertical-align: middle;"></td>
+        </tr>
+    </table>
+
+    <div class="main-title">GUIDANCE AND COUNSELING CENTER</div>
+    <div class="sub-title">INVENTORY FORM</div>
+
+    <div style="text-align:center; margin-bottom: 20px;">
+        <span class="field-label">Name:</span> {{ application.first_name }} {{ application.last_name }} &nbsp;&nbsp;&nbsp;
+        <span class="field-label">Course:</span> {{ application.program_choice }}
+    </div>
+
+    <div class="section-header">I. PERSONAL INFORMATION</div>
+    <div class="data-grid">
+        <div class="grid-item"><span class="field-label">Gender:</span> <span class="field-value">{{ application.inventory_gender or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Age:</span> <span class="field-value">{{ application.inventory_age or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Religion:</span> <span class="field-value">{{ application.inventory_religion or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Mobile Number:</span> <span class="field-value">{{ application.inventory_mobile_number or 'N/A' }}</span></div>
+        <div class="grid-item full-width"><span class="field-label">Complete Address:</span> <span class="field-value">{{ application.inventory_complete_address or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Facebook Account:</span> <span class="field-value">{{ application.inventory_facebook_account or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Interests/Hobbies:</span> <span class="field-value">{{ application.inventory_interest_hobbies or 'N/A' }}</span></div>
+        <div class="grid-item full-width"><span class="field-label">Health Condition:</span> <span class="field-value">{{ application.inventory_health_condition or 'N/A' }}</span></div>
+    </div>
+    
+    <div class="section-header">II. EDUCATIONAL BACKGROUND</div>
+    <table>
+        <thead><tr><th>LEVEL</th><th>SCHOOL</th><th>DATES</th><th>AWARDS</th></tr></thead>
+        <tbody>
+            <tr><td>Pre-Elementary</td><td>{{ application.inventory_pre_elementary_school or 'N/A' }}</td><td>{{ application.inventory_pre_elementary_dates or 'N/A' }}</td><td>{{ application.inventory_pre_elementary_awards or 'N/A' }}</td></tr>
+            <tr><td>Elementary</td><td>{{ application.inventory_elementary_school or 'N/A' }}</td><td>{{ application.inventory_elementary_dates or 'N/A' }}</td><td>{{ application.inventory_elementary_awards or 'N/A' }}</td></tr>
+            <tr><td>Secondary</td><td>{{ application.inventory_secondary_school or 'N/A' }}</td><td>{{ application.inventory_secondary_dates or 'N/A' }}</td><td>{{ application.inventory_secondary_awards or 'N/A' }}</td></tr>
+            <tr><td>Vocational</td><td>{{ application.inventory_vocational_school or 'N/A' }}</td><td>{{ application.inventory_vocational_dates or 'N/A' }}</td><td>{{ application.inventory_vocational_awards or 'N/A' }}</td></tr>
+        </tbody>
+    </table>
+
+    <div class="section-header">III. HOME AND FAMILY BACKGROUND</div>
+    <div style="font-weight:bold; margin-top: 5px;">Father's Information</div>
+    <div class="data-grid-3">
+        <div class="grid-item"><span class="field-label">Name:</span> <span class="field-value">{{ application.inventory_father_name or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Age:</span> <span class="field-value">{{ application.inventory_father_age or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Status:</span> <span class="field-value">{{ application.inventory_father_status or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Education:</span> <span class="field-value">{{ application.inventory_father_education or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Occupation:</span> <span class="field-value">{{ application.inventory_father_occupation or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Contact:</span> <span class="field-value">{{ application.inventory_father_contact or 'N/A' }}</span></div>
+    </div>
+    <div style="font-weight:bold; margin-top: 5px;">Mother's Information</div>
+    <div class="data-grid-3">
+        <div class="grid-item"><span class="field-label">Name:</span> <span class="field-value">{{ application.inventory_mother_name or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Age:</span> <span class="field-value">{{ application.inventory_mother_age or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Status:</span> <span class="field-value">{{ application.inventory_mother_status or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Education:</span> <span class="field-value">{{ application.inventory_mother_education or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Occupation:</span> <span class="field-value">{{ application.inventory_mother_occupation or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Contact:</span> <span class="field-value">{{ application.inventory_mother_contact or 'N/A' }}</span></div>
+    </div>
+     <div style="font-weight:bold; margin-top: 5px;">Family Details</div>
+    <div class="data-grid">
+        <div class="grid-item"><span class="field-label">Parents' Marital Status:</span> <span class="field-value">{{ application.inventory_parents_marital_status or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">No. of Children:</span> <span class="field-value">{{ application.inventory_number_of_children or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">No. of Brothers:</span> <span class="field-value">{{ application.inventory_number_of_brothers or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">No. of Sisters:</span> <span class="field-value">{{ application.inventory_number_of_sisters or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Family Income:</span> <span class="field-value">{{ application.inventory_family_income or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Family Description:</span> <span class="field-value">{{ application.inventory_family_description or 'N/A' }}</span></div>
+    </div>
+    <div style="font-weight:bold; margin-top: 5px;">Guardian's Information</div>
+    <div class="data-grid-3">
+        <div class="grid-item"><span class="field-label">Name:</span> <span class="field-value">{{ application.inventory_guardian_name or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Relationship:</span> <span class="field-value">{{ application.inventory_guardian_relationship or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Contact:</span> <span class="field-value">{{ application.inventory_guardian_contact or 'N/A' }}</span></div>
+    </div>
+
+    <div class="section-header">EMERGENCY CONTACT INFORMATION</div>
+    <div class="data-grid-3">
+        <div class="grid-item"><span class="field-label">Name:</span> <span class="field-value">{{ application.inventory_emergency_contact_name or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Number:</span> <span class="field-value">{{ application.inventory_emergency_contact_number or 'N/A' }}</span></div>
+        <div class="grid-item"><span class="field-label">Relationship:</span> <span class="field-value">{{ application.inventory_emergency_contact_relationship or 'N/A' }}</span></div>
+    </div>
+
+    <div class="no-print">
+        <button onclick="window.print()">Print Form</button>
+    </div>
+</div>
+</body>
+</html>

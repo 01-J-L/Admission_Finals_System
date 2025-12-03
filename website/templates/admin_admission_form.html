@@ -1,0 +1,23 @@
+{% extends 'admin_base.html' %}
+{% block title %}{{ 'Edit' if step else 'Add' }} Admission Step{% endblock %}
+{% block page_title %}{{ 'Edit' if step else 'Add' }} Admission Step{% endblock %}
+{% block content %}
+<form method="POST" class="bg-white p-8 rounded-lg shadow-md max-w-2xl mx-auto space-y-6">
+    <div>
+        <label class="block text-sm font-medium text-gray-700">Step Number</label>
+        <input type="number" name="step_number" value="{{ step.step_number if step else '' }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700">Title</label>
+        <input type="text" name="title" value="{{ step.title if step else '' }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700">Description</label>
+        <textarea name="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ step.description if step else '' }}</textarea>
+    </div>
+    <div class="flex justify-end space-x-3">
+        <a href="{{ url_for('auth.admin_manage_admission') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md">Cancel</a>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md">Save</button>
+    </div>
+</form>
+{% endblock %}

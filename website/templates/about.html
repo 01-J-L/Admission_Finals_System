@@ -2,12 +2,33 @@
 
 {% block style %}
 <style>
-/* General Styles from index.html, if needed globally or by base */
+/* --- General Styles & Theme Variables from index.html --- */
+:root {
+    --primary: #1e40af; 
+    --secondary: #3b82f6;
+    --text-dark: #111827;
+    --text-medium: #4b5563;
+    --text-light: #6b7280;
+    --bg-light-gray: #f9fafb;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
 html {
   scroll-behavior: smooth;
 }
 
-/* Header Styles (Copied from index.html) */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #fff;
+    color: var(--text-medium);
+}
+
+
+/* Header Styles (Consistent with index.html) */
 header {
     position: absolute;
     top: 0;
@@ -21,66 +42,51 @@ header {
     transition: background-color 0.3s ease;
 }
 
-.header-left {
-    display: flex;
-    align-items: center;
-}
+.header-left { display: flex; align-items: center; }
+.header-left .logo { font-size: 1.4em; color: #fff; margin-left: 15px; white-space: nowrap; transition: color 0.3s ease; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+.header-left img { filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3)); }
+.navigation a { position: relative; font-size: 1.1em; color: #fff; text-decoration: none; font-weight: 500; margin-left: 30px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+.navigation a.no-underline { text-decoration: none; }
+.menu-toggle { display: none; flex-direction: column; justify-content: space-around; width: 30px; height: 25px; background: transparent; border: none; cursor: pointer; padding: 0; z-index: 1100; margin-left: 20px; }
+.menu-toggle span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 3px; transition: all 0.3s ease-in-out; box-shadow: 0 0 2px rgba(0,0,0,0.5); }
 
-.header-left .logo {
-    font-size: 1.4em;
-    color: #fff;
-    margin-left: 15px;
-    white-space: nowrap;
-    transition: color 0.3s ease;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-.header-left img {
-    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
-}
-
-
-.navigation a {
+/* --- General Section Styling (from index.html) --- */
+.section-container {
+    padding: 80px 20px;
     position: relative;
-    font-size: 1.1em;
-    color: #fff;
-    text-decoration: none;
-    font-weight: 500;
-    margin-left: 30px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    overflow: hidden;
+    z-index: 1;
 }
-.navigation a.no-underline {
-    text-decoration: none;
+.section-title-wrapper {
+    text-align: center;
+    margin-bottom: 4rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
 }
-
-
-
-
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    justify-content: space-around;
-    width: 30px;
-    height: 25px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    z-index: 1100;
-    margin-left: 20px;
+.section-title {
+    font-size: 2.5rem;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    font-weight: 800;
 }
-
-.menu-toggle span {
-    display: block;
-    width: 100%;
-    height: 3px;
-    background-color: #fff;
-    border-radius: 3px;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0 0 2px rgba(0,0,0,0.5);
+.section-subtitle {
+    font-size: 1.125rem;
+    color: var(--text-medium);
+    line-height: 1.7;
+}
+.section-container::before,
+.section-container::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -1;
+    opacity: 0.08;
+    pointer-events: none;
 }
 
-
-/* --- About Hero Banner Styles --- */
+/* --- About Hero Banner Styles (Updated Theme) --- */
 .about-hero-banner {
     background-image: url("{{ url_for('static', filename='images/img3.jpg') }}");
     background-size: cover;
@@ -100,7 +106,6 @@ header {
     box-sizing: border-box;
     position: relative;
 }
-
 .about-hero-banner::before {
     content: '';
     position: absolute;
@@ -111,19 +116,13 @@ header {
     background-color: rgba(0, 0, 0, 0.55);
     z-index: 1;
 }
-
-.about-hero-banner .hero-content {
-    position: relative;
-    z-index: 2;
-}
-
+.about-hero-banner .hero-content { position: relative; z-index: 2; }
 .about-hero-banner .hero-content h1 {
-    font-size: 2.8em;
+    font-size: 4rem;
+    font-weight: 800;
     margin-bottom: 0.5em;
-    text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
-    font-weight: bold;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
 }
-
 .about-hero-banner .hero-content p {
     font-size: 1.3em;
     text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
@@ -132,579 +131,209 @@ header {
     margin-right: auto;
 }
 
-
-/* --- About Section Styles --- */
+/* --- About Section Styles (Updated Theme) --- */
 .about-section {
-  padding: 3rem 2rem;
-  background-color: #ffffff;
-  color: #333;
-  position: relative;
+  background-color: var(--bg-light-gray);
+  color: var(--text-medium);
   z-index: 5;
 }
-
-.about-container {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
+.about-section::before {
+    width: 400px; height: 400px; background: radial-gradient(circle, var(--secondary) 0%, var(--primary) 100%); top: -150px; left: -150px;
 }
 
-@media (min-width: 768px) {
-  .about-container {
-    flex-direction: row;
-  }
-}
+.about-container { display: flex; flex-direction: column; gap: 30px; max-width: 1200px; margin: 0 auto; }
+@media (min-width: 768px) { .about-container { flex-direction: row; } }
 
-.about-sidebar {
-  flex: 1;
-  max-width: 300px;
-}
-
+.about-sidebar { flex: 1; max-width: 300px; }
 .box-title {
-  background-color: #162938;
+  background-color: var(--primary);
   color: white;
   padding: 16px;
   font-weight: bold;
   text-align: center;
   margin-bottom: 16px;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
 }
-
 .image-box {
   background: white;
   padding: 10px;
   border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
+.image-box img { width: 100%; height: auto; display: block; border-radius: var(--radius-md); }
 
-.image-box img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 3px;
-}
-
-.about-content {
-  flex: 3;
-  padding-left: 0;
-}
-
-@media (min-width: 768px) {
-  .about-content {
-    padding-left: 30px;
-  }
-}
-
-.about-content .heading {
-  font-size: 2rem;
-  color: #162938;
-  margin-bottom: 1rem;
-  margin-top: 1.5rem;
-  border-bottom: 2px solid #162938;
-  padding-bottom: 0.5rem;
-}
+.about-content { flex: 3; padding-left: 0; }
+@media (min-width: 768px) { .about-content { padding-left: 30px; } }
+.about-content .heading { font-size: 2rem; color: var(--text-dark); margin-bottom: 1rem; margin-top: 1.5rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem; }
 
 .about-content > h1.heading:first-of-type {
-    font-size: 1.7em;
-    font-weight: 600;
-    font-style: italic;
-    color: #162938;
-    text-align: center;
-    padding: 1.5rem;
-    margin-top: 0;
-    margin-bottom: 3rem;
-    background-color: #eef3f7;
-    border: 1px solid #d0d9e0;
-    border-left: 5px solid #162938;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    border-bottom: none;
+    font-size: 1.7em; font-weight: 600; font-style: italic; color: var(--primary);
+    text-align: center; padding: 1.5rem; margin-top: 0; margin-bottom: 3rem;
+    background-color: #fff; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-bottom: none;
 }
+.about-content > h2.heading { font-size: 2.1em; color: var(--text-dark); margin-top: 2rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.6rem; margin-bottom: 1.8rem; }
+.about-content p { margin-bottom: 2.5rem; line-height: 1.75; font-size: 1.05em; color: var(--text-medium); }
 
-.about-content > h2.heading {
-  font-size: 2.1em;
-  color: #162938;
-  margin-top: 2rem;
-  border-bottom: 2px solid #162938;
-  padding-bottom: 0.6rem;
-  margin-bottom: 1.8rem;
-}
-
-.about-content p {
-  margin-bottom: 2.5rem;
-  line-height: 1.75;
-  font-size: 1.05em;
-  color: #454545;
-}
-
-.objectives {
-  list-style-type: none;
-  padding-left: 0;
-  margin-bottom: 2.5rem;
-}
-
-.objectives li {
-  margin-bottom: 1.2rem;
-  padding-left: 35px;
-  position: relative;
-  font-size: 1.05em;
-  line-height: 1.7;
-  color: #454545;
-}
-
+.objectives { list-style-type: none; padding-left: 0; margin-bottom: 2.5rem; }
+.objectives li { margin-bottom: 1.2rem; padding-left: 35px; position: relative; font-size: 1.05em; line-height: 1.7; color: var(--text-medium); }
 .objectives li::before {
-    content: "✔";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #162938;
-    font-weight: bold;
-    font-size: 1.2em;
+    content: "✔"; position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%); color: var(--primary); font-weight: bold; font-size: 1.2em;
 }
 
-/* --- Meet People Section Styles --- */
-.meet-people-section {
-  padding: 4rem 2rem;
-  background-color: #f8f9fa;
-  color: #333;
-  position: relative;
-  z-index: 5;
-}
+/* --- Meet People Section Styles (Updated Theme) --- */
+.meet-people-section { background-color: #ffffff; z-index: 5; }
+.meet-people-section::after { width: 500px; height: 500px; background: radial-gradient(circle, var(--secondary) 0%, var(--primary) 100%); top: 50%; right: -250px; transform: translateY(-50%); }
 
-.meet-people-container {
-  max-width: 1100px;
-  margin: 0 auto;
-}
+.meet-people-container { max-width: 1100px; margin: 0 auto; }
+.meet-people-top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 2rem; margin-bottom: 3rem; }
+.meet-people-text { flex: 1 1 55%; min-width: 300px; }
+.meet-people-text h2 { font-size: 2.5rem; color: var(--text-dark); margin-bottom: 1rem; font-weight: 800; }
+.meet-people-text p { margin-bottom: 1rem; line-height: 1.6; font-size: 1rem; color: var(--text-medium); }
 
-.meet-people-top-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2rem;
-  margin-bottom: 3rem;
-}
+.meet-people-image-large { flex: 1 1 40%; min-width: 300px; }
+.meet-people-image-large img { width: 100%; height: auto; display: block; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); }
 
-.meet-people-text {
-  flex: 1 1 55%;
-  min-width: 300px;
-}
-
-.meet-people-text h2 {
-  font-size: 2.2em;
-  color: #162938;
-  margin-bottom: 1rem;
-  font-weight: bold;
-}
-
-.meet-people-text p {
-  margin-bottom: 1rem;
-  line-height: 1.6;
-  font-size: 1rem;
-}
-
-.meet-people-image-large {
-  flex: 1 1 40%;
-  min-width: 300px;
-}
-
-.meet-people-image-large img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.meet-people-bottom-row {
-    margin-top: 3rem;
-    padding: 1rem 0;
-}
-
+.meet-people-bottom-row { margin-top: 3rem; padding: 1rem 0; }
 .single-featured-person {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 2.5rem;
-    max-width: 950px;
-    margin: 0 auto;
-    padding: 2rem;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e2e8f0;
+    display: flex; flex-direction: row; align-items: flex-start; gap: 2.5rem;
+    max-width: 950px; margin: 0 auto; padding: 2.5rem; background-color: #ffffff;
+    border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); border: 1px solid #e2e8f0;
     overflow: hidden;
 }
-
-.single-featured-person .person-image-container {
-    flex: 0 0 35%;
-    max-width: 320px;
-    min-width: 200px;
-}
-
-.single-featured-person .person-image-container img {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 8px;
-    object-fit: cover;
-}
-
-.single-featured-person .person-details-container {
-    flex: 1 1 60%;
-    padding-top: 0.5rem;
-}
-
-.single-featured-person .person-name {
-    font-size: 1.8em;
-    font-weight: 700;
-    color: #162938;
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-}
-
-.single-featured-person .person-role {
-    font-size: 1.15em;
-    color: #4a5568;
-    font-weight: 600;
-    margin-bottom: 1.25rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.single-featured-person .person-description {
-    font-size: 1rem;
-    line-height: 1.75;
-    color: #2d3748;
-    margin-bottom: 0;
-}
+.single-featured-person .person-image-container { flex: 0 0 35%; max-width: 320px; min-width: 200px; }
+.single-featured-person .person-image-container img { width: 100%; height: auto; display: block; border-radius: var(--radius-lg); object-fit: cover; }
+.single-featured-person .person-details-container { flex: 1 1 60%; padding-top: 0.5rem; }
+.single-featured-person .person-name { font-size: 1.8em; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 0.5rem; }
+.single-featured-person .person-role { font-size: 1.15em; color: var(--primary); font-weight: 600; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.single-featured-person .person-description { font-size: 1rem; line-height: 1.75; color: var(--text-medium); margin-bottom: 0; }
 
 @media (max-width: 768px) {
   .meet-people-top-row { flex-direction: column; }
   .meet-people-text { flex-basis: 100%; margin-bottom: 2rem; text-align: center; }
-  .meet-people-text h2 { font-size: 1.8em; }
+  .meet-people-text h2 { font-size: 2.2em; }
   .meet-people-image-large { flex-basis: 100%; }
   .single-featured-person { flex-direction: column; align-items: center; text-align: center; padding: 1.5rem; gap: 1.5rem; }
   .single-featured-person .person-image-container { flex-basis: auto; width: 60%; max-width: 240px; margin: 0 auto; }
   .single-featured-person .person-details-container { flex-basis: auto; width: 100%; padding-top: 0; }
   .single-featured-person .person-name, .single-featured-person .person-role, .single-featured-person .person-description { text-align: center; }
   .single-featured-person .person-name { font-size: 1.6em; }
-  .single-featured-person .person-role { font-size: 1.05em; }
-  .single-featured-person .person-description { font-size: 0.95rem; }
 }
 
-@media (max-width: 576px) {
-    .meet-people-text p { font-size: 0.95rem; }
-    .single-featured-person .person-image-container { width: 70%; max-width: 200px; }
-    .single-featured-person .person-name { font-size: 1.4em; }
-}
+/* --- Meet Our Staff Section Styles (Updated Theme) --- */
+.meet-our-staff-section { background-color: var(--bg-light-gray); z-index: 5; }
+.meet-our-staff-section::before { width: 350px; height: 350px; background: radial-gradient(circle, var(--primary) 0%, var(--secondary) 100%); bottom: -100px; left: -120px; }
 
+.meet-our-staff-container { max-width: 1200px; margin: 0 auto; }
+.staff-category { margin-bottom: 4rem; }
+.staff-category:last-child { margin-bottom: 0; }
 
-/* --- Meet Our Staff Section Styles --- */
-.meet-our-staff-section {
-    padding: 3rem 2rem;
-    background-color: #ffffff;
-    position: relative;
-    z-index: 5;
-}
+.staff-header-container { display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; }
+.staff-header-titles { flex-grow: 0; text-align: center; }
 
-.meet-our-staff-container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
+.staff-section-subtitle { font-size: 1em; color: var(--text-light); margin-bottom: 0.45rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
+.staff-section-main-title { font-size: 2.8em; font-weight: 800; color: var(--text-dark); margin-bottom: 0; letter-spacing: -0.5px; }
 
-.staff-category {
-    margin-bottom: 4rem;
-}
-.staff-category:last-child {
-    margin-bottom: 0;
-}
-
-.staff-header-container { /* MODIFIED: Now only for titles */
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Center the titles block */
-    margin-bottom: 2rem; /* Space between titles and carousel */
-}
-
-.staff-header-titles {
-    flex-grow: 0; /* Don't need to grow, just center */
-    text-align: center;
-}
-
-.staff-section-subtitle {
-    font-size: 1em;
-    color: #6c757d;
-    margin-bottom: 0.45rem;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 500;
-}
-
-.staff-section-main-title {
-    font-size: 2.8em;
-    font-weight: bold;
-    color: #162938;
-    margin-bottom: 0;
-    letter-spacing: -0.5px;
-}
-
-/* NEW: Wrapper for carousel content (grid + arrows) */
-.staff-carousel-content-wrapper {
-    position: relative; /* For absolute positioning of arrows */
-}
-
-.staff-grid-wrapper {
-    overflow: hidden;
-    width: 100%;
-}
-
-.staff-grid {
-    display: flex;
-    flex-wrap: nowrap;
-    /* justify-content: flex-start; Will be controlled by JS */
-    gap: 25px;
-    transition: transform 0.5s ease-in-out;
-    padding-bottom: 10px; /* For potential scrollbars if needed, or just visual space */
-}
+.staff-carousel-content-wrapper { position: relative; }
+.staff-grid-wrapper { overflow: hidden; width: 100%; }
+.staff-grid { display: flex; flex-wrap: nowrap; gap: 25px; transition: transform 0.5s ease-in-out; padding-bottom: 10px; }
 
 .staff-member-card {
-    flex-shrink: 0;
-    width: 280px;
-    box-sizing: border-box;
-    background-color: #f8f9fa;
-    border-radius: 15px;
-    padding: 25px;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer; /* Indicate it's clickable */
+    flex-shrink: 0; width: 280px; box-sizing: border-box;
+    background-color: #fff; border-radius: var(--radius-xl); padding: 25px; text-align: center;
+    box-shadow: var(--shadow-md); transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer; border: 1px solid #e5e7eb;
 }
-
-.staff-member-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-}
-
+.staff-member-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
 .staff-member-card img {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin: 0 auto 20px auto;
-    display: block;
-    border: 3px solid #ffffff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+    margin: 0 auto 20px auto; display: block; border: 4px solid #ffffff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+.staff-member-name { font-size: 1.25em; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 0.5rem; }
+.staff-member-role { font-size: 0.95em; color: var(--primary); font-weight: 500; margin-bottom: 0; }
 
-.staff-member-name {
-    font-size: 1.25em;
-    font-weight: 700;
-    color: #343a40;
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-}
-
-.staff-member-role {
-    font-size: 0.95em;
-    color: #6c757d;
-    margin-bottom: 0;
-}
-
-/* MODIFIED: staff-nav-arrow positioning and styles */
 .staff-nav-arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10; /* Ensure arrows are above the grid content */
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    font-size: 1.5em;
-    color: #343a40;
-    cursor: pointer;
-    display: flex; /* Changed from none to flex by default, JS will hide if needed */
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease, top 0.3s ease, transform 0.3s ease; /* Added top and transform transition */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+    background-color: #fff; border: 1px solid #ced4da; border-radius: 50%;
+    width: 44px; height: 44px; font-size: 1.5em; color: var(--text-dark);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease; box-shadow: var(--shadow-md);
 }
-
-.staff-nav-arrow:hover {
-    background-color: #e9ecef;
-    border-color: #adb5bd;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-}
-
-.staff-nav-arrow:disabled {
-    opacity: 0.5; /* Handles disabled appearance */
-    cursor: not-allowed;
-    background-color: #f8f9fa;
-    border-color: #ced4da; /* Match normal border or lighten as preferred */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Lighter shadow for disabled state */
-}
-
-.staff-nav-arrow.prev {
-    left: -50px; /* ADJUSTED: Position further outside the grid wrapper */
-}
-
-.staff-nav-arrow.next {
-    right: -50px; /* ADJUSTED: Position further outside the grid wrapper */
-}
-
+.staff-nav-arrow:hover { background-color: #e9ecef; border-color: #adb5bd; box-shadow: var(--shadow-lg); }
+.staff-nav-arrow:disabled { opacity: 0.5; cursor: not-allowed; background-color: #f8f9fa; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.staff-nav-arrow.prev { left: -50px; }
+.staff-nav-arrow.next { right: -50px; }
 
 @media (max-width: 992px) {
-    .staff-nav-arrow.prev {
-        left: 10px; /* Bring arrows closer on medium screens */
-    }
-    .staff-nav-arrow.next {
-        right: 10px; /* Bring arrows closer on medium screens */
-    }
+    .staff-nav-arrow.prev { left: 10px; }
+    .staff-nav-arrow.next { right: 10px; }
 }
-
 @media (max-width: 768px) {
-    .meet-our-staff-section { padding: 2rem 1rem; }
-    .staff-category { margin-bottom: 3rem; }
-    .staff-header-container { margin-bottom: 1rem; } /* Adjusted margin for tighter layout if arrows are above */
-    .staff-section-main-title { font-size: 2.2em; }
-    .staff-member-card { width: 250px; }
-    .staff-member-card img { width: 100px; height: 100px; }
-
-    /* --- Staff Carousel Arrow Adjustments for Mobile --- */
-    .staff-carousel-content-wrapper {
-        padding-top: 55px; /* Create space for arrows above the grid */
-    }
-    .staff-nav-arrow {
-        top: 8px; /* Position arrows in the new space at the top */
-        transform: translateY(0); /* Remove vertical centering */
-    }
-    .staff-nav-arrow.prev {
-        left: 5px;
-    }
-    .staff-nav-arrow.next {
-        right: 5px;
-    }
+    .staff-carousel-content-wrapper { padding-top: 55px; }
+    .staff-nav-arrow { top: 8px; transform: translateY(0); }
+    .staff-nav-arrow.prev { left: 5px; }
+    .staff-nav-arrow.next { right: 5px; }
 }
 
-@media (max-width: 576px) {
-    .staff-section-main-title { font-size: 2em; }
-    .staff-member-card { width: 220px; padding: 20px; }
-    .staff-member-card img { width: 90px; height: 90px; margin-bottom: 15px; }
-    .staff-member-name { font-size: 1.15em; }
-    .staff-member-role { font-size: 0.9em; }
-
-    .staff-nav-arrow {
-        width: 38px;
-        height: 38px;
-        font-size: 1.3em;
-    }
-    .staff-nav-arrow.prev {
-        left: 0px;
-    }
-    .staff-nav-arrow.next {
-        right: 0px;
-    }
-}
-
-
-/* --- Location/Map Section Styles --- */
+/* --- Location/Map Section Styles (MODIFIED to match contact.html style) --- */
 .location-section {
-  padding: 3rem 1rem;
-  background-color: #f4f4f4;
-  text-align: center;
-  position: relative;
-  z-index: 5;
+  background-color: #ffffff; text-align: center; z-index: 5;
+}
+.location-container { max-width: 900px; margin: 0 auto; }
+.location-section .heading { font-size: 2.5rem; color: var(--text-dark); font-weight: 800; margin-bottom: 1rem; margin-top: 0; border-bottom: none; }
+
+.map-container {
+    margin-top: 2.5rem;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid #e5e7eb;
+}
+.map-container iframe {
+    width: 100%;
+    height: 450px; /* Increased height for better view in a standalone section */
+    border: 0;
 }
 
-.location-container {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.location-section .heading {
-  margin-bottom: 2rem;
-  margin-top: 0;
-  border-bottom: none;
-  font-size: 2.5em;
-  color: #162938;
-}
-
-.map-embed-container {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  padding-top: 56.25%;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.map-embed-container iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-
-/* --- Go Top Button Styles --- */
+/* --- Go Top Button Styles (from index.html) --- */
 .go-top-btn {
-  position: fixed;
-  bottom: 70px;
-  right: 35px;
-  border-radius: 50%;
-  cursor: pointer;
-  height: 50px;
-  width: 50px;
-  background: #fff;
-  border: 3px solid #333;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+  position: fixed; bottom: 24px; right: 24px;
+  width: 48px; height: 48px; background-color: var(--primary);
+  color: white; border-radius: 50%; border: none; cursor: pointer;
+  display: none; justify-content: center; align-items: center;
+  z-index: 1000; box-shadow: var(--shadow-lg); transition: all 0.3s ease;
 }
+.go-top-btn:hover { background-color: var(--secondary); transform: scale(1.1); }
+.go-top-btn i { font-size: 1.5rem; }
 
-.go-top-btn:hover { opacity: 0.8; }
-.go-top-btn img { width: 20px; height: 20px; }
+/* --- Reveal on Scroll Animation --- */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1);
+    will-change: opacity, transform;
+}
+.reveal-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
 
-/* --- Footer Styles --- */
+
+/* --- Footer Styles (from index.html) --- */
 .footer {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem 1rem;
-  text-align: center;
-  color: white;
-  overflow: hidden;
-  z-index: 5;
+  position: relative; display: flex; flex-direction: column;
+  align-items: center; padding: 2rem 1rem; text-align: center;
+  color: white; overflow: hidden; z-index: 5;
 }
-
 .footer::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat;
-  z-index: 0;
-  opacity: 0.3;
+  content: ""; position: absolute; inset: 0;
+  background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat fixed;
+  z-index: 0; opacity: 0.3;
 }
-
 .footer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(22, 41, 56, 0.442);
-  z-index: 1;
+  content: ""; position: absolute; inset: 0;
+  background: rgba(22, 41, 56, 0.442); z-index: 1;
 }
-
 .footer * { position: relative; z-index: 2; }
 .footer-logo { width: 100px; height: 100px; margin-bottom: 1rem; }
 .footer-title { font-size: 1.5rem; font-weight: bold; }
@@ -715,10 +344,13 @@ header {
 .footer-socials a:hover { color: #0987d0; }
 .footer-divider { border-top: 1px solid white; width: 25%; margin: 2rem 0; }
 .footer-bottom { font-size: 0.875rem; line-height: 1.6; max-width: 700px; }
+.footer-bottom p { margin-bottom: 0.5rem; }
+.footer-bottom a { color: white; text-decoration: none; }
+.footer-bottom a:hover { text-decoration: underline; }
 
 /* Mobile Navigation Styles & Adjustments */
 @media (max-width: 992px) {
-    header { padding: 10px 3%; background-color: #162938; }
+    header { padding: 10px 3%; background-color: #162938; } 
     .header-left img { width: 60px; height: auto; filter: none; }
     .header-left .logo { font-size: 0.9em; margin-left: 8px; color: #fff; text-shadow: none; }
     .menu-toggle span { background-color: #ffffff; box-shadow: none; }
@@ -728,177 +360,61 @@ header {
     .navigation a:last-child { border-bottom: none; }
     .navigation a:hover { background-color: #22333f; }
     .navigation a .btnLogin-popup { width: calc(100% - 10px); margin: 5px; padding: 10px 15px; font-size: 1em; text-align: center; display: block; height: auto; box-sizing: border-box; }
-    .navigation a .btnLogin-popup[style*="background-color: #d9534f"] { margin-top: 5px; }
     .menu-toggle { display: flex; }
     .menu-toggle.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
     .menu-toggle.active span:nth-child(2) { opacity: 0; }
     .menu-toggle.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
     .about-hero-banner { padding-top: 90px; height: 65vh; min-height: 380px; }
-    .about-hero-banner .hero-content h1 { font-size: 2.2em; }
-    .about-hero-banner .hero-content p { font-size: 1.1em; }
-    .about-section { padding: 2rem 1rem; }
-    .about-content > h1.heading:first-of-type { font-size: 1.5em; padding: 1rem; margin-bottom: 2rem; }
-    .about-content > h2.heading { font-size: 1.8em; }
-    .about-content p, .objectives li { font-size: 0.95rem; }
-    .objectives li { padding-left: 30px; }
-    .objectives li::before { font-size: 1.1em; }
+    .about-hero-banner .hero-content h1 { font-size: 2.8em; }
 }
-@media (max-width: 768px) { /* Combined existing and new 768px rules */
-    .about-hero-banner { padding-top: 80px; height: 70vh; min-height: 350px; }
-    .location-section .heading { font-size: 2em; }
+@media (max-width: 768px) {
+    .about-hero-banner .hero-content h1 { font-size: 2.2em; }
+    .section-container { padding: 60px 15px; }
+    .section-title { font-size: 2.2rem; }
+    .location-section .heading { font-size: 2.2rem; }
 }
 @media (max-width: 480px) {
-    .header-left .logo { font-size: 0.8em; }
     .about-hero-banner .hero-content h1 { font-size: 1.8em; }
-    .about-hero-banner .hero-content p { font-size: 1em; }
-    .about-content > h1.heading:first-of-type { font-size: 1.3em; }
-    .about-content > h2.heading { font-size: 1.6em; }
-    .about-content p, .objectives li { font-size: 0.9rem; }
-    .staff-section-main-title { font-size: 1.8em; }
-    .location-section .heading { font-size: 1.8em; }
+    .section-title, .location-section .heading, .meet-people-text h2 { font-size: 2rem; }
 }
 
-
-/* --- Staff Member Modal Styles --- */
+/* --- Staff Member Modal Styles (Updated Theme) --- */
 .staff-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    padding: 15px;
-    box-sizing: border-box;
-    overflow-y: auto;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); display: none; align-items: center;
+    justify-content: center; z-index: 2000; padding: 15px; box-sizing: border-box; overflow-y: auto;
 }
-
-.staff-modal.active {
-    display: flex;
-}
-
+.staff-modal.active { display: flex; }
 .staff-modal-content {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    position: relative;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-    animation: fadeInModal 0.3s ease-out;
-    border: 5px solid #162938;
+    background-color: #fff; padding: 30px; border-radius: var(--radius-lg);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4); position: relative; max-width: 400px;
+    width: 90%; text-align: center; animation: fadeInModal 0.3s ease-out;
+    border: 5px solid var(--primary);
 }
-
 @keyframes fadeInModal {
     from { opacity: 0; transform: translateY(-20px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
 .staff-modal-close {
-    position: absolute;
-    top: -18px;
-    right: -18px;
-    background-color: #fff;
-    border: 2px solid #162938;
-    border-radius: 50%;
-    width: 38px;
-    height: 38px;
-    font-size: 1.8em;
-    color: #162938;
-    cursor: pointer;
-    line-height: 32px;
-    text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    z-index: 10;
+    position: absolute; top: -18px; right: -18px; background-color: #fff;
+    border: 2px solid var(--primary); border-radius: 50%; width: 38px;
+    height: 38px; font-size: 1.8em; color: var(--primary); cursor: pointer;
+    line-height: 32px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10;
 }
-.staff-modal-close:hover {
-    background-color: #f0f0f0;
-    color: #0f1f2b;
-}
-
+.staff-modal-close:hover { background-color: #f0f0f0; color: #0f1f2b; }
 .staff-modal #modalStaffImage {
-    width: 100%;
-    max-width: 250px;
-    height: auto;
-    border-radius: 6px;
-    object-fit: cover;
-    margin-bottom: 20px;
-    border: 2px solid #eee;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%; max-width: 250px; height: auto; border-radius: var(--radius-md);
+    object-fit: cover; margin-bottom: 20px; border: 2px solid #eee; display: block;
+    margin-left: auto; margin-right: auto;
 }
-
 .staff-modal #modalStaffName {
-    font-size: 1.9em;
-    font-weight: bold;
-    color: #162938;
-    margin-top: 0;
-    margin-bottom: 0.75rem;
-    line-height: 1.2;
+    font-size: 1.9em; font-weight: bold; color: var(--text-dark);
+    margin-top: 0; margin-bottom: 0.75rem; line-height: 1.2;
 }
-
 .staff-modal #modalStaffRole {
-    display: inline-block;
-    background-color: #162938;
-    color: #fff;
-    font-size: 1em;
-    font-weight: bold;
-    padding: 8px 20px;
-    border-radius: 20px;
-    margin-top: 0;
-    margin-bottom: 0;
-    text-transform: uppercase;
-}
-
-/* --- Staff Modal Mobile Adjustments --- */
-@media (max-width: 576px) {
-    .staff-modal-content {
-        padding: 20px;
-        max-width: 320px;
-        width: 90%;
-        border-width: 4px;
-    }
-    .staff-modal #modalStaffImage {
-        max-width: 180px;
-        margin-bottom: 15px;
-    }
-    .staff-modal #modalStaffName {
-        font-size: 1.5em;
-        margin-bottom: 0.6rem;
-    }
-    .staff-modal #modalStaffRole {
-        font-size: 0.9em;
-        padding: 6px 15px;
-    }
-    .staff-modal-close {
-        width: 32px;
-        height: 32px;
-        font-size: 1.5em;
-        line-height: 28px;
-        top: -15px;
-        right: -15px;
-    }
-}
-@media (max-width: 380px) {
-    .staff-modal-content {
-        padding: 15px;
-        max-width: 280px;
-    }
-     .staff-modal #modalStaffImage {
-        max-width: 150px;
-    }
-    .staff-modal #modalStaffName {
-        font-size: 1.3em;
-    }
-    .staff-modal #modalStaffRole {
-        font-size: 0.8em;
-        padding: 5px 12px;
-    }
+    display: inline-block; background-color: var(--primary); color: #fff; font-size: 1em;
+    font-weight: bold; padding: 8px 20px; border-radius: 20px;
+    margin-top: 0; margin-bottom: 0; text-transform: uppercase;
 }
 
 </style>
@@ -908,8 +424,12 @@ header {
 {% block head %}
     {{ super() }}
     <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
-    <!-- Font Awesome for carousel icons (if not already in base.html) -->
+    <!-- Fonts and Icons (Consistent with index.html) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
     <title>About Us - Padre Garcia Polytechnic College</title>
 {% endblock%}
 
@@ -956,7 +476,7 @@ header {
     </div>
 </section>
 
-<section class="about-section">
+<section class="about-section section-container reveal-on-scroll">
   <div class="about-container">
     <div class="about-sidebar">
       <div class="box-title">Vision, Mission, & Core Values</div>
@@ -966,15 +486,11 @@ header {
     </div>
 
     <div class="about-content">
-
       <h1 class="heading">"TAGA - PGPC AKO: MATALINO, DISIPLINADO, MABUTING TAO, IPINAGMAMALAKI KO!"</h1>
-
       <h2 class="heading">Vision</h2>
       <p>PGPC is a premier local higher learning institution in Region IV producing globally competitive and excellent professionals and leader's instrumental to community development and nation building.</p>
-
       <h2 class="heading">Mission</h2>
       <p>As a higher learning institution in Region IV, PGPC is committed to produce globally competitive professionals and leaders with industry-based knowledge, skills, and values that will enable them achieve their professional growth and total human development.</p>
-
       <h2 class="heading">Core Values</h2>
       <ul class="objectives">
         <li>P - Professional Development</li>
@@ -987,29 +503,39 @@ header {
 </section>
 
 <!-- --- Meet People Section --- -->
-<section class="meet-people-section">
+<section class="meet-people-section section-container reveal-on-scroll">
     <div class="meet-people-container">
         <div class="meet-people-top-row">
             <div class="meet-people-text">
-                <h2>Meet People</h2>
-                <p>At Padre Garcia Polytechnic College, you're not just joining an institution — you're becoming part of a dynamic and supportive community. Meet passionate educators, dedicated staff, and ambitious students who are all working together to shape a brighter future. Whether you're engaging with student leaders, collaborating with faculty, the PGPC experience is one of connection, inspiration, and shared growth. Our college takes pride in cultivating a culture of inclusivity, mentorship, and opportunity where everyone is encouraged to thrive.</p>
+                <!-- Dynamic Title and Text -->
+                <h2>{{ content.community_title or 'Meet Our Community' }}</h2>
+                <p>{{ content.community_text or 'At Padre Garcia Polytechnic College...' }}</p>
             </div>
             <div class="meet-people-image-large">
-                <img src="{{ url_for('static', filename='images/meetpeople.jpg') }}" alt="People connecting and networking in a vibrant setting">
+                <!-- Dynamic Community Image with fallback -->
+                {% if content.community_image %}
+                    <img src="{{ url_for('static', filename='images/uploads/' + content.community_image) }}" alt="Community">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/meetpeople.jpg') }}" alt="Community">
+                {% endif %}
             </div>
         </div>
         <div class="meet-people-bottom-row">
             <div class="single-featured-person">
                 <div class="person-image-container">
-                    <img src="{{ url_for('static', filename='images/nino.jpg') }}" alt="Doc. Niño Javinal Viñas, President of PGPC">
+                    <!-- Dynamic President Image with fallback -->
+                    {% if content.president_image %}
+                        <img src="{{ url_for('static', filename='images/uploads/' + content.president_image) }}" alt="{{ content.president_name }}">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/nino.jpg') }}" alt="President">
+                    {% endif %}
                 </div>
                 <div class="person-details-container">
-                    <h2 class="person-name">Dr. Niño Javinal Viñas</h2>
-                    <p class="person-role">College President</p>
+                    <!-- Dynamic President Details -->
+                    <h2 class="person-name">{{ content.president_name or 'Dr. Niño Javinal Viñas' }}</h2>
+                    <p class="person-role">{{ content.president_role or 'College President' }}</p>
                     <p class="person-description">
-                        The President of Padre Garcia Polytechnic College, Dr. Niño Javinal Viñas provides overall leadership and strategic vision,
-                        focusing on ensuring academic excellence and
-                        the relevance of its technical-vocational programs.
+                        {{ content.president_desc or 'The President of Padre Garcia Polytechnic College...' }}
                     </p>
                 </div>
             </div>
@@ -1019,243 +545,55 @@ header {
 <!-- End of Meet People Section -->
 
 <!-- --- Meet Our Staff Section --- -->
-<section class="meet-our-staff-section">
+<section class="meet-our-staff-section section-container reveal-on-scroll">
     <div class="meet-our-staff-container">
+        {% set category_titles = {
+            'leadership': 'Leadership & Deans',
+            'faculty': 'Faculty & Program Heads',
+            'support': 'Administrative & Support Staff'
+        } %}
 
-        <!-- Category 1: Leadership & Deans -->
-        <div class="staff-category" id="leadership-deans-category">
-            <div class="staff-header-container">
-                <div class="staff-header-titles">
-                    <!-- <p class="staff-section-subtitle">Padre Garcia Polytechnic College</p> -->
-                    <h2 class="staff-section-main-title">Leadership & Deans</h2>
-                </div>
-            </div>
-            <div class="staff-carousel-content-wrapper">
-
-                <div class="staff-grid-wrapper">
-                    <div class="staff-grid">
-
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/romy.jpg') }}" alt="ROMY C. DIAZ, VICE PRESIDENT FOR ADMINISTRATION AND FINANCE">
-                            <p class="staff-member-name">ROMY C. DIAZ</p>
-                            <h3 class="staff-member-role">VICE PRESIDENT FOR ADMINISTRATION AND FINANCE</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/mike2.jpg') }}" alt="MICHAEL K. ALMIREZ, COLLEGE DEAN / CCBA">
-                            <p class="staff-member-name">MICHAEL K. ALMIREZ</p>
-                            <h3 class="staff-member-role">COLLEGE DEAN / CCBA</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/abu2.jpg') }}" alt="JOY H. ABU, DEAN & PROGRAM CHAIR - COLLEGE OF CRIMINAL JUSTICE EDUCATION">
-                            <p class="staff-member-name">JOY H. ABU</p>
-                            <h3 class="staff-member-role">DEAN & PROGRAM CHAIR - COLLEGE OF CRIMINAL JUSTICE EDUCATION</h3>
-                        </div>
+        {% for category, members in faculty_data.items() %}
+            {% if members %}
+            <div class="staff-category" id="{{ category }}-category">
+                <div class="staff-header-container">
+                    <div class="staff-header-titles">
+                        <h2 class="staff-section-main-title">{{ category_titles.get(category, category|title) }}</h2>
                     </div>
                 </div>
-                 <button class="staff-nav-arrow prev" aria-label="Previous staff"><i class='fas fa-angle-left'></i></button>
-                 <button class="staff-nav-arrow next" aria-label="Next staff"><i class='fas fa-angle-right'></i></button>
-            </div>
-        </div>
-
-        <!-- Category 2: Faculty & Program Heads -->
-        <div class="staff-category">
-            <div class="staff-header-container">
-                <div class="staff-header-titles">
-
-                    <h2 class="staff-section-main-title">Faculty & Program Heads</h2>
-                </div>
-            </div>
-            <div class="staff-carousel-content-wrapper">
-                <button class="staff-nav-arrow prev" aria-label="Previous staff"><i class='fas fa-angle-left'></i></button>
-                <div class="staff-grid-wrapper">
-                    <div class="staff-grid">
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/ali.jpg') }}" alt="JOHN LESTER ALIWALAS, PROGRAM CHAIR, BSCS/INSTRUCTOR">
-                            <p class="staff-member-name">JOHN LESTER ALIWALAS</p>
-                            <h3 class="staff-member-role">PROGRAM CHAIR, BSCS/INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/tina.jpg') }}" alt="MARIA CRISTINA G. MAGNAYE, MIS COORDINATOR/INSTRUCTOR">
-                            <p class="staff-member-name">MARIA CRISTINA G. MAGNAYE</p>
-                            <h3 class="staff-member-role">MIS COORDINATOR/INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/marielle.jpg') }}" alt="MARIELLE RIANNA B. SALUDO, INSTRUCTOR">
-                            <p class="staff-member-name">MARIELLE RIANNA B. SALUDO</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/julius.jpg') }}" alt="JULIUS E. ESCALA, INSTRUCTOR">
-                            <p class="staff-member-name">JULIUS E. ESCALA</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/michelle.jpg') }}" alt="MICHELLE A. ABANIA, INSTRUCTOR">
-                            <p class="staff-member-name">MICHELLE A. ABANIA</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/renald.jpg') }}" alt="RENALD S. QUINTO, INSTRUCTOR">
-                            <p class="staff-member-name">RENALD S. QUINTO</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/roanne.jpg') }}" alt="ROANNE L. VETUZ, INSTRUCTOR">
-                            <p class="staff-member-name">ROANNE L. VETUZ</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/renan.jpg') }}" alt="RENAN A. ABU, INSTRUCTOR">
-                            <p class="staff-member-name">RENAN A. ABU</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/jenny.jpg') }}" alt="JENNY S. MORALES, INSTRUCTOR">
-                            <p class="staff-member-name">JENNY S. MORALES</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/jamilla.jpg') }}" alt="JAMILA JAMAE M. REÑA, INSTRUCTOR">
-                            <p class="staff-member-name">JAMILA JAMAE M. REÑA</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/gayzhelle.jpg') }}" alt="GAYZELLE D. CARINGAL, INSTRUCTOR">
-                            <p class="staff-member-name">GAYZELLE D. CARINGAL</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                         <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/allan.jpg') }}" alt="ALLAN M. DIMACULANGAN, INSTRUCTOR">
-                            <p class="staff-member-name">ALLAN M. DIMACULANGAN</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/alyana.jpg') }}" alt="FRANCIS ALYANA B. MAGTIBAY, INSTRUCTOR">
-                            <p class="staff-member-name">FRANCIS ALYANA B. MAGTIBAY</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/sebuc.jpg') }}" alt="PRINCESS JOY M. SEBUC, INSTRUCTOR">
-                            <p class="staff-member-name">PRINCESS JOY M. SEBUC</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/alexander.jpg') }}" alt="ALEXANDER J. CORACHEA, INSTRUCTOR">
-                            <p class="staff-member-name">ALEXANDER J. CORACHEA</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/quano.jpg') }}" alt="LARRICE JOY M. OUANO, INSTRUCTOR">
-                            <p class="staff-member-name">LARRICE JOY M. OUANO</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/rommel.jpg') }}" alt="ROMMEL M. ALCANTARA, INSTRUCTOR">
-                            <p class="staff-member-name">ROMMEL M. ALCANTARA</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/roldan.jpg') }}" alt="ROLDAN M. SARMIENTO, INSTRUCTOR">
-                            <p class="staff-member-name">ROLDAN M. SARMIENTO</p>
-                            <h3 class="staff-member-role">INSTRUCTOR</h3>
+                <div class="staff-carousel-content-wrapper">
+                    <div class="staff-grid-wrapper">
+                        <div class="staff-grid">
+                            {% for member in members %}
+                            <div class="staff-member-card">
+                                <img src="{{ url_for('static', filename='images/uploads/' + member.image_filename) if member.image_filename else url_for('static', filename='images/default_avatar.png') }}" alt="{{ member.name }}">
+                                <h3 class="staff-member-name">{{ member.name }}</h3>
+                                <p class="staff-member-role">{{ member.role }}</p>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
-                </div>
-                <button class="staff-nav-arrow next" aria-label="Next staff"><i class='fas fa-angle-right'></i></button>
-            </div>
-        </div>
-
-        <!-- Category 3: Administrative & Support Staff -->
-        <div class="staff-category">
-            <div class="staff-header-container">
-                <div class="staff-header-titles">
-
-                    <h2 class="staff-section-main-title">Administrative & Support Staff</h2>
+                     <button class="staff-nav-arrow prev" aria-label="Previous staff"><i class='fas fa-angle-left'></i></button>
+                     <button class="staff-nav-arrow next" aria-label="Next staff"><i class='fas fa-angle-right'></i></button>
                 </div>
             </div>
-            <div class="staff-carousel-content-wrapper">
-                <button class="staff-nav-arrow prev" aria-label="Previous staff"><i class='fas fa-angle-left'></i></button>
-                <div class="staff-grid-wrapper">
-                    <div class="staff-grid">
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/nicky.jpg') }}" alt="NICKY JANE A. SOLIS, COLLEGE REGISTRAR COORDINATOR">
-                            <p class="staff-member-name">NICKY JANE A. SOLIS</p>
-                            <h3 class="staff-member-role">COLLEGE REGISTRAR COORDINATOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/jef.jpg') }}" alt="JAY FRE V. ENDAYA, PROPERTY MANAGEMENT OFFICER">
-                            <p class="staff-member-name">JAY FRE V. ENDAYA</p>
-                            <h3 class="staff-member-role">PROPERTY MANAGEMENT OFFICER</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/leo.jpg') }}" alt="LEO P. LARESMA, OFFICE OF STUDENT AFFAIRS">
-                            <p class="staff-member-name">LEO P. LARESMA</p>
-                            <h3 class="staff-member-role">OFFICE OF STUDENT AFFAIRS</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/cath.jpg') }}" alt="CATHERINE P. BAYANIN, CASHIER'S STAFF">
-                            <p class="staff-member-name">CATHERINE P. BAYANIN</p>
-                            <h3 class="staff-member-role">CASHIER'S STAFF</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/eunice.jpg') }}" alt="EUNICE ACE M. AMPARO, COLLEGE SECRETARY">
-                            <p class="staff-member-name">EUNICE ACE M. AMPARO</p>
-                            <h3 class="staff-member-role">COLLEGE SECRETARY</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/maria.jpg') }}" alt="MARIA PRISCILLA L. CORONEL, COLLEGE LIBRARIAN">
-                            <p class="staff-member-name">MARIA PRISCILLA L. CORONEL</p>
-                            <h3 class="staff-member-role">COLLEGE LIBRARIAN</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/jennifer.jpg') }}" alt="JENNIFER S. BUYA, GUIDANCE COUNSELOR">
-                            <p class="staff-member-name">JENNIFER S. BUYA</p>
-                            <h3 class="staff-member-role">GUIDANCE COUNSELOR</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/aldrin.jpg') }}" alt="ALDRIN G. MANGURALI, ACCOUNTING & LIAISON STAFF">
-                            <p class="staff-member-name">ALDRIN G. MANGURALI</p>
-                            <h3 class="staff-member-role">ACCOUNTING & LIAISON STAFF</h3>
-                        </div>
-                         <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/nelia.jpg') }}" alt="NELIA O. ALEGADO, SCHOOL NURSE">
-                            <p class="staff-member-name">NELIA O. ALEGADO</p>
-                            <h3 class="staff-member-role">SCHOOL NURSE</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/reymundo.jpg') }}" alt="REYMUNDO R. BENEDICTO, UTILITY & MAINTENANCE">
-                            <p class="staff-member-name">REYMUNDO R. BENEDICTO</p>
-                            <h3 class="staff-member-role">UTILITY & MAINTENANCE</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/daisy.jpg') }}" alt="DAISY V. BALINGIT, UTILITY & MAINTENANCE">
-                            <p class="staff-member-name">DAISY V. BALINGIT</p>
-                            <h3 class="staff-member-role">UTILITY & MAINTENANCE</h3>
-                        </div>
-                        <div class="staff-member-card">
-                            <img src="{{ url_for('static', filename='images/nedy.jpg') }}" alt="NEDY R. SULABO, UTILITY & MAINTENANCE">
-                            <p class="staff-member-name">NEDY R. SULABO</p>
-                            <h3 class="staff-member-role">UTILITY & MAINTENANCE</h3>
-                        </div>
-                    </div>
-                </div>
-                <button class="staff-nav-arrow next" aria-label="Next staff"><i class='fas fa-angle-right'></i></button>
-            </div>
-        </div>
-
+            {% endif %}
+        {% endfor %}
     </div>
 </section>
 <!-- End of Meet Our Staff Section -->
 
-<section class="location-section">
+
+<section class="location-section section-container reveal-on-scroll">
     <div class="location-container">
         <h2 class="heading">Our Location</h2>
-        <div class="map-embed-container">
+        <p class="section-subtitle" style="margin-top: -1.5rem; margin-bottom: 2.5rem;">
+            Visit our campus. We are located in the heart of Padre Garcia, Batangas.
+        </p>
+        <div class="map-container">
             <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3545.459040105033!2d121.2656064588598!3d13.882479556840263!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd3f0024d47b1b%3A0x111daf1b2a29e55e!2sPadre%20Garcia%20Polytechnic%20College!5e1!3m2!1sen!2sph!4v1747292232960!5m2!1sen!2sph"
-                allowfullscreen=""
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
+                allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
                 title="Padre Garcia Polytechnic College Location Map">
             </iframe>
         </div>
@@ -1263,28 +601,49 @@ header {
 </section>
 
 
-<button class="go-top-btn" id="goTopBtn">
-  <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="Scroll to top arrow" />
+<button class="go-top-btn" id="goTopBtn" title="Go to top">
+  <i class="ri-arrow-up-line"></i>
 </button>
 
 <footer class="footer">
-    <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
-
-    <h1 class="footer-title">Padre Garcia Polytechnic College</h1>
-    <h2 class="footer-subtitle">THE FUTURE BEGINS HERE.</h2>
-
-    <p class="footer-connect">Connect with us</p>
-
+    <!-- Dynamic Logo -->
+    <img src="{{ url_for('static', filename='images/uploads/' + global_content.footer_logo_image) if global_content.footer_logo_image else url_for('static', filename='logopgpc.png') }}" 
+         alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
+    
+    <!-- Dynamic Title & Slogan -->
+    <h1 class="footer-title">{{ global_content.footer_title or 'Padre Garcia Polytechnic College' }}</h1>
+    <h2 class="footer-subtitle">{{ global_content.footer_subtitle or 'THE FUTURE BEGINS HERE.' }}</h2>
+    
+    <!-- Dynamic Connect Text & Socials -->
+    <p class="footer-connect">{{ global_content.footer_connect_text or 'Connect with us' }}</p>
     <div class="footer-socials">
-      <a href="https://www.facebook.com/PadreGarciaPolytechnicCollege" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-
+        {% if global_socials %}
+            {% for link in global_socials %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ link.platform_name }}">
+                    <i class="{{ link.icon_class }}"></i>
+                </a>
+            {% endfor %}
+        {% else %}
+            <!-- Fallback for old static link if no dynamic links exist -->
+            {% if global_content.footer_facebook_link %}
+                <a href="{{ global_content.footer_facebook_link }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            {% endif %}
+        {% endif %}
     </div>
 
     <div class="footer-divider"></div>
-
+    
+    <!-- Dynamic Links & Contact Info -->
     <div class="footer-bottom">
-      <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="{{ url_for('views.home') }}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7" target="_blank" rel="noopener noreferrer">Brgy.Castillo, Padre Garcia, Batangas</a> | <a href="tel:+63285244611">+63 (2) 8524-4611</a></p>
-      <p>© {{ current_year if current_year else '2025' }}. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home" target="_blank" rel="noopener noreferrer">Padre Garcia PH</a></p>
+      <p>
+          <a href="{{ url_for('views.about') }}">About</a> | 
+          <a href="{{ url_for('views.contact_page') }}">Contact us</a> | 
+          <a href="{{ url_for('views.home') }}#programs">Programs</a> | 
+          <a href="{{ url_for('views.home') }}">Admission</a> | 
+          <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7" target="_blank" rel="noopener noreferrer">{{ global_content.contact_address }}</a> | 
+          <a href="tel:{{ global_content.contact_phone }}">{{ global_content.contact_phone }}</a>
+      </p>
+      <p>© {{ current_year if current_year else '2025' }}. All Rights Reserved {{ global_content.footer_title }} | <a href="https://www.padregarcia.gov.ph/home" target="_blank" rel="noopener noreferrer">Padre Garcia PH</a></p>
     </div>
 </footer>
 
@@ -1301,28 +660,24 @@ header {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  // Go Top Button
   const goTopBtn = document.getElementById('goTopBtn');
-
   if (goTopBtn) {
     window.addEventListener('scroll', () => {
-      if (window.scrollY > 200) {
+      if (window.scrollY > 300) {
         goTopBtn.style.display = "flex";
       } else {
         goTopBtn.style.display = "none";
       }
     });
-
     goTopBtn.addEventListener('click', () => {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   }
 
+  // Mobile Menu Toggle
   const menuToggle = document.querySelector('.menu-toggle');
   const navigation = document.getElementById('main-navigation');
-
   if (menuToggle && navigation) {
       menuToggle.addEventListener('click', function() {
           navigation.classList.toggle('active');
@@ -1332,6 +687,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
+  // --- Staff Carousel/Slider Logic (Unchanged from original) ---
   function initializeStaffSlider(staffCategoryElement) {
     const carouselContentWrapper = staffCategoryElement.querySelector('.staff-carousel-content-wrapper');
     if (!carouselContentWrapper) return;
@@ -1340,382 +696,188 @@ document.addEventListener('DOMContentLoaded', function () {
     const nextButton = carouselContentWrapper.querySelector('.staff-nav-arrow.next');
     const staffGrid = carouselContentWrapper.querySelector('.staff-grid');
     const staffGridWrapper = carouselContentWrapper.querySelector('.staff-grid-wrapper');
-
-    // Identify if this is the special "Leadership & Deans" category
-    const isLeadershipCategory = staffCategoryElement.id === 'leadership-deans-category';
-    const DESKTOP_BREAKPOINT = 992; // Define desktop breakpoint
-
-    let autoSlideInterval = null; // Initialize to null
+    const isLeadershipCategory = staffCategoryElement.id === 'leadership-category';
+    const DESKTOP_BREAKPOINT = 992;
+    let autoSlideInterval = null;
     const AUTO_SLIDE_DELAY = 4000;
-
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchEndX = 0;
-    let isSwiping = false;
+    let touchStartX = 0, touchStartY = 0, touchEndX = 0, isSwiping = false;
     const swipeThreshold = 50;
 
     if (staffGrid && staffGridWrapper && prevButton && nextButton) {
         const cards = Array.from(staffGrid.querySelectorAll('.staff-member-card'));
-
         if (cards.length > 0) {
-            let currentIndex = 0;
-            let cardWidthIncludingGap;
-            let visibleCardsCount;
-            let maxIndex;
-            let totalCardsWidth; // To store the total width of all cards + gaps
-
+            let currentIndex = 0, cardWidthIncludingGap, visibleCardsCount, maxIndex, totalCardsWidth;
             function calculateMetrics() {
                 if (cards.length === 0) return;
                 const cardOuterWidth = cards[0].offsetWidth;
                 const gapStyle = getComputedStyle(staffGrid).gap;
                 const gap = gapStyle && gapStyle !== 'normal' ? parseFloat(gapStyle) : 0;
                 cardWidthIncludingGap = cardOuterWidth + gap;
-
                 const wrapperWidth = staffGridWrapper.offsetWidth;
                 visibleCardsCount = cardWidthIncludingGap > 0 ? Math.max(1, Math.floor((wrapperWidth + gap) / cardWidthIncludingGap)) : cards.length;
                 maxIndex = Math.max(0, cards.length - visibleCardsCount);
-
-                // Calculate total width of all cards including their gaps
                 totalCardsWidth = cards.reduce((acc, card) => acc + card.offsetWidth, 0) + (cards.length > 0 ? (cards.length - 1) * gap : 0);
             }
-
-            function stopAutoSlide() {
-                clearInterval(autoSlideInterval);
-                autoSlideInterval = null;
-            }
-
+            function stopAutoSlide() { clearInterval(autoSlideInterval); autoSlideInterval = null; }
             function updateCarouselAppearanceAndBehavior() {
-                calculateMetrics(); // Always get fresh metrics
-
+                calculateMetrics();
                 const wrapperWidth = staffGridWrapper.offsetWidth;
                 const allCardsFit = totalCardsWidth <= wrapperWidth;
                 const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
-
                 if (isLeadershipCategory && allCardsFit && isDesktop) {
                     staffGrid.style.justifyContent = 'center';
                     staffGrid.style.transform = 'translateX(0px)';
                     prevButton.style.display = 'none';
                     nextButton.style.display = 'none';
-                    currentIndex = 0; // Reset index as no sliding is happening
-                    stopAutoSlide(); // Stop auto-slide for this specific case
+                    currentIndex = 0;
+                    stopAutoSlide();
                 } else {
                     staffGrid.style.justifyContent = 'flex-start';
                     const offset = cardWidthIncludingGap > 0 ? -currentIndex * cardWidthIncludingGap : 0;
                     staffGrid.style.transform = `translateX(${offset}px)`;
-
                     const canScrollAtAll = cards.length > visibleCardsCount;
                     prevButton.style.display = canScrollAtAll ? 'flex' : 'none';
                     nextButton.style.display = canScrollAtAll ? 'flex' : 'none';
-                    // For infinite scroll, disabled state might be always false if canScrollAtAll
                     prevButton.disabled = !canScrollAtAll;
                     nextButton.disabled = !canScrollAtAll;
                 }
             }
-
-
             function slideToIndex(newIndex, isAuto = false) {
-                calculateMetrics(); // Ensure metrics are fresh
-
-                const wrapperWidth = staffGridWrapper.offsetWidth;
-                const allCardsFit = totalCardsWidth <= wrapperWidth;
-                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
-
-                if (isLeadershipCategory && allCardsFit && isDesktop) {
-                    // If leadership, all fit, and desktop, just update appearance (which centers and hides buttons)
-                    updateCarouselAppearanceAndBehavior();
-                    return; // No actual sliding logic needed
-                }
-
-                // Normal sliding logic
-                if (cards.length > visibleCardsCount) { // Only if scrolling is possible
-                    if (isAuto) { // Auto-slide logic for looping
-                        currentIndex = (newIndex >= cards.length) ? 0 : newIndex; // Loop for auto
-                        if (currentIndex > maxIndex && cards.length > visibleCardsCount) { // if auto went past "natural" end
-                             currentIndex = 0; // Loop to start
-                        }
-                    } else { // Manual navigation (buttons/swipe) with wrapping
-                        if (newIndex >= cards.length) { // From next button when at end
-                            currentIndex = 0;
-                        } else if (newIndex < 0) { // From prev button when at start
-                            currentIndex = maxIndex; // Go to the start of the last "page"
-                        } else {
-                            currentIndex = Math.min(newIndex, maxIndex); // Clamp to maxIndex for manual next
-                        }
-                         // Ensure currentIndex is not negative after manual prev from 0 to maxIndex
-                        if (currentIndex < 0) currentIndex = 0;
-                    }
-                } else { // Not enough cards to scroll
-                    currentIndex = 0;
-                }
-                updateCarouselAppearanceAndBehavior();
-            }
-
-
-            function startAutoSlide() {
-                stopAutoSlide(); // Clear any existing interval
-                calculateMetrics(); // Get current metrics
-
-                const wrapperWidth = staffGridWrapper.offsetWidth;
-                const allCardsFit = totalCardsWidth <= wrapperWidth;
-                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
-
-                if (isLeadershipCategory && allCardsFit && isDesktop) {
-                    return; // Don't auto-slide if centered and all fit for leadership category
-                }
-
-                if (cards.length > visibleCardsCount) { // Only auto-slide if scrolling is possible
-                    autoSlideInterval = setInterval(() => {
-                        slideToIndex(currentIndex + 1, true); // Pass true for auto-slide
-                    }, AUTO_SLIDE_DELAY);
-                }
-            }
-
-            function resetAndStartAutoSlide() {
-                stopAutoSlide();
-                startAutoSlide();
-            }
-
-
-            nextButton.addEventListener('click', () => {
-                slideToIndex(currentIndex + 1);
-                resetAndStartAutoSlide();
-            });
-
-            prevButton.addEventListener('click', () => {
-                // If currentIndex is 0, clicking prev should go to the 'end' (maxIndex)
-                let targetIndex = currentIndex - 1;
-                if (targetIndex < 0 && cards.length > visibleCardsCount) { // Wrap to end
-                    targetIndex = maxIndex;
-                } else if (targetIndex < 0) { // Not enough items to wrap, stay at 0
-                    targetIndex = 0;
-                }
-                slideToIndex(targetIndex);
-                resetAndStartAutoSlide();
-            });
-
-
-            function handleTouchStart(event) {
-                if (!event.touches || event.touches.length === 0) return;
-
-                calculateMetrics(); // Ensure metrics are fresh before checking conditions
-                const wrapperWidth = staffGridWrapper.offsetWidth;
-                const allCardsFit = totalCardsWidth <= wrapperWidth;
-                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
-
-                if (isLeadershipCategory && allCardsFit && isDesktop) {
-                    isSwiping = false; return; // Prevent swipe if centered and all fit
-                }
-
-                touchStartX = event.touches[0].clientX;
-                touchStartY = event.touches[0].clientY;
-                isSwiping = true;
-                stopAutoSlide();
-                staffGrid.style.transition = 'none'; // For smooth manual drag if implemented
-            }
-
-            function handleTouchMove(event) {
-                if (!isSwiping || !event.touches || event.touches.length === 0) return;
-
-                const touchCurrentX = event.touches[0].clientX;
-                const touchCurrentY = event.touches[0].clientY;
-
-                if (typeof touchStartX === 'undefined' || typeof touchStartY === 'undefined') return;
-
-                const deltaX = touchCurrentX - touchStartX;
-                const deltaY = touchCurrentY - touchStartY;
-
-                // Prevent page scroll if horizontal swipe is significant
-                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-                     event.preventDefault();
-                }
-            }
-
-            function handleTouchEnd(event) {
-                if (!isSwiping) return;
-                touchEndX = event.changedTouches[0].clientX;
-                const swipeDistance = touchEndX - touchStartX;
-                isSwiping = false;
-
-                staffGrid.style.transition = 'transform 0.5s ease-in-out';
-
-                calculateMetrics(); // Ensure metrics are fresh
-                const wrapperWidth = staffGridWrapper.offsetWidth;
-                const allCardsFit = totalCardsWidth <= wrapperWidth;
-                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
-
-                if (isLeadershipCategory && allCardsFit && isDesktop) {
-                    // No swipe action needed, just ensure autostart is handled
-                    resetAndStartAutoSlide();
-                    return;
-                }
-
-                if (Math.abs(swipeDistance) > swipeThreshold) {
-                    if (cards.length > visibleCardsCount) {
-                        let targetIndex = currentIndex;
-                        if (swipeDistance < 0) { // Swiped left (next)
-                            targetIndex++;
-                            if (targetIndex > maxIndex) targetIndex = 0; // Wrap to start
-                        } else { // Swiped right (prev)
-                            targetIndex--;
-                            if (targetIndex < 0) targetIndex = maxIndex; // Wrap to end
-                        }
-                        slideToIndex(targetIndex);
-                    } else {
-                        slideToIndex(currentIndex); // No change if not enough cards to scroll
-                    }
-                } else {
-                    // If not a significant swipe, snap back to current position
-                    slideToIndex(currentIndex);
-                }
-                resetAndStartAutoSlide();
-            }
-
-            const addSwipeListeners = () => {
-                if (staffGridWrapper && staffGridWrapper.dataset.swipeListeners !== 'true') {
-                    staffGridWrapper.addEventListener('touchstart', handleTouchStart, { passive: true });
-                    staffGridWrapper.addEventListener('touchmove', handleTouchMove, { passive: false });
-                    staffGridWrapper.addEventListener('touchend', handleTouchEnd);
-                    staffGridWrapper.dataset.swipeListeners = 'true';
-                }
-            };
-
-            const removeSwipeListeners = () => {
-                 if (staffGridWrapper && staffGridWrapper.dataset.swipeListeners === 'true') {
-                    staffGridWrapper.removeEventListener('touchstart', handleTouchStart);
-                    staffGridWrapper.removeEventListener('touchmove', handleTouchMove);
-                    staffGridWrapper.removeEventListener('touchend', handleTouchEnd);
-                    staffGridWrapper.dataset.swipeListeners = 'false';
-                }
-            };
-
-            function manageSwipeListeners() {
                 calculateMetrics();
                 const wrapperWidth = staffGridWrapper.offsetWidth;
                 const allCardsFit = totalCardsWidth <= wrapperWidth;
                 const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
-
-                if (isLeadershipCategory && allCardsFit && isDesktop) {
-                    removeSwipeListeners(); // Disable swipe for this specific case
-                } else if (window.innerWidth <= 768) { // Enable for mobile otherwise
-                    addSwipeListeners();
-                } else { // Disable for desktop if not the special leadership case but not mobile
-                    removeSwipeListeners();
-                }
+                if (isLeadershipCategory && allCardsFit && isDesktop) { updateCarouselAppearanceAndBehavior(); return; }
+                if (cards.length > visibleCardsCount) {
+                    if (isAuto) {
+                        currentIndex = (newIndex >= cards.length) ? 0 : newIndex;
+                        if (currentIndex > maxIndex && cards.length > visibleCardsCount) { currentIndex = 0; }
+                    } else {
+                        if (newIndex >= cards.length) { currentIndex = 0; }
+                        else if (newIndex < 0) { currentIndex = maxIndex; }
+                        else { currentIndex = Math.min(newIndex, maxIndex); }
+                        if (currentIndex < 0) currentIndex = 0;
+                    }
+                } else { currentIndex = 0; }
+                updateCarouselAppearanceAndBehavior();
             }
-
-
-            // Initial setup calls
-            updateCarouselAppearanceAndBehavior(); // Initial display setup
-            startAutoSlide(); // Start auto-slide if applicable
-            manageSwipeListeners(); // Initial swipe listener setup
-
+            function startAutoSlide() {
+                stopAutoSlide(); calculateMetrics();
+                const wrapperWidth = staffGridWrapper.offsetWidth;
+                const allCardsFit = totalCardsWidth <= wrapperWidth;
+                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+                if (isLeadershipCategory && allCardsFit && isDesktop) { return; }
+                if (cards.length > visibleCardsCount) { autoSlideInterval = setInterval(() => { slideToIndex(currentIndex + 1, true); }, AUTO_SLIDE_DELAY); }
+            }
+            function resetAndStartAutoSlide() { stopAutoSlide(); startAutoSlide(); }
+            nextButton.addEventListener('click', () => { slideToIndex(currentIndex + 1); resetAndStartAutoSlide(); });
+            prevButton.addEventListener('click', () => { slideToIndex(currentIndex - 1); resetAndStartAutoSlide(); });
+            function handleTouchStart(event) {
+                if (!event.touches || event.touches.length === 0) return;
+                calculateMetrics(); const wrapperWidth = staffGridWrapper.offsetWidth;
+                const allCardsFit = totalCardsWidth <= wrapperWidth; const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+                if (isLeadershipCategory && allCardsFit && isDesktop) { isSwiping = false; return; }
+                touchStartX = event.touches[0].clientX; touchStartY = event.touches[0].clientY;
+                isSwiping = true; stopAutoSlide(); staffGrid.style.transition = 'none';
+            }
+            function handleTouchMove(event) {
+                if (!isSwiping || !event.touches || event.touches.length === 0) return;
+                const touchCurrentX = event.touches[0].clientX; const touchCurrentY = event.touches[0].clientY;
+                if (typeof touchStartX === 'undefined' || typeof touchStartY === 'undefined') return;
+                const deltaX = touchCurrentX - touchStartX; const deltaY = touchCurrentY - touchStartY;
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) { event.preventDefault(); }
+            }
+            function handleTouchEnd(event) {
+                if (!isSwiping) return;
+                touchEndX = event.changedTouches[0].clientX; const swipeDistance = touchEndX - touchStartX;
+                isSwiping = false; staffGrid.style.transition = 'transform 0.5s ease-in-out';
+                calculateMetrics(); const wrapperWidth = staffGridWrapper.offsetWidth; const allCardsFit = totalCardsWidth <= wrapperWidth;
+                const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT; if (isLeadershipCategory && allCardsFit && isDesktop) { resetAndStartAutoSlide(); return; }
+                if (Math.abs(swipeDistance) > swipeThreshold) {
+                    if (cards.length > visibleCardsCount) {
+                        let targetIndex = currentIndex;
+                        if (swipeDistance < 0) { targetIndex++; if (targetIndex > maxIndex) targetIndex = 0; }
+                        else { targetIndex--; if (targetIndex < 0) targetIndex = maxIndex; }
+                        slideToIndex(targetIndex);
+                    } else { slideToIndex(currentIndex); }
+                } else { slideToIndex(currentIndex); }
+                resetAndStartAutoSlide();
+            }
+            const addSwipeListeners = () => { if (staffGridWrapper && staffGridWrapper.dataset.swipeListeners !== 'true') { staffGridWrapper.addEventListener('touchstart', handleTouchStart, { passive: true }); staffGridWrapper.addEventListener('touchmove', handleTouchMove, { passive: false }); staffGridWrapper.addEventListener('touchend', handleTouchEnd); staffGridWrapper.dataset.swipeListeners = 'true'; } };
+            const removeSwipeListeners = () => { if (staffGridWrapper && staffGridWrapper.dataset.swipeListeners === 'true') { staffGridWrapper.removeEventListener('touchstart', handleTouchStart); staffGridWrapper.removeEventListener('touchmove', handleTouchMove); staffGridWrapper.removeEventListener('touchend', handleTouchEnd); staffGridWrapper.dataset.swipeListeners = 'false'; } };
+            function manageSwipeListeners() {
+                calculateMetrics(); const wrapperWidth = staffGridWrapper.offsetWidth; const allCardsFit = totalCardsWidth <= wrapperWidth; const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+                if (isLeadershipCategory && allCardsFit && isDesktop) { removeSwipeListeners(); } else if (window.innerWidth <= 768) { addSwipeListeners(); } else { removeSwipeListeners(); }
+            }
+            updateCarouselAppearanceAndBehavior(); startAutoSlide(); manageSwipeListeners();
             [carouselContentWrapper, prevButton, nextButton].forEach(element => {
                 if (element) {
                     element.addEventListener('mouseenter', stopAutoSlide);
                     element.addEventListener('mouseleave', () => {
-                        // Only restart autoscroll if it's supposed to be running
-                        calculateMetrics(); // refresh metrics before check
-                        const wrapperWidth = staffGridWrapper.offsetWidth;
-                        const allCardsFit = totalCardsWidth <= wrapperWidth;
-                        const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
-                        if (!(isLeadershipCategory && allCardsFit && isDesktop)) {
-                            startAutoSlide();
-                        }
+                        calculateMetrics(); const wrapperWidth = staffGridWrapper.offsetWidth; const allCardsFit = totalCardsWidth <= wrapperWidth; const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+                        if (!(isLeadershipCategory && allCardsFit && isDesktop)) { startAutoSlide(); }
                     });
                 }
             });
-
             let resizeTimeout;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(() => {
-                    calculateMetrics();
-                    if (currentIndex > maxIndex && maxIndex >=0) {
-                         currentIndex = maxIndex;
-                    } else if (currentIndex < 0) {
-                         currentIndex = 0;
-                    }
-                    updateCarouselAppearanceAndBehavior();
-                    resetAndStartAutoSlide();
-                    manageSwipeListeners();
+                    calculateMetrics(); if (currentIndex > maxIndex && maxIndex >=0) { currentIndex = maxIndex; } else if (currentIndex < 0) { currentIndex = 0; }
+                    updateCarouselAppearanceAndBehavior(); resetAndStartAutoSlide(); manageSwipeListeners();
                 }, 250);
             });
-
-
-        } else { // No cards
+        } else {
             if(prevButton) { prevButton.style.display = 'none'; prevButton.disabled = true; }
             if(nextButton) { nextButton.style.display = 'none'; nextButton.disabled = true; }
         }
-    } else { // Essential elements missing
-        if(prevButton) { prevButton.style.display = 'none'; prevButton.disabled = true; }
-        if(nextButton) { nextButton.style.display = 'none'; nextButton.disabled = true; }
     }
   }
+  document.querySelectorAll('.staff-category').forEach(category => initializeStaffSlider(category));
 
-  const staffCategories = document.querySelectorAll('.staff-category');
-  staffCategories.forEach(categoryElement => {
-      initializeStaffSlider(categoryElement);
-  });
-
-  // --- Staff Member Modal Functionality ---
+  // --- Staff Member Modal Functionality (Unchanged) ---
   const staffModal = document.getElementById('staffMemberModal');
-  const modalImage = document.getElementById('modalStaffImage');
-  const modalName = document.getElementById('modalStaffName');
-  const modalRole = document.getElementById('modalStaffRole');
-
-  if (staffModal && modalImage && modalName && modalRole) {
+  if (staffModal) {
+    const modalImage = document.getElementById('modalStaffImage');
+    const modalName = document.getElementById('modalStaffName');
+    const modalRole = document.getElementById('modalStaffRole');
     const closeModalButton = staffModal.querySelector('.staff-modal-close');
     const allStaffCards = document.querySelectorAll('.staff-member-card');
-
     allStaffCards.forEach(card => {
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
-
         card.addEventListener('click', function() {
-            const imgSrc = this.querySelector('img').src;
-            const name = this.querySelector('.staff-member-name').textContent;
-            const role = this.querySelector('.staff-member-role').textContent;
-
-            modalImage.src = imgSrc;
-            modalImage.alt = name + ", " + role;
-            modalName.textContent = name;
-            modalRole.textContent = role;
-
+            modalImage.src = this.querySelector('img').src;
+            modalImage.alt = this.querySelector('.staff-member-name').textContent;
+            modalName.textContent = this.querySelector('.staff-member-name').textContent;
+            modalRole.textContent = this.querySelector('.staff-member-role').textContent;
             staffModal.classList.add('active');
             document.body.style.overflow = 'hidden';
             if(closeModalButton) closeModalButton.focus();
         });
-
-        card.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                this.click();
-            }
-        });
+        card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); } });
     });
-
-    if (closeModalButton) {
-        closeModalButton.addEventListener('click', function() {
-            staffModal.classList.remove('active');
-            document.body.style.overflow = '';
-        });
-    }
-
-    staffModal.addEventListener('click', function(event) {
-        if (event.target === staffModal) {
-            staffModal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    });
-
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && staffModal.classList.contains('active')) {
-            staffModal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    });
+    const closeModal = () => { staffModal.classList.remove('active'); document.body.style.overflow = ''; };
+    if (closeModalButton) closeModalButton.addEventListener('click', closeModal);
+    staffModal.addEventListener('click', e => { if (e.target === staffModal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && staffModal.classList.contains('active')) closeModal(); });
   }
 
+  // --- Animate on Scroll Logic (from index.html) ---
+  const observerOptions = {
+      root: null,
+      rootMargin: '0px 0px -50px 0px',
+      threshold: 0.1
+  };
+  const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+          if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+          }
+      });
+  }, observerOptions);
+  document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
 });
 </script>
 

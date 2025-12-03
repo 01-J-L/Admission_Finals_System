@@ -1,0 +1,66 @@
+
+
+{% extends "accounting_base.html" %}
+
+{% block title %}Accounting Dashboard{% endblock %}
+{% block page_title %}Financial Overview{% endblock %}
+
+{% block card_title %}Summary{% endblock %}
+
+{% block card_content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+    <!-- Revenue Card -->
+    <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-green-600">Total Revenue</p>
+                <p class="text-2xl font-bold text-green-900">₱{{ "{:,.2f}".format(total_revenue) }}</p>
+            </div>
+            <div class="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center text-green-700">
+                <i class="ri-money-dollar-circle-line text-2xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expenses Card -->
+    <div class="bg-red-50 p-6 rounded-lg border border-red-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-red-600">Total Expenses</p>
+                <p class="text-2xl font-bold text-red-900">₱{{ "{:,.2f}".format(total_expenses) }}</p>
+            </div>
+            <div class="w-12 h-12 bg-red-200 rounded-full flex items-center justify-center text-red-700">
+                <i class="ri-shopping-cart-line text-2xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Net Income Card -->
+    <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-blue-600">Net Income</p>
+                <p class="text-2xl font-bold text-blue-900">₱{{ "{:,.2f}".format(net_income) }}</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center text-blue-700">
+                <i class="ri-bar-chart-grouped-line text-2xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="px-6 pb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+    <div class="flex gap-4">
+        <a href="{{ url_for('auth.journal_entries') }}" class="flex items-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+            <i class="ri-booklet-line text-primary text-xl"></i>
+            <span class="text-sm font-medium text-gray-700">View Journal</span>
+        </a>
+        <a href="{{ url_for('auth.chart_of_accounts') }}" class="flex items-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+            <i class="ri-list-settings-line text-primary text-xl"></i>
+            <span class="text-sm font-medium text-gray-700">Chart of Accounts</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

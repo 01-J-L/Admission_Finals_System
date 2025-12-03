@@ -1,0 +1,92 @@
+{% extends 'admin_base.html' %}
+
+{% set is_new = not slide %}
+{% set form_title = 'Add New Slide' if is_new else 'Edit Slide' %}
+
+{% block title %}{{ form_title }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ url_for('auth.admin_manage_content') }}" class="text-gray-500 hover:text-primary">Content</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<a href="{{ url_for('auth.admin_manage_slider') }}" class="text-gray-500 hover:text-primary">Slider</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<span>{{ 'Add' if is_new else 'Edit' }}</span>
+{% endblock %}
+
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" class="space-y-6 bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto">
+
+    <div>
+        <label class="block text-sm font-medium text-gray-900">Intro Text (Small Badge)</label>
+        <input type="text" name="intro_text" value="{{ slide.intro_text or '🎓 Empowering Futures' }}"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label class="block text-sm font-medium text-gray-900">Full Title Text</label>
+            <input type="text" name="title_text" value="{{ slide.title_text or '' }}" required
+                placeholder="e.g., Discover Your Potential With Us"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            <p class="text-xs text-gray-500 mt-1">Enter the complete headline sentence.</p>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-900">Word(s) to Highlight</label>
+            <input type="text" name="highlight_text" value="{{ slide.highlight_text or '' }}" required
+                placeholder="e.g., Potential"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            <p class="text-xs text-gray-500 mt-1">Copy the exact word(s) from the Title that should have the gradient
+                color.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label class="block text-sm font-medium text-gray-900">Button Text</label>
+            <input type="text" name="button_text" value="{{ slide.button_text or 'Learn More' }}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-900">Button Link (URL or #id)</label>
+            <input type="text" name="button_link" value="{{ slide.button_link or '#' }}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+        <div>
+            <label class="block text-sm font-medium text-gray-900">Sort Order</label>
+            <input type="number" name="sort_order" value="{{ slide.sort_order if slide else 0 }}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+        </div>
+        <div class="flex items-center mb-2">
+            <input id="is_active" name="is_active" type="checkbox"
+                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" {% if not slide or
+                slide.is_active %}checked{% endif %}>
+            <label for="is_active" class="ml-2 block text-sm text-gray-900">Set as Active</label>
+        </div>
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-900">Background Image</label>
+        {% if slide and slide.image_filename %}
+        <div class="mt-2 mb-2">
+            <img src="{{ url_for('static', filename='images/uploads/' + slide.image_filename) }}"
+                class="h-32 w-auto object-cover rounded-md border">
+        </div>
+        {% endif %}
+        <input type="file" name="image" accept="image/*"
+            class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-primary hover:file:bg-violet-100">
+    </div>
+
+    <div class="flex items-center justify-end gap-x-6 pt-4 border-t border-gray-200">
+        <a href="{{ url_for('auth.admin_manage_slider') }}"
+            class="text-sm font-semibold leading-6 text-gray-900">Cancel</a>
+        <button type="submit"
+            class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90">Save
+            Slide</button>
+    </div>
+</form>
+{% endblock %}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Printable Application Form - P{{ application.academic_year[:4] if application.academic_year else '2025' }}{{ "%04d" | format(application.applicant_id if application.applicant_id else 0) }}</title>
+<title>Printable Application Form - {{ application.control_number if application.control_number else ('P' ~ (application.academic_year[:4] if application.academic_year else '2025') ~ ("%04d" | format(application.applicant_id if application.applicant_id else 0))) }}</title>
 <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
 <style>
     body { font-family: Arial, sans-serif; font-size: 10pt; margin: 0; padding: 0; color: #000; background-color: #fff; }
@@ -69,7 +69,7 @@
             </td>
             <td style="width:15%; padding:0; vertical-align: middle;">
                 <!-- Empty cell for balance, making the middle cell centered -->
-                 
+                 
             </td>
         </tr>
     </table>
@@ -77,7 +77,7 @@
     <div class="main-title">COLLEGE ADMISSION APPLICATION FORM</div>
     <div class="sub-title">A.Y. {{ application.academic_year | default('2025-2026') }}</div>
 
-    <div class="control-no-top">Control No: <span style="font-weight:normal;">{{  application.permit_control_no | default(application.control_number)  }}</span></div>
+    <div class="control-no-top">Control No: <span style="font-weight:normal;">{{  application.control_number | default(application.permit_control_no)  }}</span></div>
 
     <div style="font-size: 8pt; margin-bottom: 3px;">TO THE APPLICANT: PRINT legibly all information required. Put a check (<span class="checkbox">✓</span>) mark in the appropriate box. Only correctly and completely filled-out form will be accepted for processing.</div>
 
@@ -257,7 +257,7 @@
         </div>
         <table>
             <tr>
-                <td><span class="field-label">Control No:</span><br><span class="value-box">{{ application.permit_control_no | default(application.control_number) }}</span></td>
+                <td><span class="field-label">Control No:</span><br><span class="value-box">{{ application.control_number | default(application.permit_control_no) }}</span></td>
                 <td><span class="field-label">Date of Examination:</span><br><span class="value-box">{{ application.permit_exam_date_formatted if application.permit_exam_date else '' }}</span></td>
             </tr>
             <tr>

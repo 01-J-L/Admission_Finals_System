@@ -1,0 +1,571 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Add New Application{% endblock %}
+
+{% block page_title %}Add New Application{% endblock %}
+
+{% block breadcrumb %}Add New Application{% endblock %}
+
+{% block content %}
+<div id="addApplicationContent" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+    <h3 class="text-xl font-semibold text-gray-800 mb-6">Add New Student Application</h3>
+    <form id="adminAddApplicationForm" enctype="multipart/form-data">
+        <!-- NEW: Student Type Section -->
+        <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+            <legend class="text-lg font-semibold text-gray-700 px-2">Applicant Type</legend>
+            <div class="mt-4">
+                <label class="block text-gray-700 font-medium mb-2">Is this a new or an old/transferee student? <span
+                        class="text-red-500">*</span></label>
+                <div class="flex items-center space-x-6">
+                    <label class="flex items-center">
+                        <input type="radio" name="student_type" value="new"
+                            class="h-4 w-4 text-primary border-gray-300 focus:ring-primary" checked>
+                        <span class="ml-2 text-gray-700">New Student</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="student_type" value="old"
+                            class="h-4 w-4 text-primary border-gray-300 focus:ring-primary">
+                        <span class="ml-2 text-gray-700">Old/Transferee Student</span>
+                    </label>
+                </div>
+            </div>
+            <div id="old_student_id_wrapper_admin" class="mt-4 hidden">
+                <label for="old_student_id" class="block text-gray-700 font-medium mb-2">Old Student ID <span
+                        class="text-red-500">*</span></label>
+                <input id="old_student_id" name="old_student_id" type="text"
+                    class="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Enter the old student ID">
+            </div>
+        </fieldset>
+
+        <!-- Personal Information Section -->
+        <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+            <legend class="text-lg font-semibold text-gray-700 px-2">Personal Information</legend>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                <div class="md:col-span-2">
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-medium mb-2">Program (Course) <span
+                                class="text-red-500">*</span></label>
+                        <select name="program_choice"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            required>
+                            <option value="">Select a Program</option>
+                            {% for program in programs %}
+                            <option value="{{ program.title }}">{{ program.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-medium mb-2">Full Name <span
+                                class="text-red-500">*</span></label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><input type="text"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                    placeholder="Last Name" name="last_name" required>
+                                <p class="text-xs text-gray-500 mt-1">Last Name</p>
+                            </div>
+                            <div><input type="text"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                    placeholder="First Name" name="first_name" required>
+                                <p class="text-xs text-gray-500 mt-1">First Name</p>
+                            </div>
+                            <div><input type="text"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                    placeholder="Middle Name" name="middle_name">
+                                <p class="text-xs text-gray-500 mt-1">Middle Name (Optional)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div><label class="block text-gray-700 font-medium mb-2">Date of Birth <span
+                                    class="text-red-500">*</span></label><input type="date"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                name="date_of_birth" required></div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Place of Birth <span
+                                    class="text-red-500">*</span></label><input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="City/Municipality" name="place_of_birth" required></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Sex <span
+                                    class="text-red-500">*</span></label>
+                            <div class="flex gap-6 mt-2">
+                                <div class="flex items-center"><input type="radio" name="sex" value="Female"
+                                        required><label class="ml-2 text-gray-700">Female</label></div>
+                                <div class="flex items-center"><input type="radio" name="sex" value="Male"
+                                        required><label class="ml-2 text-gray-700">Male</label></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Civil Status <span
+                                    class="text-red-500">*</span></label>
+                            <div class="flex flex-wrap gap-4 mt-2">
+                                <div class="flex items-center"><input type="radio" name="civil_status" value="Single"
+                                        required><label class="ml-2 text-gray-700">Single</label></div>
+                                <div class="flex items-center"><input type="radio" name="civil_status" value="Married"
+                                        required><label class="ml-2 text-gray-700">Married</label></div>
+                                <div class="flex items-center"><input type="radio" name="civil_status" value="Widower"
+                                        required><label class="ml-2 text-gray-700">Widower</label></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div><label class="block text-gray-700 font-medium mb-2">Religion <span
+                                    class="text-red-500">*</span></label><input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="Your religion" name="religion" required></div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Citizenship <span
+                                    class="text-red-500">*</span></label><input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="Your citizenship" name="citizenship" required></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div><label class="block text-gray-700 font-medium mb-2">Mobile No. <span
+                                    class="text-red-500">*</span></label><input type="tel"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="Applicant's mobile number" name="mobile_number" required></div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Email Address <span
+                                    class="text-red-500">*</span></label>
+                            <input type="email"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="Applicant's email address" name="email_address" required>
+                            <!-- Warning message container -->
+                            <div id="emailWarning" class="text-red-600 text-sm mt-1 font-medium"></div>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-medium mb-2">Permanent Address <span
+                                class="text-red-500">*</span></label>
+                        <input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Street, Barangay" name="permanent_address_street_barangay" required>
+                        <div class="grid grid-cols-2 gap-4 mt-2">
+                            <input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="City/Municipality" name="permanent_address_city_municipality" required>
+                            <input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="Province" name="permanent_address_province" required>
+                        </div>
+                        <div class="mt-2"><input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="Postal Code" name="permanent_address_postal_code" required></div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-medium mb-2">Are you a member of Cultural Minority Group?
+                            <span class="text-red-500">*</span></label>
+                        <div class="flex gap-6 mt-2">
+                            <div class="flex items-center"><input type="radio" name="cultural_minority_group" value="No"
+                                    required><label class="ml-2 text-gray-700">No</label></div>
+                            <div class="flex items-center"><input type="radio" name="cultural_minority_group"
+                                    value="Yes" required><label class="ml-2 text-gray-700">Yes</label></div>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-medium mb-2">Do you have any physical disability or
+                            condition that requires special attention? <span class="text-red-500">*</span></label>
+                        <div class="flex gap-6 mt-2">
+                            <div class="flex items-center"><input type="radio" name="physical_disability" value="No"
+                                    required><label class="ml-2 text-gray-700">No</label></div>
+                            <div class="flex items-center"><input type="radio" name="physical_disability" value="Yes"
+                                    required><label class="ml-2 text-gray-700">Yes</label></div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                        <div class="flex flex-col items-center justify-center">
+                            <div id="adminPhotoPreviewContainer"
+                                class="w-32 h-32 bg-gray-200 border border-gray-300 rounded flex items-center justify-center mb-2 relative overflow-hidden">
+                                <img id="adminPhotoPreview" class="hidden w-full h-full object-cover" />
+                                <i id="adminPhotoPlaceholder" class="ri-user-line text-gray-400 text-4xl"></i>
+                            </div>
+                            <p class="text-sm text-gray-700 text-center mb-2">Attach Recent 2x2 Photo (Optional for
+                                Admin)</p>
+                            <input type="file" id="adminPhotoInput" name="photo" accept="image/*" class="hidden" />
+                            <button type="button" id="adminUploadPhotoBtn"
+                                class="bg-primary text-white px-4 py-2 rounded-button text-sm whitespace-nowrap">Upload
+                                Photo</button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 class="font-medium text-gray-800 mb-2">Application Details</h4>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm mb-1">Date of Application <span
+                                    class="text-red-500">*</span></label>
+                            <input type="date"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                name="date_of_application" value="{{ today_date_for_form }}" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-1">Academic Year <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                value="2025-2026" name="academic_year" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Family Details Section -->
+        <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+            <legend class="text-lg font-semibold text-gray-700 px-2">Family Details</legend>
+            <div class="mb-6 mt-4">
+                <label class="block text-gray-700 font-medium mb-2">Average Family Income (Monthly) <span
+                        class="text-red-500">*</span></label>
+                <select name="average_family_income" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                    <option value="">Select family income</option>
+                    <option value="10000_below">₱10,000 below</option>
+                    <option value="10001_to_20000">₱10,001 - 20,000</option>
+                    <option value="20001_to_30000">₱20,001 - 30,000</option>
+                    <option value="30001_to_40000">₱30,001 - 40,000</option>
+                    <option value="40001_to_50000">₱40,001 - 50,000</option>
+                    <option value="50001_to_100000">₱50,001 - 100,000</option>
+                    <option value="100001_above">₱100,001 above</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-4">Father's Information</h4>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Father's Name <span
+                                class="text-red-500">*</span></label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Full name" name="father_name" required></div>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation <span
+                                class="text-red-500">*</span></label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Occupation" name="father_occupation" required></div>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address <span
+                                class="text-red-500">*</span></label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Company name and address" name="father_company_address" required></div>
+                    <div><label class="block text-gray-700 text-sm mb-2">Contact No. <span
+                                class="text-red-500">*</span></label><input type="tel"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Mobile number" name="father_contact_number" required></div>
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-4">Mother's Information</h4>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Mother's Maiden Name <span
+                                class="text-red-500">*</span></label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Full maiden name" name="mother_maiden_name" required></div>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation <span
+                                class="text-red-500">*</span></label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Occupation" name="mother_occupation" required></div>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address <span
+                                class="text-red-500">*</span></label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Company name and address" name="mother_company_address" required></div>
+                    <div><label class="block text-gray-700 text-sm mb-2">Contact No. <span
+                                class="text-red-500">*</span></label><input type="tel"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Mobile number" name="mother_contact_number" required></div>
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-4">Guardian's Information (Optional)</h4>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Guardian's Name</label><input
+                            type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Full name" name="guardian_name"></div>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Occupation</label><input
+                            type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Occupation" name="guardian_occupation"></div>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Company & Address</label><input
+                            type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Company name and address" name="guardian_company_address"></div>
+                    <div><label class="block text-gray-700 text-sm mb-2">Contact No.</label><input type="tel"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Mobile number" name="guardian_contact_number"></div>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Educational Background Section -->
+        <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+            <legend class="text-lg font-semibold text-gray-700 px-2">Educational Background</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-4">
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-4">Senior High School</h4>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">SHS Name <span
+                                class="text-red-500">*</span></label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="School name" name="senior_high_school" required></div>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Address (Brgy, City/Town,
+                            Province) <span class="text-red-500">*</span></label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="School address" name="senior_high_school_address" required></div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm mb-2">Strand <span
+                                class="text-red-500">*</span></label>
+                        <select name="senior_high_school_track_strand"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary pr-8"
+                            required>
+                            <option value="">Select strand</option>
+                            <option value="STEM">STEM (Science, Technology, Engineering, and Mathematics)</option>
+                            <option value="ABM">ABM (Accountancy, Business, and Management)</option>
+                            <option value="HUMSS">HUMSS (Humanities and Social Sciences)</option>
+                            <option value="GAS">GAS (General Academic Strand)</option>
+                            <option value="TVL">TVL (Technical-Vocational-Livelihood)</option>
+                            <option value="SPORTS">Sports</option>
+                            <option value="ARTS">Arts and Design</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm mb-2">Inclusive Dates (Year) <span
+                                class="text-red-500">*</span></label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="From (YYYY)" name="senior_high_school_year_from" pattern="\d{4}"
+                                title="Enter a 4-digit year" required>
+                            <input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="To (YYYY)" name="senior_high_school_year_to" pattern="\d{4}"
+                                title="Enter a 4-digit year" required>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-4">College (if any) / ALS Graduate (Optional)</h4>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">School Name</label><input
+                            type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="School name" name="tertiary_school"></div>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Address (Brgy, City/Town,
+                            Province)</label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="School address" name="tertiary_school_address"></div>
+                    <div class="mb-4"><label class="block text-gray-700 text-sm mb-2">Program</label><input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="Program/Course" name="tertiary_course"></div>
+                    <div>
+                        <label class="block text-gray-700 text-sm mb-2">Inclusive Dates (Year)</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="From (YYYY)" name="tertiary_year_from" pattern="\d{4}"
+                                title="Enter a 4-digit year">
+                            <input type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="To (YYYY)" name="tertiary_year_to" pattern="\d{4}"
+                                title="Enter a 4-digit year">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Required Documents Section -->
+        <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+            <legend class="text-lg font-semibold text-gray-700 px-2">Required Documents (Optional for Admin)</legend>
+            <p class="text-sm text-gray-600 my-4">Upload clear copies. Max 5MB per file. Accepted formats: PDF, JPG,
+                PNG.</p>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-medium mb-2" for="admin_shs_diploma_file_input">1.
+                    Certified True Copy of Senior High School Diploma</label>
+                <input type="file" id="admin_shs_diploma_file_input" name="shs_diploma_file_input"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-medium mb-2" for="admin_shs_card_file_input">2. Original
+                    Senior High School Report Card (Form 138)</label>
+                <input type="file" id="admin_shs_card_file_input" name="shs_card_file_input"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-medium mb-2" for="admin_birth_certificate_file_input">3.
+                    Photocopy of PSA/NSO Birth Certificate</label>
+                <input type="file" id="admin_birth_certificate_file_input" name="birth_certificate_file_input"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+        </fieldset>
+
+        <!-- Final Submission Date & Agreements -->
+        <fieldset class="mb-8 p-4 border border-gray-200 rounded-md">
+            <legend class="text-lg font-semibold text-gray-700 px-2">Submission Details</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div>
+                    <label class="block text-gray-700 text-sm mb-2" for="admin_final_submission_date_input">Final
+                        Submission Date (Student) <span class="text-red-500">*</span></label>
+                    <input type="date" id="admin_final_submission_date_input" name="final_submission_date"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        value="{{ today_date_for_form }}" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm mb-2">Agreements (Student Declaration) <span
+                            class="text-red-500">*</span></label>
+                    <div class="flex items-center mt-1">
+                        <input type="checkbox" name="agreements" value="Yes" id="admin_agreements_checkbox" required>
+                        <label for="admin_agreements_checkbox" class="ml-2 text-gray-700">Student agreed to terms &
+                            conditions.</label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Admin confirms student's agreement.</p>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="mt-8 flex justify-end">
+            <button type="submit" id="adminSubmitNewApplicationBtn"
+                class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap hover:bg-primary/90">
+                Submit New Application
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- SweetAlert2 for pop-ups -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- NEW: Logic for admin student type selection ---
+        const studentTypeRadiosAdmin = document.querySelectorAll('input[name="student_type"]');
+        const oldStudentIdWrapperAdmin = document.getElementById('old_student_id_wrapper_admin');
+        const oldStudentIdInputAdmin = document.getElementById('old_student_id');
+
+        function handleAdminStudentTypeChange() {
+            if (document.querySelector('input[name="student_type"]:checked').value === 'old') {
+                oldStudentIdWrapperAdmin.classList.remove('hidden');
+                oldStudentIdInputAdmin.required = true;
+            } else {
+                oldStudentIdWrapperAdmin.classList.add('hidden');
+                oldStudentIdInputAdmin.required = false;
+                oldStudentIdInputAdmin.value = '';
+            }
+        }
+
+        studentTypeRadiosAdmin.forEach(radio => {
+            radio.addEventListener('change', handleAdminStudentTypeChange);
+        });
+
+        // --- Existing logic ---
+        const uploadBtn = document.getElementById('adminUploadPhotoBtn');
+        const photoInput = document.getElementById('adminPhotoInput');
+        const photoPreview = document.getElementById('adminPhotoPreview');
+        const photoPlaceholder = document.getElementById('adminPhotoPlaceholder');
+        const form = document.getElementById('adminAddApplicationForm');
+        const submitBtn = document.getElementById('adminSubmitNewApplicationBtn');
+        const emailInput = document.querySelector('input[name="email_address"]');
+        const emailWarning = document.getElementById('emailWarning');
+
+        uploadBtn.addEventListener('click', () => {
+            photoInput.click();
+        });
+
+        photoInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    photoPreview.src = e.target.result;
+                    photoPreview.classList.remove('hidden');
+                    photoPlaceholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // --- Real-time Email Check ---
+        emailInput.addEventListener('blur', async () => {
+            const email = emailInput.value.trim();
+            emailWarning.textContent = ''; // Clear previous warnings
+            submitBtn.disabled = false; // Re-enable button by default
+
+            if (!email) return;
+
+            // Basic email format validation
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                emailWarning.textContent = 'Please enter a valid email format.';
+                return;
+            }
+
+            try {
+                const response = await fetch("{{ url_for('auth.admin_check_email_exists') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await response.json();
+                if (data.exists) {
+                    emailWarning.textContent = '⚠️ Warning: An active application with this email already exists.';
+                    submitBtn.disabled = true; // Prevent submission if email is a duplicate
+                }
+            } catch (error) {
+                console.error("Email check failed:", error);
+                emailWarning.textContent = 'Could not verify email. Please check connection.';
+            }
+        });
+
+        // Re-enable submit button if user corrects the email
+        emailInput.addEventListener('input', () => {
+            if (submitBtn.disabled) {
+                emailWarning.textContent = '';
+                submitBtn.disabled = false;
+            }
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="ri-loader-4-line animate-spin mr-2"></i> Submitting...`;
+
+            fetch("{{ url_for('auth.admin_add_application_by_admin_action') }}", {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            // This code runs after the user clicks "OK" on the success pop-up
+                            if (result.isConfirmed) {
+                                window.location.reload(); // Reloads the page to reset the form
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'An error occurred. Please check the form and try again.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                        // Re-enable the button ONLY on failure
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Submit New Application';
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Network Error!',
+                        text: 'A network or server error occurred. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    console.error('Error:', error);
+                    // Re-enable the button on network failure too
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Submit New Application';
+                });
+        });
+    });
+</script>
+{% endblock %}

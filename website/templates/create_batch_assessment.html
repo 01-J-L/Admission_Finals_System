@@ -1,0 +1,130 @@
+{% extends base_template %}
+{% block title %}Batch Assessment{% endblock %}
+{% block page_title %}Mass Assessment Management{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+
+    <!-- CREATION FORM -->
+    <div class="bg-white rounded-card shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center gap-4 mb-6 border-b pb-4">
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <i class="ri-group-line text-purple-600 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">Create New Batch Assessment</h2>
+                <p class="text-sm text-gray-500">Apply fees to groups. Leave filters blank to apply to ALL.</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.create_batch_assessment') }}"
+            onsubmit="return confirm('Are you sure? This will apply fees to all students matching your selection.');">
+
+            <!-- Fee Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Assessment Description</label>
+                    <input type="text" name="description" placeholder="e.g., Computer Laboratory Fee" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Amount (₱)</label>
+                    <input type="number" name="total_amount" step="0.01" placeholder="0.00" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+
+            <!-- Target Filters -->
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
+                <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="ri-filter-3-line"></i> Target Group (Who pays this fee?)
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">School Year</label>
+                        <select name="target_year" class="w-full px-3 py-2 border border-gray-300 bg-white rounded-button text-sm">
+                            <option value="">All Years</option>
+                            {% for year in all_school_years %}
+                            <option value="{{ year }}" {% if year==active_school_year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Residency</label>
+                        <select name="scope" class="w-full px-3 py-2 border border-gray-300 bg-white rounded-button text-sm">
+                            <option value="">All Residents</option>
+                            <option value="garciano">Padre Garcia Only</option>
+                            <option value="non_garciano">Non-Padre Garcia Only</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Course</label>
+                        <select name="course" class="w-full px-3 py-2 border border-gray-300 bg-white rounded-button text-sm">
+                            <option value="">All Courses</option>
+                            <option value="Bachelor of Science in Computer Science">BS Computer Science</option>
+                            <option value="Bachelor of Science in Criminology">BS Criminology</option>
+                            <option value="Bachelor of Science in Public Administration">BS Public Administration</option>
+                            <option value="Bachelor of Science in Management Accountancy">BS Management Accountancy</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Year Level</label>
+                        <select name="year_level" class="w-full px-3 py-2 border border-gray-300 bg-white rounded-button text-sm">
+                            <option value="">All Levels</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4">
+                <button type="submit" class="px-6 py-2.5 bg-primary text-white font-medium rounded-button hover:bg-primary-dark shadow-md transition-colors flex items-center gap-2">
+                    <i class="ri-add-circle-line"></i> Create Batch Assessment
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- HISTORY LOG TABLE -->
+    <div class="bg-white rounded-card shadow-lg p-6 border border-gray-100">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Batch Assessment History</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-600">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3">Date</th>
+                        <th class="px-4 py-3">Description</th>
+                        <th class="px-4 py-3">Amount</th>
+                        <th class="px-4 py-3">Filters Applied</th>
+                        <th class="px-4 py-3 text-center">Affected</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in history %}
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-4 py-4">{{ log.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-4 py-4 font-medium text-gray-900">{{ log.description }}</td>
+                        <td class="px-4 py-4 font-bold">₱{{ "{:,.2f}".format(log.amount) }}</td>
+                        <td class="px-4 py-4 text-xs space-y-1">
+                            {% if log.target_year and log.target_year != 'All' %}<div class="font-semibold">{{ log.target_year }}</div>{% endif %}
+                            {% if log.course and log.course != 'All' %}<div class="text-blue-600">{{ log.course }}</div>{% endif %}
+                            {% if log.year_level and log.year_level != 'All' %}<div class="text-green-600">{{ log.year_level }}</div>{% endif %}
+                            {% if log.scope and log.scope != 'all' and log.scope != 'All' %}
+                            <div class="px-1.5 py-0.5 rounded bg-yellow-100 inline-block text-yellow-800 uppercase">{{ log.scope }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 text-center text-lg font-bold">{{ log.student_count }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No history found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

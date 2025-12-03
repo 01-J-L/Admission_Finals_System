@@ -1,0 +1,169 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Manage Website Content{% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ url_for('auth.admin_manage_content') }}" class="text-gray-500 hover:text-primary">Manage Content</a>
+{% endblock %}
+
+{% block page_title %}Manage Website Content{% endblock %}
+
+{% block content %}
+<p class="text-gray-600 mb-8">Select a content type below to add, edit, or delete items on your public website.</p>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Manage Programs Card -->
+    <a href="{{ url_for('auth.admin_manage_programs') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 text-blue-600">
+                    <i class="ri-book-open-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Manage Programs</h5>
+                <p class="font-normal text-gray-700">Edit course details, objectives, and career opportunities.</p>
+            </div>
+        </div>
+    </a>
+
+    <!-- Manage News Card -->
+    <a href="{{ url_for('auth.admin_manage_news') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-600">
+                    <i class="ri-newspaper-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Manage News</h5>
+                <p class="font-normal text-gray-700">Add, update, or remove news articles and features.</p>
+            </div>
+        </div>
+    </a>
+
+    <!-- Manage Faculty Card -->
+    <a href="{{ url_for('auth.admin_manage_faculty') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 text-purple-600">
+                    <i class="ri-group-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Manage Faculty</h5>
+                <p class="font-normal text-gray-700">Update faculty and staff information on the 'About' page.</p>
+            </div>
+        </div>
+    </a>
+
+    <!-- Manage Announcements Card -->
+    <a href="{{ url_for('auth.admin_manage_announcements') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 text-yellow-600">
+                    <i class="ri-megaphone-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Manage Announcements</h5>
+                <p class="font-normal text-gray-700">Add, update, or remove announcements on the homepage.</p>
+            </div>
+        </div>
+    </a>
+    <!-- Manage Slider Card -->
+    <a href="{{ url_for('auth.admin_manage_slider') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 text-orange-600">
+                    <i class="ri-slideshow-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Manage Hero Slider</h5>
+                <p class="font-normal text-gray-700">Update the main banner images and text on the homepage.</p>
+            </div>
+        </div>
+    </a>
+    <!-- Manage Admission Steps -->
+    <a href="{{ url_for('auth.admin_manage_admission') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-red-100 text-red-600">
+                    <i class="ri-list-ordered ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Admission Steps</h5>
+                <p class="font-normal text-gray-700">Edit the 'How to Apply' steps on homepage.</p>
+            </div>
+        </div>
+    </a>
+
+    <!-- Manage FAQs -->
+    <a href="{{ url_for('auth.admin_manage_faqs') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 text-teal-600">
+                    <i class="ri-question-answer-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Manage FAQs</h5>
+                <p class="font-normal text-gray-700">Update Frequently Asked Questions.</p>
+            </div>
+        </div>
+    </a>
+    <a href="{{ url_for('auth.admin_manage_about_content') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 text-indigo-600">
+                    <i class="ri-user-star-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">About Page Info</h5>
+                <p class="font-normal text-gray-700">Edit Community text and President's profile.</p>
+            </div>
+        </div>
+    </a>
+    <a href="{{ url_for('auth.admin_manage_contact_content') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-pink-100 text-pink-600">
+                    <i class="ri-contacts-book-2-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Contact Info</h5>
+                <p class="font-normal text-gray-700">Edit phone, email, address, and map location.</p>
+            </div>
+        </div>
+    </a>
+    <!-- Add this card inside the grid in admin_manage_content.html -->
+    <a href="{{ url_for('auth.admin_manage_sidebar_content') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 text-blue-600">
+                    <i class="ri-layout-right-2-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Student Portal Sidebar</h5>
+                <p class="font-normal text-gray-700">Edit 'Important Info' and 'Contact Admissions' on the status page.
+                </p>
+            </div>
+        </div>
+    </a>
+</div>
+{% endblock %}

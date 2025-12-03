@@ -2,555 +2,680 @@
 
 {% block style %}
 <style>
-    /* Existing styles from new_student.html */
-    :where([class^="ri-"])::before { content: "\f3c2"; } /* Ensure Remix Icon loads if used by header/nav */
-    body {
-        background-color: #f9fafb; /* Original body background */
-    }
-    html {
-      scroll-behavior: smooth; /* Consistent scroll behavior */
-    }
-    .scale-110 {
-        transform: scale(1.1);
-    }
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-    input[type="number"] {
-        -moz-appearance: textfield;
-    }
-    /* ... (other existing custom styles for form elements, .btns, .go-top-btn, .footer are kept) ... */
-    .custom-checkbox {
-        position: relative;
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        border: 2px solid #cbd5e1;
-        border-radius: 4px;
-        transition: all 0.2s ease;
-    }
-    .custom-checkbox.checked {
-        background-color: #1e40af;
-        border-color: #1e40af;
-    }
-    .custom-checkbox.checked::after {
-        content: '';
-        position: absolute;
-        left: 5px;
-        top: 2px;
-        width: 5px;
-        height: 9px;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-    }
-    .custom-radio {
-        position: relative;
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        border: 2px solid #cbd5e1;
-        border-radius: 50%;
-        transition: all 0.2s ease;
-    }
-    .custom-radio.checked {
-        border-color: #1e40af;
-    }
-    .custom-radio.checked::after {
-        content: '';
-        position: absolute;
-        left: 3px;
-        top: 3px;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background-color: #1e40af;
-    }
-    .btns {
-        width: 20%;
-        margin-bottom: 4rem;
-        background-color: #162938;
-        color: #fff;
-        font-weight: 600;
-        padding: 1rem 0;
-        border: none;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    .btns:hover {
-        background-color: #1e2f3c;
-    }
-    .go-top-btn {
-        position: fixed;
-        bottom: 70px;
-        right: 35px;
-        border-radius: 50%;
-        cursor: pointer;
-        height: 50px;
-        width: 50px;
-        background: #fff;
-        border: 3px solid #333;
-        display: none; /* JS will handle display */
-        justify-content: center;
-        align-items: center;
-        z-index: 999;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    }
-    .go-top-btn img {
-        width: 20px;
-        height: 20px;
-    }
-    .footer {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 2rem 1rem;
-        text-align: center;
-        color: white;
-        overflow: hidden;
-    }
-    .footer::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat;
-        z-index: 0;
-        opacity: 0.3;
-    }
-    .footer::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: rgba(22, 41, 56, 0.442);
-        z-index: 1;
-    }
-    .footer * {
-        position: relative;
-        z-index: 2;
-    }
-    .footer-logo {
-        width: 100px;
-        height: 100px;
-        margin-bottom: 1rem;
-    }
-    .footer-title {
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-    .footer-subtitle {
-        font-size: 1.25rem;
-        font-weight: bold;
-        margin-top: 0.5rem;
-    }
-    .footer-connect {
-        margin-top: 1rem;
-        font-size: 1rem;
-    }
-    .footer-socials {
-        display: flex;
-        gap: 1rem;
-        margin-top: 0.5rem;
-        font-size: 1.25rem;
-    }
-    .footer-socials a {
-        color: white;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-    .footer-socials a:hover {
-        color: #0987d0;
-    }
-    .footer-divider {
-        border-top: 1px solid white;
-        width: 25%;
-        margin: 2rem 0;
-    }
-    .footer-bottom {
-        font-size: 0.875rem;
-        line-height: 1.6;
-        max-width: 700px;
-    }
+  /* Existing styles from new_student.html */
+  :where([class^="ri-"])::before {
+    content: "\f3c2";
+  }
 
-    /* Header Styles - Adapted from index.html's sizing and relevant visual properties for a solid dark header */
+  /* Ensure Remix Icon loads if used by header/nav */
+  body {
+    background-color: #f9fafb;
+    /* Original body background */
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Consistent scroll behavior */
+  }
+
+  .scale-110 {
+    transform: scale(1.1);
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  /* ... (other existing custom styles for form elements, .btns, .go-top-btn, .footer are kept) ... */
+  .custom-checkbox {
+    position: relative;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .custom-checkbox.checked {
+    background-color: #1e40af;
+    border-color: #1e40af;
+  }
+
+  .custom-checkbox.checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .custom-radio {
+    position: relative;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+
+  .custom-radio.checked {
+    border-color: #1e40af;
+  }
+
+  .custom-radio.checked::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #1e40af;
+  }
+
+  .btns {
+    width: 20%;
+    margin-bottom: 4rem;
+    background-color: #162938;
+    color: #fff;
+    font-weight: 600;
+    padding: 1rem 0;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .btns:hover {
+    background-color: #1e2f3c;
+  }
+
+  .go-top-btn {
+    position: fixed;
+    bottom: 70px;
+    right: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    height: 50px;
+    width: 50px;
+    background: #fff;
+    border: 3px solid #333;
+    display: none;
+    /* JS will handle display */
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .go-top-btn img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .footer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+    text-align: center;
+    color: white;
+    overflow: hidden;
+  }
+
+  .footer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat;
+    z-index: 0;
+    opacity: 0.3;
+  }
+
+  .footer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(22, 41, 56, 0.442);
+    z-index: 1;
+  }
+
+  .footer * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .footer-logo {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1rem;
+  }
+
+  .footer-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  .footer-subtitle {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+  }
+
+  .footer-connect {
+    margin-top: 1rem;
+    font-size: 1rem;
+  }
+
+  .footer-socials {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .footer-socials a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .footer-socials a:hover {
+    color: #0987d0;
+  }
+
+  .footer-divider {
+    border-top: 1px solid white;
+    width: 25%;
+    margin: 2rem 0;
+  }
+
+  .footer-bottom {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    max-width: 700px;
+  }
+
+  /* Header Styles - Adapted from index.html's sizing and relevant visual properties for a solid dark header */
+  header {
+    position: relative;
+    /* Retained from new_student.html's original header */
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px 5%;
+    /* Desktop padding from index.html */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Common practice, retained */
+    background-color: #162938;
+    /* new_student.html header is always dark */
+    transition: background-color 0.3s ease;
+    /* Added from index.html for consistency, though not actively used here */
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+  }
+
+  .header-left img {
+    /* SIZING FROM INDEX.HTML (Desktop) */
+    width: 80px;
+    /* From index.html desktop */
+    height: auto;
+    /* Calculated height based on aspect ratio for 80px width is ~66px */
+  }
+
+  .header-left .logo {
+    /* College name */
+    /* SIZING/SPACING FROM INDEX.HTML (Desktop) */
+    font-size: 1.4em;
+    /* Same as current new_student.html */
+    color: #fff;
+    margin-left: 15px;
+    /* Same as current new_student.html */
+    white-space: nowrap;
+    text-shadow: none;
+    /* index.html mobile (solid bg) uses text-shadow: none */
+  }
+
+  /* Desktop Navigation Styles */
+  .navigation a {
+    position: relative;
+    /* SIZING/SPACING FROM INDEX.HTML (Desktop) */
+    font-size: 1.1em;
+    /* Same as current new_student.html */
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 30px;
+    /* Same as current new_student.html */
+    text-shadow: none;
+    /* index.html mobile (solid bg) uses text-shadow: none */
+  }
+
+  .navigation a.no-underline {
+    /* This style already existed and is good */
+    text-decoration: none;
+  }
+
+  /* General style for buttons within nav links (e.g., "Apply Now") - Retained from new_student.html */
+  .navigation .btnLogin-popup {
+    background-color: #fff;
+    color: #162938;
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    text-align: center;
+  }
+
+  .navigation .btnLogin-popup:hover {
+    background-color: #f0f0f0;
+  }
+
+  /* Specific style for the Logout button - Retained from new_student.html */
+  .navigation .btnLogin-popup.btn-logout {
+    background-color: #d9534f;
+    color: #fff;
+    border-color: #d9534f;
+  }
+
+  .navigation .btnLogin-popup.btn-logout:hover {
+    background-color: #c9302c;
+    color: #fff;
+    border-color: #c9302c;
+  }
+
+  /* CSS to remove line animation from logout link - Retained from new_student.html */
+  .navigation a.logout-link:hover {
+    text-decoration: none !important;
+  }
+
+  .navigation a.logout-link::after,
+  .navigation a.logout-link::before {
+    display: none !important;
+  }
+
+
+  /* Hamburger Menu Button */
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    /* Standard size */
+    height: 25px;
+    /* Standard size */
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1100;
+    margin-left: 20px;
+    /* Spacing */
+  }
+
+  .menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: #fff;
+    /* White lines for dark header */
+    border-radius: 3px;
+    transition: all 0.3s ease-in-out;
+    box-shadow: none;
+    /* index.html mobile (solid bg) uses box-shadow: none */
+  }
+
+  /* Mobile Navigation Styles */
+  @media (max-width: 992px) {
     header {
-        position: relative; /* Retained from new_student.html's original header */
-        top: 0;
-        left: 0;
-        width: 100%;
-        padding: 15px 5%; /* Desktop padding from index.html */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        z-index: 1000;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Common practice, retained */
-        background-color: #162938; /* new_student.html header is always dark */
-        transition: background-color 0.3s ease; /* Added from index.html for consistency, though not actively used here */
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
+      padding: 10px 3%;
+      /* Mobile padding from index.html */
     }
 
     .header-left img {
-        /* SIZING FROM INDEX.HTML (Desktop) */
-        width: 80px; /* From index.html desktop */
-        height: auto; /* Calculated height based on aspect ratio for 80px width is ~66px */
+      /* SIZING FROM INDEX.HTML (Mobile) */
+      width: 60px;
+      /* From index.html mobile */
+      height: auto;
+      /* Calculated height based on aspect ratio for 60px width is ~50px */
     }
 
-    .header-left .logo { /* College name */
-        /* SIZING/SPACING FROM INDEX.HTML (Desktop) */
-        font-size: 1.4em; /* Same as current new_student.html */
-        color: #fff;
-        margin-left: 15px; /* Same as current new_student.html */
-        white-space: nowrap;
-        text-shadow: none; /* index.html mobile (solid bg) uses text-shadow: none */
+
+    .header-left .logo {
+      /* SIZING/SPACING FROM INDEX.HTML (Mobile) */
+      font-size: 0.9em;
+      /* From index.html mobile */
+      margin-left: 8px;
+      /* From index.html mobile */
+      color: #fff;
+      /* Ensure still white on dark mobile header */
+      text-shadow: none;
+      /* Consistent with index.html mobile (solid bg) */
     }
 
-    /* Desktop Navigation Styles */
+    .navigation {
+      position: absolute;
+      top: 100%;
+      /* Position below the header */
+      right: 0;
+      width: 250px;
+      /* From index.html mobile, same as current new_student.html */
+      background-color: #162938;
+      /* Consistent with header, same as current new_student.html */
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      flex-direction: column;
+      align-items: stretch;
+      display: none;
+      z-index: 1050;
+      border-top: 1px solid #2a3f54;
+      /* Mobile header height: ~50px (image) + 2*10px (padding) = 70px */
+      max-height: calc(100vh - 70px);
+      /* Adjusted based on new_student's mobile header height */
+      overflow-y: auto;
+    }
+
+    .navigation.active {
+      display: flex;
+    }
+
     .navigation a {
-        position: relative;
-        /* SIZING/SPACING FROM INDEX.HTML (Desktop) */
-        font-size: 1.1em; /* Same as current new_student.html */
-        color: #fff;
-        text-decoration: none;
-        font-weight: 500;
-        margin-left: 30px; /* Same as current new_student.html */
-        text-shadow: none; /* index.html mobile (solid bg) uses text-shadow: none */
-    }
-    .navigation a.no-underline { /* This style already existed and is good */
-        text-decoration: none;
-    }
-
-    /* General style for buttons within nav links (e.g., "Apply Now") - Retained from new_student.html */
-    .navigation .btnLogin-popup {
-        background-color: #fff; 
-        color: #162938;       
-        padding: 8px 15px;
-        border-radius: 5px;
-        border: 1px solid transparent;
-        cursor: pointer;
-        font-weight: 500;
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        text-align: center;
-    }
-    .navigation .btnLogin-popup:hover {
-        background-color: #f0f0f0;
+      display: block;
+      padding: 12px 20px;
+      /* From index.html mobile */
+      margin-left: 0;
+      text-align: left;
+      color: #f0f0f0;
+      /* Lighter text for readability, from index.html mobile */
+      border-bottom: 1px solid #2a3f54;
+      text-decoration: none;
+      text-shadow: none;
+      /* Consistent with index.html mobile (solid bg) */
     }
 
-    /* Specific style for the Logout button - Retained from new_student.html */
-    .navigation .btnLogin-popup.btn-logout {
-        background-color: #d9534f;
-        color: #fff;
-        border-color: #d9534f;
-    }
-    .navigation .btnLogin-popup.btn-logout:hover {
-        background-color: #c9302c;
-        color: #fff;
-        border-color: #c9302c;
+    .navigation a:last-child {
+      border-bottom: none;
     }
 
-    /* CSS to remove line animation from logout link - Retained from new_student.html */
-    .navigation a.logout-link:hover {
-        text-decoration: none !important;
-    }
-    .navigation a.logout-link::after,
-    .navigation a.logout-link::before {
-        display: none !important;
+    .navigation a:hover {
+      background-color: #22333f;
     }
 
+    /* Layout for ALL btnLogin-popup buttons in mobile navigation - Retained */
+    .navigation a .btnLogin-popup {
+      display: block;
+      width: auto;
+      margin: 5px 0;
+    }
 
-    /* Hamburger Menu Button */
+    /* Make logout button fill the link area in mobile - Retained */
+    .navigation a.logout-link {
+      padding: 0;
+    }
+
+    .navigation a.logout-link .btnLogin-popup.btn-logout {
+      width: 100%;
+      margin: 0;
+      padding: 12px 20px;
+      border-radius: 0;
+    }
+
+    /* Ensure logout link in mobile also has no line animation - Retained */
+    .navigation a.logout-link.logout-link:hover {
+      text-decoration: none !important;
+    }
+
+    .navigation a.logout-link.logout-link::after,
+    .navigation a.logout-link.logout-link::before {
+      display: none !important;
+    }
+
     .menu-toggle {
-        display: none;
-        flex-direction: column;
-        justify-content: space-around;
-        width: 30px; /* Standard size */
-        height: 25px; /* Standard size */
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 0;
-        z-index: 1100;
-        margin-left: 20px; /* Spacing */
+      display: flex;
+      /* Show hamburger on mobile */
     }
 
-    .menu-toggle span {
-        display: block;
-        width: 100%;
-        height: 3px;
-        background-color: #fff; /* White lines for dark header */
-        border-radius: 3px;
-        transition: all 0.3s ease-in-out;
-        box-shadow: none; /* index.html mobile (solid bg) uses box-shadow: none */
-    }
-
-    /* Mobile Navigation Styles */
-    @media (max-width: 992px) {
-        header {
-            padding: 10px 3%; /* Mobile padding from index.html */
-        }
-
-        .header-left img {
-            /* SIZING FROM INDEX.HTML (Mobile) */
-            width: 60px; /* From index.html mobile */
-            height: auto; /* Calculated height based on aspect ratio for 60px width is ~50px */
-        }
-
-
-        .header-left .logo {
-            /* SIZING/SPACING FROM INDEX.HTML (Mobile) */
-            font-size: 0.9em; /* From index.html mobile */
-            margin-left: 8px; /* From index.html mobile */
-            color: #fff; /* Ensure still white on dark mobile header */
-            text-shadow: none; /* Consistent with index.html mobile (solid bg) */
-        }
-
-        .navigation {
-            position: absolute;
-            top: 100%; /* Position below the header */
-            right: 0;
-            width: 250px; /* From index.html mobile, same as current new_student.html */
-            background-color: #162938; /* Consistent with header, same as current new_student.html */
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-            flex-direction: column;
-            align-items: stretch; 
-            display: none; 
-            z-index: 1050;
-            border-top: 1px solid #2a3f54; 
-            /* Mobile header height: ~50px (image) + 2*10px (padding) = 70px */
-            max-height: calc(100vh - 70px); /* Adjusted based on new_student's mobile header height */
-            overflow-y: auto; 
-        }
-
-        .navigation.active {
-            display: flex;
-        }
-
-        .navigation a {
-            display: block; 
-            padding: 12px 20px; /* From index.html mobile */
-            margin-left: 0;
-            text-align: left;
-            color: #f0f0f0; /* Lighter text for readability, from index.html mobile */
-            border-bottom: 1px solid #2a3f54; 
-            text-decoration: none;
-            text-shadow: none; /* Consistent with index.html mobile (solid bg) */
-        }
-        .navigation a:last-child {
-            border-bottom: none;
-        }
-        .navigation a:hover {
-            background-color: #22333f; 
-        }
-
-        /* Layout for ALL btnLogin-popup buttons in mobile navigation - Retained */
-        .navigation a .btnLogin-popup {
-            display: block; 
-            width: auto; 
-            margin: 5px 0; 
-        }
-
-        /* Make logout button fill the link area in mobile - Retained */
-        .navigation a.logout-link {
-            padding: 0; 
-        }
-        .navigation a.logout-link .btnLogin-popup.btn-logout {
-            width: 100%; 
-            margin: 0;   
-            padding: 12px 20px; 
-            border-radius: 0; 
-        }
-        
-        /* Ensure logout link in mobile also has no line animation - Retained */
-        .navigation a.logout-link.logout-link:hover { 
-             text-decoration: none !important;
-        }
-        .navigation a.logout-link.logout-link::after,
-        .navigation a.logout-link.logout-link::before {
-            display: none !important;
-        }
-
-        .menu-toggle {
-            display: flex; /* Show hamburger on mobile */
-        }
-        /* .menu-toggle span styles already defined generally and should apply, 
+    /* .menu-toggle span styles already defined generally and should apply, 
            explicit background-color and box-shadow:none from index.html mobile context already set above.
         */
 
-        /* Hamburger animation to X - Retained */
-        .menu-toggle.active span:nth-child(1) {
-            transform: translateY(9px) rotate(45deg);
-        }
-        .menu-toggle.active span:nth-child(2) {
-            opacity: 0;
-        }
-        .menu-toggle.active span:nth-child(3) {
-            transform: translateY(-9px) rotate(-45deg);
-        }
+    /* Hamburger animation to X - Retained */
+    .menu-toggle.active span:nth-child(1) {
+      transform: translateY(9px) rotate(45deg);
     }
 
-    /* Main content area styling to account for header */
+    .menu-toggle.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+      transform: translateY(-9px) rotate(-45deg);
+    }
+  }
+
+  /* Main content area styling to account for header */
+  .main-content-area {
+    /* Mobile-first defaults */
+    /* Mobile header height: ~50px (image from 60px width) + 2*10px padding = 70px */
+    padding-top: 70px;
+  }
+
+  @media (min-width: 993px) {
+
+    /* Desktop breakpoint */
     .main-content-area {
-        /* Mobile-first defaults */
-        /* Mobile header height: ~50px (image from 60px width) + 2*10px padding = 70px */
-        padding-top: 70px;
+      /* Desktop header height: ~66px (image from 80px width) + 2*15px padding = ~96px. Round to 100px. */
+      padding-top: 100px;
+    }
+  }
+
+  /* --- START OF MOBILE RESPONSIVE ADDITIONS FOR FORM AND FOOTER --- */
+  @media (max-width: 767px) {
+    /* Targeting screens smaller than Tailwind's 'md' breakpoint (768px) */
+
+    /* Adjust layout of title and "Back to Status" button container */
+    /* Selector targets the specific flex container holding the title and the optional "Back to Status" button */
+    .max-w-5xl>div>.p-6.border-b>.flex.justify-between.items-start {
+      flex-direction: column;
+      align-items: flex-start;
+      /* Align items to the start when stacked */
     }
 
-    @media (min-width: 993px) { /* Desktop breakpoint */
-        .main-content-area {
-            /* Desktop header height: ~66px (image from 80px width) + 2*15px padding = ~96px. Round to 100px. */
-            padding-top: 100px;
-        }
+    /* Style for the "Back to Status" link itself when stacked */
+    .max-w-5xl>div>.p-6.border-b>.flex.justify-between.items-start a[href*="application_status_page"] {
+      margin-left: 0;
+      /* Remove left margin */
+      margin-top: 1rem;
+      /* Add space above the button when stacked */
+      width: 100%;
+      /* Make button full width */
+      text-align: center;
+      justify-content: center;
+      /* Center icon and text within the button */
     }
 
-    /* --- START OF MOBILE RESPONSIVE ADDITIONS FOR FORM AND FOOTER --- */
-    @media (max-width: 767px) { /* Targeting screens smaller than Tailwind's 'md' breakpoint (768px) */
-        
-        /* Adjust layout of title and "Back to Status" button container */
-        /* Selector targets the specific flex container holding the title and the optional "Back to Status" button */
-        .max-w-5xl > div > .p-6.border-b > .flex.justify-between.items-start {
-            flex-direction: column;
-            align-items: flex-start; /* Align items to the start when stacked */
-        }
-        /* Style for the "Back to Status" link itself when stacked */
-        .max-w-5xl > div > .p-6.border-b > .flex.justify-between.items-start a[href*="application_status_page"] {
-            margin-left: 0;    /* Remove left margin */
-            margin-top: 1rem;  /* Add space above the button when stacked */
-            width: 100%;       /* Make button full width */
-            text-align: center;
-            justify-content: center; /* Center icon and text within the button */
-        }
-
-        /* Stack step navigation buttons (Previous/Next/Submit) and make them full width */
-        /* Applies to single button containers (like step 1's next button) */
-        #step1 .flex.justify-end button,
-        /* Applies to two-button containers (like step 2, 3, 4's prev/next buttons) */
-        #step2 .flex.justify-between button,
-        #step3 .flex.justify-between button,
-        #step4 .flex.justify-between button {
-            width: 100%;
-            box-sizing: border-box; /* Ensure padding/border don't make it overflow 100% */
-        }
-
-        /* Adjust the flex containers for these buttons to stack them */
-        #step1 .flex.justify-end,
-        #step2 .flex.justify-between,
-        #step3 .flex.justify-between,
-        #step4 .flex.justify-between {
-            flex-direction: column-reverse; /* Stacks children, with the second child (e.g., "Next") appearing on top */
-            gap: 0.75rem; /* 12px space between stacked buttons */
-        }
-        /* Ensure single button (Next) in step 1 container also behaves as a column item */
-        #step1 .flex.justify-end {
-             align-items: stretch; /* Make button take full width if not already by above rule */
-        }
-
-
-        /* Footer adjustments for mobile */
-        .footer-logo {
-            width: 80px;
-            height: 80px;
-        }
-        .footer-title {
-            font-size: 1.25rem; 
-        }
-        .footer-subtitle {
-            font-size: 1rem; 
-        }
-        .footer-divider {
-            width: 70%; /* Wider on mobile */
-            margin: 1.5rem 0;
-        }
-        .footer-socials {
-            gap: 0.75rem; /* Slightly reduce gap */
-        }
-        .footer-socials a {
-            font-size: 1.15rem; 
-        }
-        .footer-bottom {
-            font-size: 0.8rem; /* Slightly smaller text */
-        }
-        .footer-bottom p {
-            line-height: 1.5;
-        }
-        .footer {
-            padding: 1.5rem 1rem; /* Adjust padding for smaller screens */
-        }
-
-        /* Reduce padding on form content for very small screens if needed */
-        .max-w-5xl .p-6 {
-            padding-left: 1rem;  /* from 1.5rem (p-6) */
-            padding-right: 1rem; /* from 1.5rem (p-6) */
-        }
-        /* Stepper UI padding adjustment */
-        .max-w-5xl .px-6.py-4 {
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-        }
-        /* Stepper text on mobile if it gets too cramped */
-        .px-6.py-4.border-b .flex.items-center .flex-col p.text-sm {
-             font-size: 0.75rem; /* equivalent to Tailwind's text-xs */
-             line-height: 1.2;   /* Tighter line height for short texts */
-             margin-top: 0.25rem; /* Reduce top margin slightly */
-        }
-        .px-6.py-4.border-b .flex.items-center .flex-col .w-10.h-10 {
-            width: 2rem; /* 32px */
-            height: 2rem; /* 32px */
-        }
-        .px-6.py-4.border-b .flex.items-center .flex-col .w-10.h-10 i {
-            font-size: 1rem; /* Adjust icon size within the circle */
-        }
-    }
-    /* --- END OF MOBILE RESPONSIVE ADDITIONS --- */
-
-    /* Style for validation error messages */
-    .validation-error-message {
-        color: #e53e3e; /* Tailwind red-600 */
-        font-size: 0.75rem; /* text-xs */
-        margin-top: 0.25rem; /* mt-1 */
-    }
-    /* Style for fields with validation errors */
-    .border-red-500 {
-        border-color: #f56565 !important; /* Tailwind red-500 */
-    }
-    .ring-red-500 {
-        --tw-ring-color: #f56565 !important; /* Tailwind red-500 */
+    /* Stack step navigation buttons (Previous/Next/Submit) and make them full width */
+    /* Applies to single button containers (like step 1's next button) */
+    #step1 .flex.justify-end button,
+    /* Applies to two-button containers (like step 2, 3, 4's prev/next buttons) */
+    #step2 .flex.justify-between button,
+    #step3 .flex.justify-between button,
+    #step4 .flex.justify-between button {
+      width: 100%;
+      box-sizing: border-box;
+      /* Ensure padding/border don't make it overflow 100% */
     }
 
+    /* Adjust the flex containers for these buttons to stack them */
+    #step1 .flex.justify-end,
+    #step2 .flex.justify-between,
+    #step3 .flex.justify-between,
+    #step4 .flex.justify-between {
+      flex-direction: column-reverse;
+      /* Stacks children, with the second child (e.g., "Next") appearing on top */
+      gap: 0.75rem;
+      /* 12px space between stacked buttons */
+    }
+
+    /* Ensure single button (Next) in step 1 container also behaves as a column item */
+    #step1 .flex.justify-end {
+      align-items: stretch;
+      /* Make button take full width if not already by above rule */
+    }
+
+
+    /* Footer adjustments for mobile */
+    .footer-logo {
+      width: 80px;
+      height: 80px;
+    }
+
+    .footer-title {
+      font-size: 1.25rem;
+    }
+
+    .footer-subtitle {
+      font-size: 1rem;
+    }
+
+    .footer-divider {
+      width: 70%;
+      /* Wider on mobile */
+      margin: 1.5rem 0;
+    }
+
+    .footer-socials {
+      gap: 0.75rem;
+      /* Slightly reduce gap */
+    }
+
+    .footer-socials a {
+      font-size: 1.15rem;
+    }
+
+    .footer-bottom {
+      font-size: 0.8rem;
+      /* Slightly smaller text */
+    }
+
+    .footer-bottom p {
+      line-height: 1.5;
+    }
+
+    .footer {
+      padding: 1.5rem 1rem;
+      /* Adjust padding for smaller screens */
+    }
+
+    /* Reduce padding on form content for very small screens if needed */
+    .max-w-5xl .p-6 {
+      padding-left: 1rem;
+      /* from 1.5rem (p-6) */
+      padding-right: 1rem;
+      /* from 1.5rem (p-6) */
+    }
+
+    /* Stepper UI padding adjustment */
+    .max-w-5xl .px-6.py-4 {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    /* Stepper text on mobile if it gets too cramped */
+    .px-6.py-4.border-b .flex.items-center .flex-col p.text-sm {
+      font-size: 0.75rem;
+      /* equivalent to Tailwind's text-xs */
+      line-height: 1.2;
+      /* Tighter line height for short texts */
+      margin-top: 0.25rem;
+      /* Reduce top margin slightly */
+    }
+
+    .px-6.py-4.border-b .flex.items-center .flex-col .w-10.h-10 {
+      width: 2rem;
+      /* 32px */
+      height: 2rem;
+      /* 32px */
+    }
+
+    .px-6.py-4.border-b .flex.items-center .flex-col .w-10.h-10 i {
+      font-size: 1rem;
+      /* Adjust icon size within the circle */
+    }
+  }
+
+  /* --- END OF MOBILE RESPONSIVE ADDITIONS --- */
+
+  /* Style for validation error messages */
+  .validation-error-message {
+    color: #e53e3e;
+    /* Tailwind red-600 */
+    font-size: 0.75rem;
+    /* text-xs */
+    margin-top: 0.25rem;
+    /* mt-1 */
+  }
+
+  /* Style for fields with validation errors */
+  .border-red-500 {
+    border-color: #f56565 !important;
+    /* Tailwind red-500 */
+  }
+
+  .ring-red-500 {
+    --tw-ring-color: #f56565 !important;
+    /* Tailwind red-500 */
+  }
 </style>
 {% endblock %}
 
 {% block head %}
 <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
 <header>
-    <div class="header-left">
-        <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Company Logo" >
-        <h2 class="logo">Padre Garcia Polytechnic College</h2>
-    </div>
+  <div class="header-left">
+    <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Company Logo">
+    <h2 class="logo">Padre Garcia Polytechnic College</h2>
+  </div>
 
-    <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-navigation">
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
+  <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 
-    <nav class="navigation" id="main-navigation">
-        {% if student_logged_in %}
-            <a href="{{ url_for('views.application_status_page') }}">Application Status</a>
-            <a href="{{ url_for('auth.logout') }}" class="logout-link">
-                <button class="btnLogin-popup btn-logout">Logout</button>
-            </a>
-        {% else %}
-            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
-                <button class="btnLogin-popup">Apply now</button>
-            </a>
-        {% endif %}
-    </nav>
+  <nav class="navigation" id="main-navigation">
+    {% if student_logged_in %}
+    <a href="{{ url_for('views.application_status_page') }}">Application Status</a>
+    <a href="{{ url_for('auth.logout') }}" class="logout-link">
+      <button class="btnLogin-popup btn-logout">Logout</button>
+    </a>
+    {% else %}
+    <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
+      <button class="btnLogin-popup">Apply now</button>
+    </a>
+    {% endif %}
+  </nav>
 </header>
 {% endblock %}
 
@@ -558,28 +683,29 @@
 <div class="main-content-area">
   <div class="min-h-screen flex flex-col">
     <main class="flex-grow container mx-auto px-4 py-8">
-      <div
-        class="max-w-5xl mx-auto bg-white rounded-lg shadow-md overflow-hidden"
-      >
+      <div class="max-w-5xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-6 border-b border-gray-200">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800">
-                        College Admission Application Form
-                    </h2>
-                    <p class="text-gray-600 mt-1">
-                        Complete all required information to apply for admission.
-                    </p>
-                </div>
-                
+          <div class="flex justify-between items-start">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-800">
+                College Admission Application Form
+              </h2>
+              <p class="text-gray-600 mt-1">
+                Complete all required information to apply for admission.
+              </p>
             </div>
+            {% if student_logged_in %}
+            <a href="{{ url_for('views.application_status_page') }}"
+              class="ml-auto bg-gray-100 text-gray-700 px-4 py-2 rounded-button whitespace-nowrap flex items-center text-sm hover:bg-gray-200 transition-colors">
+              <i class="ri-arrow-left-line mr-2"></i>Back to Status
+            </a>
+            {% endif %}
+          </div>
         </div>
         <div class="px-6 py-4 border-b border-gray-200">
           <div class="flex items-center">
             <div class="flex flex-col items-center flex-1">
-              <div
-                class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center relative z-10"
-              >
+              <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center relative z-10">
                 <i class="ri-user-line"></i>
               </div>
               <p class="text-sm font-medium text-primary mt-2">
@@ -587,15 +713,12 @@
               </p>
             </div>
             <div class="h-1 bg-gray-200 flex-1 relative -mx-2">
-              <div
-                class="absolute inset-0 bg-primary transform origin-left transition-transform duration-300"
-                style="transform: scaleX(0)"
-              ></div>
+              <div class="absolute inset-0 bg-primary transform origin-left transition-transform duration-300"
+                style="transform: scaleX(0)"></div>
             </div>
             <div class="flex flex-col items-center flex-1">
               <div
-                class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10"
-              >
+                class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10">
                 <i class="ri-team-line"></i>
               </div>
               <p class="text-sm font-medium text-gray-500 mt-2">
@@ -603,15 +726,12 @@
               </p>
             </div>
             <div class="h-1 bg-gray-200 flex-1 relative -mx-2">
-              <div
-                class="absolute inset-0 bg-primary transform origin-left transition-transform duration-300"
-                style="transform: scaleX(0)"
-              ></div>
+              <div class="absolute inset-0 bg-primary transform origin-left transition-transform duration-300"
+                style="transform: scaleX(0)"></div>
             </div>
             <div class="flex flex-col items-center flex-1">
               <div
-                class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10"
-              >
+                class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10">
                 <i class="ri-book-open-line"></i>
               </div>
               <p class="text-sm font-medium text-gray-500 mt-2">
@@ -619,15 +739,12 @@
               </p>
             </div>
             <div class="h-1 bg-gray-200 flex-1 relative -mx-2">
-              <div
-                class="absolute inset-0 bg-primary transform origin-left transition-transform duration-300"
-                style="transform: scaleX(0)"
-              ></div>
+              <div class="absolute inset-0 bg-primary transform origin-left transition-transform duration-300"
+                style="transform: scaleX(0)"></div>
             </div>
             <div class="flex flex-col items-center flex-1">
               <div
-                class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10"
-              >
+                class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center relative z-10">
                 <i class="ri-check-line"></i>
               </div>
               <p class="text-sm font-medium text-gray-500 mt-2">
@@ -636,1123 +753,982 @@
             </div>
           </div>
         </div>
-        <form action="{{ url_for('auth.submit_application') }}" method="POST" enctype="multipart/form-data" >
-        <div class="p-6">
-          <div id="step1" class="block">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-              Personal Information
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div class="md:col-span-2">
-                <div class="mb-6">
-                  <label class="block text-gray-700 font-medium mb-2"
-                    >Program (Course)
-                    <span class="text-red-500">*</span></label
-                  >
-                  <!-- MODIFIED: Changed input to select -->
-                  <select
-                    name="program_choice"
-                    id="program"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  >
-                    <option value="">Select a Program</option>
-                    <option value="Bachelor of Science in Computer Science">Bachelor of Science in Computer Science</option>
-                    <option value="Bachelor of Science in Management Accounting">Bachelor of Science in Management Accounting</option>
-                    <option value="Bachelor of Public Administration">Bachelor of Public Administration</option>
-                    <option value="Bachelor of Science in Criminology">Bachelor of Science in Criminology</option>
-                  </select>
+        <form action="{{ url_for('auth.submit_application') }}" method="POST" enctype="multipart/form-data">
+          <!-- Hidden field for student type -->
+          <input type="hidden" name="student_type" value="{{ student_type }}">
+
+          <div class="p-6">
+            <div id="step1" class="block">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                Personal Information
+              </h3>
+              <!-- Student Type / ID Display -->
+              <div class="mb-6 p-4 rounded-md bg-blue-50 border border-blue-200">
+                <label class="block text-gray-700 font-medium mb-2">Applicant Type</label>
+                {% if student_type == 'old' and old_student_id %}
+                <p class="text-sm text-gray-600">You are applying as an <strong class="text-primary">Old/Transferee
+                    Student</strong>.</p>
+                <div class="mt-2">
+                  <label class="block text-xs text-gray-500">Your Student ID</label>
+                  <input type="text" name="old_student_id" value="{{ old_student_id }}" readonly
+                    class="w-full sm:w-1/2 mt-1 px-4 py-2 bg-gray-100 border border-gray-300 rounded focus:outline-none cursor-not-allowed">
                 </div>
-                <div class="mb-6">
-                  <label class="block text-gray-700 font-medium mb-2"
-                    >Full Name <span class="text-red-500">*</span></label
-                  >
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <input
-                        type="text"
-                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                        placeholder="Last Name"
-                        name="last_name" 
-                        required
-                      />
-                      <p class="text-xs text-gray-500 mt-1">Last Name</p>
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                        placeholder="First Name"
-                        name="first_name"
-                        required
-                      />
-                      <p class="text-xs text-gray-500 mt-1">First Name</p>
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                        placeholder="Middle Name"
-                        name="middle_name"
-                      />
-                      <p class="text-xs text-gray-500 mt-1">Middle Name (Optional)</p>
-                    </div>
-                  </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label class="block text-gray-700 font-medium mb-2"
-                      >Date of Birth
-                      <span class="text-red-500">*</span></label
-                    >
-                    <input
-                      type="date"
+                {% else %}
+                <p class="text-sm text-gray-600">You are applying as a <strong class="text-primary">New
+                    Student</strong>.</p>
+                {% endif %}
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2">
+                  <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">Program (Course)
+                      <span class="text-red-500">*</span></label>
+                    <select name="program_choice" id="program"
                       class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      name="date_of_birth"
-                      required
-                    />
+                      required>
+                      <option value="">Select a Program</option>
+                      {% for program in programs %}
+                      <option value="{{ program.title }}">{{ program.title }}</option>
+                      {% endfor %}
+                    </select>
                   </div>
-                  <div>
-                    <label class="block text-gray-700 font-medium mb-2"
-                      >Place of Birth
-                      <span class="text-red-500">*</span></label
-                    >
-                    <input
-                      type="text"
+                  <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">Full Name <span
+                        class="text-red-500">*</span></label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <input type="text"
+                          class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                          placeholder="Last Name" name="last_name" required />
+                        <p class="text-xs text-gray-500 mt-1">Last Name</p>
+                      </div>
+                      <div>
+                        <input type="text"
+                          class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                          placeholder="First Name" name="first_name" required />
+                        <p class="text-xs text-gray-500 mt-1">First Name</p>
+                      </div>
+                      <div>
+                        <input type="text"
+                          class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                          placeholder="Middle Name" name="middle_name" />
+                        <p class="text-xs text-gray-500 mt-1">Middle Name (Optional)</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label class="block text-gray-700 font-medium mb-1">Date of Birth <span
+                          class="text-red-500">*</span></label>
+                      <input type="date"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        name="date_of_birth" required />
+                    </div>
+                    <div>
+                      <label class="block text-gray-700 font-medium mb-2">Place of Birth
+                        <span class="text-red-500">*</span></label>
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="City/Municipality" name="place_of_birth" required />
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label class="block text-gray-700 font-medium mb-2">Sex <span
+                          class="text-red-500">*</span></label>
+                      <div class="flex gap-6 mt-2">
+                        <div class="flex items-center">
+                          <input type="radio" name="sex" value="female" required />
+                          <label class="ml-2 text-gray-700">Female</label>
+                        </div>
+                        <div class="flex items-center">
+                          <input type="radio" name="sex" value="male" required />
+                          <label class="ml-2 text-gray-700">Male</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-gray-700 font-medium mb-2">Civil Status <span
+                          class="text-red-500">*</span></label>
+                      <div class="flex flex-wrap gap-4 mt-2">
+                        <div class="flex items-center">
+                          <input type="radio" name="civil_status" value="single" required />
+                          <label class="ml-2 text-gray-700">Single</label>
+                        </div>
+                        <div class="flex items-center">
+                          <input type="radio" name="civil_status" value="married" required />
+                          <label class="ml-2 text-gray-700">Married</label>
+                        </div>
+                        <div class="flex items-center">
+                          <input type="radio" name="civil_status" value="widower" required />
+                          <label class="ml-2 text-gray-700">Widower</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label class="block text-gray-700 font-medium mb-2">Religion <span
+                          class="text-red-500">*</span></label>
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="Your religion" name="religion" required />
+                    </div>
+                    <div>
+                      <label class="block text-gray-700 font-medium mb-2">Citizenship <span
+                          class="text-red-500">*</span></label>
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="Your citizenship" name="citizenship" required />
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label class="block text-gray-700 font-medium mb-2">Mobile No. <span
+                          class="text-red-500">*</span></label>
+                      <input type="tel"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="Your mobile number" name="mobile_number" required />
+                    </div>
+                    <div>
+                      <label class="block text-gray-700 font-medium mb-2">Email Address
+                        <span class="text-red-500">*</span></label>
+                      <input type="email"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="Your email address" name="email_address"
+                        value="{{ student_email if student_email else '' }}" required />
+                    </div>
+                  </div>
+                  <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">Permanent Address
+                      <span class="text-red-500">*</span></label>
+                    <input type="text"
                       class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="City/Municipality"
-                      name="place_of_birth"
-                      required
-                    />
+                      placeholder="Street, Barangay" name="permanent_address_street_barangay" required />
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                      <!-- Use sm:grid-cols-2 for better mobile stacking than md:grid-cols-2 -->
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="City/Municipality" name="permanent_address_city_municipality" required />
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="Province" name="permanent_address_province" required />
+                    </div>
+                    <div class="mt-2">
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="Postal Code" name="permanent_address_postal_code" required />
+                    </div>
                   </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label class="block text-gray-700 font-medium mb-2">Sex <span class="text-red-500">*</span></label>
+                  <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">Are you a member of Cultural Minority Group?
+                      <span class="text-red-500">*</span></label>
                     <div class="flex gap-6 mt-2">
                       <div class="flex items-center">
-                        <input type="radio" name="sex" value="female" required />
-                        <label class="ml-2 text-gray-700">Female</label>
+                        <input type="radio" name="cultural_minority_group" value="No" required />
+                        <label class="ml-2 text-gray-700">No</label>
                       </div>
                       <div class="flex items-center">
-                        <input type="radio" name="sex" value="male" required />
-                        <label class="ml-2 text-gray-700">Male</label>
+                        <input type="radio" name="cultural_minority_group" value="Yes" required />
+                        <label class="ml-2 text-gray-700">Yes</label>
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <label class="block text-gray-700 font-medium mb-2"
-                      >Civil Status <span class="text-red-500">*</span></label
-                    >
-                    <div class="flex flex-wrap gap-4 mt-2">
-                      <div class="flex items-center">
-                        <input type="radio" name="civil_status" value="single" required />
-                        <label class="ml-2 text-gray-700">Single</label>
-                      </div>
-                      <div class="flex items-center">
-                        <input type="radio" name="civil_status" value="married" required />
-                        <label class="ml-2 text-gray-700">Married</label>
-                      </div>
-                      <div class="flex items-center">
-                        <input type="radio" name="civil_status" value="widower" required />
-                        <label class="ml-2 text-gray-700">Widower</label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label class="block text-gray-700 font-medium mb-2"
-                      >Religion <span class="text-red-500">*</span></label
-                    >
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="Your religion"
-                      name="religion"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-gray-700 font-medium mb-2"
-                      >Citizenship <span class="text-red-500">*</span></label
-                    >
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="Your citizenship"
-                      name="citizenship"
-                      required
-                    />
-                  </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label class="block text-gray-700 font-medium mb-2"
-                      >Mobile No. <span class="text-red-500">*</span></label
-                    >
-                    <input
-                      type="tel"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="Your mobile number"
-                      name="mobile_number"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-gray-700 font-medium mb-2"
-                      >Email Address
-                      <span class="text-red-500">*</span></label
-                    >
-                    <input
-                      type="email"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="Your email address"
-                      name="email_address"
-                      value="{{ student_email if student_email else '' }}"
-                      required
-                    />
-                  </div>
-                </div>
-                <div class="mb-6">
-                  <label class="block text-gray-700 font-medium mb-2"
-                    >Permanent Address
-                    <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Street, Barangay"
-                    name="permanent_address_street_barangay"
-                    required
-                  />
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2"> <!-- Use sm:grid-cols-2 for better mobile stacking than md:grid-cols-2 -->
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="City/Municipality"
-                      name="permanent_address_city_municipality"
-                      required
-                    />
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="Province"
-                      name="permanent_address_province"
-                      required
-                    />
-                  </div>
-                  <div class="mt-2">
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="Postal Code"
-                      name="permanent_address_postal_code"
-                      required
-                    />
-                  </div>
-                </div>
-                <div class="mb-6">   
-                  <label class="block text-gray-700 font-medium mb-2"
-                    >Are you a member of Cultural Minority Group? <span class="text-red-500">*</span></label
-                  >
-                  <div class="flex gap-6 mt-2">
-                    <div class="flex items-center">
-                      <input type="radio" name="cultural_minority_group" value="No" required />
-                      <label class="ml-2 text-gray-700">No</label>
-                    </div>
-                    <div class="flex items-center">
-                      <input type="radio" name="cultural_minority_group" value="Yes" required />
-                      <label class="ml-2 text-gray-700">Yes</label>
-                    </div>
-                  </div>
-                </div>
-                <div class="mb-6">
-                  <label class="block text-gray-700 font-medium mb-2"
-                    >Do you have any physical disability or condition that
-                    requires special attention? <span class="text-red-500">*</span></label
-                  >
-                  <div class="flex gap-6 mt-2">
-                    <div class="flex items-center">
-                      <input type="radio" name="physical_disability" value="No" required />
-                      <label class="ml-2 text-gray-700">No</label>
-                    </div>
-                    <div class="flex items-center">
-                      <input type="radio" name="physical_disability" value="Yes" required />
-                      <label class="ml-2 text-gray-700"
-                        >Yes (Specify attached certification of
-                        disability)</label
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div
-                  class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6"
-                >
-                  <div class="flex flex-col items-center justify-center">
-                    <div
-                      id="photoPreviewContainer"
-                      class="w-32 h-32 bg-gray-200 border border-gray-300 rounded flex items-center justify-center mb-2 relative overflow-hidden"
-                    >
-                      <img
-                        id="photoPreview"
-                        class="hidden w-full h-full object-cover"
-                      />
-                      <i
-                        id="photoPlaceholder"
-                        class="ri-user-line text-gray-400 text-4xl"
-                      ></i>
-                      <div
-                        id="photoCropOverlay"
-                        class="hidden absolute inset-0 bg-black/50 flex items-center justify-center"
-                      >
-                        <button
-                          id="confirmCrop"
-                          class="bg-white text-gray-800 px-3 py-1 rounded-button text-xs whitespace-nowrap"
-                        >
-                          Confirm Crop
-                        </button>
-                      </div>
-                    </div>
-                    <p class="text-sm text-gray-700 text-center mb-2">
-                      Attach a Recent 2x2 photo with white background <span class="text-red-500">*</span>
-                    </p>
-                    <input
-                      type="file"
-                      id="photoInput"
-                      name="photo"
-                      accept="image/*"
-                      class="hidden"
-                      required
-                    />
+                  <!-- Find this specific block in new_student.html and replace it -->
+                  <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">Do you have any physical disability or condition
+                      that requires special attention? <span class="text-red-500">*</span></label>
 
-                    <button
-                      type="button"
-                      id="uploadPhotoBtn"
-                      class="bg-primary text-white px-4 py-2 rounded-button text-sm whitespace-nowrap"
-                    >
-                      Upload Photo
-                    </button>
-                    <div
-                      id="photoToast"
-                      class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white text-sm z-50 transform transition-transform duration-300 translate-y-full hidden"
-                    ></div>
-                  </div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <h4 class="font-medium text-gray-800 mb-2">
-                    Application Details
-                  </h4>
-                  
-                  <div class="mb-4">
-                    <label class="block text-gray-700 text-sm mb-1"
-                      >Date of Application <span class="text-red-500">*</span></label
-                    >
-                    <input
-                      type="date"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      value="{{ today_date_for_form }}" {# MODIFIED #}
-                      name="date_of_application"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-gray-700 text-sm mb-1"
-                      >Academic Year <span class="text-red-500">*</span></label
-                    >
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      value="2025-2026" {# Default or make dynamic #}
-                      name="academic_year"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="mt-8 flex justify-end">
-              <button
-                type="button"
-                id="nextToStep2"
-                class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap"
-              >
-                Next: Family Details
-              </button>
-            </div>
-          </div>
-          <!-- Step 2: Family Details -->
-          <div id="step2" class="hidden">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-              Family Details
-            </h3>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Average Family Income (Monthly) <span class="text-red-500">*</span></label>
-              <select name="average_family_income" required
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                <option value="">Select your family's income</option>
-                <option value="10000_below">₱10,000 below</option>
-                <option value="10001_to_20000">₱10,001 - 20,000</option>
-                <option value="20001_to_30000">₱20,001 - 30,000</option>
-                <option value="30001_to_40000">₱30,001 - 40,000</option>
-                <option value="40001_to_50000">₱40,001 - 50,000</option>
-                <option value="50001_to_100000">₱50,001 - 100,000</option>
-                <option value="100001_above">₱100,001 above</option>
-              </select>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div>
-                <h4 class="font-medium text-gray-800 mb-4">
-                  Father's Information
-                </h4>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Father's Name <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Full name"
-                    name="father_name"
-                    required
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Occupation <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Occupation"
-                    name="father_occupation"
-                    required
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Company & Address <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Company name and address"
-                    name="father_company_address"
-                    required
-                  />
-                </div>
-                <div>
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Contact No. <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="tel"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Mobile number"
-                    name="father_contact_number"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <h4 class="font-medium text-gray-800 mb-4">
-                  Mother's Information
-                </h4>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Mother's Maiden Name <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Full maiden name"
-                    name="mother_maiden_name"
-                    required
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Occupation <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Occupation"
-                    name="mother_occupation"
-                    required
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Company & Address <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Company name and address"
-                    name="mother_company_address"
-                    required
-                  />
-                </div>
-                <div>
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Contact No. <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="tel"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Mobile number"
-                    name="mother_contact_number"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <h4 class="font-medium text-gray-800 mb-4">
-                  Guardian's Information (Optional)
-                </h4>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Guardian's Name</label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Full name"
-                    name="guardian_name"
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Occupation</label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Occupation"
-                    name="guardian_occupation"
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Company & Address</label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Company name and address"
-                    name="guardian_company_address"
-                  />
-                </div>
-                <div>
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Contact No.</label
-                  >
-                  <input
-                    type="tel"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Mobile number"
-                    name="guardian_contact_number"
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="mt-8 flex justify-between">
-              <button
-                type="button"
-                id="backToStep1"
-                class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap"
-              >
-                Previous: Personal Information
-              </button>
-              <button
-                type="button"
-                id="nextToStep3"
-                class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap"
-              >
-                Next: Educational Background
-              </button>
-            </div>
-          </div>
-          <!-- Step 3: Educational Background -->
-          <div id="step3" class="hidden">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-              Educational Background
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <h4 class="font-medium text-gray-800 mb-4">
-                  Senior High School
-                </h4>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >SHS Name <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="School name"
-                    name="senior_high_school"
-                    required
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Address (Brgy, City/Town, Province)
-                    <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="School address"
-                    name="senior_high_school_address"
-                    required
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Strand <span class="text-red-500">*</span></label
-                  >
-                  <select
-                    name="senior_high_school_track_strand"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary pr-8"
-                    required
-                  >
-                    <option value="">Select strand</option>
-                    <option value="STEM">
-                      STEM (Science, Technology, Engineering, and Mathematics)
-                    </option>
-                    <option value="ABM">
-                      ABM (Accountancy, Business, and Management)
-                    </option>
-                    <option value="HUMSS">
-                      HUMSS (Humanities and Social Sciences)
-                    </option>
-                    <option value="GAS">GAS (General Academic Strand)</option>
-                    <option value="TVL">
-                      TVL (Technical-Vocational-Livelihood)
-                    </option>
-                    <option value="SPORTS">Sports</option>
-                    <option value="ARTS">Arts and Design</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Inclusive Dates (Year)
-                    <span class="text-red-500">*</span></label
-                  >
-                  <div class="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="From (Year)"
-                      name="senior_high_school_year_from"
-                      required
-                    />
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="To (Year)"
-                      name="senior_high_school_year_to"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h4 class="font-medium text-gray-800 mb-4">
-                  College (if any) / ALS Graduate (Optional)
-                </h4>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >School Name</label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="School name"
-                    name="tertiary_school"
-                    
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Address (Brgy, City/Town, Province)</label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="School address"
-                    name="tertiary_school_address"
-                    
-                  />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Program</label
-                  >
-                  <input
-                    type="text"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Program/Course"
-                    name="tertiary_course"
-                    
-                  />
-                </div>
-                <div>
-                  <label class="block text-gray-700 text-sm mb-2"
-                    >Inclusive Dates (Year)</label
-                  >
-                  <div class="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="From (Year)"
-                      name="tertiary_year_from"
-                      
-                    />
-                    <input
-                      type="text"
-                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="To (Year)"
-                      name="tertiary_year_to"
-                      
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+                    <div class="flex gap-6 mt-2">
+                      <div class="flex items-center">
+                        <input type="radio" name="physical_disability" value="No" class="disability-radio" required>
+                        <label class="ml-2 text-gray-700">No</label>
+                      </div>
+                      <div class="flex items-center">
+                        <input type="radio" name="physical_disability" value="Yes" class="disability-radio" required>
+                        <label class="ml-2 text-gray-700">Yes</label>
+                      </div>
+                    </div>
 
-            <div class="mt-6 pt-6 border-t border-gray-200">
-                <h4 class="font-medium text-gray-800 mb-4">Required Documents</h4>
-                <p class="text-sm text-gray-600 mb-4">Please upload clear copies. Max 5MB per file. Accepted formats: PDF, JPG, PNG.</p>
-                
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-medium mb-2" for="shs_diploma_file_input">
-                        1. Copy of Good Moral <span class="text-red-500">*</span>
-                    </label>
-                    <input type="file" id="shs_diploma_file_input" name="shs_diploma_file_input"
-                           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                           accept=".pdf,.jpg,.jpeg,.png" required>
+                    <!-- NEW: Hidden Upload Section -->
+                    <div id="disability_file_container"
+                      class="hidden mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                      <label class="block text-sm font-medium text-gray-800 mb-2">
+                        Please upload PWD ID or Medical Certificate <span class="text-red-500">*</span>
+                      </label>
+                      <input type="file" name="pwd_id_file_input" id="pwd_id_file_input" accept=".pdf,.jpg,.jpeg,.png"
+                        class="w-full px-3 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-700">
+                      <p class="text-xs text-gray-500 mt-1">Supported formats: PDF, JPG, PNG (Max 5MB)</p>
+                    </div>
+                  </div>
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-medium mb-2" for="shs_card_file_input">
-                        2. Brgy. Certificate <span class="text-red-500">*</span>
-                    </label>
-                    <input type="file" id="shs_card_file_input" name="shs_card_file_input"
-                           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                           accept=".pdf,.jpg,.jpeg,.png" required>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-medium mb-2" for="birth_certificate_file_input">
-                        3. Photocopy of PSA/NSO Birth Certificate <span class="text-red-500">*</span>
-                    </label>
-                    <input type="file" id="birth_certificate_file_input" name="birth_certificate_file_input"
-                           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                           accept=".pdf,.jpg,.jpeg,.png" required>
-                </div>
-            </div>
+                <div>
+                  <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                    <div class="flex flex-col items-center justify-center">
+                      <div id="photoPreviewContainer"
+                        class="w-32 h-32 bg-gray-200 border border-gray-300 rounded flex items-center justify-center mb-2 relative overflow-hidden">
+                        <img id="photoPreview" class="hidden w-full h-full object-cover" />
+                        <i id="photoPlaceholder" class="ri-user-line text-gray-400 text-4xl"></i>
+                        <div id="photoCropOverlay"
+                          class="hidden absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <button id="confirmCrop"
+                            class="bg-white text-gray-800 px-3 py-1 rounded-button text-xs whitespace-nowrap">
+                            Confirm Crop
+                          </button>
+                        </div>
+                      </div>
+                      <p class="text-sm text-gray-700 text-center mb-2">
+                        Attach a Recent 2x2 photo with white background <span class="text-red-500">*</span>
+                      </p>
+                      <input type="file" id="photoInput" name="photo" accept="image/*" class="hidden" required />
 
-            <div class="mt-8 flex justify-between">
-              <button
-                type="button"
-                id="backToStep2"
-                class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap"
-              >
-                Previous: Family Details
-              </button>
-              <button
-                type="button"
-                id="nextToStep4"
-                class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap"
-              >
-                Next: Review & Submit
-              </button>
+                      <button type="button" id="uploadPhotoBtn"
+                        class="bg-primary text-white px-4 py-2 rounded-button text-sm whitespace-nowrap">
+                        Upload Photo
+                      </button>
+                      <div id="photoToast"
+                        class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white text-sm z-50 transform transition-transform duration-300 translate-y-full hidden">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-medium text-gray-800 mb-2">
+                      Application Details
+                    </h4>
+
+                    <div class="mb-4">
+                      <label class="block text-gray-700 text-sm mb-1">Date of Application <span
+                          class="text-red-500">*</span></label>
+                      <!-- ADDED: readonly and styling classes -->
+                      <input type="date"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-gray-100 cursor-not-allowed text-gray-600"
+                        value="{{ today_date_for_form }}" name="date_of_application" readonly required />
+                    </div>
+                    <div>
+                      <label class="block text-gray-700 text-sm mb-1">Academic Year <span
+                          class="text-red-500">*</span></label>
+                      <!-- ADDED: readonly and styling classes -->
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-gray-100 cursor-not-allowed text-gray-600"
+                        value="{{ active_school_year }}" name="academic_year" readonly required />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-8 flex justify-end">
+                <button type="button" id="nextToStep2"
+                  class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap">
+                  Next: Family Details
+                </button>
+              </div>
             </div>
-          </div>
-          <div id="step4" class="hidden">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-              Review & Submit
-            </h3>
-            <div
-              class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6"
-              id="reviewDataContainer"
-            >
-              <!-- Review data will be populated here by JS -->
-            </div>
-            <div
-              class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6"
-            >
-              <h4 class="font-medium text-gray-800 mb-4">
-                Consent and Declaration
-              </h4>
+            <!-- Step 2: Family Details -->
+            <div id="step2" class="hidden">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                Family Details
+              </h3>
               <div class="mb-6">
-                <h5 class="font-medium text-gray-700 mb-2">CONSENT</h5>
-                <p class="text-sm text-gray-600 mb-4">
-                  I am fully aware that Padre Garcia Polytechnic College is
-                  bound by the Data Privacy Act of 2012 and its Implementing
-                  Rules and Regulations (IRR) effective since September 8,
-                  2016, to protect all my personal and sensitive information
-                  that it collects, processes, and retains upon my application
-                  for admission, enrollment, and during my stay in the
-                  College. I am fully aware that PGPC may share such
-                  information to affiliated or partner organizations as part
-                  of its contractual obligations or with other Government
-                  agencies pursuant to law or legal processes. In this regard,
-                  I hereby allow PGPC to collect, process, use and share my
-                  personal data for the pursuit of its legitimate academic,
-                  research and employment purposes and/or interests as an
-                  educational institution.
-                </p>
+                <label class="block text-gray-700 font-medium mb-2">Average Family Income (Monthly) <span
+                    class="text-red-500">*</span></label>
+                <select name="average_family_income" required
+                  class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                  <option value="">Select your family's income</option>
+                  <option value="10000_below">₱10,000 below</option>
+                  <option value="10001_to_20000">₱10,001 - 20,000</option>
+                  <option value="20001_to_30000">₱20,001 - 30,000</option>
+                  <option value="30001_to_40000">₱30,001 - 40,000</option>
+                  <option value="40001_to_50000">₱40,001 - 50,000</option>
+                  <option value="50001_to_100000">₱50,001 - 100,000</option>
+                  <option value="100001_above">₱100,001 above</option>
+                </select>
               </div>
-              <div>
-                <h5 class="font-medium text-gray-700 mb-2">OATH</h5>
-                <p class="text-sm text-gray-600">
-                  I hereby certify that all information supplied in this
-                  application form is complete and accurate. I also understand
-                  that any false information will disqualify me from being
-                  admitted to the College.
-                </p>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div>
+                  <h4 class="font-medium text-gray-800 mb-4">
+                    Father's Information
+                  </h4>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Father's Name <span
+                        class="text-red-500">*</span></label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Full name" name="father_name" />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Occupation <span
+                        class="text-red-500">*</span></label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Occupation" name="father_occupation" />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Company & Address <span
+                        class="text-red-500">*</span></label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Company name and address" name="father_company_address" />
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 text-sm mb-2">Contact No. <span
+                        class="text-red-500">*</span></label>
+                    <input type="tel"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Mobile number" name="father_contact_number" />
+                  </div>
+                </div>
+                <div>
+                  <h4 class="font-medium text-gray-800 mb-4">
+                    Mother's Information
+                  </h4>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Mother's Maiden Name <span
+                        class="text-red-500">*</span></label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Full maiden name" name="mother_maiden_name" />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Occupation <span
+                        class="text-red-500">*</span></label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Occupation" name="mother_occupation" />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Company & Address <span
+                        class="text-red-500">*</span></label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Company name and address" name="mother_company_address" />
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 text-sm mb-2">Contact No. <span
+                        class="text-red-500">*</span></label>
+                    <input type="tel"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Mobile number" name="mother_contact_number" />
+                  </div>
+                </div>
+                <div>
+                  <h4 class="font-medium text-gray-800 mb-4">
+                    Guardian's Information
+                  </h4>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Guardian's Name</label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Full name" name="guardian_name" required />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Occupation</label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Occupation" name="guardian_occupation" required />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Company & Address</label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Company name and address" name="guardian_company_address" required />
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 text-sm mb-2">Contact No.</label>
+                    <input type="tel"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Mobile number" name="guardian_contact_number" required />
+                  </div>
+                </div>
+              </div>
+              <div class="mt-8 flex justify-between">
+                <button type="button" id="backToStep1"
+                  class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap">
+                  Previous: Personal Information
+                </button>
+                <button type="button" id="nextToStep3"
+                  class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap">
+                  Next: Educational Background
+                </button>
               </div>
             </div>
-            <div class="flex items-center mb-6">
-              <input type="checkbox" name="agreements" value="Yes" id="agreements" required>
-              <label class="ml-2 text-gray-700"
-                >I have read and agree to the terms and conditions
-                above. <span class="text-red-500">*</span></label
-              >
-            </div>
-            <div class="grid grid-cols-1 gap-6 mb-6">
-              <div>
-                <label class="block text-gray-700 text-sm mb-2" for="final_submission_date_input">Final Submission Date <span class="text-red-500">*</span></label>
-                <input
-                  type="date"
-                  id="final_submission_date_input"
-                  name="final_submission_date"
-                  class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                  value="{{ today_date_for_form }}" {# MODIFIED #}
-                  required
-                />
+            <!-- Step 3: Educational Background -->
+            <div id="step3" class="hidden">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                Educational Background
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <h4 class="font-medium text-gray-800 mb-4">
+                    Senior High School
+                  </h4>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">SHS Name <span class="text-red-500">*</span></label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="School name" name="senior_high_school" required />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Address (Brgy, City/Town, Province)
+                      <span class="text-red-500">*</span></label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="School address" name="senior_high_school_address" required />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Strand <span class="text-red-500">*</span></label>
+                    <select name="senior_high_school_track_strand"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary pr-8"
+                      required>
+                      <option value="">Select strand</option>
+                      <option value="STEM">
+                        STEM (Science, Technology, Engineering, and Mathematics)
+                      </option>
+                      <option value="ABM">
+                        ABM (Accountancy, Business, and Management)
+                      </option>
+                      <option value="HUMSS">
+                        HUMSS (Humanities and Social Sciences)
+                      </option>
+                      <option value="GAS">GAS (General Academic Strand)</option>
+                      <option value="TVL">
+                        TVL (Technical-Vocational-Livelihood)
+                      </option>
+                      <option value="SPORTS">Sports</option>
+                      <option value="ARTS">Arts and Design</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 text-sm mb-2">Inclusive Dates (Year)
+                      <span class="text-red-500">*</span></label>
+                    <div class="grid grid-cols-2 gap-4">
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="From (Year)" name="senior_high_school_year_from" required />
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="To (Year)" name="senior_high_school_year_to" required />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 class="font-medium text-gray-800 mb-4">
+                    College (if any) / ALS Graduate (Optional)
+                  </h4>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">School Name</label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="School name" name="tertiary_school" />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Address (Brgy, City/Town, Province)</label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="School address" name="tertiary_school_address" />
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Program</label>
+                    <input type="text"
+                      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Program/Course" name="tertiary_course" />
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 text-sm mb-2">Inclusive Dates (Year)</label>
+                    <div class="grid grid-cols-2 gap-4">
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="From (Year)" name="tertiary_year_from" />
+                      <input type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="To (Year)" name="tertiary_year_to" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="font-medium text-gray-800 mb-4">Required Documents</h4>
+                <p class="text-sm text-gray-600 mb-4">Please upload clear copies. Max 5MB per file. Accepted formats:
+                  PDF, JPG, PNG.</p>
+
+                <div class="mb-6">
+                  <label class="block text-gray-700 text-sm font-medium mb-2" for="shs_diploma_file_input">
+                    1. Copy of Good Moral <span class="text-red-500">*</span>
+                  </label>
+                  <input type="file" id="shs_diploma_file_input" name="shs_diploma_file_input"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
+                <div class="mb-6">
+                  <label class="block text-gray-700 text-sm font-medium mb-2" for="shs_card_file_input">
+                    2. Brgy. Certificate <span class="text-red-500">*</span>
+                  </label>
+                  <input type="file" id="shs_card_file_input" name="shs_card_file_input"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
+                <div class="mb-6">
+                  <label class="block text-gray-700 text-sm font-medium mb-2" for="birth_certificate_file_input">
+                    3. Photocopy of PSA/NSO Birth Certificate <span class="text-red-500">*</span>
+                  </label>
+                  <input type="file" id="birth_certificate_file_input" name="birth_certificate_file_input"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
+              </div>
+
+              <div class="mt-8 flex justify-between">
+                <button type="button" id="backToStep2"
+                  class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap">
+                  Previous: Family Details
+                </button>
+                <button type="button" id="nextToStep4"
+                  class="bg-primary text-white px-6 py-2 rounded-button font-medium whitespace-nowrap">
+                  Next: Review & Submit
+                </button>
               </div>
             </div>
-           
-            <div class="mt-8 flex justify-between">
-              <button
-                type="button"
-                id="backToStep3"
-                class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap"
-              >
-                Previous: Educational Background
-              </button>
-                <button
-                   id="submitApplication"
-                   class="bg-gray-300 text-white px-6 py-2 rounded-button font-medium whitespace-nowrap cursor-not-allowed"
-                   type="submit"
-                    disabled
-                    >     
-                      Submit Application
-                  </button>
-            </div> 
-          </div> 
-        </div> 
-      </form>
-      </div> 
+            <div id="step4" class="hidden">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                Review & Submit
+              </h3>
+              <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6" id="reviewDataContainer">
+                <!-- Review data will be populated here by JS -->
+              </div>
+              <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
+                <h4 class="font-medium text-gray-800 mb-4">
+                  Consent and Declaration
+                </h4>
+                <div class="mb-6">
+                  <h5 class="font-medium text-gray-700 mb-2">{{ global_content.consent_title or 'CONSENT' }}</h5>
+                  <p class="text-sm text-gray-600 mb-4 whitespace-pre-line">
+                    {{ global_content.consent_text }}
+                  </p>
+                </div>
+                <div>
+                  <h5 class="font-medium text-gray-700 mb-2">{{ global_content.oath_title or 'OATH' }}</h5>
+                  <p class="text-sm text-gray-600 whitespace-pre-line">
+                    {{ global_content.oath_text }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center mb-6">
+                <input type="checkbox" name="agreements" value="Yes" id="agreements" required>
+                <label class="ml-2 text-gray-700">I have read and agree to the terms and conditions
+                  above. <span class="text-red-500">*</span></label>
+              </div>
+              <div class="grid grid-cols-1 gap-6 mb-6">
+                <div>
+                  <label class="block text-gray-700 text-sm mb-2" for="final_submission_date_input">Final Submission
+                    Date <span class="text-red-500">*</span></label>
+                  <input type="date" id="final_submission_date_input" name="final_submission_date"
+                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    value="{{ today_date_for_form }}" required />
+                </div>
+              </div>
+
+              <div class="mt-8 flex justify-between">
+                <button type="button" id="backToStep3"
+                  class="border border-gray-300 text-gray-700 px-6 py-2 rounded-button font-medium whitespace-nowrap">
+                  Previous: Educational Background
+                </button>
+                <button id="submitApplication"
+                  class="bg-gray-300 text-white px-6 py-2 rounded-button font-medium whitespace-nowrap cursor-not-allowed"
+                  type="submit" disabled>
+                  Submit Application
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
     </main>
-  </div> 
+  </div>
 
   <footer class="footer">
-      <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
-      <h1 class="footer-title">Padre Garcia Polytechnic College</h1>
-      <h2 class="footer-subtitle">THE FUTURE BEGINS HERE.</h2>
-      <p class="footer-connect">Connect with us</p>
-      <div class="footer-socials">
-        <a href="https://www.facebook.com/PadreGarciaPolytechnicCollege"><i class="fab fa-facebook-f"></i></a>
+    <!-- Dynamic Logo -->
+    <img
+      src="{{ url_for('static', filename='images/uploads/' + global_content.footer_logo_image) if global_content.footer_logo_image else url_for('static', filename='logopgpc.png') }}"
+      alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
 
-      </div>
-      <div class="footer-divider"></div>
-      <div class="footer-bottom">
-        <p><a href="{{ url_for('views.about') }}">About</a> | <a href="{{ url_for('views.contact_page') }}">Contact us</a> | <a href="url_for('views.home')}}#programs">Programs</a> | <a href="{{ url_for('views.home') }}">Admission</a> | <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7">Brgy.Castillo, Padre Garcia, Batangas</a> | +63 (2) 8524-4611</p>
-        <p>© 2025. All Rights Reserved Padre Garcia Polytechnic College | <a href="https://www.padregarcia.gov.ph/home">Padre Garcia PH</a></p>
-      </div>
+    <!-- Dynamic Title & Slogan -->
+    <h1 class="footer-title">{{ global_content.footer_title or 'Padre Garcia Polytechnic College' }}</h1>
+    <h2 class="footer-subtitle">{{ global_content.footer_subtitle or 'THE FUTURE BEGINS HERE.' }}</h2>
+
+    <!-- Dynamic Connect Text & Socials -->
+    <p class="footer-connect">{{ global_content.footer_connect_text or 'Connect with us' }}</p>
+    <div class="footer-socials">
+      {% if global_socials %}
+      {% for link in global_socials %}
+      <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ link.platform_name }}">
+        <i class="{{ link.icon_class }}"></i>
+      </a>
+      {% endfor %}
+      {% else %}
+      <!-- Fallback for old static link if no dynamic links exist -->
+      {% if global_content.footer_facebook_link %}
+      <a href="{{ global_content.footer_facebook_link }}" target="_blank" rel="noopener noreferrer"
+        aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+      {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="footer-divider"></div>
+
+    <!-- Dynamic Links & Contact Info -->
+    <div class="footer-bottom">
+      <p>
+        <a href="{{ url_for('views.about') }}">About</a> |
+        <a href="{{ url_for('views.contact_page') }}">Contact us</a> |
+        <a href="{{ url_for('views.home') }}#programs">Programs</a> |
+        <a href="{{ url_for('views.home') }}">Admission</a> |
+        <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7" target="_blank" rel="noopener noreferrer">{{
+          global_content.contact_address }}</a> |
+        <a href="tel:{{ global_content.contact_phone }}">{{ global_content.contact_phone }}</a>
+      </p>
+      <p>© {{ current_year if current_year else '2025' }}. All Rights Reserved {{ global_content.footer_title }} | <a
+          href="https://www.padregarcia.gov.ph/home" target="_blank" rel="noopener noreferrer">Padre Garcia PH</a></p>
+    </div>
   </footer>
-</div> 
+</div>
 
 <button class="go-top-btn" id="goTopBtn">
-    <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="Go to top">
+  <img src="{{ url_for('static', filename='arrow-up.jpg') }}" alt="arrow up" />
 </button>
 
 <script>
-    // --- START OF VALIDATION HELPER FUNCTIONS ---
-    function findFirstInvalidField(stepElement) {
-        const fields = stepElement.querySelectorAll('input[required], select[required], textarea[required]');
-        const checkedRadioGroups = new Set();
 
-        for (const field of fields) {
-            // Skip fields that are not visible (e.g., part of a hidden conditional section within the step)
-            // offsetParent will be null if the element or its parents are display:none
-            if (!field.offsetParent && field.type !== 'hidden') continue;
+  document.addEventListener("DOMContentLoaded", function() {
+    const disabilityRadios = document.querySelectorAll('.disability-radio');
+    const disabilityContainer = document.getElementById('disability_file_container');
+    const disabilityInput = document.getElementById('pwd_id_file_input');
 
-            let isInvalid = false;
-            if (field.type === 'radio') {
-                const groupName = field.name;
-                // Only validate required radio groups once
-                if (field.required && !checkedRadioGroups.has(groupName)) {
-                    const groupChecked = stepElement.querySelector(`input[name="${groupName}"]:checked`);
-                    if (!groupChecked) {
-                        // Return the first radio button of the group for focus
-                        return stepElement.querySelector(`input[name="${groupName}"][required]`) || field;
-                    }
-                    checkedRadioGroups.add(groupName);
-                }
-            } else if (field.type === 'checkbox') {
-                if (field.required && !field.checked) {
-                    isInvalid = true;
-                }
-            } else if (field.type === 'file') {
-                if (field.required && field.files.length === 0) {
-                    isInvalid = true;
-                }
-            } else if (field.tagName.toLowerCase() === 'select') {
-                if (field.required && field.value === '') {
-                    isInvalid = true;
-                }
-            } else { // Text, email, date, tel, etc.
-                if (field.required && !field.value.trim()) {
-                    isInvalid = true;
-                }
-            }
-
-            if (isInvalid) {
-                return field;
-            }
-        }
-        return null; // All required fields in this step are valid
-    }
-
-    function showValidationError(field, message = "This field is required.") {
-        if (!field) return;
-
-        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Delay focus slightly to ensure scrolling is complete, especially on some browsers
-        setTimeout(() => field.focus({ preventScroll: true }), 100);
-
-
-        // Remove any existing error message for this field's parent group to avoid duplicates
-        // This targets the div directly containing the field or its label/field group
-        let fieldContainer = field.closest('.mb-6') || field.closest('.mb-4') || field.parentElement;
-        const existingErrorMsg = fieldContainer.querySelector('.validation-error-message');
-        if (existingErrorMsg) {
-            existingErrorMsg.remove();
-        }
+    function toggleDisabilityUpload() {
+        const selectedValue = document.querySelector('input[name="physical_disability"]:checked')?.value;
         
-        // Remove error style from the field first
-        field.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
-        // Then add it back, ensures visual feedback even if called multiple times
-        field.classList.add('border-red-500', 'ring-2', 'ring-red-500');
-        
-        const errorMsgElement = document.createElement('p');
-        errorMsgElement.className = 'validation-error-message text-red-500 text-xs mt-1';
-        errorMsgElement.textContent = message;
-        
-        // Insert error message after the field or its immediate wrapper if it's complex (e.g. radio/checkbox groups)
-        if (field.type === 'radio' || field.type === 'checkbox') {
-            // Place error after the group of radios/checkboxes or their container
-            let parentWrapper = field.closest('.flex.gap-6') || field.closest('.flex.flex-wrap.gap-4') || field.parentElement;
-            parentWrapper.parentElement.appendChild(errorMsgElement);
+        if (selectedValue === 'Yes') {
+            disabilityContainer.classList.remove('hidden');
+            disabilityInput.required = true; // Make file mandatory
         } else {
-             field.parentElement.appendChild(errorMsgElement);
+            disabilityContainer.classList.add('hidden');
+            disabilityInput.required = false; // Remove requirement
+            disabilityInput.value = ''; // Clear file if they switch back to No
         }
-
-
-        const clearError = () => {
-            field.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
-            const msgToRemove = fieldContainer.querySelector('.validation-error-message');
-            if (msgToRemove) msgToRemove.remove();
-            field.removeEventListener('input', clearError);
-            field.removeEventListener('change', clearError);
-        };
-        field.addEventListener('input', clearError);
-        field.addEventListener('change', clearError);
     }
-    // --- END OF VALIDATION HELPER FUNCTIONS ---
 
-    // Existing script content from new_student.html for form logic
-    document.addEventListener("DOMContentLoaded", function () {
-      const requiredFields = document.querySelectorAll(
-        "#step1 input[required], #step1 select[required], #step2 input[required], #step2 select[required], #step3 input[required], #step3 select[required], #step4 input[required], #step4 select[required]"
-      );
-      const submitButton = document.getElementById("submitApplication");
-  
-      function validateForm() { // This function controls the submit button's enabled state
-        let isValid = true;
-  
-        requiredFields.forEach((field) => {
-          if (field.type === 'radio' || field.type === 'checkbox') {
-            if (field.type === 'checkbox' && field.name === 'agreements') { 
-                 if (!field.checked) isValid = false;
-            } else if (field.type === 'radio') {
-                 // Check if field is visible before validating
-                 if (field.offsetParent !== null || field.type === 'hidden') {
-                    const radioGroup = document.querySelectorAll(`input[name="${field.name}"]`);
-                    let oneChecked = false;
-                    radioGroup.forEach(radio => { if (radio.checked) oneChecked = true; });
-                    if (field.required && !oneChecked) isValid = false;
-                 }
+    disabilityRadios.forEach(radio => {
+        radio.addEventListener('change', toggleDisabilityUpload);
+    });
+});
+  // --- START OF VALIDATION HELPER FUNCTIONS ---
+  function findFirstInvalidField(stepElement) {
+    const fields = stepElement.querySelectorAll('input[required], select[required], textarea[required], input[type="checkbox"][required]');
+    const checkedRadioGroups = new Set();
+
+    for (const field of fields) {
+      // Skip fields that are not visible (e.g., part of a hidden conditional section within the step)
+      // offsetParent will be null if the element or its parents are display:none
+      if (!field.offsetParent && field.type !== 'hidden') continue;
+
+      let isInvalid = false;
+      if (field.type === 'radio') {
+        const groupName = field.name;
+        // Only validate required radio groups once
+        if (field.required && !checkedRadioGroups.has(groupName)) {
+          const groupChecked = stepElement.querySelector(`input[name="${groupName}"]:checked`);
+          if (!groupChecked) {
+            // Return the first radio button of the group for focus
+            return stepElement.querySelector(`input[name="${groupName}"][required]`) || field;
+          }
+          checkedRadioGroups.add(groupName);
+        }
+      } else if (field.type === 'checkbox') {
+        if (field.required && !field.checked) {
+          isInvalid = true;
+        }
+      } else if (field.type === 'file') {
+        if (field.required && field.files.length === 0) {
+          isInvalid = true;
+        }
+      } else if (field.tagName.toLowerCase() === 'select') {
+        if (field.required && field.value === '') {
+          isInvalid = true;
+        }
+      } else { // Text, email, date, tel, etc.
+        if (field.required && !field.value.trim()) {
+          isInvalid = true;
+        }
+      }
+
+      if (isInvalid) {
+        return field;
+      }
+    }
+    return null; // All required fields in this step are valid
+  }
+
+  function showValidationError(field, message = "This field is required.") {
+    if (!field) return;
+
+    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Delay focus slightly to ensure scrolling is complete, especially on some browsers
+    setTimeout(() => field.focus({ preventScroll: true }), 100);
+
+
+    // Remove any existing error message for this field's parent group to avoid duplicates
+    // This targets the div directly containing the field or its label/field group
+    let fieldContainer = field.closest('.mb-6') || field.closest('.mb-4') || field.parentElement;
+    const existingErrorMsg = fieldContainer.querySelector('.validation-error-message');
+    if (existingErrorMsg) {
+      existingErrorMsg.remove();
+    }
+
+    // Remove error style from the field first
+    field.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+    // Then add it back, ensures visual feedback even if called multiple times
+    field.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+
+    const errorMsgElement = document.createElement('p');
+    errorMsgElement.className = 'validation-error-message text-red-500 text-xs mt-1';
+    errorMsgElement.textContent = message;
+
+    // Insert error message after the field or its immediate wrapper if it's complex (e.g. radio/checkbox groups)
+    if (field.type === 'radio' || field.type === 'checkbox') {
+      // Place error after the group of radios/checkboxes or their container
+      let parentWrapper = field.closest('.flex.gap-6') || field.closest('.flex.flex-wrap.gap-4') || field.parentElement;
+      parentWrapper.parentElement.appendChild(errorMsgElement);
+    } else {
+      field.parentElement.appendChild(errorMsgElement);
+    }
+
+
+    const clearError = () => {
+      field.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+      const msgToRemove = fieldContainer.querySelector('.validation-error-message');
+      if (msgToRemove) msgToRemove.remove();
+      field.removeEventListener('input', clearError);
+      field.removeEventListener('change', clearError);
+    };
+    field.addEventListener('input', clearError);
+    field.addEventListener('change', clearError);
+  }
+  // --- END OF VALIDATION HELPER FUNCTIONS ---
+
+  // Existing script content from new_student.html for form logic
+  document.addEventListener("DOMContentLoaded", function () {
+    const requiredFields = document.querySelectorAll(
+      "#step1 input[required], #step1 select[required], #step2 input[required], #step2 select[required], #step3 input[required], #step3 select[required], #step4 input[required], #step4 select[required]"
+    );
+    const submitButton = document.getElementById("submitApplication");
+
+    function validateForm() { // This function controls the submit button's enabled state
+      let isValid = true;
+
+      requiredFields.forEach((field) => {
+        if (field.type === 'radio' || field.type === 'checkbox') {
+          if (field.type === 'checkbox' && field.name === 'agreements') {
+            if (!field.checked) isValid = false;
+          } else if (field.type === 'radio') {
+            // Check if field is visible before validating
+            if (field.offsetParent !== null || field.type === 'hidden') {
+              const radioGroup = document.querySelectorAll(`input[name="${field.name}"]`);
+              let oneChecked = false;
+              radioGroup.forEach(radio => { if (radio.checked) oneChecked = true; });
+              if (field.required && !oneChecked) isValid = false;
             }
-          } else if (field.type === 'file') {
-            if (field.required && (field.offsetParent !== null || field.type === 'hidden') && !field.files.length) {
-                isValid = false;
-            }
-          } else if ((field.offsetParent !== null || field.type === 'hidden') && field.required && !field.value.trim()) {
+          }
+        } else if (field.type === 'file') {
+          if (field.required && (field.offsetParent !== null || field.type === 'hidden') && !field.files.length) {
             isValid = false;
           }
-        });
-  
-        if (isValid) {
-          submitButton.disabled = false;
-          submitButton.classList.remove("bg-gray-300", "cursor-not-allowed");
-          submitButton.classList.add("bg-primary");
-        } else {
-          submitButton.disabled = true;
-          submitButton.classList.add("bg-gray-300", "cursor-not-allowed");
-          submitButton.classList.remove("bg-primary");
-        }
-      }
-  
-      requiredFields.forEach((field) => {
-        field.addEventListener("input", validateForm);
-        if (field.type === 'radio' || field.type === 'checkbox' || field.type === 'file') {
-            field.addEventListener("change", validateForm);
+        } else if ((field.offsetParent !== null || field.type === 'hidden') && field.required && !field.value.trim()) {
+          isValid = false;
         }
       });
-  
-      validateForm(); // Initial check
+
+      if (isValid) {
+        submitButton.disabled = false;
+        submitButton.classList.remove("bg-gray-300", "cursor-not-allowed");
+        submitButton.classList.add("bg-primary");
+      } else {
+        submitButton.disabled = true;
+        submitButton.classList.add("bg-gray-300", "cursor-not-allowed");
+        submitButton.classList.remove("bg-primary");
+      }
+    }
+
+    requiredFields.forEach((field) => {
+      field.addEventListener("input", validateForm);
+      if (field.type === 'radio' || field.type === 'checkbox' || field.type === 'file') {
+        field.addEventListener("change", validateForm);
+      }
     });
-  
-    document.addEventListener("DOMContentLoaded", function () {
-      const step1 = document.getElementById("step1");
-      const step2 = document.getElementById("step2");
-      const step3 = document.getElementById("step3");
-      const step4 = document.getElementById("step4");
-      const nextToStep2 = document.getElementById("nextToStep2");
-      const backToStep1 = document.getElementById("backToStep1"); 
-      const nextToStep3 = document.getElementById("nextToStep3");
-      const backToStep2Buttons = document.querySelectorAll("#backToStep2"); 
-      const nextToStep4 = document.getElementById("nextToStep4");
-      const backToStep3Buttons = document.querySelectorAll("#backToStep3"); 
-      // CORRECTED LINE:
-      const form = document.querySelector('form[action="{{ url_for("auth.submit_application") }}"]');
+
+    validateForm(); // Initial check
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const step1 = document.getElementById("step1");
+    const step2 = document.getElementById("step2");
+    const step3 = document.getElementById("step3");
+    const step4 = document.getElementById("step4");
+    const nextToStep2 = document.getElementById("nextToStep2");
+    const backToStep1 = document.getElementById("backToStep1");
+    const nextToStep3 = document.getElementById("nextToStep3");
+    const backToStep2Buttons = document.querySelectorAll("#backToStep2");
+    const nextToStep4 = document.getElementById("nextToStep4");
+    const backToStep3Buttons = document.querySelectorAll("#backToStep3");
+    // CORRECTED LINE:
+    const form = document.querySelector('form[action="{{ url_for("auth.submit_application") }}"]');
 
 
-      function collectFormData() { 
-        const formData = {
-          program: document.querySelector('select[name="program_choice"]').value, // MODIFIED: Changed to select
-          lastName: document.querySelector('input[name="last_name"]').value,
-          firstName: document.querySelector('input[name="first_name"]').value,
-          middleName: document.querySelector('input[name="middle_name"]').value,
-          dateOfBirth: document.querySelector('input[type="date"][name="date_of_birth"]').value,
-          placeOfBirth: document.querySelector('input[placeholder="City/Municipality"][name="place_of_birth"]').value,
-          sex: document.querySelector('input[name="sex"]:checked') ? document.querySelector('input[name="sex"]:checked').value : "",
-          civilStatus: document.querySelector('input[name="civil_status"]:checked') ? document.querySelector('input[name="civil_status"]:checked').value : "",
-          religion: document.querySelector('input[name="religion"]').value,
-          citizenship: document.querySelector('input[name="citizenship"]').value,
-          mobileNo: document.querySelector('input[name="mobile_number"]').value,
-          email: document.querySelector('input[name="email_address"]').value,
-          address: {
-            street: document.querySelector('input[name="permanent_address_street_barangay"]').value,
-            city: document.querySelector('input[name="permanent_address_city_municipality"]').value,
-            province: document.querySelector('input[name="permanent_address_province"]').value,
-            postalCode: document.querySelector('input[name="permanent_address_postal_code"]').value,
+    function collectFormData() {
+      const formData = {
+        program: document.querySelector('select[name="program_choice"]').value, // MODIFIED: Changed to select
+        lastName: document.querySelector('input[name="last_name"]').value,
+        firstName: document.querySelector('input[name="first_name"]').value,
+        middleName: document.querySelector('input[name="middle_name"]').value,
+        dateOfBirth: document.querySelector('input[type="date"][name="date_of_birth"]').value,
+        placeOfBirth: document.querySelector('input[placeholder="City/Municipality"][name="place_of_birth"]').value,
+        sex: document.querySelector('input[name="sex"]:checked') ? document.querySelector('input[name="sex"]:checked').value : "",
+        civilStatus: document.querySelector('input[name="civil_status"]:checked') ? document.querySelector('input[name="civil_status"]:checked').value : "",
+        religion: document.querySelector('input[name="religion"]').value,
+        citizenship: document.querySelector('input[name="citizenship"]').value,
+        mobileNo: document.querySelector('input[name="mobile_number"]').value,
+        email: document.querySelector('input[name="email_address"]').value,
+        address: {
+          street: document.querySelector('input[name="permanent_address_street_barangay"]').value,
+          city: document.querySelector('input[name="permanent_address_city_municipality"]').value,
+          province: document.querySelector('input[name="permanent_address_province"]').value,
+          postalCode: document.querySelector('input[name="permanent_address_postal_code"]').value,
+        },
+        father: {
+          name: document.querySelector('input[name="father_name"]').value,
+          occupation: document.querySelector('input[name="father_occupation"]').value,
+          company: document.querySelector('input[name="father_company_address"]').value,
+          contact: document.querySelector('input[name="father_contact_number"]').value,
+        },
+        mother: {
+          name: document.querySelector('input[name="mother_maiden_name"]').value,
+          occupation: document.querySelector('input[name="mother_occupation"]').value,
+          company: document.querySelector('input[name="mother_company_address"]').value,
+          contact: document.querySelector('input[name="mother_contact_number"]').value,
+        },
+        education: {
+          shs: {
+            name: document.querySelector('input[name="senior_high_school"]').value,
+            address: document.querySelector('input[name="senior_high_school_address"]').value,
+            strand: document.querySelector('select[name="senior_high_school_track_strand"]').value,
+            yearFrom: document.querySelector('input[name="senior_high_school_year_from"]').value,
+            yearTo: document.querySelector('input[name="senior_high_school_year_to"]').value,
           },
-          father: {
-            name: document.querySelector('input[name="father_name"]').value,
-            occupation: document.querySelector('input[name="father_occupation"]').value,
-            company: document.querySelector('input[name="father_company_address"]').value,
-            contact: document.querySelector('input[name="father_contact_number"]').value,
-          },
-          mother: {
-            name: document.querySelector('input[name="mother_maiden_name"]').value,
-            occupation: document.querySelector('input[name="mother_occupation"]').value,
-            company: document.querySelector('input[name="mother_company_address"]').value,
-            contact: document.querySelector('input[name="mother_contact_number"]').value,
-          },
-          education: {
-            shs: {
-              name: document.querySelector('input[name="senior_high_school"]').value,
-              address: document.querySelector('input[name="senior_high_school_address"]').value,
-              strand: document.querySelector('select[name="senior_high_school_track_strand"]').value,
-              yearFrom: document.querySelector('input[name="senior_high_school_year_from"]').value,
-              yearTo: document.querySelector('input[name="senior_high_school_year_to"]').value,
-            },
-          },
-        };
-        return formData;
-      }
-
-    if(nextToStep2) {
-        nextToStep2.addEventListener("click", function (e) {
-            e.preventDefault();
-            step1.querySelectorAll('.validation-error-message').forEach(el => el.remove());
-            step1.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
-            const invalidField = findFirstInvalidField(step1);
-            if (invalidField) {
-                showValidationError(invalidField, "Please complete this required field.");
-            } else {
-                step1.classList.add("hidden");
-                step2.classList.remove("hidden");
-                window.scrollTo(0, 0);
-                updateStepperUI(2);
-            }
-        });
+        },
+      };
+      return formData;
     }
 
-    if(backToStep1) backToStep1.addEventListener("click", function (e) { e.preventDefault(); step2.classList.add("hidden"); step1.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(1); });
-      
-    if(nextToStep3) {
-        nextToStep3.addEventListener("click", function (e) {
-            e.preventDefault();
-            step2.querySelectorAll('.validation-error-message').forEach(el => el.remove());
-            step2.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
-            const invalidField = findFirstInvalidField(step2);
-            if (invalidField) {
-                showValidationError(invalidField, "Please complete this required field.");
-            } else {
-                step2.classList.add("hidden");
-                step3.classList.remove("hidden");
-                window.scrollTo(0, 0);
-                updateStepperUI(3);
+    if (nextToStep2) {
+      nextToStep2.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        // 1. Photo Validation
+        const photoInput = document.getElementById('photoInput');
+        if (photoInput && photoInput.files.length === 0) {
+          const photoContainer = document.getElementById('photoPreviewContainer');
+          if (photoContainer) photoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (typeof showPhotoToastGlobal === "function") {
+            showPhotoToastGlobal("⚠️ Please upload your 2x2 photo before proceeding.", "error");
+          } else {
+            alert("Please upload your 2x2 photo before proceeding.");
+          }
+          return;
+        }
+
+        // 2. Age Validation (16+ Only)
+        const dobInput = document.querySelector('input[name="date_of_birth"]');
+        if (dobInput && dobInput.value) {
+          const birthDate = new Date(dobInput.value);
+          const today = new Date();
+
+          // Calculate age
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+
+          if (age < 16) {
+            showValidationError(dobInput, `You must be at least 16 years old to apply. (Current Age: ${age})`);
+            if (typeof showPhotoToastGlobal === "function") {
+              showPhotoToastGlobal("⚠️ Age requirement not met (Must be 16+).", "error");
             }
-        });
-    }
-      
-      backToStep2Buttons.forEach(button => {
-          button.addEventListener("click", function (e) {
-              e.preventDefault();
-              step3.classList.add("hidden");
-              step2.classList.remove("hidden");
-              window.scrollTo(0, 0);
-              updateStepperUI(2);
-          });
+            return; // Stop execution here
+          }
+        }
+
+        // 3. Standard Validation & Step Transition
+        step1.querySelectorAll('.validation-error-message').forEach(el => el.remove());
+        step1.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
+
+        const invalidField = findFirstInvalidField(step1);
+
+        if (invalidField) {
+          showValidationError(invalidField, "Please complete this required field.");
+        } else {
+          step1.classList.add("hidden");
+          step2.classList.remove("hidden");
+          window.scrollTo(0, 0);
+          updateStepperUI(2);
+        }
       });
+    }
 
-    if(nextToStep4) {
-        nextToStep4.addEventListener("click", function (e) {
-            e.preventDefault();
-            step3.querySelectorAll('.validation-error-message').forEach(el => el.remove());
-            step3.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
-            const invalidField = findFirstInvalidField(step3);
-            if (invalidField) {
-                showValidationError(invalidField, "Please complete this required field or document upload.");
-            } else {
-                const formData = collectFormData(); 
-                const diplomaFile = document.getElementById('shs_diploma_file_input').files[0];
-                const cardFile = document.getElementById('shs_card_file_input').files[0];
-                const birthCertFile = document.getElementById('birth_certificate_file_input').files[0];
+    if (backToStep1) backToStep1.addEventListener("click", function (e) { e.preventDefault(); step2.classList.add("hidden"); step1.classList.remove("hidden"); window.scrollTo(0, 0); updateStepperUI(1); });
 
-                const reviewContent = `
+    if (nextToStep3) {
+      nextToStep3.addEventListener("click", function (e) {
+        e.preventDefault();
+        step2.querySelectorAll('.validation-error-message').forEach(el => el.remove());
+        step2.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
+        const invalidField = findFirstInvalidField(step2);
+        if (invalidField) {
+          showValidationError(invalidField, "Please complete this required field.");
+        } else {
+          step2.classList.add("hidden");
+          step3.classList.remove("hidden");
+          window.scrollTo(0, 0);
+          updateStepperUI(3);
+        }
+      });
+    }
+
+    backToStep2Buttons.forEach(button => {
+      button.addEventListener("click", function (e) {
+        e.preventDefault();
+        step3.classList.add("hidden");
+        step2.classList.remove("hidden");
+        window.scrollTo(0, 0);
+        updateStepperUI(2);
+      });
+    });
+
+    if (nextToStep4) {
+      nextToStep4.addEventListener("click", function (e) {
+        e.preventDefault();
+        step3.querySelectorAll('.validation-error-message').forEach(el => el.remove());
+        step3.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
+        const invalidField = findFirstInvalidField(step3);
+        if (invalidField) {
+          showValidationError(invalidField, "Please complete this required field or document upload.");
+        } else {
+          const formData = collectFormData();
+          const diplomaFile = document.getElementById('shs_diploma_file_input').files[0];
+          const cardFile = document.getElementById('shs_card_file_input').files[0];
+          const birthCertFile = document.getElementById('birth_certificate_file_input').files[0];
+
+          const reviewContent = `
                 <div class="space-y-6">
                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
                 <h4 class="font-medium text-gray-800 mb-4">Personal Information</h4>
@@ -1788,232 +1764,231 @@
                 </div>
                 </div>
                 </div>`;
-                
-                const consentSection = step4.querySelector(".bg-gray-50.p-6.rounded-lg.border.border-gray-200.mb-6"); 
-                
-                const existingReviewContainer = step4.querySelector("#reviewDataContainer");
-                if (existingReviewContainer) {
-                    existingReviewContainer.innerHTML = reviewContent; // Update if exists
-                } else {
-                    const reviewContainer = document.createElement("div");
-                    reviewContainer.id = "reviewDataContainer"; 
-                    reviewContainer.innerHTML = reviewContent;
-                    consentSection.parentNode.insertBefore(reviewContainer, consentSection);
-                }
-                step3.classList.add("hidden");
-                step4.classList.remove("hidden");
-                window.scrollTo(0, 0);
-                updateStepperUI(4);
-            }
-        });
-    }
-      
-      backToStep3Buttons.forEach(button => {
-          button.addEventListener("click", function(e) {
-              e.preventDefault();
-              step4.classList.add("hidden");
-              step3.classList.remove("hidden");
-              window.scrollTo(0, 0);
-              updateStepperUI(3);
-          });
-      });
 
-      if (form) {
-          form.addEventListener('submit', function(event) {
-              const stepsToValidate = [
-                  { el: step1, num: 1, name: "Personal Information" },
-                  { el: step2, num: 2, name: "Family Details" },
-                  { el: step3, num: 3, name: "Educational Background" },
-                  { el: step4, num: 4, name: "Review & Submit (Consent & Date)" }
-              ];
+          const consentSection = step4.querySelector(".bg-gray-50.p-6.rounded-lg.border.border-gray-200.mb-6");
 
-              for (const stepInfo of stepsToValidate) {
-                  // Clear previous error indicators for this step before re-validating
-                  stepInfo.el.querySelectorAll('.validation-error-message').forEach(el => el.remove());
-                  stepInfo.el.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
-
-                  const invalidField = findFirstInvalidField(stepInfo.el);
-                  if (invalidField) {
-                      event.preventDefault(); // Stop form submission
-
-                      const currentVisibleStepContainer = document.querySelector('#step1.block, #step2.block, #step3.block, #step4.block');
-                      if (currentVisibleStepContainer !== stepInfo.el) {
-                          document.querySelectorAll('#step1, #step2, #step3, #step4').forEach(s => s.classList.add('hidden'));
-                          stepInfo.el.classList.remove('hidden');
-                          updateStepperUI(stepInfo.num);
-                      }
-                      
-                      showValidationError(invalidField, `Please complete this field in the "${stepInfo.name}" section.`);
-                      if (typeof showPhotoToastGlobal === "function") { // Check if toast function exists
-                          showPhotoToastGlobal(`Please correct the errors in the "${stepInfo.name}" section before submitting.`, "error");
-                      }
-                      return; 
-                  }
-              }
-              // If loop completes, all validations passed, form will submit naturally.
-          });
-      }
-      
-      function updateStepperUI(activeStep) {
-        const stepperItems = document.querySelectorAll(".px-6.py-4.border-b .flex.items-center > div.flex.flex-col");
-        const progressBars = document.querySelectorAll(".px-6.py-4.border-b .h-1.bg-gray-200 > div");
-        stepperItems.forEach((item, index) => {
-          const stepNumber = index + 1;
-          const circle = item.querySelector("div.w-10.h-10"); 
-          const text = item.querySelector("p");
-
-          if (stepNumber < activeStep) {
-            circle.classList.remove("bg-gray-200", "text-gray-500");
-            circle.classList.add("bg-primary", "text-white");
-            text.classList.remove("text-gray-500");
-            text.classList.add("text-primary");
-            if (progressBars[index]) progressBars[index].style.transform = "scaleX(1)";
-          } else if (stepNumber === activeStep) {
-            circle.classList.remove("bg-gray-200", "text-gray-500");
-            circle.classList.add("bg-primary", "text-white");
-            text.classList.remove("text-gray-500");
-            text.classList.add("text-primary");
-            circle.classList.add("scale-110");
-            setTimeout(() => circle.classList.remove("scale-110"), 300);
-            // Ensure current step's preceding progress bar is filled
-            if (index > 0 && progressBars[index-1]) progressBars[index-1].style.transform = "scaleX(1)"; 
-            // Ensure current step's own progress bar (if it's not the last step) is reset or partially filled if needed
-            // For now, it means the bar *after* the current step icon is not filled yet unless activeStep makes it so.
-            if (progressBars[index]) progressBars[index].style.transform = "scaleX(0)";
-
-
-          } else { // Steps after activeStep
-            circle.classList.remove("bg-primary", "text-white", "scale-110");
-            circle.classList.add("bg-gray-200", "text-gray-500");
-            text.classList.remove("text-primary");
-            text.classList.add("text-gray-500");
-            // Ensure progress bars for future steps are reset
-            if (progressBars[index -1]) progressBars[index-1].style.transform = "scaleX(0)"; // bar before this future step
-            if (progressBars[index]) progressBars[index].style.transform = "scaleX(0)"; // bar after this future step (if any)
+          const existingReviewContainer = step4.querySelector("#reviewDataContainer");
+          if (existingReviewContainer) {
+            existingReviewContainer.innerHTML = reviewContent; // Update if exists
+          } else {
+            const reviewContainer = document.createElement("div");
+            reviewContainer.id = "reviewDataContainer";
+            reviewContainer.innerHTML = reviewContent;
+            consentSection.parentNode.insertBefore(reviewContainer, consentSection);
           }
-        });
-         // Special handling for the very first progress bar if activeStep is 1
-        if (activeStep === 1 && progressBars[0]) {
-            progressBars[0].style.transform = "scaleX(0)";
+          step3.classList.add("hidden");
+          step4.classList.remove("hidden");
+          window.scrollTo(0, 0);
+          updateStepperUI(4);
         }
+      });
+    }
+
+    backToStep3Buttons.forEach(button => {
+      button.addEventListener("click", function (e) {
+        e.preventDefault();
+        step4.classList.add("hidden");
+        step3.classList.remove("hidden");
+        window.scrollTo(0, 0);
+        updateStepperUI(3);
+      });
+    });
+
+    if (form) {
+      form.addEventListener('submit', function (event) {
+        const stepsToValidate = [
+          { el: step1, num: 1, name: "Personal Information" },
+          { el: step2, num: 2, name: "Family Details" },
+          { el: step3, num: 3, name: "Educational Background" },
+          { el: step4, num: 4, name: "Review & Submit (Consent & Date)" }
+        ];
+
+        for (const stepInfo of stepsToValidate) {
+          // Clear previous error indicators for this step before re-validating
+          stepInfo.el.querySelectorAll('.validation-error-message').forEach(el => el.remove());
+          stepInfo.el.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500', 'ring-2', 'ring-red-500'));
+
+          const invalidField = findFirstInvalidField(stepInfo.el);
+          if (invalidField) {
+            event.preventDefault(); // Stop form submission
+
+            const currentVisibleStepContainer = document.querySelector('#step1.block, #step2.block, #step3.block, #step4.block');
+            if (currentVisibleStepContainer !== stepInfo.el) {
+              document.querySelectorAll('#step1, #step2, #step3, #step4').forEach(s => s.classList.add('hidden'));
+              stepInfo.el.classList.remove('hidden');
+              updateStepperUI(stepInfo.num);
+            }
+
+            showValidationError(invalidField, `Please complete this field in the "${stepInfo.name}" section.`);
+            if (typeof showPhotoToastGlobal === "function") { // Check if toast function exists
+              showPhotoToastGlobal(`Please correct the errors in the "${stepInfo.name}" section before submitting.`, "error");
+            }
+            return;
+          }
+        }
+        // If loop completes, all validations passed, form will submit naturally.
+      });
+    }
+
+    function updateStepperUI(activeStep) {
+      const stepperItems = document.querySelectorAll(".px-6.py-4.border-b .flex.items-center > div.flex.flex-col");
+      const progressBars = document.querySelectorAll(".px-6.py-4.border-b .h-1.bg-gray-200 > div");
+      stepperItems.forEach((item, index) => {
+        const stepNumber = index + 1;
+        const circle = item.querySelector("div.w-10.h-10");
+        const text = item.querySelector("p");
+
+        if (stepNumber < activeStep) {
+          circle.classList.remove("bg-gray-200", "text-gray-500");
+          circle.classList.add("bg-primary", "text-white");
+          text.classList.remove("text-gray-500");
+          text.classList.add("text-primary");
+          if (progressBars[index]) progressBars[index].style.transform = "scaleX(1)";
+        } else if (stepNumber === activeStep) {
+          circle.classList.remove("bg-gray-200", "text-gray-500");
+          circle.classList.add("bg-primary", "text-white");
+          text.classList.remove("text-gray-500");
+          text.classList.add("text-primary");
+          circle.classList.add("scale-110");
+          setTimeout(() => circle.classList.remove("scale-110"), 300);
+          // Ensure current step's preceding progress bar is filled
+          if (index > 0 && progressBars[index - 1]) progressBars[index - 1].style.transform = "scaleX(1)";
+          // Ensure current step's own progress bar (if it's not the last step) is reset or partially filled if needed
+          // For now, it means the bar *after* the current step icon is not filled yet unless activeStep makes it so.
+          if (progressBars[index]) progressBars[index].style.transform = "scaleX(0)";
+
+
+        } else { // Steps after activeStep
+          circle.classList.remove("bg-primary", "text-white", "scale-110");
+          circle.classList.add("bg-gray-200", "text-gray-500");
+          text.classList.remove("text-primary");
+          text.classList.add("text-gray-500");
+          // Ensure progress bars for future steps are reset
+          if (progressBars[index - 1]) progressBars[index - 1].style.transform = "scaleX(0)"; // bar before this future step
+          if (progressBars[index]) progressBars[index].style.transform = "scaleX(0)"; // bar after this future step (if any)
+        }
+      });
+      // Special handling for the very first progress bar if activeStep is 1
+      if (activeStep === 1 && progressBars[0]) {
+        progressBars[0].style.transform = "scaleX(0)";
       }
-      // Initialize stepper to step 1 on page load
-      updateStepperUI(1);
+    }
+    // Initialize stepper to step 1 on page load
+    updateStepperUI(1);
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const uploadPhotoBtn = document.getElementById("uploadPhotoBtn");
+    const photoInput = document.getElementById("photoInput");
+    const photoPreview = document.getElementById("photoPreview");
+    const photoPlaceholder = document.getElementById("photoPlaceholder");
+    const photoToast = document.getElementById("photoToast");
+
+    if (uploadPhotoBtn) {
+      uploadPhotoBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (photoInput) photoInput.click();
+      });
+    }
+
+    if (photoInput) {
+      photoInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          if (!file.type.startsWith("image/")) {
+            showPhotoToastGlobal("⚠️ Please select an image file", "error");
+            photoInput.value = "";
+            return;
+          }
+          const MAX_SIZE = 5 * 1024 * 1024;
+          if (file.size > MAX_SIZE) {
+            showPhotoToastGlobal("⚠️ Photo is too large (max 5MB)", "error");
+            photoInput.value = "";
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (photoPreview) photoPreview.src = event.target.result;
+            if (photoPreview) photoPreview.classList.remove("hidden");
+            if (photoPlaceholder) photoPlaceholder.classList.add("hidden");
+          };
+          reader.readAsDataURL(file);
+          showPhotoToastGlobal("✅ Photo selected: " + file.name, "success");
+        }
+      });
+    }
+
+    const fileInputs = document.querySelectorAll('input[type="file"][name$="_file_input"]');
+    fileInputs.forEach(input => {
+      input.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+          const MAX_DOC_SIZE = 5 * 1024 * 1024;
+          const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+
+          if (!allowedTypes.includes(file.type) && !allowedTypes.find(type => file.name.toLowerCase().endsWith(type.split('/')[1]))) {
+            showPhotoToastGlobal(`⚠️ Invalid file type for ${input.labels[0].textContent.split('*')[0].trim()}. Allowed: PDF, JPG, PNG.`, "error");
+            input.value = "";
+            return;
+          }
+          if (file.size > MAX_DOC_SIZE) {
+            showPhotoToastGlobal(`⚠️ ${input.labels[0].textContent.split('*')[0].trim()} is too large (max 5MB).`, "error");
+            input.value = "";
+            return;
+          }
+          showPhotoToastGlobal(`✅ File selected for ${input.labels[0].textContent.split('*')[0].trim()}: ${file.name}`, "success");
+        }
+      });
     });
-  
-    document.addEventListener("DOMContentLoaded", function () {
-        const uploadPhotoBtn = document.getElementById("uploadPhotoBtn");
-        const photoInput = document.getElementById("photoInput");
-        const photoPreview = document.getElementById("photoPreview");
-        const photoPlaceholder = document.getElementById("photoPlaceholder");
-        const photoToast = document.getElementById("photoToast");
 
-        if (uploadPhotoBtn) {
-            uploadPhotoBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                if(photoInput) photoInput.click();
-            });
-        }
+    // Make showPhotoToast globally accessible if defined here, or ensure it's defined globally elsewhere.
+    // For simplicity, defining it here if it's specific to this page's photo/file uploads.
+    // If it's intended to be a global utility, it should be defined outside specific DOMContentLoaded listeners.
+    window.showPhotoToastGlobal = function showPhotoToast(message, type) {
+      if (!photoToast) return;
+      photoToast.textContent = message;
+      photoToast.className = "fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white text-sm z-50 transform transition-transform duration-300"; // Reset classes
+      if (type === "success") photoToast.classList.add("bg-green-500");
+      else if (type === "error") photoToast.classList.add("bg-red-500");
+      else photoToast.classList.add("bg-blue-500"); // Default color
 
-        if (photoInput) {
-            photoInput.addEventListener("change", (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    if (!file.type.startsWith("image/")) {
-                        showPhotoToastGlobal("⚠️ Please select an image file", "error");
-                        photoInput.value = ""; 
-                        return;
-                    }
-                    const MAX_SIZE = 5 * 1024 * 1024; 
-                    if (file.size > MAX_SIZE) {
-                        showPhotoToastGlobal("⚠️ Photo is too large (max 5MB)", "error");
-                        photoInput.value = ""; 
-                        return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        if(photoPreview) photoPreview.src = event.target.result;
-                        if(photoPreview) photoPreview.classList.remove("hidden");
-                        if(photoPlaceholder) photoPlaceholder.classList.add("hidden");
-                    };
-                    reader.readAsDataURL(file);
-                    showPhotoToastGlobal("✅ Photo selected: " + file.name, "success");
-                }
-            });
-        }
-        
-        const fileInputs = document.querySelectorAll('input[type="file"][name$="_file_input"]'); 
-        fileInputs.forEach(input => {
-            input.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const MAX_DOC_SIZE = 5 * 1024 * 1024; 
-                    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-                    
-                    if (!allowedTypes.includes(file.type) && !allowedTypes.find(type => file.name.toLowerCase().endsWith(type.split('/')[1]))) {
-                        showPhotoToastGlobal(`⚠️ Invalid file type for ${input.labels[0].textContent.split('*')[0].trim()}. Allowed: PDF, JPG, PNG.`, "error");
-                        input.value = ""; 
-                        return;
-                    }
-                    if (file.size > MAX_DOC_SIZE) {
-                        showPhotoToastGlobal(`⚠️ ${input.labels[0].textContent.split('*')[0].trim()} is too large (max 5MB).`, "error");
-                        input.value = ""; 
-                        return;
-                    }
-                    showPhotoToastGlobal(`✅ File selected for ${input.labels[0].textContent.split('*')[0].trim()}: ${file.name}`, "success");
-                }
-            });
-        });
+      photoToast.classList.remove("hidden", "translate-y-full");
+      photoToast.classList.add("translate-y-0"); // Animate in
 
-        // Make showPhotoToast globally accessible if defined here, or ensure it's defined globally elsewhere.
-        // For simplicity, defining it here if it's specific to this page's photo/file uploads.
-        // If it's intended to be a global utility, it should be defined outside specific DOMContentLoaded listeners.
-        // Let's assume it's this one for now:
-        window.showPhotoToastGlobal = function showPhotoToast(message, type) {
-            if (!photoToast) return;
-            photoToast.textContent = message;
-            photoToast.className = "fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white text-sm z-50 transform transition-transform duration-300"; // Reset classes
-            if (type === "success") photoToast.classList.add("bg-green-500");
-            else if (type === "error") photoToast.classList.add("bg-red-500");
-            else photoToast.classList.add("bg-blue-500"); // Default color
-
-            photoToast.classList.remove("hidden", "translate-y-full");
-            photoToast.classList.add("translate-y-0"); // Animate in
-
-            setTimeout(() => {
-                photoToast.classList.remove("translate-y-0");
-                photoToast.classList.add("translate-y-full"); // Animate out
-                setTimeout(() => photoToast.classList.add("hidden"), 300); // Hide after animation
-            }, 3000); 
-        }
-    });
+      setTimeout(() => {
+        photoToast.classList.remove("translate-y-0");
+        photoToast.classList.add("translate-y-full"); // Animate out
+        setTimeout(() => photoToast.classList.add("hidden"), 300); // Hide after animation
+      }, 3000);
+    }
+  });
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const goTopBtn = document.getElementById('goTopBtn');
-        if(goTopBtn) {
-            window.addEventListener('scroll', () => {
-                goTopBtn.style.display = window.scrollY > 200 ? "flex" : "none";
-            });
-            goTopBtn.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: "smooth" });
-            });
-        }
-    });
+  document.addEventListener('DOMContentLoaded', function () {
+    const goTopBtn = document.getElementById('goTopBtn');
+    if (goTopBtn) {
+      window.addEventListener('scroll', () => {
+        goTopBtn.style.display = window.scrollY > 200 ? "flex" : "none";
+      });
+      goTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+  });
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const menuToggle = document.querySelector('.menu-toggle');
-        const navigation = document.getElementById('main-navigation');
+  document.addEventListener('DOMContentLoaded', function () {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navigation = document.getElementById('main-navigation');
 
-        if (menuToggle && navigation) {
-            menuToggle.addEventListener('click', function() {
-                navigation.classList.toggle('active');
-                menuToggle.classList.toggle('active');
-                const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
-                menuToggle.setAttribute('aria-expanded', !isExpanded);
-            });
-        }
-    });
+    if (menuToggle && navigation) {
+      menuToggle.addEventListener('click', function () {
+        navigation.classList.toggle('active');
+        menuToggle.classList.toggle('active');
+        const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
+        menuToggle.setAttribute('aria-expanded', !isExpanded);
+      });
+    }
+  });
 </script>
 {% endblock %}

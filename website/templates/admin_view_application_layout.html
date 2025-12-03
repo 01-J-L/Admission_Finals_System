@@ -1,0 +1,1021 @@
+{% extends "admin_base.html" %}
+
+{% block title %}View Student - {% if application.old_student_id %}{{ application.old_student_id }}{% else %}P2025{{ "%04d" | format(application.applicant_id) }}{% endif %}{% endblock %}
+{% block page_title %}View Student Details{% endblock %}
+
+{% block breadcrumb %}
+{% set status = application.application_status %}
+{% set exam_status = application.exam_status %}
+{% set has_permit_details = application.permit_exam_date and application.permit_exam_time and application.permit_testing_room %}
+
+{% if status == 'Pending' %}
+<a href="{{ url_for('auth.admin_pending_applications') }}" class="text-gray-500 hover:text-primary">Pending Applications</a>
+{% elif status == 'Approved' and not has_permit_details %}
+<a href="{{ url_for('auth.admin_approved_applications') }}" class="text-gray-500 hover:text-primary">Approved Applications</a>
+{% elif status == 'Scheduled' or (status == 'Approved' and has_permit_details) %}
+<a href="{{ url_for('auth.admin_scheduled_applications') }}" class="text-gray-500 hover:text-primary">Scheduled Applications</a>
+{% elif exam_status == 'Not Taken' %}
+<a href="{{ url_for('auth.admin_not_taken_applications') }}" class="text-gray-500 hover:text-primary">Did Not Attend Exam</a>
+{% elif status == 'Rejected' %}
+<a href="{{ url_for('auth.admin_rejected_applications') }}" class="text-gray-500 hover:text-primary">Rejected Applications</a>
+{% elif status == 'Passed' %}
+<a href="{{ url_for('auth.admin_passed_applications') }}" class="text-gray-500 hover:text-primary">Passed Applications</a>
+{% elif status == 'Failed' %}
+<a href="{{ url_for('auth.admin_failed_applications') }}" class="text-gray-500 hover:text-primary">Failed Applications</a>
+{% elif status == 'Enrolling' %}
+<a href="{{ url_for('auth.admin_enrolling_applications') }}" class="text-gray-500 hover:text-primary">Enrolling Applications</a>
+{% elif status == 'Enrolled' %}
+<a href="{{ url_for('auth.admin_enrolled_applications') }}" class="text-gray-500 hover:text-primary">Enrolled Students</a>
+{% elif status == 'Dropped' %}
+<a href="{{ url_for('auth.admin_dropped_applications') }}" class="text-gray-500 hover:text-primary">Dropped Students</a>
+{% elif status == 'Not Enrolled' %}
+<a href="{{ url_for('auth.admin_not_enrolled_applications') }}" class="text-gray-500 hover:text-primary">Not Enrolled Applications</a>
+{% else %}
+<a href="{{ url_for('auth.admin_all_applications') }}" class="text-gray-500 hover:text-primary">All Applications</a>
+{% endif %}
+
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+{% set display_id = application.old_student_id or application.control_number or ('App #' ~ application.applicant_id) %}
+<span>View Student ({{ display_id }})</span>
+{% endblock %}
+
+{% block content %}
+<style>
+    .info-badge {
+        display: inline-block;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 9999px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge-enrolled { background-color: #d1fae5; color: #065f46; }
+    .status-badge-pending { background-color: #fef3c7; color: #92400e; }
+    .status-badge-approved { background-color: #a7f3d0; color: #047857; }
+    .status-badge-scheduled { background-color: #c7d2fe; color: #4338ca; }
+    .status-badge-rejected { background-color: #fee2e2; color: #991b1b; }
+    .status-badge-passed { background-color: #ccfbf1; color: #115e59; }
+    .status-badge-failed { background-color: #ffedd5; color: #9a3412; }
+    .status-badge-dropped { background-color: #e5e7eb; color: #4b5563; }
+    .status-badge-default { background-color: #e5e7eb; color: #374151; }
+
+    .tab-nav-link {
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-bottom: 2px solid transparent;
+        color: #6b7280;
+        font-weight: 500;
+        transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-nav-link.active {
+        color: #4f46e5;
+        border-bottom-color: #4f46e5;
+    }
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    .data-field {
+        background-color: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        color: #374151;
+        min-height: 38px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .view-doc-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 9999px;
+        background-color: #eef2ff;
+        color: #4338ca;
+        text-decoration: none;
+        transition: background-color 0.2s;
+        border: 1px solid #c7d2fe;
+        cursor: pointer;
+    }
+
+    .view-doc-btn:hover {
+        background-color: #c7d2fe;
+    }
+
+    .not-provided-badge {
+        display: inline-block;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 9999px;
+        background-color: #f3f4f6;
+        color: #4b5563;
+    }
+</style>
+
+<div class="flex flex-col lg:flex-row gap-6">
+    <!-- Left Column: Student Info -->
+    <div class="w-full lg:w-1/4 lg:max-w-xs flex-shrink-0">
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100 sticky top-24">
+            <h3 class="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">Student Info</h3>
+            <div class="flex flex-col items-center text-center">
+                <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-100 mb-3 border border-gray-300">
+                    <img src="{{ application.photo_base64 or url_for('static', filename='images/default_avatar.png') }}"
+                        alt="Student Photo" class="w-full h-full object-cover">
+                </div>
+                <p class="font-bold text-lg text-gray-900">{{ application.first_name }} {{ application.last_name }}</p>
+                <p class="text-sm text-gray-500 mb-4">ID:
+                    {% set display_id = application.old_student_id or application.control_number or ('App #' ~ application.applicant_id) %}
+                    <span class="font-medium text-gray-800">{{ display_id }}</span>
+                </p>
+
+                <div class="w-full text-left text-sm space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500">STATUS</span>
+                        {% set status_lower = application.application_status | lower %}
+                        <span class="info-badge status-badge-{{ status_lower if status_lower in ['enrolled', 'pending', 'approved', 'scheduled', 'rejected', 'passed', 'failed', 'dropped'] else 'default' }}">{{ application.application_status }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500">DATE ADDED</span>
+                        <span class="text-gray-800 font-medium">{{ application.submitted_at_formatted if application.submitted_at else 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500">ACADEMIC YEAR</span>
+                        <span class="text-gray-800 font-medium">{{ application.academic_year or 'N/A' }}</span>
+                    </div>
+                    
+                    <!-- Consolidated Year & Section with Edit Button -->
+                    <div class="border-t border-dashed border-gray-200 my-2 pt-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-gray-500 text-xs uppercase tracking-wide">Placement</span>
+                            {% if session.user_role in ['admin', 'registrar'] %}
+                            <button onclick="openLevelSectionModal()" class="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center transition-colors">
+                                <i class="ri-edit-box-line mr-1"></i> Edit
+                            </button>
+                            {% endif %}
+                        </div>
+                        <!-- Display Program here -->
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500">Program</span>
+                            <span class="text-gray-800 font-medium text-right text-xs">{{ application.program_choice or 'N/A' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-gray-500">Year Level</span>
+                            <span class="text-gray-800 font-medium">{{ application.enrollment_year_level or 'N/A' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-gray-500">Section</span>
+                            <span class="text-gray-800 font-medium">
+                                {% if application.section_name %}
+                                    {{ application.section_name }}
+                                {% else %}
+                                    <span class="text-gray-400 italic">Unassigned</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if application.enrollment_semester %}
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-gray-500">Semester</span>
+                            <span class="text-gray-800 font-medium">{{ application.enrollment_semester }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if student_academic_status %}
+                    <div class="flex justify-between items-center pt-2 border-t border-dashed border-gray-200">
+                        <span class="text-gray-500">MARKS</span>
+                        {% if student_academic_status == 'Regular' %}
+                        <span class="info-badge status-badge-approved">Regular</span>
+                        {% else %}
+                        <span class="info-badge" style="background-color: #f5f3ff; color: #6d28d9;">Irregular</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Details -->
+    <div class="flex-1">
+        <div class="bg-white rounded-lg shadow-md border border-gray-100">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-4 px-6 overflow-x-auto" id="tab-navigation">
+                    <a class="tab-nav-link active" data-target="basic-info">Basic Info</a>
+                    <a class="tab-nav-link" data-target="address">Address</a>
+                    <a class="tab-nav-link" data-target="guardian">Guardian</a>
+                    <a class="tab-nav-link" data-target="education">Education</a>
+                    <a class="tab-nav-link" data-target="inventory">Student Inventory</a>
+                    <a class="tab-nav-link" data-target="documents">Documents</a>
+                </nav>
+            </div>
+            <div class="p-6">
+                <!-- Basic Info Pane -->
+                <div id="basic-info" class="tab-pane active">
+                    <h4 class="text-md font-semibold text-gray-600 mb-4 pb-2 border-b">Personal Details</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-6 mb-6">
+                        <div><label class="block text-xs text-gray-500 mb-1">First Name</label>
+                            <div class="data-field">{{ application.first_name }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Middle Name</label>
+                            <div class="data-field">{{ application.middle_name or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Last Name</label>
+                            <div class="data-field">{{ application.last_name }}</div>
+                        </div>
+                    </div>
+                    <h4 class="text-md font-semibold text-gray-600 mb-4 pb-2 border-b">Other Info</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
+                        <div><label class="block text-xs text-gray-500 mb-1">Gender</label>
+                            <div class="data-field">{{ application.sex }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Civil Status</label>
+                            <div class="data-field">{{ application.civil_status }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Religion</label>
+                            <div class="data-field">{{ application.religion }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Citizenship</label>
+                            <div class="data-field">{{ application.citizenship }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Birthday</label>
+                            <div class="data-field">{{ application.date_of_birth_formatted }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Birth Place</label>
+                            <div class="data-field">{{ application.place_of_birth }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Pane -->
+                <div id="address" class="tab-pane">
+                    <h4 class="text-md font-semibold text-gray-600 mb-4 pb-2 border-b">Contact & Address</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
+                        <div><label class="block text-xs text-gray-500 mb-1">Email</label>
+                            <div class="data-field">{{ application.email_address }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Mobile No.</label>
+                            <div class="data-field">{{ application.mobile_number }}</div>
+                        </div>
+                        <div class="md:col-span-2"><label class="block text-xs text-gray-500 mb-1">Street / Barangay</label>
+                            <div class="data-field">{{ application.permanent_address_street_barangay }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">City / Municipality</label>
+                            <div class="data-field">{{ application.permanent_address_city_municipality }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Province</label>
+                            <div class="data-field">{{ application.permanent_address_province }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Postal Code</label>
+                            <div class="data-field">{{ application.permanent_address_postal_code }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guardian Pane -->
+                <div id="guardian" class="tab-pane">
+                    <h4 class="text-md font-semibold text-gray-600 mb-4 pb-2 border-b">Family Background</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Father -->
+                        <div class="space-y-4">
+                            <h5 class="font-medium text-gray-800">Father's Info</h5>
+                            <div><label class="block text-xs text-gray-500 mb-1">Name</label>
+                                <div class="data-field">{{ application.father_name or 'N/A' }}</div>
+                            </div>
+                            <div><label class="block text-xs text-gray-500 mb-1">Occupation</label>
+                                <div class="data-field">{{ application.father_occupation or 'N/A' }}</div>
+                            </div>
+                            <div><label class="block text-xs text-gray-500 mb-1">Contact No.</label>
+                                <div class="data-field">{{ application.father_contact_number or 'N/A' }}</div>
+                            </div>
+                        </div>
+                        <!-- Mother -->
+                        <div class="space-y-4">
+                            <h5 class="font-medium text-gray-800">Mother's Info</h5>
+                            <div><label class="block text-xs text-gray-500 mb-1">Name</label>
+                                <div class="data-field">{{ application.mother_maiden_name or 'N/A' }}</div>
+                            </div>
+                            <div><label class="block text-xs text-gray-500 mb-1">Occupation</label>
+                                <div class="data-field">{{ application.mother_occupation or 'N/A' }}</div>
+                            </div>
+                            <div><label class="block text-xs text-gray-500 mb-1">Contact No.</label>
+                                <div class="data-field">{{ application.mother_contact_number or 'N/A' }}</div>
+                            </div>
+                        </div>
+                        <!-- Guardian -->
+                        <div class="space-y-4">
+                            <h5 class="font-medium text-gray-800">Guardian's Info</h5>
+                            <div><label class="block text-xs text-gray-500 mb-1">Name</label>
+                                <div class="data-field">{{ application.guardian_name or 'N/A' }}</div>
+                            </div>
+                            <div><label class="block text-xs text-gray-500 mb-1">Occupation</label>
+                                <div class="data-field">{{ application.guardian_occupation or 'N/A' }}</div>
+                            </div>
+                            <div><label class="block text-xs text-gray-500 mb-1">Contact No.</label>
+                                <div class="data-field">{{ application.guardian_contact_number or 'N/A' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education Pane -->
+                <div id="education" class="tab-pane">
+                    <h4 class="text-md font-semibold text-gray-600 mb-4 pb-2 border-b">Educational Background</h4>
+                    <div class="space-y-6">
+                        <div>
+                            <h5 class="font-medium text-gray-800">Senior High School</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                <div class="md:col-span-2"><label class="block text-xs text-gray-500 mb-1">School Name</label>
+                                    <div class="data-field">{{ application.senior_high_school or 'N/A' }}</div>
+                                </div>
+                                <div class="md:col-span-2"><label class="block text-xs text-gray-500 mb-1">Address</label>
+                                    <div class="data-field">{{ application.senior_high_school_address or 'N/A' }}</div>
+                                </div>
+                                <div><label class="block text-xs text-gray-500 mb-1">Track/Strand</label>
+                                    <div class="data-field">{{ application.senior_high_school_track_strand or 'N/A' }}
+                                    </div>
+                                </div>
+                                <div><label class="block text-xs text-gray-500 mb-1">Year Graduated</label>
+                                    <div class="data-field">{{ application.senior_high_school_year_to or 'N/A' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="font-medium text-gray-800">Tertiary (if applicable)</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                <div class="md:col-span-2"><label class="block text-xs text-gray-500 mb-1">School Name</label>
+                                    <div class="data-field">{{ application.tertiary_school or 'N/A' }}</div>
+                                </div>
+                                <div><label class="block text-xs text-gray-500 mb-1">Course</label>
+                                    <div class="data-field">{{ application.tertiary_course or 'N/A' }}</div>
+                                </div>
+                                <div><label class="block text-xs text-gray-500 mb-1">Last Year Attended</label>
+                                    <div class="data-field">{{ application.tertiary_year_to or 'N/A' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Inventory Pane -->
+                <div id="inventory" class="tab-pane">
+                    
+                    <!-- NEW: Header with Edit Button -->
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h4 class="text-md font-semibold text-gray-600">Inventory Information</h4>
+                        {% if session.user_role in ['admin', 'registrar', 'guidance', 'osa'] %}
+                        <button onclick="openInventoryModal()" class="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-md font-medium transition-colors flex items-center">
+                            <i class="ri-edit-box-line mr-1"></i> Edit Inventory
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- I. Personal Information -->
+                    <h5 class="text-sm font-bold text-gray-700 mb-2">I. Personal Information</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 mb-6">
+                        <div><label class="block text-xs text-gray-500 mb-1">Gender</label>
+                            <div class="data-field">{{ application.inventory_gender or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Age</label>
+                            <div class="data-field">{{ application.inventory_age or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Religion</label>
+                            <div class="data-field">{{ application.inventory_religion or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Mobile Number</label>
+                            <div class="data-field">{{ application.inventory_mobile_number or 'N/A' }}</div>
+                        </div>
+                        <div class="md:col-span-2"><label class="block text-xs text-gray-500 mb-1">Complete Address</label>
+                            <div class="data-field">{{ application.inventory_complete_address or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Facebook Account</label>
+                            <div class="data-field">{{ application.inventory_facebook_account or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Health Condition</label>
+                            <div class="data-field">{{ application.inventory_health_condition or 'N/A' }}</div>
+                        </div>
+                        <div class="md:col-span-2"><label class="block text-xs text-gray-500 mb-1">Interests / Hobbies</label>
+                            <div class="data-field">{{ application.inventory_interest_hobbies or 'N/A' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- II. Educational Background -->
+                    <h5 class="text-sm font-bold text-gray-700 mb-2">II. Educational Background</h5>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="min-w-full text-sm border border-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 border text-left font-medium text-gray-500">Level</th>
+                                    <th class="px-4 py-2 border text-left font-medium text-gray-500">School</th>
+                                    <th class="px-4 py-2 border text-left font-medium text-gray-500">Dates</th>
+                                    <th class="px-4 py-2 border text-left font-medium text-gray-500">Awards</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2 border font-medium">Pre-Elementary</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_pre_elementary_school or '' }}</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_pre_elementary_dates or '' }}</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_pre_elementary_awards or '' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border font-medium">Elementary</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_elementary_school or '' }}</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_elementary_dates or '' }}</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_elementary_awards or '' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border font-medium">Secondary</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_secondary_school or '' }}</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_secondary_dates or '' }}</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_secondary_awards or '' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border font-medium">Vocational</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_vocational_school or '' }}</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_vocational_dates or '' }}</td>
+                                    <td class="px-4 py-2 border">{{ application.inventory_vocational_awards or '' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- III. Home and Family -->
+                    <h5 class="text-sm font-bold text-gray-700 mb-2">III. Home and Family Background</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <!-- Father -->
+                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <h5 class="font-bold text-gray-700 mb-2">Father</h5>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="text-gray-500 text-xs block">Name:</span> {{ application.inventory_father_name or 'N/A' }}</div>
+                                <div><span class="text-gray-500 text-xs block">Age / Status:</span> {{ application.inventory_father_age or '' }} / {{ application.inventory_father_status or '' }}</div>
+                                <div><span class="text-gray-500 text-xs block">Occupation:</span> {{ application.inventory_father_occupation or 'N/A' }}</div>
+                                <div><span class="text-gray-500 text-xs block">Contact:</span> {{ application.inventory_father_contact or 'N/A' }}</div>
+                            </div>
+                        </div>
+                        <!-- Mother -->
+                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <h5 class="font-bold text-gray-700 mb-2">Mother</h5>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="text-gray-500 text-xs block">Name:</span> {{ application.inventory_mother_name or 'N/A' }}</div>
+                                <div><span class="text-gray-500 text-xs block">Age / Status:</span> {{ application.inventory_mother_age or '' }} / {{ application.inventory_mother_status or '' }}</div>
+                                <div><span class="text-gray-500 text-xs block">Occupation:</span> {{ application.inventory_mother_occupation or 'N/A' }}</div>
+                                <div><span class="text-gray-500 text-xs block">Contact:</span> {{ application.inventory_mother_contact or 'N/A' }}</div>
+                            </div>
+                        </div>
+                        <!-- Guardian -->
+                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <h5 class="font-bold text-gray-700 mb-2">Guardian</h5>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="text-gray-500 text-xs block">Name:</span> {{ application.inventory_guardian_name or 'N/A' }}</div>
+                                <div><span class="text-gray-500 text-xs block">Relationship:</span> {{ application.inventory_guardian_relationship or 'N/A' }}</div>
+                                <div><span class="text-gray-500 text-xs block">Contact:</span> {{ application.inventory_guardian_contact or 'N/A' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Family Stats -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div><label class="block text-xs text-gray-500 mb-1">Marital Status</label>
+                            <div class="data-field">{{ application.inventory_parents_marital_status or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Family Income</label>
+                            <div class="data-field">{{ application.inventory_family_income or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1"># of Children</label>
+                            <div class="data-field">{{ application.inventory_number_of_children or '0' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Family Description</label>
+                            <div class="data-field">{{ application.inventory_family_description or 'N/A' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- IV. Emergency Contact -->
+                    <h5 class="text-sm font-bold text-gray-700 mb-2">IV. Emergency Contact</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label class="block text-xs text-gray-500 mb-1">Name</label>
+                            <div class="data-field">{{ application.inventory_emergency_contact_name or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Contact Number</label>
+                            <div class="data-field">{{ application.inventory_emergency_contact_number or 'N/A' }}</div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 mb-1">Relationship</label>
+                            <div class="data-field">{{ application.inventory_emergency_contact_relationship or 'N/A' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Pane -->
+                <div id="documents" class="tab-pane">
+                    <h4 class="text-md font-semibold text-gray-600 mb-4 pb-2 border-b">Initial Application Documents</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md">
+                            <span class="font-medium text-gray-800">2x2 Photo</span>
+                            {% if application.photo %}
+                            <button type="button" class="view-doc-btn"
+                                data-view-url="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}"
+                                data-download-url="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id, action='download') }}"
+                                data-doc-title="{{ application.first_name }}_{{ application.last_name }}_Photo.jpg"
+                                data-doc-type="image">
+                                <i class="ri-eye-line mr-1"></i> View
+                            </button>
+                            {% else %}<span class="not-provided-badge">Not Provided</span>{% endif %}
+                        </div>
+
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md">
+                            <span class="font-medium text-gray-800">PWD ID / Medical Cert.</span>
+                            {% if application.pwd_id_file %}
+                                <button type="button" class="view-doc-btn"
+                                    data-view-url="{{ url_for('auth.get_applicant_document', applicant_id=application.applicant_id, doc_type='pwd_id') }}"
+                                    data-download-url="{{ url_for('auth.get_applicant_document', applicant_id=application.applicant_id, doc_type='pwd_id', action='download') }}"
+                                    data-doc-title="{{ application.pwd_id_filename or 'PWD_Document' }}"
+                                    data-doc-type="{{ 'image' if (application.pwd_id_mimetype and 'image' in application.pwd_id_mimetype) else 'pdf' }}">
+                                    <i class="ri-eye-line mr-1"></i> View
+                                </button>
+                            {% else %}
+                                {% if application.physical_disability == 'Yes' %}
+                                    <span class="not-provided-badge bg-red-100 text-red-600">Missing</span>
+                                {% else %}
+                                    <span class="not-provided-badge">N/A</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h4 class="text-md font-semibold text-gray-600 mt-8 mb-4 pb-2 border-b">Enrollment Requirements</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+
+                        {% set enrollment_docs = {
+                        'enrollment_shs_card_file': ('a. Form 138 (SHS Card)', 'enrollment_card'),
+                        'enrollment_shs_diploma_file': ('b. SHS Diploma', 'enrollment_diploma'),
+                        'enrollment_good_moral_file': ('c. Good Moral Certificate', 'enrollment_good_moral'),
+                        'enrollment_psa_birth_file': ('d. PSA Birth Certificate', 'enrollment_psa'),
+                        'enrollment_photos_2x2_file': ('e. 2x2 Photos', 'enrollment_photos'),
+                        'enrollment_entrance_fee_proof_file': ('f. Signature', 'enrollment_fee'),
+                        'enrollment_voters_id_file': ('g. Voter\'s ID/Certificate', 'enrollment_voters'),
+                        'enrollment_cbs_file': ('h. Verified CBS', 'enrollment_cbs'),
+                        'enrollment_brgy_cert_file': ('i. Brgy. Certification', 'enrollment_brgy')
+                        } %}
+
+                        {% for db_col, info in enrollment_docs.items() %}
+                        {% set doc_label = info[0] %}
+                        {% set doc_type_url = info[1] %}
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md">
+                            <span class="font-medium text-gray-800">{{ doc_label }}</span>
+                            {% if application[db_col] %}
+                            <button type="button" class="view-doc-btn"
+                                data-view-url="{{ url_for('auth.get_applicant_document', applicant_id=application.applicant_id, doc_type=doc_type_url) }}"
+                                data-download-url="{{ url_for('auth.get_applicant_document', applicant_id=application.applicant_id, doc_type=doc_type_url, action='download') }}"
+                                data-doc-title="{{ application[db_col.replace('_file', '_filename')] or doc_label }}"
+                                data-doc-type="{{ 'image' if (application[db_col.replace('_file', '_mimetype')] and 'image' in application[db_col.replace('_file', '_mimetype')]) else 'pdf' }}">
+                                <i class="ri-eye-line mr-1"></i> View
+                            </button>
+                            {% else %}<span class="not-provided-badge">Not Provided</span>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Document Viewer Modal -->
+<div id="document-viewer-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl flex flex-col w-full max-w-2xl h-5/6 max-h-[85vh]">
+        <!-- Modal Header -->
+        <div class="flex-shrink-0 bg-gray-100 p-3 flex justify-between items-center border-b">
+            <h3 id="modal-doc-title" class="text-lg font-semibold text-gray-800 truncate pr-4">Document Viewer</h3>
+            <div class="flex items-center gap-4">
+                <a id="modal-download-btn" href="#" class="inline-flex items-center gap-2 bg-primary text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-primary/80">
+                    <i class="ri-download-2-line"></i> <span>Download</span>
+                </a>
+                <button id="modal-close-btn" class="text-gray-500 hover:text-gray-800"><i class="ri-close-line text-2xl"></i></button>
+            </div>
+        </div>
+        <!-- Modal Content -->
+        <div id="modal-doc-content" class="flex-grow bg-gray-200 overflow-y-auto">
+            <!-- Content injected via JS -->
+        </div>
+    </div>
+</div>
+
+<!-- Edit Level/Section Modal -->
+<div id="editLevelSectionModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">Update Student Placement</h3>
+            <button onclick="closeLevelSectionModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="ri-close-line text-2xl"></i>
+            </button>
+        </div>
+        
+        <form id="updateLevelSectionForm" class="p-6 space-y-4">
+            <input type="hidden" id="current_section_id" value="{{ application.section_id }}">
+
+            <!-- 1. Program Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Program</label>
+                <select id="edit_program_choice" name="program_choice" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" onchange="loadSectionsForEdit()">
+                    {% for program in programs %}
+                        <option value="{{ program.title }}" {% if application.program_choice == program.title %}selected{% endif %}>
+                            {{ program.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-red-500 mt-1">Warning: Changing this will list sections for the new program.</p>
+            </div>
+
+            <!-- 2. Year Level Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Year Level</label>
+                <select id="edit_year_level" name="year_level" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" onchange="loadSectionsForEdit()">
+                    <option value="1st Year" {% if application.enrollment_year_level == '1st Year' %}selected{% endif %}>1st Year</option>
+                    <option value="2nd Year" {% if application.enrollment_year_level == '2nd Year' %}selected{% endif %}>2nd Year</option>
+                    <option value="3rd Year" {% if application.enrollment_year_level == '3rd Year' %}selected{% endif %}>3rd Year</option>
+                    <option value="4th Year" {% if application.enrollment_year_level == '4th Year' %}selected{% endif %}>4th Year</option>
+                    <option value="5th Year" {% if application.enrollment_year_level == '5th Year' %}selected{% endif %}>5th Year</option>
+                </select>
+            </div>
+
+            <!-- 3. Section Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                <select id="edit_section_id" name="section_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" required>
+                    <option value="">Select Program & Year first...</option>
+                </select>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button type="button" onclick="closeLevelSectionModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm mr-2 hover:bg-gray-300">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md text-sm hover:bg-blue-700">Update Placement</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- EDIT INVENTORY MODAL -->
+<div id="editInventoryModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg">
+            <h3 class="text-lg font-semibold text-gray-900">Edit Student Inventory</h3>
+            <button onclick="closeInventoryModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="ri-close-line text-2xl"></i>
+            </button>
+        </div>
+        
+        <!-- Scrollable Form Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <form id="editInventoryForm" class="space-y-6">
+                
+                <!-- I. Personal Info -->
+                <fieldset class="border p-4 rounded-md">
+                    <legend class="text-sm font-bold text-gray-700 px-2">I. Personal Information</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600">Gender</label>
+                            <select name="inventory_gender" class="w-full border-gray-300 rounded-md shadow-sm text-sm p-2">
+                                <option value="Male" {% if application.inventory_gender == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if application.inventory_gender == 'Female' %}selected{% endif %}>Female</option>
+                            </select>
+                        </div>
+                        <div><label class="block text-xs font-medium text-gray-600">Age</label><input type="number" name="inventory_age" value="{{ application.inventory_age or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
+                        <div><label class="block text-xs font-medium text-gray-600">Religion</label><input type="text" name="inventory_religion" value="{{ application.inventory_religion or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
+                        <div><label class="block text-xs font-medium text-gray-600">Mobile</label><input type="text" name="inventory_mobile_number" value="{{ application.inventory_mobile_number or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
+                        <div class="md:col-span-2"><label class="block text-xs font-medium text-gray-600">Complete Address</label><input type="text" name="inventory_complete_address" value="{{ application.inventory_complete_address or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
+                        <div><label class="block text-xs font-medium text-gray-600">FB Account</label><input type="text" name="inventory_facebook_account" value="{{ application.inventory_facebook_account or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
+                        <div class="md:col-span-2"><label class="block text-xs font-medium text-gray-600">Hobbies/Interests</label><input type="text" name="inventory_interest_hobbies" value="{{ application.inventory_interest_hobbies or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
+                        <div class="md:col-span-3"><label class="block text-xs font-medium text-gray-600">Health Condition</label><input type="text" name="inventory_health_condition" value="{{ application.inventory_health_condition or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
+                    </div>
+                </fieldset>
+
+                <!-- II. Education -->
+                <fieldset class="border p-4 rounded-md">
+                    <legend class="text-sm font-bold text-gray-700 px-2">II. Education</legend>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead><tr class="bg-gray-100"><th class="p-2">Level</th><th class="p-2">School</th><th class="p-2">Dates</th><th class="p-2">Awards</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td class="p-2 font-medium">Pre-Elem</td>
+                                    <td class="p-1"><input type="text" name="inventory_pre_elementary_school" value="{{ application.inventory_pre_elementary_school or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                    <td class="p-1"><input type="text" name="inventory_pre_elementary_dates" value="{{ application.inventory_pre_elementary_dates or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                    <td class="p-1"><input type="text" name="inventory_pre_elementary_awards" value="{{ application.inventory_pre_elementary_awards or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">Elem</td>
+                                    <td class="p-1"><input type="text" name="inventory_elementary_school" value="{{ application.inventory_elementary_school or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                    <td class="p-1"><input type="text" name="inventory_elementary_dates" value="{{ application.inventory_elementary_dates or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                    <td class="p-1"><input type="text" name="inventory_elementary_awards" value="{{ application.inventory_elementary_awards or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">Secondary</td>
+                                    <td class="p-1"><input type="text" name="inventory_secondary_school" value="{{ application.inventory_secondary_school or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                    <td class="p-1"><input type="text" name="inventory_secondary_dates" value="{{ application.inventory_secondary_dates or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                    <td class="p-1"><input type="text" name="inventory_secondary_awards" value="{{ application.inventory_secondary_awards or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">Vocational</td>
+                                    <td class="p-1"><input type="text" name="inventory_vocational_school" value="{{ application.inventory_vocational_school or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                    <td class="p-1"><input type="text" name="inventory_vocational_dates" value="{{ application.inventory_vocational_dates or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                    <td class="p-1"><input type="text" name="inventory_vocational_awards" value="{{ application.inventory_vocational_awards or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </fieldset>
+
+                <!-- III. Family -->
+                <fieldset class="border p-4 rounded-md">
+                    <legend class="text-sm font-bold text-gray-700 px-2">III. Family Background</legend>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Father -->
+                        <div class="bg-gray-50 p-2 rounded">
+                            <h5 class="text-xs font-bold text-gray-600 mb-2 uppercase">Father</h5>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="col-span-2"><label class="text-[10px]">Name</label><input type="text" name="inventory_father_name" value="{{ application.inventory_father_name or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                                <div><label class="text-[10px]">Age</label><input type="number" name="inventory_father_age" value="{{ application.inventory_father_age or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                                <div><label class="text-[10px]">Status</label><input type="text" name="inventory_father_status" value="{{ application.inventory_father_status or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                                <div class="col-span-2"><label class="text-[10px]">Occupation</label><input type="text" name="inventory_father_occupation" value="{{ application.inventory_father_occupation or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                                <div class="col-span-2"><label class="text-[10px]">Contact</label><input type="text" name="inventory_father_contact" value="{{ application.inventory_father_contact or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                            </div>
+                        </div>
+                        <!-- Mother -->
+                        <div class="bg-gray-50 p-2 rounded">
+                            <h5 class="text-xs font-bold text-gray-600 mb-2 uppercase">Mother</h5>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="col-span-2"><label class="text-[10px]">Name</label><input type="text" name="inventory_mother_name" value="{{ application.inventory_mother_name or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                                <div><label class="text-[10px]">Age</label><input type="number" name="inventory_mother_age" value="{{ application.inventory_mother_age or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                                <div><label class="text-[10px]">Status</label><input type="text" name="inventory_mother_status" value="{{ application.inventory_mother_status or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                                <div class="col-span-2"><label class="text-[10px]">Occupation</label><input type="text" name="inventory_mother_occupation" value="{{ application.inventory_mother_occupation or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                                <div class="col-span-2"><label class="text-[10px]">Contact</label><input type="text" name="inventory_mother_contact" value="{{ application.inventory_mother_contact or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <div><label class="block text-xs text-gray-600">Marital Status</label><input type="text" name="inventory_parents_marital_status" value="{{ application.inventory_parents_marital_status or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                        <div><label class="block text-xs text-gray-600">Family Income</label><input type="text" name="inventory_family_income" value="{{ application.inventory_family_income or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                        <div><label class="block text-xs text-gray-600">No. of Children</label><input type="number" name="inventory_number_of_children" value="{{ application.inventory_number_of_children or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                        <div class="md:col-span-3"><label class="block text-xs text-gray-600">Family Description</label><input type="text" name="inventory_family_description" value="{{ application.inventory_family_description or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                        
+                        <div><label class="block text-xs text-gray-600">Guardian Name</label><input type="text" name="inventory_guardian_name" value="{{ application.inventory_guardian_name or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                        <div><label class="block text-xs text-gray-600">Guardian Relation</label><input type="text" name="inventory_guardian_relationship" value="{{ application.inventory_guardian_relationship or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                        <div><label class="block text-xs text-gray-600">Guardian Contact</label><input type="text" name="inventory_guardian_contact" value="{{ application.inventory_guardian_contact or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                    </div>
+                </fieldset>
+
+                <!-- IV. Emergency -->
+                <fieldset class="border p-4 rounded-md">
+                    <legend class="text-sm font-bold text-gray-700 px-2">IV. Emergency Contact</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                         <div><label class="block text-xs text-gray-600">Name</label><input type="text" name="inventory_emergency_contact_name" value="{{ application.inventory_emergency_contact_name or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                         <div><label class="block text-xs text-gray-600">Number</label><input type="text" name="inventory_emergency_contact_number" value="{{ application.inventory_emergency_contact_number or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                         <div><label class="block text-xs text-gray-600">Relationship</label><input type="text" name="inventory_emergency_contact_relationship" value="{{ application.inventory_emergency_contact_relationship or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                    </div>
+                </fieldset>
+
+            </form>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="p-4 border-t bg-gray-50 rounded-b-lg flex justify-end space-x-2">
+            <button onclick="closeInventoryModal()" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded hover:bg-gray-300">Cancel</button>
+            <button onclick="submitInventoryUpdate()" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded hover:bg-primary/90">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Tab switching logic
+        const tabLinks = document.querySelectorAll('.tab-nav-link');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.dataset.target;
+
+                tabLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+
+                tabPanes.forEach(pane => {
+                    if (pane.id === targetId) {
+                        pane.classList.add('active');
+                    } else {
+                        pane.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        // Document viewer modal logic
+        const docViewerModal = document.getElementById('document-viewer-modal');
+        const modalDocTitle = document.getElementById('modal-doc-title');
+        const modalDownloadBtn = document.getElementById('modal-download-btn');
+        const modalDocContent = document.getElementById('modal-doc-content');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const viewDocButtons = document.querySelectorAll('.view-doc-btn');
+
+        viewDocButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const viewUrl = button.dataset.viewUrl;
+                const downloadUrl = button.dataset.downloadUrl;
+                const docTitle = button.dataset.docTitle;
+                const docType = button.dataset.docType || 'pdf';
+
+                modalDocTitle.textContent = docTitle;
+                modalDownloadBtn.href = downloadUrl;
+                modalDocContent.innerHTML = ''; 
+
+                let contentElement;
+                if (docType === 'image') {
+                    contentElement = document.createElement('img');
+                    contentElement.src = viewUrl;
+                    contentElement.alt = docTitle;
+                    contentElement.className = 'w-full h-full object-contain';
+                } else {
+                    contentElement = document.createElement('iframe');
+                    contentElement.src = viewUrl;
+                    contentElement.className = 'w-full h-full border-0';
+                }
+
+                modalDocContent.appendChild(contentElement);
+                docViewerModal.classList.remove('hidden');
+                docViewerModal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        function closeModal() {
+            docViewerModal.classList.add('hidden');
+            docViewerModal.classList.remove('flex');
+            modalDocContent.innerHTML = '';
+            document.body.style.overflow = '';
+        }
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        docViewerModal.addEventListener('click', (e) => {
+            if (e.target === docViewerModal) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape" && !docViewerModal.classList.contains('hidden')) closeModal();
+        });
+    });
+
+    // --- UPDATED: Edit Level/Section/Program Logic ---
+    const editModal = document.getElementById('editLevelSectionModal');
+    const editProgramSelect = document.getElementById('edit_program_choice');
+    const editYearSelect = document.getElementById('edit_year_level');
+    const editSectionSelect = document.getElementById('edit_section_id');
+    const currentSectionId = document.getElementById('current_section_id').value;
+    const applicantId = "{{ application.applicant_id }}";
+
+    function openLevelSectionModal() {
+        editModal.classList.remove('hidden');
+        editModal.classList.add('flex');
+        // Trigger section load based on current selections
+        loadSectionsForEdit();
+    }
+
+    function closeLevelSectionModal() {
+        editModal.classList.add('hidden');
+        editModal.classList.remove('flex');
+    }
+
+    async function loadSectionsForEdit() {
+        const programTitle = editProgramSelect.value; // Get dynamically from dropdown
+        const year = editYearSelect.value;
+        
+        editSectionSelect.innerHTML = '<option value="">Loading...</option>';
+        editSectionSelect.disabled = true;
+
+        try {
+            // Pass the selected program from the dropdown, not the hidden field
+            const response = await fetch(`/api/get-sections?program=${encodeURIComponent(programTitle)}&year=${encodeURIComponent(year)}`);
+            const sections = await response.json();
+
+            editSectionSelect.innerHTML = '<option value="">Select Section...</option>';
+            
+            if (sections.length === 0) {
+                const opt = document.createElement('option');
+                opt.text = "No sections found for this program/year";
+                editSectionSelect.add(opt);
+            } else {
+                sections.forEach(sec => {
+                    const opt = document.createElement('option');
+                    opt.value = sec.id;
+                    opt.text = `${sec.section_name} (${sec.current_count}/${sec.max_students})`;
+                    
+                    // Auto-select ONLY if it matches current ID AND the Program matches original
+                    // (Simplification: If user changes Program, we force them to pick a new section manually, so no auto-select)
+                    if (sec.id == currentSectionId && programTitle == "{{ application.program_choice }}") {
+                        opt.selected = true;
+                    }
+                    editSectionSelect.add(opt);
+                });
+            }
+            editSectionSelect.disabled = false;
+
+        } catch (error) {
+            console.error('Error loading sections:', error);
+            editSectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+        }
+    }
+
+    // Handle Form Submit
+    document.getElementById('updateLevelSectionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        formData.append('program_choice', editProgramSelect.value); // Add Program
+        formData.append('year_level', editYearSelect.value);
+        formData.append('section_id', editSectionSelect.value);
+
+        try {
+            const response = await fetch(`/admin/application/${applicantId}/update-level-section`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                if (typeof showToast === 'function') {
+                    showToast(result.message, 'success');
+                } else {
+                    alert(result.message);
+                }
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alert(result.message || 'Update failed');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred connecting to the server.');
+        }
+    });
+
+    // --- Inventory Modal Logic ---
+    const inventoryModal = document.getElementById('editInventoryModal');
+    
+    function openInventoryModal() {
+        inventoryModal.classList.remove('hidden');
+        inventoryModal.classList.add('flex');
+    }
+
+    function closeInventoryModal() {
+        inventoryModal.classList.add('hidden');
+        inventoryModal.classList.remove('flex');
+    }
+
+    async function submitInventoryUpdate() {
+        const form = document.getElementById('editInventoryForm');
+        const formData = new FormData(form);
+        const applicantId = "{{ application.applicant_id }}";
+
+        try {
+            const response = await fetch(`/admin/application/${applicantId}/update-inventory`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if(data.success) {
+                if(typeof showToast === 'function') {
+                    showToast(data.message, 'success');
+                } else {
+                    alert(data.message);
+                }
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alert(data.message || 'Update failed');
+            }
+        } catch(error) {
+            console.error(error);
+            alert('An error occurred connecting to the server.');
+        }
+    }
+    
+    inventoryModal.addEventListener('click', function(e) {
+        if(e.target === inventoryModal) closeInventoryModal();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "student_base.html" %}
+{% block title %}Payment History{% endblock %}
+{% block content %}
+<div class="w-full max-w-5xl mx-auto">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">Payment History</h2>
+    <div class="bg-white rounded-card shadow-sm p-6">
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-600">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Date</th>
+                        <th scope="col" class="px-6 py-3">Amount Paid</th>
+                        <th scope="col" class="px-6 py-3">Type</th>
+                        <th scope="col" class="px-6 py-3">Remark</th>
+                        <th scope="col" class="px-6 py-3">Cashier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <!-- FIXED: Changed p.date to p.payment_date -->
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ p.payment_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-6 py-4">₱{{ "{:,.2f}".format(p.amount_paid) }}</td>
+                        <td class="px-6 py-4">{{ p.type }}</td>
+                        <td class="px-6 py-4">{{ p.remark }}</td>
+                        <td class="px-6 py-4">{{ p.cashier_username }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">No payment records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

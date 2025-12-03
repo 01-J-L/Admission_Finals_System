@@ -1,0 +1,198 @@
+{% extends base_template %}
+{% block title %}Return Voucher{% endblock %}
+{% block page_title %}Return Voucher - Padre Garcia Students{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white rounded-card p-6 border border-gray-100 shadow-sm">
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-2">
+            <i class="ri-check-double-line text-green-600 text-xl"></i>
+        </div>
+        <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ returned_count }}</h3>
+        <p class="text-gray-600 text-sm">Returned (In Current View)</p>
+    </div>
+    <div class="bg-white rounded-card p-6 border border-gray-100 shadow-sm">
+        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-2">
+            <i class="ri-close-line text-danger text-xl"></i>
+        </div>
+        <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ not_returned_count }}</h3>
+        <p class="text-gray-600 text-sm">Not Returned (In Current View)</p>
+    </div>
+</div>
+
+<div class="bg-white rounded-card shadow-lg p-6 border border-gray-100">
+
+    <!-- Filter Form -->
+    <form method="GET" action="{{ url_for('auth.return_voucher') }}"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-end bg-gray-50 p-4 rounded-lg border border-gray-200">
+
+        <!-- Term Selection -->
+        <select name="school_year"
+            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            <option value="">Select School Year</option>
+            {% for year in all_school_years %}
+            <option value="{{ year }}" {% if school_year==year %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
+        <select name="semester"
+            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            <option value="">Select Semester</option>
+            <option value="1st Sem" {% if semester=='1st Sem' %}selected{% endif %}>1st Sem</option>
+            <option value="2nd Sem" {% if semester=='2nd Sem' %}selected{% endif %}>2nd Sem</option>
+            <option value="Summer" {% if semester=='Summer' %}selected{% endif %}>Summer</option>
+        </select>
+
+        <!-- Student Filters -->
+        <select name="course" id="courseSelect" onchange="updateSections()"
+            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            <option value="">All Courses</option>
+            <option value="Bachelor of Science in Computer Science" {% if
+                course=='Bachelor of Science in Computer Science' %}selected{% endif %}>BSCS</option>
+            <option value="Bachelor of Science in Criminology" {% if course=='Bachelor of Science in Criminology'
+                %}selected{% endif %}>BSCrim</option>
+            <option value="Bachelor of Science in Public Administration" {% if
+                course=='Bachelor of Science in Public Administration' %}selected{% endif %}>BSPA</option>
+            <option value="Bachelor of Science in Management Accountancy" {% if
+                course=='Bachelor of Science in Management Accountancy' %}selected{% endif %}>BSMA</option>
+        </select>
+
+        <select name="year_level"
+            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            <option value="">All Years</option>
+            <option value="1st Year" {% if year_level=='1st Year' %}selected{% endif %}>1st Year</option>
+            <option value="2nd Year" {% if year_level=='2nd Year' %}selected{% endif %}>2nd Year</option>
+            <option value="3rd Year" {% if year_level=='3rd Year' %}selected{% endif %}>3rd Year</option>
+            <option value="4th Year" {% if year_level=='4th Year' %}selected{% endif %}>4th Year</option>
+        </select>
+
+        <select name="section" id="sectionSelect"
+            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            <option value="">All Sections</option>
+            <!-- JS Populated -->
+        </select>
+
+        <select name="status"
+            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            <option value="">All Statuses</option>
+            <option value="returned" {% if status_filter=='returned' %}selected{% endif %}>Returned</option>
+            <option value="not_returned" {% if status_filter=='not_returned' %}selected{% endif %}>Not Returned</option>
+        </select>
+
+        <div class="lg:col-span-2">
+            <input type="text" name="query" placeholder="Search by Last Name or ID" value="{{ search_query or '' }}"
+                class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-2 lg:col-span-4 mt-2">
+            <button type="submit"
+                class="flex-1 bg-primary text-white p-2.5 rounded-lg font-medium hover:bg-primary-dark flex items-center justify-center gap-2">
+                <i class="ri-filter-3-line"></i> Apply Filters
+            </button>
+            <a href="{{ url_for('auth.clear_filters') }}"
+                class="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 hover:text-red-600"
+                title="Clear Filters">
+                <i class="ri-refresh-line"></i>
+            </a>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-600">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Name</th>
+                    <th scope="col" class="px-6 py-3">Course & Sec</th>
+                    <th scope="col" class="px-6 py-3">Student ID</th>
+                    <th scope="col" class="px-6 py-3 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if students %}
+                {% for student in students %}
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium text-gray-900">{{ student.last_name }}, {{ student.first_name }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-xs">
+                            {{ student.course }}<br>
+                            <span class="font-semibold">{{ student.year_level }} - {{ student.section }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">{{ student.student_id }}</td>
+                    <td class="px-6 py-4 text-center">
+                        {% if student.id in returned_ids %}
+                        <span
+                            class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="ri-check-line"></i> Returned
+                        </span>
+                        {% else %}
+                        <form method="POST"
+                            action="{{ url_for('auth.submit_voucher', student_id_db=student.id) }}?status={{ status_filter }}&search={{ search_query }}">
+                            <!-- Pass filters in hidden fields to maintain state after POST -->
+                            <input type="hidden" name="school_year" value="{{ school_year }}">
+                            <input type="hidden" name="semester" value="{{ semester }}">
+                            <button type="submit"
+                                class="font-medium text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-md text-xs shadow-sm transition-colors">
+                                Mark as Returned
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="4" class="px-6 py-10 text-center text-gray-500">No Padre Garcia students found matching
+                        these filters.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const sectionMap = {
+        "Bachelor of Science in Computer Science": ["A", "B", "C"],
+        "Bachelor of Science in Criminology": ["A", "B", "C", "D", "E"],
+        "Bachelor of Science in Public Administration": ["A", "B"],
+        "Bachelor of Science in Management Accountancy": ["A", "B", "C"]
+    };
+
+    function updateSections() {
+        const courseSelect = document.getElementById("courseSelect");
+        const sectionSelect = document.getElementById("sectionSelect");
+        const selectedCourse = courseSelect.value;
+        const currentSection = "{{ section }}";
+
+        sectionSelect.innerHTML = '<option value="">All Sections</option>';
+
+        if (selectedCourse && sectionMap[selectedCourse]) {
+            sectionSelect.disabled = false;
+            sectionMap[selectedCourse].forEach(section => {
+                const option = document.createElement("option");
+                option.value = section;
+                option.text = "Section " + section;
+                if (section === currentSection) option.selected = true;
+                sectionSelect.appendChild(option);
+            });
+        } else if (selectedCourse) {
+            ["A", "B", "C", "D", "E", "1", "2", "3"].forEach(section => {
+                const option = document.createElement("option");
+                option.value = section;
+                option.text = "Section " + section;
+                if (section === currentSection) option.selected = true;
+                sectionSelect.appendChild(option);
+            });
+        } else {
+            sectionSelect.disabled = true;
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function () { updateSections(); });
+</script>
+{% endblock %}
