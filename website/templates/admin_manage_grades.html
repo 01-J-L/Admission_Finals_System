@@ -1,3 +1,5 @@
+<!-- --- START OF FILE admin_manage_grades.html --- -->
+
 {% extends "admin_base.html" %}
 
 {% block title %}Manage Grades for {{ student.first_name }} {{ student.last_name }}{% endblock %}
@@ -103,13 +105,12 @@
             <i class="ri-file-download-line mr-2"></i> Export
         </a>
 
-        <button type="button" id="printGradesBtn" class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-gray-700 flex items-center">
-            <i class="ri-printer-line mr-2"></i> Print
-        </button>
-    </div>
-
-    <div id="print-header" class="print-only">
-        <h2 id="print-title" class="text-xl font-bold text-center my-4"></h2>
+        <!-- UPDATED PRINT BUTTON TO LINK -->
+        <a href="{{ url_for('auth.admin_print_grade_card', student_user_id=student.student_user_id) }}" 
+           target="_blank"
+           class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-gray-700 flex items-center">
+            <i class="ri-printer-line mr-2"></i> Print Class Card
+        </a>
     </div>
 
     <form id="gradesForm" class="mt-6">
@@ -129,7 +130,7 @@
                         {% else %}Summer / Midyear
                         {% endif %}
                     </h4>
-                    <!-- NEW: Unit Counter -->
+                    <!-- Unit Counter -->
                     <div class="text-sm mr-2">
                         <span class="font-semibold {{ 'text-red-600' if total_sem_units > max_units_allowed else 'text-green-600' }}">
                             Total Units: {{ total_sem_units }}
@@ -148,7 +149,9 @@
                                 <th class="px-4 py-2 text-left font-medium text-gray-600">Code</th>
                                 <th class="px-4 py-2 text-left font-medium text-gray-600 w-1/3">Subject Title</th>
                                 <th class="px-4 py-2 text-center font-medium text-gray-600">Units</th>
-                                <th class="px-4 py-2 text-center font-medium text-gray-600">Grade</th>
+                                <!-- PERCENTAGE HEADER -->
+                                <th class="px-4 py-2 text-center font-medium text-gray-600">Percentage</th>
+                                <th class="px-4 py-2 text-center font-medium text-gray-600">Grade Point</th>
                                 <th class="px-4 py-2 text-left font-medium text-gray-600">Remarks</th>
                                 <th class="px-4 py-2 text-left font-medium text-gray-600">Availability</th>
                             </tr>
@@ -165,11 +168,21 @@
                                 <td class="px-4 py-2">{{ subject.subject_title }}</td>
                                 <td class="px-4 py-2 text-center text-gray-500">{{ subject.units }}</td>
                                 
+                                <!-- Percentage Input -->
+                                <td class="px-4 py-2 text-center">
+                                    <input type="number" name="percentage_{{ subject.id }}"
+                                        value="{{ grade_info.percentage if grade_info and grade_info.percentage else '' }}"
+                                        placeholder="e.g. 95"
+                                        class="w-20 border-gray-300 rounded-md shadow-sm sm:text-sm percentage-input text-center"
+                                        data-subject-id="{{ subject.id }}" {{ 'disabled' if is_disabled }}>
+                                </td>
+
                                 <!-- Grade Input -->
                                 <td class="px-4 py-2 text-center">
                                     <input type="number" step="0.01" name="grade_{{ subject.id }}"
                                         value="{{ grade_info.grade if grade_info else '' }}"
                                         class="w-24 border-gray-300 rounded-md shadow-sm sm:text-sm grade-input text-center"
+                                        placeholder="e.g. 1.25"
                                         data-subject-id="{{ subject.id }}" {{ 'disabled' if is_disabled }}>
                                 </td>
                                 
@@ -271,20 +284,34 @@
         gradesForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             const gradesData = [];
+            // We iterate over grade inputs to identify rows (subjects)
             const allGradeInputsOnSubmit = document.querySelectorAll('.grade-input');
 
             allGradeInputsOnSubmit.forEach(input => {
                 if (input.disabled) return;
+                
                 const subjectId = input.dataset.subjectId;
                 const gradeValue = input.value.trim();
+                
+                // Get Percentage Value from the corresponding input
+                const percentageInput = document.querySelector(`input[name="percentage_${subjectId}"]`);
+                const percentageValue = percentageInput ? percentageInput.value.trim() : null;
+
                 const grade = gradeValue === '' ? null : parseFloat(gradeValue);
                 const remarks = document.querySelector(`select[name="remarks_${subjectId}"]`).value;
                 const academicYear = document.querySelector(`input[name="academic_year_${subjectId}"]`).value;
                 const semesterTaken = document.querySelector(`input[name="semester_taken_${subjectId}"]`).value;
                 
-                // Only send if there is data to save (grade or remarks)
-                if (grade !== null || (remarks && remarks.trim() !== '')) {
-                    gradesData.push({ subject_id: subjectId, grade: grade, remarks: remarks, academic_year: academicYear, semester: semesterTaken });
+                // Only send if there is data to save
+                if (grade !== null || (percentageValue !== null && percentageValue !== '') || (remarks && remarks.trim() !== '')) {
+                    gradesData.push({ 
+                        subject_id: subjectId, 
+                        grade: grade, 
+                        percentage: percentageValue, // Included in payload
+                        remarks: remarks, 
+                        academic_year: academicYear, 
+                        semester: semesterTaken 
+                    });
                 }
             });
 
@@ -306,10 +333,9 @@
             }
         });
 
-        // --- Filter, Export, Print Logic ---
+        // --- Filter Logic ---
         const yearLevelFilter = document.getElementById('yearLevelFilter');
         const semesterLevelFilter = document.getElementById('semesterLevelFilter');
-        const printBtn = document.getElementById('printGradesBtn');
         const exportBtn = document.getElementById('exportExcelBtn');
         const baseExportUrl = "{{ url_for('auth.admin_export_grades', student_user_id=student.student_user_id) }}";
 
@@ -358,19 +384,6 @@
 
         if(yearLevelFilter) yearLevelFilter.addEventListener('change', applyFilters);
         if(semesterLevelFilter) semesterLevelFilter.addEventListener('change', applyFilters);
-
-        if(printBtn) {
-            printBtn.addEventListener('click', () => {
-                const printTitleEl = document.getElementById('print-title');
-                if(printTitleEl) printTitleEl.textContent = `Grades for ${studentName}`;
-                window.print();
-            });
-        }
-
-        window.addEventListener('afterprint', () => {
-            const printTitleEl = document.getElementById('print-title');
-            if(printTitleEl) printTitleEl.textContent = '';
-        });
 
         // --- Import Logic ---
         const importBtn = document.getElementById('importExcelBtn');

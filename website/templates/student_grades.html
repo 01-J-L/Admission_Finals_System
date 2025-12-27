@@ -1,121 +1,175 @@
+<!-- --- START OF FILE student_grades.html --- -->
+
 {% extends 'base.html' %}
 
 {% block title %}My Grades{% endblock %}
 
-{% block style %}
+{% block head %}
+{{ super() }}
+<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { primary: '#1e40af', secondary: '#3b82f6', pgpc_blue: '#1e40af' },
+                borderRadius: { DEFAULT: '8px', 'xl': '12px' }
+            }
+        }
+    }
+</script>
 <style>
-    body {
-        background-color: #f9fafb;
-    }
-    .term-header {
-        background-color: #eef2ff;
-        color: #4338ca;
-        padding: 0.75rem 1rem;
-        border-left: 4px solid #4f46e5;
-    }
+    :where([class^="ri-"])::before { content: "\f3c2"; }
     @media print {
-        body {
-            background-color: #fff;
-        }
-        .no-print, header, footer {
-            display: none !important;
-        }
-        .print-container {
-            box-shadow: none;
-            border: none;
-            padding: 0;
-            margin: 0;
-        }
-        .print-title {
-            display: block !important;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        thead {
-            background-color: #f3f4f6 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        .term-header {
-            background-color: #eef2ff !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
+        body, html { background-color: white !important; }
+        aside, header, .no-print, #sidebar, #sidebar-overlay { display: none !important; }
+        .main-content-wrapper { margin: 0 !important; overflow: visible !important; }
+        table { border: 1px solid #000; width: 100%; }
+        th, td { border: 1px solid #000; }
     }
-    .print-only {
-        display: none;
-    }
+    .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
 </style>
 {% endblock %}
 
 {% block body %}
-<body class="min-h-screen">
-    
+<div class="flex h-screen bg-gray-50 overflow-hidden">
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
 
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg print-container">
-            <!-- Header for both screen and print -->
-            <div class="text-center mb-6 print-title">
-                <h1 class="text-2xl font-bold text-gray-900">Transcript of Records</h1>
-                <p class="text-gray-600">Student: {{ student.first_name }} {{ student.last_name }}</p>
-                <p class="text-gray-600">Student ID: {{ student.old_student_id or ('S-' ~ '%05d'|format(student.student_user_id)) }}</p>
-                <p class="text-gray-600">Program: {{ student.program_choice }}</p>
-            </div>
-
-            <!-- Action Buttons (No Print) -->
-            <div class="flex justify-between items-center mb-6 no-print">
-                <a href="{{ url_for('views.application_status_page') }}" class="inline-flex items-center text-sm font-medium text-blue-600 hover:underline">
-                    <i class="ri-arrow-left-line mr-1"></i> Back to Status
-                </a>
-                <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-md hover:bg-primary/90">
-                    <i class="ri-printer-line mr-2"></i> Print Grades
-                </button>
-            </div>
-
-            <!-- MODIFIED: Grades Content - Loop through terms -->
-            {% if grades_by_term %}
-                <div class="space-y-8">
-                    {% for term, grades in grades_by_term.items() %}
-                    <div class="term-section">
-                        <h2 class="text-lg font-semibold mb-3 term-header rounded-md">
-                            {{ term }}
-                        </h2>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full border-collapse border border-gray-300">
-                                <thead class="bg-gray-100">
-                                    <tr>
-                                        <th class="border border-gray-300 p-3 text-left text-sm font-semibold text-gray-700">Subject Code</th>
-                                        <th class="border border-gray-300 p-3 text-left text-sm font-semibold text-gray-700">Subject Title</th>
-                                        <th class="border border-gray-300 p-3 text-center text-sm font-semibold text-gray-700">Grade</th>
-                                        <th class="border border-gray-300 p-3 text-left text-sm font-semibold text-gray-700">Remarks</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for grade in grades %}
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="border border-gray-300 p-3 font-mono">{{ grade.subject_code }}</td>
-                                        <td class="border border-gray-300 p-3">{{ grade.subject_title }}</td>
-                                        <td class="border border-gray-300 p-3 text-center font-semibold">
-                                            {% if grade.grade and grade.grade > 0 %}
-                                                {{ '%.2f'|format(grade.grade) }}
-                                            {% else %}
-                                                —
-                                            {% endif %}
-                                        </td>
-                                        <td class="border border-gray-300 p-3">{{ grade.remarks or 'Incomplete' }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-gray-500 italic mt-4 text-center">No grades have been recorded for your account yet.</p>
-            {% endif %}
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed lg:static inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 sidebar-scroll overflow-y-auto flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-gray-200">
+            <a href="{{ url_for('views.home') }}" class="flex items-center gap-2">
+                <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Logo" class="w-8 h-8 object-contain">
+                <span class="text-blue-900 font-['Pacifico'] text-lg">PGPC Portal</span>
+            </a>
         </div>
-    </main>
-</body>
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="{{ url_for('views.application_status_page') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-dashboard-line text-lg"></i><span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('views.view_student_statement') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-wallet-3-line text-lg"></i><span>Statement</span>
+            </a>
+            <a href="{{ url_for('auth.view_student_grades') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors bg-blue-50 text-blue-700">
+                <i class="ri-book-read-line text-lg"></i><span>My Grades</span>
+            </a>
+            <a href="{{ url_for('views.student_resources') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-download-cloud-2-line text-lg"></i><span>Downloads</span>
+            </a>
+            <a href="{{ url_for('auth.student_messenger') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-messenger-line text-lg"></i><span>Messenger</span>
+            </a>
+            <a href="{{ url_for('auth.change_password_page') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-lock-password-line text-lg"></i><span>Change Password</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-200">
+            <a href="{{ url_for('auth.logout') }}" class="flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200 w-full">
+                <i class="ri-logout-box-line"></i><span>Sign Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-wrapper bg-gray-50">
+        <header class="bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b border-gray-200 shadow-sm z-10 sticky top-0">
+            <div class="flex items-center gap-4">
+                <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-blue-600"><i class="ri-menu-2-line text-2xl"></i></button>
+                <h2 class="text-lg font-bold text-gray-800">Transcript of Records</h2>
+            </div>
+             <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3 pl-4 border-l border-gray-200">
+                    <div class="text-right hidden sm:block">
+                        <div class="text-sm font-bold text-gray-800">{{ application.first_name }} {{ application.last_name }}</div>
+                        <div class="text-xs text-gray-500">{{ application.program_choice }}</div>
+                    </div>
+                    <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}?t={{ application.last_updated_at.timestamp() if application.last_updated_at else '' }}"
+                         onerror="this.src='{{ url_for('static', filename='images/default_avatar.png') }}'"
+                         alt="Avatar" class="w-9 h-9 rounded-full object-cover border border-gray-300">
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 relative z-0">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex justify-end mb-6 no-print">
+                    <!-- UPDATED PRINT BUTTON TO LINK -->
+                    <a href="{{ url_for('auth.student_print_grade_card') }}" 
+                       target="_blank"
+                       class="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black transition-colors shadow-sm">
+                        <i class="ri-printer-line"></i> <span>Print Class Card</span>
+                    </a>
+                </div>
+
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
+                    <div class="mb-8 border-b border-gray-100 pb-6 text-center sm:text-left">
+                        <h1 class="text-2xl font-bold text-gray-900">Academic Grades</h1>
+                        <p class="text-gray-500 text-sm mt-1">Student: <span class="font-semibold text-gray-800">{{ student.first_name }} {{ student.last_name }}</span></p>
+                        <p class="text-gray-500 text-sm">Program: <span class="text-blue-600 font-medium">{{ student.program_choice }}</span></p>
+                    </div>
+
+                    {% if grades_by_term %}
+                        <div class="space-y-8">
+                            {% for term, grades in grades_by_term.items() %}
+                            <div class="term-section">
+                                <h2 class="text-sm font-bold text-blue-800 bg-blue-50 border-l-4 border-blue-600 px-4 py-2 rounded-r-lg mb-4 uppercase tracking-wide">
+                                    {{ term }}
+                                </h2>
+                                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                                    <table class="min-w-full text-sm text-left">
+                                        <thead class="bg-gray-50 text-gray-500 uppercase font-semibold text-xs border-b border-gray-200">
+                                            <tr>
+                                                <th class="px-4 py-3 font-medium w-32">Subject Code</th>
+                                                <th class="px-4 py-3 font-medium">Subject Title</th>
+                                                <th class="px-4 py-3 text-center w-24">Grade</th>
+                                                <th class="px-4 py-3 w-32">Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100">
+                                            {% for grade in grades %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-4 py-3 font-mono text-gray-600">{{ grade.subject_code }}</td>
+                                                <td class="px-4 py-3 text-gray-900 font-medium">{{ grade.subject_title }}</td>
+                                                <td class="px-4 py-3 text-center font-bold {{ 'text-red-600' if grade.grade > 3.0 or grade.grade == 5.0 else 'text-gray-800' }}">
+                                                    {% if grade.grade and grade.grade > 0 %}
+                                                        {{ '%.2f'|format(grade.grade) }}
+                                                    {% else %}
+                                                        —
+                                                    {% endif %}
+                                                </td>
+                                                <td class="px-4 py-3 text-xs uppercase font-semibold {{ 'text-green-600' if grade.remarks == 'Passed' else 'text-red-500' }}">
+                                                    {{ grade.remarks or 'Incomplete' }}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-12 text-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                            <i class="ri-book-open-line text-4xl text-gray-300 mb-2 block"></i>
+                            <p class="text-gray-500 italic">No grades have been recorded for your account yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        function toggleSidebar() { sidebar.classList.toggle('-translate-x-full'); sidebarOverlay.classList.toggle('hidden'); }
+        if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+    });
+</script>
 {% endblock %}

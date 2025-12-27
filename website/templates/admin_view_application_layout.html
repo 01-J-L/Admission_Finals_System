@@ -1,3 +1,5 @@
+<!-- --- START OF FILE templates/admin_view_application_layout.html --- -->
+
 {% extends "admin_base.html" %}
 
 {% block title %}View Student - {% if application.old_student_id %}{{ application.old_student_id }}{% else %}P2025{{ "%04d" | format(application.applicant_id) }}{% endif %}{% endblock %}
@@ -161,10 +163,12 @@
                     <div class="border-t border-dashed border-gray-200 my-2 pt-2">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-gray-500 text-xs uppercase tracking-wide">Placement</span>
-                            {% if session.user_role in ['admin', 'registrar'] %}
-                            <button onclick="openLevelSectionModal()" class="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center transition-colors">
-                                <i class="ri-edit-box-line mr-1"></i> Edit
-                            </button>
+                            
+                            <!-- CHECK: Privilege AND Specific Roles (Admin/Registrar) -->
+                            {% if session.can_edit_student and session.user_role in ['admin', 'registrar'] %}
+                                <button onclick="openLevelSectionModal()" class="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center transition-colors">
+                                    <i class="ri-edit-box-line mr-1"></i> Edit
+                                </button>
                             {% endif %}
                         </div>
                         <!-- Display Program here -->
@@ -270,6 +274,7 @@
                         <div><label class="block text-xs text-gray-500 mb-1">Mobile No.</label>
                             <div class="data-field">{{ application.mobile_number }}</div>
                         </div>
+                        
                         <div class="md:col-span-2"><label class="block text-xs text-gray-500 mb-1">Street / Barangay</label>
                             <div class="data-field">{{ application.permanent_address_street_barangay }}</div>
                         </div>
@@ -373,10 +378,12 @@
                 <!-- Student Inventory Pane -->
                 <div id="inventory" class="tab-pane">
                     
-                    <!-- NEW: Header with Edit Button -->
+                    <!-- Header with Edit Button -->
                     <div class="flex justify-between items-center mb-4 border-b pb-2">
                         <h4 class="text-md font-semibold text-gray-600">Inventory Information</h4>
-                        {% if session.user_role in ['admin', 'registrar', 'guidance', 'osa'] %}
+                        
+                        <!-- Permission Check -->
+                        {% if session.can_edit_student %}
                         <button onclick="openInventoryModal()" class="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-md font-medium transition-colors flex items-center">
                             <i class="ri-edit-box-line mr-1"></i> Edit Inventory
                         </button>
@@ -506,15 +513,9 @@
                     <!-- IV. Emergency Contact -->
                     <h5 class="text-sm font-bold text-gray-700 mb-2">IV. Emergency Contact</h5>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div><label class="block text-xs text-gray-500 mb-1">Name</label>
-                            <div class="data-field">{{ application.inventory_emergency_contact_name or 'N/A' }}</div>
-                        </div>
-                        <div><label class="block text-xs text-gray-500 mb-1">Contact Number</label>
-                            <div class="data-field">{{ application.inventory_emergency_contact_number or 'N/A' }}</div>
-                        </div>
-                        <div><label class="block text-xs text-gray-500 mb-1">Relationship</label>
-                            <div class="data-field">{{ application.inventory_emergency_contact_relationship or 'N/A' }}</div>
-                        </div>
+                         <div><label class="block text-xs text-gray-600">Name</label><div class="data-field">{{ application.inventory_emergency_contact_name or 'N/A' }}</div></div>
+                         <div><label class="block text-xs text-gray-600">Number</label><div class="data-field">{{ application.inventory_emergency_contact_number or 'N/A' }}</div></div>
+                         <div><label class="block text-xs text-gray-600">Relationship</label><div class="data-field">{{ application.inventory_emergency_contact_relationship or 'N/A' }}</div></div>
                     </div>
                 </div>
 
@@ -589,28 +590,40 @@
                     </div>
                 </div>
 
+                <!-- Grades Pane -->
+                <div id="grades" class="tab-pane">
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b">
+                        <h4 class="text-md font-semibold text-gray-700">Grades Overview</h4>
+                        <a href="{{ url_for('auth.admin_manage_grades_page', student_user_id=application.student_user_id) }}"
+                            class="text-sm font-medium text-primary hover:underline">Manage Grades</a>
+                    </div>
+                    <!-- (Grades Display Logic remains the same) -->
+                </div>
+
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modals for Viewer, Edit Section, Edit Inventory -->
 <!-- Document Viewer Modal -->
-<div id="document-viewer-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+<div id="document-viewer-modal"
+    class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl flex flex-col w-full max-w-2xl h-5/6 max-h-[85vh]">
-        <!-- Modal Header -->
         <div class="flex-shrink-0 bg-gray-100 p-3 flex justify-between items-center border-b">
             <h3 id="modal-doc-title" class="text-lg font-semibold text-gray-800 truncate pr-4">Document Viewer</h3>
             <div class="flex items-center gap-4">
-                <a id="modal-download-btn" href="#" class="inline-flex items-center gap-2 bg-primary text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-primary/80">
-                    <i class="ri-download-2-line"></i> <span>Download</span>
+                <a id="modal-download-btn" href="#"
+                    class="inline-flex items-center gap-2 bg-primary text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-primary/80">
+                    <i class="ri-download-2-line"></i>
+                    <span>Download</span>
                 </a>
-                <button id="modal-close-btn" class="text-gray-500 hover:text-gray-800"><i class="ri-close-line text-2xl"></i></button>
+                <button id="modal-close-btn" class="text-gray-500 hover:text-gray-800">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
             </div>
         </div>
-        <!-- Modal Content -->
-        <div id="modal-doc-content" class="flex-grow bg-gray-200 overflow-y-auto">
-            <!-- Content injected via JS -->
-        </div>
+        <div id="modal-doc-content" class="flex-grow bg-gray-200 overflow-y-auto"></div>
     </div>
 </div>
 
@@ -671,8 +684,6 @@
 <!-- EDIT INVENTORY MODAL -->
 <div id="editInventoryModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
-        
-        <!-- Header -->
         <div class="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg">
             <h3 class="text-lg font-semibold text-gray-900">Edit Student Inventory</h3>
             <button onclick="closeInventoryModal()" class="text-gray-400 hover:text-gray-600">
@@ -680,13 +691,12 @@
             </button>
         </div>
         
-        <!-- Scrollable Form Content -->
-        <div class="flex-1 overflow-y-auto p-6">
+        <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
             <form id="editInventoryForm" class="space-y-6">
                 
-                <!-- I. Personal Info -->
+                <!-- I. Personal Information -->
                 <fieldset class="border p-4 rounded-md">
-                    <legend class="text-sm font-bold text-gray-700 px-2">I. Personal Information</legend>
+                    <legend class="text-sm font-bold text-gray-700 px-2 uppercase">I. Personal Information</legend>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                         <div>
                             <label class="block text-xs font-medium text-gray-600">Gender</label>
@@ -697,98 +707,170 @@
                         </div>
                         <div><label class="block text-xs font-medium text-gray-600">Age</label><input type="number" name="inventory_age" value="{{ application.inventory_age or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
                         <div><label class="block text-xs font-medium text-gray-600">Religion</label><input type="text" name="inventory_religion" value="{{ application.inventory_religion or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
-                        <div><label class="block text-xs font-medium text-gray-600">Mobile</label><input type="text" name="inventory_mobile_number" value="{{ application.inventory_mobile_number or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
-                        <div class="md:col-span-2"><label class="block text-xs font-medium text-gray-600">Complete Address</label><input type="text" name="inventory_complete_address" value="{{ application.inventory_complete_address or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
+                        
+                        <div class="md:col-span-3"><label class="block text-xs font-medium text-gray-600">Mobile Number</label><input type="text" name="inventory_mobile_number" value="{{ application.inventory_mobile_number or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
+
+                        <!-- Address Unification -->
+                        <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 bg-blue-50 p-3 rounded border border-blue-200">
+                            <div class="md:col-span-3 mb-1 font-bold text-xs text-blue-800 uppercase">Unify Address (Updates Main Profile)</div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600">Street / Barangay</label>
+                                <input type="text" name="address_street" value="{{ application.permanent_address_street_barangay or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600">City / Municipality</label>
+                                <input type="text" name="address_city" value="{{ application.permanent_address_city_municipality or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600">Province</label>
+                                <input type="text" name="address_province" value="{{ application.permanent_address_province or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2">
+                            </div>
+                        </div>
+
                         <div><label class="block text-xs font-medium text-gray-600">FB Account</label><input type="text" name="inventory_facebook_account" value="{{ application.inventory_facebook_account or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
                         <div class="md:col-span-2"><label class="block text-xs font-medium text-gray-600">Hobbies/Interests</label><input type="text" name="inventory_interest_hobbies" value="{{ application.inventory_interest_hobbies or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
                         <div class="md:col-span-3"><label class="block text-xs font-medium text-gray-600">Health Condition</label><input type="text" name="inventory_health_condition" value="{{ application.inventory_health_condition or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2"></div>
                     </div>
                 </fieldset>
 
-                <!-- II. Education -->
+                <!-- II. Educational Background -->
                 <fieldset class="border p-4 rounded-md">
-                    <legend class="text-sm font-bold text-gray-700 px-2">II. Education</legend>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
-                            <thead><tr class="bg-gray-100"><th class="p-2">Level</th><th class="p-2">School</th><th class="p-2">Dates</th><th class="p-2">Awards</th></tr></thead>
-                            <tbody>
-                                <tr>
-                                    <td class="p-2 font-medium">Pre-Elem</td>
-                                    <td class="p-1"><input type="text" name="inventory_pre_elementary_school" value="{{ application.inventory_pre_elementary_school or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                    <td class="p-1"><input type="text" name="inventory_pre_elementary_dates" value="{{ application.inventory_pre_elementary_dates or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                    <td class="p-1"><input type="text" name="inventory_pre_elementary_awards" value="{{ application.inventory_pre_elementary_awards or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2 font-medium">Elem</td>
-                                    <td class="p-1"><input type="text" name="inventory_elementary_school" value="{{ application.inventory_elementary_school or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                    <td class="p-1"><input type="text" name="inventory_elementary_dates" value="{{ application.inventory_elementary_dates or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                    <td class="p-1"><input type="text" name="inventory_elementary_awards" value="{{ application.inventory_elementary_awards or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2 font-medium">Secondary</td>
-                                    <td class="p-1"><input type="text" name="inventory_secondary_school" value="{{ application.inventory_secondary_school or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                    <td class="p-1"><input type="text" name="inventory_secondary_dates" value="{{ application.inventory_secondary_dates or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                    <td class="p-1"><input type="text" name="inventory_secondary_awards" value="{{ application.inventory_secondary_awards or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2 font-medium">Vocational</td>
-                                    <td class="p-1"><input type="text" name="inventory_vocational_school" value="{{ application.inventory_vocational_school or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                    <td class="p-1"><input type="text" name="inventory_vocational_dates" value="{{ application.inventory_vocational_dates or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                    <td class="p-1"><input type="text" name="inventory_vocational_awards" value="{{ application.inventory_vocational_awards or '' }}" class="w-full border-gray-300 rounded text-xs"></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <legend class="text-sm font-bold text-gray-700 px-2 uppercase">II. Educational Background</legend>
+                    <div class="space-y-4 mt-2">
+                        <!-- Pre-Elementary -->
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center border-b pb-2">
+                            <div class="md:col-span-2 font-semibold text-xs text-gray-500">Pre-Elem</div>
+                            <div class="md:col-span-4"><input type="text" name="inventory_pre_elementary_school" value="{{ application.inventory_pre_elementary_school or '' }}" placeholder="School Name" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="md:col-span-3"><input type="text" name="inventory_pre_elementary_dates" value="{{ application.inventory_pre_elementary_dates or '' }}" placeholder="Dates" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="md:col-span-3"><input type="text" name="inventory_pre_elementary_awards" value="{{ application.inventory_pre_elementary_awards or '' }}" placeholder="Awards" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                        </div>
+                        <!-- Elementary -->
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center border-b pb-2">
+                            <div class="md:col-span-2 font-semibold text-xs text-gray-500">Elementary</div>
+                            <div class="md:col-span-4"><input type="text" name="inventory_elementary_school" value="{{ application.inventory_elementary_school or '' }}" placeholder="School Name" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="md:col-span-3"><input type="text" name="inventory_elementary_dates" value="{{ application.inventory_elementary_dates or '' }}" placeholder="Dates" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="md:col-span-3"><input type="text" name="inventory_elementary_awards" value="{{ application.inventory_elementary_awards or '' }}" placeholder="Awards" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                        </div>
+                        <!-- Secondary -->
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center border-b pb-2">
+                            <div class="md:col-span-2 font-semibold text-xs text-gray-500">Secondary</div>
+                            <div class="md:col-span-4"><input type="text" name="inventory_secondary_school" value="{{ application.inventory_secondary_school or '' }}" placeholder="School Name" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="md:col-span-3"><input type="text" name="inventory_secondary_dates" value="{{ application.inventory_secondary_dates or '' }}" placeholder="Dates" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="md:col-span-3"><input type="text" name="inventory_secondary_awards" value="{{ application.inventory_secondary_awards or '' }}" placeholder="Awards" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                        </div>
+                        <!-- Vocational -->
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+                            <div class="md:col-span-2 font-semibold text-xs text-gray-500">Vocational</div>
+                            <div class="md:col-span-4"><input type="text" name="inventory_vocational_school" value="{{ application.inventory_vocational_school or '' }}" placeholder="School Name" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="md:col-span-3"><input type="text" name="inventory_vocational_dates" value="{{ application.inventory_vocational_dates or '' }}" placeholder="Dates" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="md:col-span-3"><input type="text" name="inventory_vocational_awards" value="{{ application.inventory_vocational_awards or '' }}" placeholder="Awards" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                        </div>
                     </div>
                 </fieldset>
 
-                <!-- III. Family -->
+                <!-- III. Home and Family Background -->
                 <fieldset class="border p-4 rounded-md">
-                    <legend class="text-sm font-bold text-gray-700 px-2">III. Family Background</legend>
+                    <legend class="text-sm font-bold text-gray-700 px-2 uppercase">III. Home and Family</legend>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Father -->
-                        <div class="bg-gray-50 p-2 rounded">
-                            <h5 class="text-xs font-bold text-gray-600 mb-2 uppercase">Father</h5>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="col-span-2"><label class="text-[10px]">Name</label><input type="text" name="inventory_father_name" value="{{ application.inventory_father_name or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
-                                <div><label class="text-[10px]">Age</label><input type="number" name="inventory_father_age" value="{{ application.inventory_father_age or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
-                                <div><label class="text-[10px]">Status</label><input type="text" name="inventory_father_status" value="{{ application.inventory_father_status or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
-                                <div class="col-span-2"><label class="text-[10px]">Occupation</label><input type="text" name="inventory_father_occupation" value="{{ application.inventory_father_occupation or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
-                                <div class="col-span-2"><label class="text-[10px]">Contact</label><input type="text" name="inventory_father_contact" value="{{ application.inventory_father_contact or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
+                    <!-- Father -->
+                    <div class="mb-4 pb-4 border-b">
+                        <h5 class="text-xs font-bold text-blue-600 uppercase mb-2">Father's Info</h5>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            <div class="col-span-2"><input type="text" name="inventory_father_name" value="{{ application.inventory_father_name or '' }}" placeholder="Father Name" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div><input type="text" name="inventory_father_age" value="{{ application.inventory_father_age or '' }}" placeholder="Age" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div>
+                                <select name="inventory_father_status" class="w-full border-gray-300 rounded-md text-xs p-2">
+                                    <option value="">Status</option>
+                                    <option value="Living" {% if application.inventory_father_status == 'Living' %}selected{% endif %}>Living</option>
+                                    <option value="Deceased" {% if application.inventory_father_status == 'Deceased' %}selected{% endif %}>Deceased</option>
+                                </select>
                             </div>
-                        </div>
-                        <!-- Mother -->
-                        <div class="bg-gray-50 p-2 rounded">
-                            <h5 class="text-xs font-bold text-gray-600 mb-2 uppercase">Mother</h5>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="col-span-2"><label class="text-[10px]">Name</label><input type="text" name="inventory_mother_name" value="{{ application.inventory_mother_name or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
-                                <div><label class="text-[10px]">Age</label><input type="number" name="inventory_mother_age" value="{{ application.inventory_mother_age or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
-                                <div><label class="text-[10px]">Status</label><input type="text" name="inventory_mother_status" value="{{ application.inventory_mother_status or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
-                                <div class="col-span-2"><label class="text-[10px]">Occupation</label><input type="text" name="inventory_mother_occupation" value="{{ application.inventory_mother_occupation or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
-                                <div class="col-span-2"><label class="text-[10px]">Contact</label><input type="text" name="inventory_mother_contact" value="{{ application.inventory_mother_contact or '' }}" class="w-full border-gray-300 rounded text-xs"></div>
-                            </div>
+                            <div><input type="text" name="inventory_father_contact" value="{{ application.inventory_father_contact or '' }}" placeholder="Contact" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="col-span-2"><input type="text" name="inventory_father_education" value="{{ application.inventory_father_education or '' }}" placeholder="Education" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="col-span-3"><input type="text" name="inventory_father_occupation" value="{{ application.inventory_father_occupation or '' }}" placeholder="Occupation" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                        <div><label class="block text-xs text-gray-600">Marital Status</label><input type="text" name="inventory_parents_marital_status" value="{{ application.inventory_parents_marital_status or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
-                        <div><label class="block text-xs text-gray-600">Family Income</label><input type="text" name="inventory_family_income" value="{{ application.inventory_family_income or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
-                        <div><label class="block text-xs text-gray-600">No. of Children</label><input type="number" name="inventory_number_of_children" value="{{ application.inventory_number_of_children or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
-                        <div class="md:col-span-3"><label class="block text-xs text-gray-600">Family Description</label><input type="text" name="inventory_family_description" value="{{ application.inventory_family_description or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
-                        
-                        <div><label class="block text-xs text-gray-600">Guardian Name</label><input type="text" name="inventory_guardian_name" value="{{ application.inventory_guardian_name or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
-                        <div><label class="block text-xs text-gray-600">Guardian Relation</label><input type="text" name="inventory_guardian_relationship" value="{{ application.inventory_guardian_relationship or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
-                        <div><label class="block text-xs text-gray-600">Guardian Contact</label><input type="text" name="inventory_guardian_contact" value="{{ application.inventory_guardian_contact or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                    <!-- Mother -->
+                    <div class="mb-4 pb-4 border-b">
+                        <h5 class="text-xs font-bold text-pink-600 uppercase mb-2">Mother's Info</h5>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            <div class="col-span-2"><input type="text" name="inventory_mother_name" value="{{ application.inventory_mother_name or '' }}" placeholder="Mother Name" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div><input type="text" name="inventory_mother_age" value="{{ application.inventory_mother_age or '' }}" placeholder="Age" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div>
+                                <select name="inventory_mother_status" class="w-full border-gray-300 rounded-md text-xs p-2">
+                                    <option value="">Status</option>
+                                    <option value="Living" {% if application.inventory_mother_status == 'Living' %}selected{% endif %}>Living</option>
+                                    <option value="Deceased" {% if application.inventory_mother_status == 'Deceased' %}selected{% endif %}>Deceased</option>
+                                </select>
+                            </div>
+                            <div><input type="text" name="inventory_mother_contact" value="{{ application.inventory_mother_contact or '' }}" placeholder="Contact" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="col-span-2"><input type="text" name="inventory_mother_education" value="{{ application.inventory_mother_education or '' }}" placeholder="Education" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div class="col-span-3"><input type="text" name="inventory_mother_occupation" value="{{ application.inventory_mother_occupation or '' }}" placeholder="Occupation" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Guardian -->
+                    <div class="mb-4 pb-4 border-b">
+                         <h5 class="text-xs font-bold text-gray-600 uppercase mb-2">Guardian</h5>
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div><input type="text" name="inventory_guardian_name" value="{{ application.inventory_guardian_name or '' }}" placeholder="Guardian Name" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div><input type="text" name="inventory_guardian_relationship" value="{{ application.inventory_guardian_relationship or '' }}" placeholder="Relationship" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                            <div><input type="text" name="inventory_guardian_contact" value="{{ application.inventory_guardian_contact or '' }}" placeholder="Contact" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                         </div>
+                    </div>
+
+                    <!-- General Family Stats -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600">Marital Status of Parents</label>
+                            <input type="text" name="inventory_parents_marital_status" value="{{ application.inventory_parents_marital_status or '' }}" class="w-full border-gray-300 rounded-md text-xs p-2">
+                        </div>
+                        <div>
+                             <label class="block text-xs font-medium text-gray-600"># of Children</label>
+                             <input type="number" name="inventory_number_of_children" value="{{ application.inventory_number_of_children or '' }}" class="w-full border-gray-300 rounded-md text-xs p-2">
+                        </div>
+                        <div>
+                             <label class="block text-xs font-medium text-gray-600"># of Brothers</label>
+                             <input type="number" name="inventory_number_of_brothers" value="{{ application.inventory_number_of_brothers or '' }}" class="w-full border-gray-300 rounded-md text-xs p-2">
+                        </div>
+                        <div>
+                             <label class="block text-xs font-medium text-gray-600"># of Sisters</label>
+                             <input type="number" name="inventory_number_of_sisters" value="{{ application.inventory_number_of_sisters or '' }}" class="w-full border-gray-300 rounded-md text-xs p-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600">Monthly Income</label>
+                            <input type="text" name="inventory_family_income" value="{{ application.inventory_family_income or '' }}" class="w-full border-gray-300 rounded-md text-xs p-2">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-gray-600">Family Description (e.g. Living together, OFW)</label>
+                            <input type="text" name="inventory_family_description" value="{{ application.inventory_family_description or '' }}" class="w-full border-gray-300 rounded-md text-xs p-2">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mt-4">
+                         <div><label class="block text-xs font-medium text-gray-600">Fav Colors</label><input type="text" name="inventory_favorite_colors" value="{{ application.inventory_favorite_colors or '' }}" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                         <div><label class="block text-xs font-medium text-gray-600">Fav Sports</label><input type="text" name="inventory_favorite_sports" value="{{ application.inventory_favorite_sports or '' }}" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
+                         <div><label class="block text-xs font-medium text-gray-600">Fav Foods</label><input type="text" name="inventory_favorite_foods" value="{{ application.inventory_favorite_foods or '' }}" class="w-full border-gray-300 rounded-md text-xs p-2"></div>
                     </div>
                 </fieldset>
 
-                <!-- IV. Emergency -->
+                <!-- IV. Emergency Contact -->
                 <fieldset class="border p-4 rounded-md">
-                    <legend class="text-sm font-bold text-gray-700 px-2">IV. Emergency Contact</legend>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                         <div><label class="block text-xs text-gray-600">Name</label><input type="text" name="inventory_emergency_contact_name" value="{{ application.inventory_emergency_contact_name or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
-                         <div><label class="block text-xs text-gray-600">Number</label><input type="text" name="inventory_emergency_contact_number" value="{{ application.inventory_emergency_contact_number or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
-                         <div><label class="block text-xs text-gray-600">Relationship</label><input type="text" name="inventory_emergency_contact_relationship" value="{{ application.inventory_emergency_contact_relationship or '' }}" class="w-full border-gray-300 rounded text-xs p-2"></div>
+                    <legend class="text-sm font-bold text-gray-700 px-2 uppercase">IV. Emergency Contact</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600">Name</label>
+                            <input type="text" name="inventory_emergency_contact_name" value="{{ application.inventory_emergency_contact_name or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600">Number</label>
+                            <input type="text" name="inventory_emergency_contact_number" value="{{ application.inventory_emergency_contact_number or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600">Relationship</label>
+                            <input type="text" name="inventory_emergency_contact_relationship" value="{{ application.inventory_emergency_contact_relationship or '' }}" class="w-full border-gray-300 rounded-md text-sm p-2">
+                        </div>
                     </div>
                 </fieldset>
 
@@ -803,9 +885,10 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Tab switching logic
+        // Tab switching
         const tabLinks = document.querySelectorAll('.tab-nav-link');
         const tabPanes = document.querySelectorAll('.tab-pane');
 
@@ -813,21 +896,15 @@
             link.addEventListener('click', function (e) {
                 e.preventDefault();
                 const targetId = this.dataset.target;
-
                 tabLinks.forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
-
                 tabPanes.forEach(pane => {
-                    if (pane.id === targetId) {
-                        pane.classList.add('active');
-                    } else {
-                        pane.classList.remove('active');
-                    }
+                    pane.classList.toggle('active', pane.id === targetId);
                 });
             });
         });
 
-        // Document viewer modal logic
+        // Document viewer modal
         const docViewerModal = document.getElementById('document-viewer-modal');
         const modalDocTitle = document.getElementById('modal-doc-title');
         const modalDownloadBtn = document.getElementById('modal-download-btn');
@@ -872,16 +949,12 @@
             document.body.style.overflow = '';
         }
 
-        modalCloseBtn.addEventListener('click', closeModal);
-        docViewerModal.addEventListener('click', (e) => {
-            if (e.target === docViewerModal) closeModal();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "Escape" && !docViewerModal.classList.contains('hidden')) closeModal();
-        });
+        if(modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+        if(docViewerModal) docViewerModal.addEventListener('click', (e) => { if (e.target === docViewerModal) closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === "Escape" && !docViewerModal.classList.contains('hidden')) closeModal(); });
     });
 
-    // --- UPDATED: Edit Level/Section/Program Logic ---
+    // --- Placement Edit Logic ---
     const editModal = document.getElementById('editLevelSectionModal');
     const editProgramSelect = document.getElementById('edit_program_choice');
     const editYearSelect = document.getElementById('edit_year_level');
@@ -892,7 +965,6 @@
     function openLevelSectionModal() {
         editModal.classList.remove('hidden');
         editModal.classList.add('flex');
-        // Trigger section load based on current selections
         loadSectionsForEdit();
     }
 
@@ -902,14 +974,13 @@
     }
 
     async function loadSectionsForEdit() {
-        const programTitle = editProgramSelect.value; // Get dynamically from dropdown
+        const programTitle = editProgramSelect.value;
         const year = editYearSelect.value;
         
         editSectionSelect.innerHTML = '<option value="">Loading...</option>';
         editSectionSelect.disabled = true;
 
         try {
-            // Pass the selected program from the dropdown, not the hidden field
             const response = await fetch(`/api/get-sections?program=${encodeURIComponent(programTitle)}&year=${encodeURIComponent(year)}`);
             const sections = await response.json();
 
@@ -924,9 +995,6 @@
                     const opt = document.createElement('option');
                     opt.value = sec.id;
                     opt.text = `${sec.section_name} (${sec.current_count}/${sec.max_students})`;
-                    
-                    // Auto-select ONLY if it matches current ID AND the Program matches original
-                    // (Simplification: If user changes Program, we force them to pick a new section manually, so no auto-select)
                     if (sec.id == currentSectionId && programTitle == "{{ application.program_choice }}") {
                         opt.selected = true;
                     }
@@ -934,19 +1002,17 @@
                 });
             }
             editSectionSelect.disabled = false;
-
         } catch (error) {
             console.error('Error loading sections:', error);
             editSectionSelect.innerHTML = '<option value="">Error loading sections</option>';
         }
     }
 
-    // Handle Form Submit
     document.getElementById('updateLevelSectionForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const formData = new FormData();
-        formData.append('program_choice', editProgramSelect.value); // Add Program
+        formData.append('program_choice', editProgramSelect.value);
         formData.append('year_level', editYearSelect.value);
         formData.append('section_id', editSectionSelect.value);
 
@@ -958,22 +1024,24 @@
             const result = await response.json();
 
             if (result.success) {
-                if (typeof showToast === 'function') {
-                    showToast(result.message, 'success');
-                } else {
-                    alert(result.message);
-                }
-                setTimeout(() => location.reload(), 1000);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: result.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => location.reload());
             } else {
-                alert(result.message || 'Update failed');
+                // If permission denied, show error
+                Swal.fire({ icon: 'error', title: 'Error', text: result.message });
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred connecting to the server.');
+            Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not connect to server.' });
         }
     });
 
-    // --- Inventory Modal Logic ---
+    // --- Inventory Edit Logic ---
     const inventoryModal = document.getElementById('editInventoryModal');
     
     function openInventoryModal() {
@@ -989,7 +1057,6 @@
     async function submitInventoryUpdate() {
         const form = document.getElementById('editInventoryForm');
         const formData = new FormData(form);
-        const applicantId = "{{ application.applicant_id }}";
 
         try {
             const response = await fetch(`/admin/application/${applicantId}/update-inventory`, {
@@ -999,18 +1066,20 @@
             const data = await response.json();
 
             if(data.success) {
-                if(typeof showToast === 'function') {
-                    showToast(data.message, 'success');
-                } else {
-                    alert(data.message);
-                }
-                setTimeout(() => location.reload(), 1000);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => location.reload());
             } else {
-                alert(data.message || 'Update failed');
+                // Permission error
+                Swal.fire({ icon: 'error', title: 'Action Failed', text: data.message });
             }
         } catch(error) {
             console.error(error);
-            alert('An error occurred connecting to the server.');
+            Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not connect to server.' });
         }
     }
     

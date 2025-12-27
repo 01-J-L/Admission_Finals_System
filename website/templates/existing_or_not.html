@@ -1,3 +1,5 @@
+<!-- --- START OF FILE templates/existing_or_not.html --- -->
+
 {% extends 'base.html' %}
 
 {% block title %}Student Admission{% endblock %}
@@ -272,9 +274,12 @@ header {
                  <button class="btnLogin-popup" style="background-color: #d9534f;">Logout</button>
             </a>
         {% else %}
-            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
-              <button class="btnLogin-popup">Apply now</button>
-            </a>
+             <!-- NEW: Check if registration is open -->
+             
+             <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
+                 <button class="btnLogin-popup">Apply now</button>
+             </a>
+             
         {% endif %}
     </nav>
 </header>
@@ -301,8 +306,8 @@ header {
             </button>
         </div>
 
-        <!-- Create Account Card (Condition to hide if closed) -->
-        {% if global_content.registration_open == 'true' %}
+        <!-- Create Account Card (Updated Logic) -->
+        {% if global_content.enable_account_creation == 'true' %}
         <div class="choice-card">
             <div class="icon-wrapper">
                 <i class="ri-user-add-line icon"></i>
@@ -332,14 +337,28 @@ header {
         </div>
     </div>
 
-    <div class="mt-12 text-center">
-        <p>
-            Need help? Contact our admissions team at
-            <a href="mailto:polytechniccollegepadregarcia@gmail.com" class="text-primary font-semibold hover:underline">
-                polytechniccollegepadregarcia@gmail.com
-            </a>
-        </p>
+    <!-- Need Help Section -->
+<div class="mt-12 w-full max-w-2xl mx-auto px-4">
+    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left transition-all hover:shadow-md">
+        <!-- Icon Circle -->
+        <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center shrink-0">
+            <i class="ri-customer-service-2-line text-2xl"></i>
+        </div>
+        
+        <!-- Text Content -->
+        <div class="flex-1 min-w-0">
+            <h4 class="text-gray-900 font-bold mb-1">Need assistance?</h4>
+            <p class="text-sm sm:text-base text-gray-600 leading-relaxed">
+                Our admissions team is here to guide you. Reach us at: 
+                <!-- DYNAMIC EMAIL FROM ADMIN PANEL -->
+                <a href="mailto:{{ global_content.contact_email or 'polytechniccollegepadregarcia@gmail.com' }}" 
+                   class="text-primary font-semibold hover:underline block lg:inline-block break-all sm:break-normal">
+                    {{ global_content.contact_email or 'polytechniccollegepadregarcia@gmail.com' }}
+                </a>
+            </p>
+        </div>
     </div>
+</div>
 </main>
 
 <!-- Procedure Modal -->

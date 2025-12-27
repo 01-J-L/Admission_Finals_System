@@ -1,5 +1,3 @@
-
-
 {% extends "admin_base.html" %}
 
 {% block title %}Manage System Users{% endblock %}
@@ -21,16 +19,19 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Edit Privilege
+                        </th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     {% for user in users %}
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.full_name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.username }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ user.full_name }}<br>
+                            <span class="text-xs text-gray-500">@{{ user.username }}</span>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 {% if user.role == 'admin' %}bg-purple-100 text-purple-800
@@ -43,22 +44,41 @@
                                 {{ user.role|upper }}
                             </span>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            {% if user.role == 'admin' %}
+                            <span class="text-xs text-gray-400 italic">Full Access</span>
+                            {% else %}
+                            <!-- Toggle Switch for Automatic Saving -->
+                            <label class="relative inline-flex items-center cursor-pointer"
+                                title="Toggle to auto-save permission">
+                                <input type="checkbox" class="sr-only peer privilege-toggle"
+                                    data-user-id="{{ user.id }}" {% if user.can_edit %}checked{% endif %}>
+                                <div
+                                    class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600">
+                                </div>
+                            </label>
+                            {% endif %}
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <!-- Change Password Button (Available for all) -->
-                            <button type="button" onclick="openPasswordModal('{{ user.id }}', '{{ user.username }}')" 
-                                    class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1 rounded border border-blue-200" title="Change Password">
+                            <!-- Change Password Button -->
+                            <button type="button" onclick="openPasswordModal('{{ user.id }}', '{{ user.username }}')"
+                                class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1 rounded border border-blue-200"
+                                title="Change Password">
                                 <i class="ri-key-2-line"></i>
                             </button>
 
                             <!-- Delete Button (Hidden for Admin) -->
                             {% if user.role != 'admin' %}
-                                <form action="{{ url_for('auth.admin_delete_user', user_id=user.id) }}" method="POST" class="inline" onsubmit="return confirm('Delete this user?');">
-                                    <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 p-1 rounded border border-red-200" title="Delete User">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </button>
-                                </form>
+                            <form action="{{ url_for('auth.admin_delete_user', user_id=user.id) }}" method="POST"
+                                class="inline" onsubmit="return confirm('Delete this user?');">
+                                <button type="submit"
+                                    class="text-red-600 hover:text-red-900 bg-red-50 p-1 rounded border border-red-200"
+                                    title="Delete User">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </form>
                             {% else %}
-                                <span class="text-gray-400 text-xs italic px-2">Protected</span>
+                            <span class="text-gray-400 text-xs italic px-2">Protected</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -75,28 +95,35 @@
             <form action="{{ url_for('auth.admin_add_user') }}" method="POST" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" name="full_name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    <input type="text" name="full_name" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" name="username" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    <input type="text" name="username" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" name="password" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    <input type="password" name="password" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Role</label>
-                    <select name="role" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    <select name="role" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                         <option value="registrar">Registrar</option>
                         <option value="guidance">Guidance</option>
                         <option value="osa">OSA</option>
                         <option value="cashier">Cashier</option>
                         <option value="accounting">Accounting</option>
+                        <!-- NEW OPTION ADDED HERE -->
+                        <option value="secretary">Secretary</option>
                     </select>
                 </div>
                 <div class="pt-2">
-                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <button type="submit"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                         Create User
                     </button>
                 </div>
@@ -106,24 +133,32 @@
 </div>
 
 <!-- Password Change Modal -->
-<div id="passwordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50" onclick="closePasswordModal(event)">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
+<div id="passwordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50"
+    onclick="closePasswordModal(event)">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+        onclick="event.stopPropagation()">
         <div class="mt-3">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">Change Password</h3>
-                <button onclick="closePasswordModal()" class="text-gray-400 hover:text-gray-500"><i class="ri-close-line text-2xl"></i></button>
+                <button onclick="closePasswordModal()" class="text-gray-400 hover:text-gray-500"><i
+                        class="ri-close-line text-2xl"></i></button>
             </div>
             <div class="mt-2 py-3">
-                <p class="text-sm text-gray-500 mb-4">Changing password for user: <strong id="modalUsername"></strong></p>
+                <p class="text-sm text-gray-500 mb-4">Changing password for user: <strong id="modalUsername"></strong>
+                </p>
                 <form action="{{ url_for('auth.admin_change_user_password') }}" method="POST">
                     <input type="hidden" name="user_id" id="modalUserId">
-                    
+
                     <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                    <input type="password" name="new_password" required class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm mb-4" placeholder="Enter new password">
-                    
+                    <input type="password" name="new_password" required
+                        class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm mb-4"
+                        placeholder="Enter new password">
+
                     <div class="flex justify-end gap-2">
-                        <button type="button" onclick="closePasswordModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm font-medium hover:bg-gray-300">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Update</button>
+                        <button type="button" onclick="closePasswordModal()"
+                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm font-medium hover:bg-gray-300">Cancel</button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Update</button>
                     </div>
                 </form>
             </div>
@@ -131,6 +166,8 @@
     </div>
 </div>
 
+<!-- JAVASCRIPT FOR AUTO-SAVE -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function openPasswordModal(userId, username) {
         document.getElementById('modalUserId').value = userId;
@@ -141,5 +178,55 @@
     function closePasswordModal(event) {
         document.getElementById('passwordModal').classList.add('hidden');
     }
+
+    // AUTOMATIC SAVING LOGIC
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggles = document.querySelectorAll('.privilege-toggle');
+
+        toggles.forEach(toggle => {
+            toggle.addEventListener('change', async function () {
+                const userId = this.dataset.userId;
+                const canEdit = this.checked ? 1 : 0; // Convert boolean to int
+
+                // Disable temporarily to prevent spamming
+                this.disabled = true;
+
+                try {
+                    const response = await fetch("{{ url_for('auth.admin_toggle_user_permission') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}' // Security good practice if available
+                        },
+                        body: JSON.stringify({ user_id: userId, can_edit: canEdit })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Success Feedback (Toast)
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message,
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    } else {
+                        // Revert on server error
+                        this.checked = !this.checked;
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    this.checked = !this.checked; // Revert on network error
+                    Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not connect to server.' });
+                } finally {
+                    this.disabled = false;
+                }
+            });
+        });
+    });
 </script>
 {% endblock %}

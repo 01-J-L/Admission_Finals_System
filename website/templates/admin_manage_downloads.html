@@ -1,0 +1,297 @@
+<!-- --- START OF FILE admin_manage_downloads.html --- -->
+{% extends 'admin_base.html' %}
+
+{% block title %}Manage Student Resources{% endblock %}
+{% block page_title %}Student Resources & Downloads{% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ url_for('auth.admin_manage_content') }}" class="text-gray-500 hover:text-primary">Content</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<span>Downloads</span>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- Left Column: Upload Form (Unchanged) -->
+    <div class="lg:col-span-1">
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 sticky top-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Upload New Resource</h3>
+            
+            <form action="{{ url_for('auth.admin_manage_downloads') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Resource Title</label>
+                    <input type="text" name="title" required placeholder="e.g., BSCS 1A Schedule" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select name="category" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                        <option value="" disabled selected>Select Category...</option>
+                        <option value="Handbooks">Handbooks</option>
+                        <option value="Forms">Forms</option>
+                        <option value="Memos">Memos & Advisories</option>
+                        <option value="Academic">Academic Materials</option>
+                        <option value="Schedules">Class Schedules</option>
+                    </select>
+                </div>
+
+                <!-- TARGETING OPTIONS -->
+                <div class="bg-gray-50 p-3 rounded-md border border-gray-200 space-y-3">
+                    <p class="text-xs font-bold text-gray-500 uppercase">Target Audience</p>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Target Program</label>
+                        <select name="target_program" class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8 py-1">
+                            <option value="All" selected>All Programs</option>
+                            {% for prog in programs %}
+                            <option value="{{ prog.title }}">{{ prog.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Target Year Level</label>
+                        <select name="target_year_level" class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8 py-1">
+                            <option value="All" selected>All Year Levels</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                            <option value="5th Year">5th Year</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Target Specific Section</label>
+                        <select name="target_section" class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8 py-1">
+                            <option value="All" selected>All Sections</option>
+                            {% for sec in sections %}
+                            <option value="{{ sec.section_name }}">{{ sec.section_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">File (PDF/Image)</label>
+                    <input type="file" name="file" required accept=".pdf,.jpg,.png,.doc,.docx,.xlsx" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="text-xs text-gray-500 mt-1">Max size: 16MB.</p>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none">
+                        <i class="ri-upload-cloud-line mr-2"></i> Upload & Publish
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Column: File List -->
+    <div class="lg:col-span-2">
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 class="text-lg font-bold text-gray-800 mb-6">Current Resources</h3>
+
+            {% if grouped_files %}
+                {% for category, files in grouped_files.items() %}
+                <div class="mb-8 last:mb-0">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-bold text-sm uppercase tracking-wide">{{ category }}</span>
+                        <div class="h-px bg-gray-200 flex-1"></div>
+                    </div>
+
+                    <div class="space-y-3">
+                        {% for file in files %}
+                        <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors group">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-10 h-10 rounded bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                                    {% if file.filename.endswith('.pdf') %}
+                                        <i class="ri-file-pdf-line text-xl"></i>
+                                    {% elif file.filename.endswith(('.jpg', '.png')) %}
+                                        <i class="ri-image-line text-xl"></i>
+                                    {% elif file.filename.endswith(('.xlsx', '.xls')) %}
+                                        <i class="ri-file-excel-line text-xl"></i>
+                                    {% else %}
+                                        <i class="ri-file-text-line text-xl"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="text-sm font-semibold text-gray-900 truncate">{{ file.title }}</h4>
+                                    <div class="flex flex-wrap gap-2 mt-1">
+                                        <span class="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                                            Prog: {{ file.target_program }}
+                                        </span>
+                                        <span class="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                                            Year: {{ file.target_year_level }}
+                                        </span>
+                                        <span class="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                                            Sec: {{ file.target_section }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 pl-2">
+                                <a href="{{ url_for('static', filename='uploads/downloads/' + file.filename) }}" target="_blank" class="p-1.5 text-gray-400 hover:text-blue-600 transition-colors" title="View">
+                                    <i class="ri-eye-line text-lg"></i>
+                                </a>
+                                
+                                <!-- EDIT BUTTON -->
+                                <button type="button" class="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors edit-resource-btn"
+                                        data-id="{{ file.id }}"
+                                        data-title="{{ file.title }}"
+                                        data-category="{{ file.category }}"
+                                        data-program="{{ file.target_program }}"
+                                        data-year="{{ file.target_year_level }}"
+                                        data-section="{{ file.target_section }}"
+                                        title="Edit">
+                                    <i class="ri-pencil-line text-lg"></i>
+                                </button>
+
+                                <form action="{{ url_for('auth.admin_delete_download', file_id=file.id) }}" method="POST" onsubmit="return confirm('Delete this file?');">
+                                    <button type="submit" class="p-1.5 text-gray-400 hover:text-red-600 transition-colors" title="Delete">
+                                        <i class="ri-delete-bin-line text-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-folder-open-line text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900">No files uploaded yet</h3>
+                    <p class="text-gray-500 mt-1">Use the form on the left to upload resources.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- EDIT RESOURCE MODAL -->
+<div id="editResourceModal" class="fixed inset-0 bg-gray-900/50 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="flex justify-between items-center p-5 border-b bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-800">Edit Resource</h3>
+            <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="ri-close-line text-2xl"></i>
+            </button>
+        </div>
+        
+        <form id="editResourceForm" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Resource Title</label>
+                <input type="text" name="title" id="edit_title" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select name="category" id="edit_category" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                    <option value="Handbooks">Handbooks</option>
+                    <option value="Forms">Forms</option>
+                    <option value="Memos">Memos & Advisories</option>
+                    <option value="Academic">Academic Materials</option>
+                    <option value="Schedules">Class Schedules</option>
+                </select>
+            </div>
+
+            <div class="bg-blue-50 p-3 rounded-md border border-blue-100 space-y-3">
+                <p class="text-xs font-bold text-blue-800 uppercase">Update Target Audience</p>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Target Program</label>
+                    <select name="target_program" id="edit_target_program" class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8 py-1">
+                        <option value="All">All Programs</option>
+                        {% for prog in programs %}
+                        <option value="{{ prog.title }}">{{ prog.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Target Year Level</label>
+                    <select name="target_year_level" id="edit_target_year_level" class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8 py-1">
+                        <option value="All">All Year Levels</option>
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                        <option value="5th Year">5th Year</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Target Specific Section</label>
+                    <select name="target_section" id="edit_target_section" class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8 py-1">
+                        <option value="All">All Sections</option>
+                        {% for sec in sections %}
+                        <option value="{{ sec.section_name }}">{{ sec.section_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Replace File (Optional)</label>
+                <input type="file" name="file" accept=".pdf,.jpg,.png,.doc,.docx,.xlsx" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <p class="text-xs text-gray-500 mt-1">Leave empty to keep the current file.</p>
+            </div>
+
+            <div class="pt-4 flex justify-end gap-3">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm font-medium hover:bg-gray-300">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary/90">Update Resource</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('editResourceModal');
+    const form = document.getElementById('editResourceForm');
+    const editBtns = document.querySelectorAll('.edit-resource-btn');
+
+    function openEditModal(data) {
+        // Populate fields
+        document.getElementById('edit_title').value = data.title;
+        document.getElementById('edit_category').value = data.category;
+        document.getElementById('edit_target_program').value = data.program;
+        document.getElementById('edit_target_year_level').value = data.year;
+        document.getElementById('edit_target_section').value = data.section;
+        
+        // Update form action
+        form.action = `/admin/downloads/edit/${data.id}`;
+        
+        // Show modal
+        modal.classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        modal.classList.add('hidden');
+    }
+
+    editBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const data = {
+                id: btn.dataset.id,
+                title: btn.dataset.title,
+                category: btn.dataset.category,
+                program: btn.dataset.program,
+                year: btn.dataset.year,
+                section: btn.dataset.section
+            };
+            openEditModal(data);
+        });
+    });
+
+    // Close on outside click
+    modal.addEventListener('click', (e) => {
+        if(e.target === modal) closeEditModal();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+<!-- --- START OF FILE student_downloads.html --- -->
+
+{% extends "base.html" %}
+
+{% block title %}Downloads & Resources{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+tailwind.config = {
+    theme: {
+        extend: {
+            colors: { primary: '#1e40af', secondary: '#3b82f6', pgpc_blue: '#1e40af' },
+            borderRadius: { DEFAULT: '8px', 'xl': '12px' }
+        }
+    }
+}
+</script>
+<style>
+    :where([class^="ri-"])::before { content: "\f3c2"; }
+    .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="flex h-screen bg-gray-50 overflow-hidden">
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed lg:static inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 sidebar-scroll overflow-y-auto flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-gray-200">
+            <a href="{{ url_for('views.home') }}" class="flex items-center gap-2">
+                <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Logo" class="w-8 h-8 object-contain">
+                <span class="text-blue-900 font-['Georgia'] text-lg">PGPC Dashboard</span>
+            </a>
+        </div>
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="{{ url_for('views.application_status_page') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-dashboard-line text-lg"></i><span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('views.view_student_statement') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-wallet-3-line text-lg"></i><span>Statement of Account</span>
+            </a>
+            <a href="{{ url_for('auth.view_student_grades') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-book-read-line text-lg"></i><span>My Grades</span>
+            </a>
+            <a href="{{ url_for('views.student_resources') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors bg-blue-50 text-blue-700">
+                <i class="ri-download-cloud-2-line text-lg"></i><span>Downloads</span>
+            </a>
+            <a href="{{ url_for('auth.student_messenger') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-messenger-line text-lg"></i><span>Messenger</span>
+            </a>
+             <a href="{{ url_for('auth.change_password_page') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-lock-password-line text-lg"></i><span>Change Password</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-200">
+            <a href="{{ url_for('auth.logout') }}" class="flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200 w-full">
+                <i class="ri-logout-box-line"></i><span>Sign Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col min-w-0 main-content-wrapper bg-gray-50">
+        <header class="bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b border-gray-200 shadow-sm z-10 sticky top-0">
+            <div class="flex items-center gap-4">
+                <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-blue-600"><i class="ri-menu-2-line text-2xl"></i></button>
+                <h2 class="text-lg font-bold text-gray-800">Student Resources</h2>
+            </div>
+             <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3 pl-4 border-l border-gray-200">
+                    <div class="text-right hidden sm:block">
+                        <div class="text-sm font-bold text-gray-800">{{ application.first_name }} {{ application.last_name }}</div>
+                        <div class="text-xs text-gray-500">{{ application.program_choice }}</div>
+                    </div>
+                    <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}?t={{ application.last_updated_at.timestamp() if application.last_updated_at else '' }}"
+                         onerror="this.src='{{ url_for('static', filename='images/default_avatar.png') }}'"
+                         alt="Avatar" class="w-9 h-9 rounded-full object-cover border border-gray-300">
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 relative z-0">
+            <div class="max-w-7xl mx-auto">
+                <div class="relative bg-gradient-to-r from-blue-700 to-blue-900 rounded-xl p-8 mb-8 overflow-hidden shadow-md">
+                    <div class="relative z-10">
+                        <h1 class="text-2xl font-bold text-white mb-2">Downloads & Materials</h1>
+                        <p class="text-blue-100 opacity-90 text-sm">Access academic forms, handbooks, memos, and class schedules.</p>
+                    </div>
+                </div>
+
+                {% if grouped_files %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-in">
+                        {% for section, files in grouped_files.items() %}
+                        <div class="flex flex-col gap-4">
+                            <div class="bg-white rounded-lg p-5 shadow-sm border-t-4 border-blue-600 flex items-center gap-4">
+                                <div class="h-10 w-10 rounded-lg flex items-center justify-center text-xl bg-gray-50 text-gray-600">
+                                    {% if section == 'Forms' %}<i class="ri-file-edit-line"></i>
+                                    {% elif section == 'Handbooks' %}<i class="ri-book-open-line"></i>
+                                    {% elif section == 'Memos' %}<i class="ri-notification-3-line"></i>
+                                    {% elif section == 'Schedules' %}<i class="ri-calendar-check-line"></i>
+                                    {% else %}<i class="ri-folder-2-line"></i>{% endif %}
+                                </div>
+                                <div>
+                                    <h2 class="font-bold text-gray-800 text-md">{{ section }}</h2>
+                                    <p class="text-xs text-gray-500">{{ files|length }} file(s)</p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-3">
+                                {% for file in files %}
+                                <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:border-blue-300 transition-colors group">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 mt-1 text-gray-400 text-xl"><i class="ri-file-text-line"></i></div>
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors truncate">{{ file.title }}</h3>
+                                            <p class="text-[10px] text-gray-400">{{ file.uploaded_at.strftime('%b %d, %Y') }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-3 ml-8">
+                                        <a href="{{ url_for('static', filename='uploads/downloads/' ~ file.filename) }}" target="_blank" class="text-xs text-gray-600 hover:text-blue-600 font-medium">View</a>
+                                        <span class="text-gray-300">|</span>
+                                        <a href="{{ url_for('static', filename='uploads/downloads/' ~ file.filename) }}" download class="text-xs text-blue-600 hover:text-blue-800 font-medium">Download</a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-white rounded-xl shadow-sm p-12 text-center border border-dashed border-gray-300">
+                        <i class="ri-folder-open-line text-4xl text-gray-300 mb-2 block"></i>
+                        <p class="text-gray-500 text-sm">No resources found.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        function toggleSidebar() { sidebar.classList.toggle('-translate-x-full'); sidebarOverlay.classList.toggle('hidden'); }
+        if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+    });
+</script>
+{% endblock %}

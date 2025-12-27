@@ -1,5 +1,3 @@
-
-
 {% extends "admin_base.html" %}
 
 {% block title %}Enrolled Students{% endblock %}
@@ -9,7 +7,7 @@
 {% block content %}
 <div id="applicationsContent" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100"
     data-page-context="{{ active_page }}">
-    
+
     <!-- Fixed Header Layout -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h3 id="mainPageTitle" class="text-xl font-semibold text-gray-800">{{ page_title }}</h3>
@@ -27,7 +25,21 @@
 
     <div class="bg-gray-50 p-4 rounded shadow-inner border border-gray-200 mb-6 filter-bar">
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-4 items-end">
-            
+
+            <!-- NEW: Sort By Dropdown -->
+            <div class="col-span-1">
+                <label for="sortBy" class="text-sm font-medium text-gray-700">Sort By:</label>
+                <select id="sortBy"
+                    class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                    <option value="name_asc">Name (A-Z)</option>
+                    <option value="name_desc">Name (Z-A)</option>
+                    <option value="id_asc">ID Number (Ascending)</option>
+                    <option value="id_desc">ID Number (Descending)</option>
+                    <option value="date_desc">Date (Newest First)</option>
+                    <option value="date_asc">Date (Oldest First)</option>
+                </select>
+            </div>
+
             <!-- Date Filters -->
             <div class="col-span-1 md:col-span-2 lg:col-span-2"><span id="dateFilterLabel"
                     class="text-sm font-medium text-gray-700 mb-2 block">Filter by Submission Date:</span>
@@ -42,7 +54,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Program Filter -->
             <div class="col-span-1"><label for="programFilter"
                     class="text-sm font-medium text-gray-700">Program:</label><select id="programFilter"
@@ -56,7 +68,8 @@
             <!-- NEW: Section Filter -->
             <div class="col-span-1">
                 <label for="sectionFilter" class="text-sm font-medium text-gray-700">Section:</label>
-                <select id="sectionFilter" name="sectionFilter" class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
+                <select id="sectionFilter" name="sectionFilter"
+                    class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
                     <option value="all">All Sections</option>
                     <option value="Unassigned">Unassigned</option>
                     {% for section in sections %}
@@ -75,7 +88,7 @@
                     <option value="4th Year">4th Year</option>
                     <option value="5th Year">5th Year</option>
                 </select></div>
-            
+
             <div class="col-span-1"><label for="semesterFilter"
                     class="text-sm font-medium text-gray-700">Semester:</label><select id="semesterFilter"
                     class="w-full mt-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm !rounded-button focus:ring-primary focus:border-primary">
@@ -85,38 +98,32 @@
                     <option value="3rd Semester">3rd Semester</option>
                     <option value="Summer">Summer</option>
                 </select></div>
-            
-            <div class="col-span-1"><label class="text-sm font-medium text-gray-700 block mb-2">Gender:</label>
-                <div class="flex items-center space-x-3">
-                    <div class="flex items-center"><input type="radio" id="genderFilterAll" name="genderFilter"
-                            value="All" checked><label for="genderFilterAll"
-                            class="text-sm text-gray-600 ml-1">All</label></div>
-                    <div class="flex items-center"><input type="radio" id="genderFilterMale" name="genderFilter"
-                            value="Male"><label for="genderFilterMale" class="text-sm text-gray-600 ml-1">Male</label>
-                    </div>
-                    <div class="flex items-center"><input type="radio" id="genderFilterFemale" name="genderFilter"
-                            value="Female"><label for="genderFilterFemale"
-                            class="text-sm text-gray-600 ml-1">Female</label></div>
-                </div>
-            </div>
 
-            <div class="col-span-1"><label class="text-sm font-medium text-gray-700 block mb-2">Location:</label>
-                <div class="flex items-center space-x-3">
-                    <div class="flex items-center"><input type="radio" id="locationFilterAll" name="locationFilter"
-                            value="All" checked><label for="locationFilterAll"
-                            class="text-sm text-gray-600 ml-1">All</label></div>
-                    <div class="flex items-center"><input type="radio" id="locationFilterGarciano" name="locationFilter"
-                            value="Garciano"><label for="locationFilterGarciano"
-                            class="text-sm text-gray-600 ml-1">Garciano</label></div>
-                    <div class="flex items-center"><input type="radio" id="locationFilterNonGarciano"
-                            name="locationFilter" value="Non-Garciano"><label for="locationFilterNonGarciano"
-                            class="text-sm text-gray-600 ml-1">Non-Garciano</label></div>
-                </div>
-            </div>
-            
             <div class="col-span-1 flex items-end"><button id="clearFiltersBtn"
                     class="w-full px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-medium !rounded-button hover:bg-gray-300 flex items-center justify-center"><i
                         class="ri-filter-off-line mr-1"></i> Clear All Filters</button></div>
+
+            <!-- Gender & Location -->
+            <div class="col-span-1 md:col-span-4 flex flex-wrap gap-6 mt-2">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-medium text-gray-700">Gender:</label>
+                    <label class="flex items-center text-xs text-gray-600"><input type="radio" name="genderFilter"
+                            value="All" checked class="mr-1"> All</label>
+                    <label class="flex items-center text-xs text-gray-600"><input type="radio" name="genderFilter"
+                            value="Male" class="mr-1"> Male</label>
+                    <label class="flex items-center text-xs text-gray-600"><input type="radio" name="genderFilter"
+                            value="Female" class="mr-1"> Female</label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-medium text-gray-700">Location:</label>
+                    <label class="flex items-center text-xs text-gray-600"><input type="radio" name="locationFilter"
+                            value="All" checked class="mr-1"> All</label>
+                    <label class="flex items-center text-xs text-gray-600"><input type="radio" name="locationFilter"
+                            value="Garciano" class="mr-1"> Garciano</label>
+                    <label class="flex items-center text-xs text-gray-600"><input type="radio" name="locationFilter"
+                            value="Non-Garciano" class="mr-1"> Non-Garciano</label>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -125,9 +132,9 @@
         class="bulk-actions bg-blue-50 p-3 rounded-md border border-blue-200 mb-6 flex-wrap items-center gap-y-2">
         <span id="selectedCount" class="text-sm font-medium text-blue-700 mr-4">0 items selected</span>
         <div class="flex flex-wrap gap-2">
-            <button id="bulkEnrollingBtn"
-                class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-purple-200"><i
-                    class="ri-arrow-go-back-line mr-1"></i> Revert to Enrolling</button>
+            <button id="bulkEnrolledBtn"
+                class="px-3 py-1.5 bg-green-100 text-green-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-green-200"><i
+                    class="ri-checkbox-circle-line mr-1"></i> Set Enrolled</button>
             <button id="bulkDroppedBtn"
                 class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-medium !rounded-button flex items-center hover:bg-gray-300"><i
                     class="ri-user-unfollow-line mr-1"></i> Set Dropped</button>
@@ -147,7 +154,8 @@
                     <th scope="col"
                         class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <label class="custom-checkbox"><input type="checkbox" id="selectAll"><span
-                                class="checkmark"></span></label></th>
+                                class="checkmark"></span></label>
+                    </th>
                     <th scope="col"
                         class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Student ID</th>
@@ -162,6 +170,9 @@
                         Enrolled For</th>
                     <th scope="col"
                         class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Balance</th>
+                    <th scope="col"
+                        class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status</th>
                     <th scope="col"
                         class="px-3 py-2 md:px-6 md:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -172,7 +183,6 @@
                 {% if applications %}
                 {% for app in applications %}
                 {% set display_id = app.old_student_id or app.control_number or ('App #' ~ app.applicant_id) %}
-                
                 <tr class="hover:bg-gray-50" data-applicant-id="{{ app.applicant_id }}"
                     data-gender="{{ app.sex or '' }}"
                     data-submission-date="{{ (app.submitted_at or app.date_of_application).strftime('%Y-%m-%d') if (app.submitted_at or app.date_of_application) else '' }}"
@@ -192,7 +202,7 @@
                         <label class="custom-checkbox"><input type="checkbox" class="row-checkbox"
                                 data-id="{{ app.applicant_id }}"><span class="checkmark"></span></label>
                     </td>
-                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-900 font-medium sort-id">
                         {{ display_id }}
                     </td>
 
@@ -204,11 +214,11 @@
                                     app.last_name[0] if app.last_name else 'A' }}</span>
                             </div>
                             <div class="ml-3">
-                                <!-- MODIFIED: Name Format to Lastname, Firstname M. with Title Case -->
                                 <p class="text-sm font-medium text-gray-900 applicant-name">
-                                    {{ app.last_name | title }}, {{ app.first_name | title }} {% if app.middle_name %}{{ app.middle_name[0]|upper }}.{% endif %}
+                                    {{ app.last_name | title }}, {{ app.first_name | title }}
                                 </p>
-                                <p class="text-xs text-gray-500 applicant-email">{{ app.student_account_email or app.email_address or
+                                <p class="text-xs text-gray-500 applicant-email">{{ app.student_account_email or
+                                    app.email_address or
                                     'N/A' }}</p>
                             </div>
                         </div>
@@ -224,6 +234,19 @@
                         <div>{{ app.enrollment_year_level or 'N/A' }}</div>
                         <div class="text-xs text-gray-500">{{ app.enrollment_semester or 'N/A' }}</div>
                     </td>
+                    <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                        <div
+                            class="text-sm font-bold {% if app.display_balance > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                            ₱{{ "{:,.2f}".format(app.display_balance) }}
+                        </div>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+        {% if app.financial_status == 'Fully Paid' %}bg-green-100 text-green-800
+        {% elif app.financial_status == 'Partial' %}bg-yellow-100 text-yellow-800
+        {% elif app.financial_status == 'Unpaid' %}bg-red-100 text-red-800
+        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ app.financial_status }}
+                        </span>
+                    </td>
                     <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap status-cell">
                         <span
                             class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-badge bg-green-100 text-green-800">Enrolled</span>
@@ -237,6 +260,10 @@
                                 <i class="ri-graduation-cap-line mr-1"></i> Grades
                             </a>
                             {% endif %}
+                            <a href="{{ url_for('auth.admin_view_student_statement', applicant_id=app.applicant_id) }}"
+                                class="text-gray-500 hover:text-green-600 p-0.5 sm:p-1" title="Statement of Account">
+                                <i class="ri-file-list-3-line ri-lg"></i>
+                            </a>
                             <a href="{{ url_for('auth.admin_view_application_page', applicant_id=app.applicant_id) }}"
                                 class="text-gray-500 hover:text-blue-600 p-0.5 sm:p-1" title="View Full Page"><i
                                     class="ri-external-link-line ri-lg"></i></a>
@@ -287,6 +314,41 @@
         const clearFiltersBtn = document.getElementById('clearFiltersBtn');
         const tableRows = document.querySelectorAll('#applicationsTable tbody tr[data-applicant-id]');
 
+        // NEW: Sorting Logic
+        const sortSelect = document.getElementById('sortBy');
+
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function () {
+                sortApplications(this.value);
+            });
+        }
+
+        function sortApplications(sortValue) {
+            const tbody = document.querySelector('#applicationsTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr[data-applicant-id]'));
+
+            rows.sort((a, b) => {
+                let valA, valB;
+
+                if (sortValue.includes('name')) {
+                    valA = a.querySelector('.applicant-name').textContent.trim().toLowerCase();
+                    valB = b.querySelector('.applicant-name').textContent.trim().toLowerCase();
+                } else if (sortValue.includes('id')) {
+                    valA = a.querySelector('.sort-id').textContent.trim().toLowerCase();
+                    valB = b.querySelector('.sort-id').textContent.trim().toLowerCase();
+                } else if (sortValue.includes('date')) {
+                    valA = a.dataset.submissionDate || '';
+                    valB = b.dataset.submissionDate || '';
+                }
+
+                if (valA < valB) return sortValue.endsWith('asc') ? -1 : 1;
+                if (valA > valB) return sortValue.endsWith('asc') ? 1 : -1;
+                return 0;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
         function applyAllFilters() {
             if (!tableRows || tableRows.length === 0) return;
             const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
@@ -298,27 +360,24 @@
             const semester = semesterFilter?.value;
             const gender = document.querySelector('input[name="genderFilter"]:checked')?.value;
             const location = document.querySelector('input[name="locationFilter"]:checked')?.value;
-            
+
             let visibleCount = 0;
             const tableBody = document.querySelector('#applicationsTable tbody');
 
             tableRows.forEach(row => {
                 const searchMatch = (
-                        (row.dataset.searchString || '').toLowerCase().includes(searchTerm) ||
-                        (row.querySelector('.applicant-name')?.textContent.toLowerCase() || '').includes(searchTerm) ||
-                        (row.querySelector('.applicant-email')?.textContent.toLowerCase() || '').includes(searchTerm) ||
-                        `p2025${(row.dataset.applicantId || '').padStart(4, '0')}`.toLowerCase().includes(searchTerm) ||
-                        (row.dataset.oldStudentId || '').toLowerCase().includes(searchTerm)
-                    );
+                    (row.dataset.searchString || '').toLowerCase().includes(searchTerm) ||
+                    (row.querySelector('.applicant-name')?.textContent.toLowerCase() || '').includes(searchTerm)
+                );
 
                 let dateMatch = true;
                 if (startDate || endDate) {
-                     const subDate = row.dataset.submissionDate;
-                     if (!subDate) dateMatch = false;
-                     else {
+                    const subDate = row.dataset.submissionDate;
+                    if (!subDate) dateMatch = false;
+                    else {
                         if (startDate && subDate < startDate) dateMatch = false;
                         if (endDate && subDate > endDate) dateMatch = false;
-                     }
+                    }
                 }
 
                 let programMatch = true;
@@ -326,7 +385,6 @@
                     if (row.dataset.program !== program) programMatch = false;
                 }
 
-                // NEW: Section Match Logic
                 let sectionMatch = true;
                 if (section && section !== 'all') {
                     if ((row.dataset.section || 'Unassigned') !== section) sectionMatch = false;
@@ -341,10 +399,10 @@
                 if (semester && semester !== 'all') {
                     if (row.dataset.semester !== semester) semesterMatch = false;
                 }
-                
+
                 let genderMatch = true;
                 if (gender && gender !== 'All') {
-                     if ((row.dataset.gender || '').toLowerCase() !== gender.toLowerCase()) genderMatch = false;
+                    if ((row.dataset.gender || '').toLowerCase() !== gender.toLowerCase()) genderMatch = false;
                 }
 
                 let locationMatch = true;
@@ -394,9 +452,15 @@
                 if (semesterFilter) semesterFilter.value = 'all';
                 document.getElementById('genderFilterAll').checked = true;
                 document.getElementById('locationFilterAll').checked = true;
+                if (sortSelect) sortSelect.value = 'name_asc'; // Reset sort
+
                 applyAllFilters();
+                sortApplications('name_asc');
             });
         }
+
+        // Initial sort
+        sortApplications('name_asc');
     });
 </script>
 {% endblock %}

@@ -1,14 +1,27 @@
+<!-- --- START OF FILE templates/update_payment.html --- -->
+
 {% extends base_template %}
 {% block title %}Record Payment{% endblock %}
 {% block page_title %}Record Payment{% endblock %}
 
 {% block content %}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- LEFT COLUMN: Student Details & History -->
+    <!-- LEFT COLUMN: Student Details & Assessments -->
     <div class="lg:col-span-2 space-y-6">
         <!-- Student Info Card -->
-        <div class="bg-white rounded-card shadow-sm p-6 border border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Student Details</h3>
+        <div class="bg-white rounded-card shadow-sm p-6 border border-gray-100 relative">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Student Details</h3>
+                <!-- NEW: View History Button -->
+                {% if student %}
+                <a href="{{ url_for('auth.cashier_view_history', student_id=student.applicant_id) }}" 
+                   class="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors border border-blue-200">
+                    <i class="ri-history-line"></i> View History
+                </a>
+                {% endif %}
+            </div>
+
+            {% if student %}
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                 <div>
                     <p class="text-xs text-gray-500">Name</p>
@@ -16,7 +29,7 @@
                 </div>
                 <div>
                     <p class="text-xs text-gray-500">Student ID</p>
-                    <p class="font-semibold">{{ student.student_id }}</p>
+                    <p class="font-semibold">{{ student.display_id }}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500">Course</p>
@@ -24,67 +37,58 @@
                 </div>
                 <div>
                     <p class="text-xs text-gray-500">Year & Section</p>
-                    <p class="font-semibold">{{ student.year_level }} - {{ student.section }}</p>
+                    <p class="font-semibold">{{ student.year_level }} - {{ student.section or 'N/A' }}</p>
                 </div>
                 <div class="col-span-2 md:col-span-1">
                     <p class="text-xs text-gray-500">Email</p>
                     <p class="font-semibold truncate">{{ student.email or 'N/A' }}</p>
                 </div>
             </div>
+            {% else %}
+            <p class="text-red-500 italic">Student record not found.</p>
+            {% endif %}
         </div>
 
-        <!-- Assessments List (Statement of Account) -->
+        <!-- Assessments List -->
         <div class="bg-white rounded-card shadow-sm p-6 border border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Statement of Account</h3>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Unpaid Assessments</h3>
             {% if assessments %}
                 <div class="space-y-4">
-                    {% for assessment in assessments %}
-                    <div class="border rounded-lg p-4 {% if assessment.status == 'paid' %}bg-green-50 border-green-200{% elif assessment.status == 'partial' %}bg-yellow-50 border-yellow-200{% else %}bg-gray-50 border-gray-200{% endif %}">
+                    {% for assessment in assessments if assessment.status != 'paid' %}
+                    <div class="border rounded-lg p-4 bg-white border-gray-200 hover:shadow-sm transition-shadow">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="font-semibold text-gray-800">{{ assessment.description }}</p>
                                 <p class="text-xs text-gray-500">Date: {{ assessment.created_at.strftime('%Y-%m-%d') }}</p>
-                                {% if assessment.batch_id %}
-                                    <span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">Batch Assessment</span>
-                                {% endif %}
                             </div>
                             <span class="text-xs font-bold uppercase px-2 py-1 rounded-full 
-                                {% if assessment.status == 'paid' %}bg-green-200 text-green-800{% elif assessment.status == 'partial' %}bg-yellow-200 text-yellow-800{% else %}bg-gray-200 text-gray-800{% endif %}">
+                                {% if assessment.status == 'partial' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
                                 {{ assessment.status }}
                             </span>
                         </div>
-                        <div class="grid grid-cols-3 gap-4 mt-4 text-sm text-center">
-                            <div>
-                                <p class="text-xs text-gray-500">Total Fee</p>
-                                <p class="font-medium text-gray-700">₱{{ "{:,.2f}".format(assessment.total_amount) }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500">Amount Paid</p>
-                                <p class="font-medium text-green-700">₱{{ "{:,.2f}".format(assessment.amount_paid) }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500">Current Balance</p>
-                                <p class="font-bold text-red-600">₱{{ "{:,.2f}".format(assessment.balance) }}</p>
-                            </div>
+                        <div class="flex justify-between mt-3 text-sm">
+                            <span class="text-gray-500">Total Fee: ₱{{ "{:,.2f}".format(assessment.total_amount) }}</span>
+                            <span class="font-bold text-red-600">Balance: ₱{{ "{:,.2f}".format(assessment.balance) }}</span>
                         </div>
                     </div>
+                    {% else %}
+                        <div class="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                            <i class="ri-checkbox-circle-line text-green-500 text-3xl mb-2"></i>
+                            <p class="text-gray-500 text-sm">No unpaid assessments found.</p>
+                        </div>
                     {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                    <p class="text-gray-500">No assessments found for this student.</p>
-                    <p class="text-xs text-gray-400 mt-1">Use "Batch Assessment" in the dashboard to add fees.</p>
                 </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- RIGHT COLUMN: Payment Form Only -->
+    <!-- RIGHT COLUMN: Payment Form -->
     <div class="lg:col-span-1">
         <div class="bg-white rounded-card shadow-sm p-6 border border-gray-100 sticky top-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Record Payment</h3>
             
-            <form method="POST" action="{{ url_for('auth.update_payment', student_id_db=student.student_id) }}" class="space-y-4">
+            {% if student %}
+            <form method="POST" action="{{ url_for('auth.update_payment', student_id_db=student.applicant_id) }}" class="space-y-4">
                 
                 <!-- Assessment Dropdown -->
                 <div>
@@ -92,14 +96,11 @@
                     <select id="assessment_id" name="assessment_id" required class="w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-sm">
                         <option value="">-- Select Item to Pay --</option>
                         {% for assessment in assessments if assessment.status != 'paid' %}
-                            <option value="{{ assessment.id }}">
+                            <option value="{{ assessment.id }}" data-balance="{{ assessment.balance }}">
                                 {{ assessment.description }} (Bal: ₱{{ "{:,.2f}".format(assessment.balance) }})
                             </option>
                         {% endfor %}
                     </select>
-                    {% if not assessments or assessments|selectattr('status', '!=', 'paid')|list|length == 0 %}
-                        <p class="text-xs text-red-500 mt-1">No pending balances to pay.</p>
-                    {% endif %}
                 </div>
 
                 <!-- Amount -->
@@ -144,7 +145,21 @@
                     </button>
                 </div>
             </form>
+            {% else %}
+                <div class="text-center p-4 bg-gray-50 rounded">Please select a valid student.</div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<script>
+    // Auto-fill amount based on balance
+    document.getElementById('assessment_id').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const balance = selectedOption.getAttribute('data-balance');
+        if (balance) {
+            document.getElementById('amount').value = balance;
+        }
+    });
+</script>
 {% endblock %}

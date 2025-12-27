@@ -1,39 +1,230 @@
-{% extends "student_base.html" %}
-{% block title %}Payment History{% endblock %}
-{% block content %}
-<div class="w-full max-w-5xl mx-auto">
-    <h2 class="text-3xl font-bold text-gray-800 mb-6">Payment History</h2>
-    <div class="bg-white rounded-card shadow-sm p-6">
-        
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-600">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3">Date</th>
-                        <th scope="col" class="px-6 py-3">Amount Paid</th>
-                        <th scope="col" class="px-6 py-3">Type</th>
-                        <th scope="col" class="px-6 py-3">Remark</th>
-                        <th scope="col" class="px-6 py-3">Cashier</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in payments %}
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <!-- FIXED: Changed p.date to p.payment_date -->
-                        <td class="px-6 py-4 font-medium text-gray-900">{{ p.payment_date.strftime('%Y-%m-%d') }}</td>
-                        <td class="px-6 py-4">₱{{ "{:,.2f}".format(p.amount_paid) }}</td>
-                        <td class="px-6 py-4">{{ p.type }}</td>
-                        <td class="px-6 py-4">{{ p.remark }}</td>
-                        <td class="px-6 py-4">{{ p.cashier_username }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">No payment records found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<!-- --- START OF FILE student_payment_history.html --- -->
+
+{% extends "base.html" %}
+
+{% block title %}My Payment History{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { primary: '#1e40af', secondary: '#3b82f6', pgpc_blue: '#1e40af' },
+                borderRadius: { DEFAULT: '8px', 'xl': '12px' }
+            }
+        }
+    }
+</script>
+<style>
+    :where([class^="ri-"])::before { content: "\f3c2"; }
+    @media print {
+        body, html { background-color: white !important; }
+        aside, header, .no-print, #sidebar, #sidebar-overlay { display: none !important; }
+        .main-content-wrapper { margin: 0 !important; overflow: visible !important; }
+        .bg-white { box-shadow: none !important; border: none !important; }
+        table { border: 1px solid #000; width: 100%; display: table !important; }
+        thead { display: table-header-group !important; }
+        tbody { display: table-row-group !important; }
+        tr { display: table-row !important; border: 1px solid #000 !important; }
+        th, td { border: 1px solid #000; padding: 5px; display: table-cell !important; }
+        .md\:hidden { display: none !important; } /* Hide mobile labels in print */
+        .md\:table-cell { display: table-cell !important; }
+    }
+    .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="flex h-screen bg-gray-50 overflow-hidden">
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed lg:static inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 sidebar-scroll overflow-y-auto flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-gray-200">
+            <a href="{{ url_for('views.home') }}" class="flex items-center gap-2">
+                <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Logo" class="w-8 h-8 object-contain">
+                <span class="text-blue-900 font-['Georgia'] text-lg">PGPC Dashboard</span>
+            </a>
         </div>
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="{{ url_for('views.application_status_page') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-dashboard-line text-lg"></i><span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('views.view_student_statement') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors bg-blue-50 text-blue-700">
+                <i class="ri-wallet-3-line text-lg"></i><span>Statement of Account</span>
+            </a>
+            <a href="{{ url_for('auth.view_student_grades') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-book-read-line text-lg"></i><span>My Grades</span>
+            </a>
+            <a href="{{ url_for('views.student_resources') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-download-cloud-2-line text-lg"></i><span>Downloads</span>
+            </a>
+            <a href="{{ url_for('auth.student_messenger') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-messenger-line text-lg"></i><span>Messenger</span>
+            </a>
+             <a href="{{ url_for('auth.change_password_page') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-lock-password-line text-lg"></i><span>Change Password</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-200">
+            <a href="{{ url_for('auth.logout') }}" class="flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200 w-full">
+                <i class="ri-logout-box-line"></i><span>Sign Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-wrapper bg-gray-50">
+        <header class="bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b border-gray-200 shadow-sm z-10 sticky top-0">
+            <div class="flex items-center gap-4">
+                <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-blue-600"><i class="ri-menu-2-line text-2xl"></i></button>
+                <h2 class="text-lg font-bold text-gray-800">Payment History</h2>
+            </div>
+             <div class="flex items-center space-x-4">
+                {% if application %}
+                <div class="flex items-center space-x-3 pl-4 border-l border-gray-200">
+                    <div class="text-right hidden sm:block">
+                        <div class="text-sm font-bold text-gray-800">{{ application.first_name }} {{ application.last_name }}</div>
+                        <div class="text-xs text-gray-500">{{ application.program_choice }}</div>
+                    </div>
+                    <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}?t={{ application.last_updated_at.timestamp() if application.last_updated_at else '' }}"
+                         onerror="this.src='{{ url_for('static', filename='images/default_avatar.png') }}'"
+                         alt="Avatar" class="w-9 h-9 rounded-full object-cover border border-gray-300">
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 relative z-0">
+            <div class="max-w-5xl mx-auto">
+                
+                <!-- Action Bar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 no-print">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Transaction History</h1>
+                        <p class="text-gray-500 text-sm">View all your past payments.</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <a href="{{ url_for('views.view_student_statement') }}" class="flex items-center justify-center gap-2 bg-white text-gray-600 border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm w-full sm:w-auto">
+                            <i class="ri-arrow-left-line"></i> <span>Back</span>
+                        </a>
+                        <button onclick="window.print()" class="flex items-center justify-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors shadow-sm w-full sm:w-auto">
+                            <i class="ri-printer-line"></i> <span>Print</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white md:rounded-xl shadow-sm border-y md:border border-gray-200 overflow-hidden -mx-4 md:mx-0">
+                    {% if payments %}
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm text-left">
+                            <thead class="bg-gray-50 text-gray-500 uppercase font-semibold text-xs border-b border-gray-200 hidden md:table-header-group">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium tracking-wider">Date</th>
+                                    <th class="px-6 py-4 font-medium tracking-wider">Reference / Type</th>
+                                    <th class="px-6 py-4 font-medium tracking-wider">Description</th>
+                                    <th class="px-6 py-4 font-medium tracking-wider text-right">Amount Paid</th>
+                                    <th class="px-6 py-4 font-medium tracking-wider text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 bg-white block md:table-row-group">
+                                {% for pay in payments %}
+                                <!-- Responsive Table Row -->
+                                <tr class="block md:table-row hover:bg-gray-50 transition-colors border-b md:border-none p-4 md:p-0 relative">
+                                    
+                                    <!-- Date Column -->
+                                    <td class="block md:table-cell md:px-6 md:py-4 md:whitespace-nowrap text-gray-900 font-medium pb-1 md:pb-4">
+                                        <span class="inline-block md:hidden text-xs font-semibold text-gray-400 uppercase mr-2 min-w-[80px]">Date:</span>
+                                        {{ pay.payment_date.strftime('%b %d, %Y') }}
+                                    </td>
+
+                                    <!-- Reference/Type Column -->
+                                    <td class="block md:table-cell md:px-6 md:py-4 md:whitespace-nowrap pb-1 md:pb-4">
+                                        <div class="flex items-start">
+                                            <span class="inline-block md:hidden text-xs font-semibold text-gray-400 uppercase mr-2 min-w-[80px] mt-0.5">Ref/Type:</span>
+                                            <div>
+                                                <span class="text-gray-800 font-semibold block">{{ pay.payment_method }}</span>
+                                                {% if pay.id %}
+                                                <span class="text-xs text-gray-400 font-mono">Ref: {{ "%06d" | format(pay.id) }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Description Column -->
+                                    <td class="block md:table-cell md:px-6 md:py-4 text-gray-600 pb-1 md:pb-4">
+                                        <div class="flex items-start">
+                                            <span class="inline-block md:hidden text-xs font-semibold text-gray-400 uppercase mr-2 min-w-[80px] mt-0.5">Desc:</span>
+                                            <div>
+                                                <div class="font-medium text-gray-800">{{ pay.assessment_description or 'General Payment' }}</div>
+                                                {% if pay.remark %}
+                                                <div class="text-xs text-gray-500 italic mt-0.5">({{ pay.remark }})</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Amount Column -->
+                                    <td class="block md:table-cell md:px-6 md:py-4 md:whitespace-nowrap md:text-right font-bold text-green-600 pb-2 md:pb-4">
+                                        <div class="flex justify-between md:block items-center">
+                                            <span class="inline-block md:hidden text-xs font-semibold text-gray-400 uppercase mr-2 min-w-[80px]">Amount:</span>
+                                            <span class="text-lg md:text-sm">₱{{ "{:,.2f}".format(pay.amount_paid) }}</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Status Column -->
+                                    <td class="block md:table-cell md:px-6 md:py-4 md:whitespace-nowrap text-center">
+                                        <!-- Mobile absolute positioning for status -->
+                                        <span class="md:hidden absolute top-4 right-4 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800 border border-green-200">
+                                            Verified
+                                        </span>
+                                        <span class="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                                            Verified
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Footer Total -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between md:justify-end items-center gap-4">
+                        <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Paid</span>
+                        <span class="text-2xl font-bold text-gray-900">₱{{ "{:,.2f}".format(total_paid) }}</span>
+                    </div>
+
+                    {% else %}
+                    <div class="p-12 text-center bg-white">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4 text-gray-300 border border-gray-100">
+                            <i class="ri-secure-payment-line text-3xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">No Payments Yet</h3>
+                        <p class="mt-1 text-sm text-gray-500 max-w-sm mx-auto">Payments you make will appear here once processed by the cashier.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+            </div>
+        </main>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        function toggleSidebar() { sidebar.classList.toggle('-translate-x-full'); sidebarOverlay.classList.toggle('hidden'); }
+        if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+    });
+</script>
 {% endblock %}

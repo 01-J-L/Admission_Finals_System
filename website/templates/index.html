@@ -1215,9 +1215,17 @@
             <button class="btnLogin-popup" style="background-color: #d9534f;">Logout</button>
         </a>
         {% else %}
+        <a href="{{ url_for('auth.student_login_page') }}">
+                Student Login
+            </a>
+        
+        <!-- NEW: Check if registration is open -->
+        
         <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
             <button class="btnLogin-popup">Apply now</button>
         </a>
+        
+        
         {% endif %}
     </nav>
 </header>
@@ -1242,23 +1250,33 @@
                     {% endif %}
                 </h1>
 
+                <!-- NEW: Check Registration Status for Slider Button -->
                 <div class="slide-actions">
-                    <a href="{{ slide.button_link }}" class="btn-get-started">{{ slide.button_text }}</a>
+                    {% if global_content.registration_open == 'true' %}
+                        <a href="{{ slide.button_link }}" class="btn-get-started">{{ slide.button_text }}</a>
+                    {% else %}
+                         <a href="{{ slide.button_link }}" class="btn-get-started">{{ slide.button_text }}</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% endfor %}
         {% else %}
-        <!-- Fallback static slides if DB is empty -->
+        <!-- Fallback static slides -->
         <div class="slide" data-img="{{ url_for('static', filename='images/img1.jpg') }}">
             <div class="slide-content">
                 <p class="intro-text">🎓 Empowering Futures</p>
                 <h1>Padre Garcia <span class="highlight">Polytechnic</span> College</h1>
                 <div class="slide-actions">
+                    {% if global_content.registration_open == 'true' %}
                     <a href="{{ url_for('views.existing_or_not') }}" class="btn-get-started">Apply Now</a>
+                    {% else %}
+                    <a href="#programs" class="btn-get-started">View Programs</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
+        <!-- ... (Rest of fallback slides) ... -->
         <div class="slide" data-img="{{ url_for('static', filename='images/img2.jpg') }}">
             <div class="slide-content">
                 <p class="intro-text">🎓 Innovation & Excellence</p>

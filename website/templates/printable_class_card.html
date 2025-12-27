@@ -1,0 +1,297 @@
+<!-- --- START OF FILE templates/printable_class_card.html --- -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Class Card</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            margin: 0;
+            padding: 0;
+            background: #ccc; /* Gray background for web view */
+        }
+
+        .page {
+            width: 8.5in; /* Standard Letter/A4 width approximation */
+            min-height: 11in;
+            background: white;
+            margin: 20px auto;
+            padding: 40px;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            page-break-after: always;
+        }
+
+        /* Header Layout */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .header-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .header-text {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .school-name {
+            font-weight: bold;
+            font-size: 14pt;
+            text-transform: uppercase;
+        }
+        .doc-title {
+            font-weight: bold;
+            font-size: 12pt;
+            margin-top: 5px;
+        }
+        .ay-text {
+            font-weight: bold;
+            font-size: 11pt;
+            margin-top: 5px;
+        }
+
+        /* Student Info Layout */
+        .student-info {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .info-group {
+            display: flex;
+            align-items: flex-end;
+        }
+        .label {
+            margin-right: 5px;
+            white-space: nowrap;
+        }
+        .value {
+            border-bottom: 1px solid black;
+            padding: 0 5px;
+            font-weight: bold;
+        }
+        /* Specific widths to match image */
+        .name-val { width: 400px; }
+        .id-val { width: 150px; }
+        .course-val { width: 350px; }
+        .year-val { width: 50px; text-align: center; }
+        .status-val { width: 100px; text-align: center; }
+
+        /* Table Layout */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid black;
+            margin-bottom: 50px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 6px;
+            text-align: center;
+            font-size: 10pt;
+        }
+        th {
+            font-weight: bold;
+            padding: 10px 0;
+        }
+        .col-desc { text-align: left; padding-left: 10px; }
+        
+        /* Footer / Summary Row */
+        .summary-row td {
+            border: 1px solid black;
+            font-weight: bold;
+            padding: 8px;
+        }
+
+        /* Signature Section */
+        .footer-sig {
+            margin-top: 50px;
+            width: 300px;
+            text-align: center;
+        }
+        .sig-line {
+            border-bottom: 1px solid black;
+            margin-bottom: 5px;
+        }
+        .sig-label {
+            font-style: italic;
+        }
+
+        /* Print Settings */
+        @media print {
+            body { background: none; }
+            .page {
+                margin: 0;
+                box-shadow: none;
+                border: none;
+                width: 100%;
+                height: auto;
+            }
+            .no-print { display: none; }
+            /* Ensure background colors/images print */
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+        }
+
+        /* Action Buttons */
+        .actions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            font-family: sans-serif;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-print { background: #333; }
+        .btn-back { background: #666; }
+    </style>
+</head>
+<body>
+
+<div class="actions no-print">
+    <button onclick="window.print()" class="btn btn-print">Print</button>
+    <button onclick="window.close()" class="btn btn-back">Close</button>
+</div>
+
+<!-- Iterate through terms. Each term gets a separate page/class card -->
+{% for term_key, data in transcript.items() %}
+<div class="page">
+    <!-- Header -->
+    <div class="header">
+        <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Logo Left" class="header-logo">
+        <div class="header-text">
+            <div class="school-name">PADRE GARCIA POLYTECHNIC COLLEGE</div>
+            <div class="doc-title">CLASS CARD</div>
+            <div class="ay-text">A.Y. {{ data.academic_year }}</div>
+        </div>
+        <!-- Right Logo (Using same file or different if you have one, e.g., garcia.png) -->
+        <img src="{{ url_for('static', filename='garcia.png') }}" alt="Logo Right" class="header-logo">
+    </div>
+
+    <!-- Student Details -->
+    <div class="student-info">
+        <div class="info-row">
+            <div class="info-group">
+                <span class="label">Name:</span>
+                <span class="value name-val">{{ student.last_name | upper }}, {{ student.first_name | upper }}</span>
+            </div>
+            <div class="info-group">
+                <span class="label">Student #:</span>
+                <span class="value id-val">{{ student.old_student_id or student.control_number or 'N/A' }}</span>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-group">
+                <span class="label">Course:</span>
+                <span class="value course-val">{{ student.program_choice }}</span>
+            </div>
+            <div class="info-group">
+                <span class="label">Year Level:</span>
+                <!-- Extract Year Number (e.g. 1st -> 1) -->
+                <span class="value year-val">{{ data.subjects[0].year_level if data.subjects else '1' }}</span>
+            </div>
+            <div class="info-group">
+                <span class="label">Status:</span>
+                <!-- Show Semester (e.g. 1st Sem) -->
+                <span class="value status-val">{{ data.semester.replace('Semester', 'Sem') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grades Table -->
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50px;">No.</th>
+                <th style="width: 100px;">Code</th>
+                <th>Course Description</th>
+                <th style="width: 60px;">Units</th>
+                <th style="width: 80px;">Final Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subject in data.subjects %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ subject.subject_code }}</td>
+                <td class="col-desc">{{ subject.subject_title }}</td>
+                <td>{{ subject.units }}</td>
+                <!-- Bold grade if failed or inc -->
+                <td style="font-weight: bold; {% if subject.grade > 3.0 or subject.grade == 0 %}color: red;{% endif %}">
+                    {% if subject.grade and subject.grade > 0 %}
+                        {{ "%.2f"|format(subject.grade) }}
+                    {% elif subject.remarks == 'Incomplete' %}
+                        INC
+                    {% elif subject.remarks == 'Dropped' %}
+                        DRP
+                    {% else %}
+                        
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            
+            <!-- Fill empty rows to make it look uniform (Optional) -->
+            {% for i in range(8 - data.subjects|length) %}
+            <tr>
+                <td>&nbsp;</td><td></td><td></td><td></td><td></td>
+            </tr>
+            {% endfor %}
+
+            <!-- Footer / Totals Row -->
+            <tr>
+                <td colspan="3" style="border:none; border-top: 1px solid black;"></td> <!-- Empty spacer -->
+                <td class="summary-row" style="border: 1px solid black; font-weight: bold;">
+                    Total Units
+                </td>
+                <td class="summary-row" style="border: 1px solid black; font-weight: bold;">
+                    {{ data.total_units }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:none;"></td> <!-- Empty spacer -->
+                <td class="summary-row" style="border: 1px solid black; font-weight: bold; height: 30px; vertical-align: middle;">
+                    GWA =
+                </td>
+                <td class="summary-row" style="border: 1px solid black; font-weight: bold; vertical-align: middle;">
+                    {% if data.gwa > 0 %}
+                        {{ "%.2f"|format(data.gwa) }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+
+    <!-- Signature -->
+    <div class="footer-sig">
+        <div class="sig-line"></div>
+        <div class="sig-label">College Registrar</div>
+    </div>
+</div>
+{% endfor %}
+
+</body>
+</html>

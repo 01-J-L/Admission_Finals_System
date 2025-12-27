@@ -1,3 +1,5 @@
+<!-- --- START OF FILE templates/student_login.html --- -->
+
 {% extends 'base.html' %}
 
 {% block title %}Student Login{% endblock %}
@@ -64,6 +66,9 @@ header {
     .navigation { position: absolute; top: 100%; right: 0; width: 250px; background-color: #162938; box-shadow: 0 8px 16px rgba(0,0,0,0.15); flex-direction: column; align-items: stretch; display: none; z-index: 1050; border-top: 1px solid #2a3f54; max-height: calc(100vh - 80px); overflow-y: auto; }
     .navigation.active { display: flex; }
     .navigation a { display: block; padding: 12px 20px; margin-left: 0; text-align: left; color: #f0f0f0; border-bottom: 1px solid #2a3f54; }
+    .navigation a:last-child { border-bottom: none; }
+    .navigation a:hover { background-color: #22333f; }
+    .navigation a .btnLogin-popup { width: calc(100% - 10px); margin: 5px; padding: 10px 15px; font-size: 1em; text-align: center; display: block; height: auto; box-sizing: border-box; }
     .menu-toggle { display: flex; }
     .menu-toggle.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
     .menu-toggle.active span:nth-child(2) { opacity: 0; }
@@ -97,21 +102,28 @@ header {
     .login-panel { flex-direction: row; }
 }
 
-/* Left Welcome Panel */
 .welcome-panel {
     width: 100%;
     background: linear-gradient(135deg, var(--secondary), var(--primary));
     color: white;
-    padding: 2.5rem;
+    /* Adaptive padding: 2rem on mobile, 3.5rem on desktop */
+    padding: 2rem; 
     display: flex;
     flex-direction: column;
     justify-content: center;
     position: relative;
     overflow: hidden;
+    min-height: 200px; /* Ensures it doesn't collapse on small heights */
 }
+
 @media (min-width: 768px) {
-    .welcome-panel { width: 40%; }
+    .welcome-panel { 
+        width: 40%; 
+        padding: 3.5rem;
+    }
 }
+
+/* Decorative circles - Scaled down for mobile so they don't overlap text */
 .welcome-panel::before, .welcome-panel::after {
     content: '';
     position: absolute;
@@ -119,11 +131,18 @@ header {
     background-color: rgba(255, 255, 255, 0.05);
     z-index: 0;
 }
-.welcome-panel::before { width: 200px; height: 200px; bottom: -80px; left: -80px; }
-.welcome-panel::after { width: 150px; height: 150px; top: -60px; right: -60px; }
-.welcome-panel > div { position: relative; z-index: 1; }
-.welcome-panel h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
-.welcome-panel p { font-size: 1rem; line-height: 1.6; opacity: 0.9; }
+
+.welcome-panel::before { 
+    width: 120px; height: 120px; bottom: -40px; left: -40px; 
+}
+.welcome-panel::after { 
+    width: 80px; height: 80px; top: -30px; right: -30px; 
+}
+
+@media (min-width: 768px) {
+    .welcome-panel::before { width: 200px; height: 200px; bottom: -80px; left: -80px; }
+    .welcome-panel::after { width: 150px; height: 150px; top: -60px; right: -60px; }
+}
 
 /* Right Form Panel */
 .form-panel {
@@ -202,13 +221,20 @@ header {
     text-decoration: none;
 }
 .form-links a:hover { text-decoration: underline; }
+@media (max-width: 480px) {
+  .g-recaptcha {
+    transform: scale(0.85);
+    transform-origin: center;
+  }
+}
+
 
 /* --- Animate on Scroll & Go Top Button --- */
 .reveal-on-scroll { opacity: 0; transform: translateY(50px); transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1); will-change: opacity, transform; }
 .reveal-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
 
 /* --- Footer --- */
-.footer { position: relative; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; text-align: center; color: white; overflow: hidden; }
+.footer { position: relative; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; text-align: center; color: white; overflow: hidden; background-color: #111827; }
 .footer::before { content: ""; position: absolute; inset: 0; background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat fixed; z-index: 0; opacity: 0.3; }
 .footer::after { content: ""; position: absolute; inset: 0; background: rgba(22, 41, 56, 0.442); z-index: 1; }
 .footer * { position: relative; z-index: 2; }
@@ -249,7 +275,12 @@ header {
             <a href="{{ url_for('views.application_status_page') }}"><button class="btnLogin-popup">My Application</button></a>
             <a href="{{ url_for('auth.logout') }}"><button class="btnLogin-popup" style="background-color: #d9534f;">Logout</button></a>
         {% else %}
-            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline"><button class="btnLogin-popup">Apply now</button></a>
+            <!-- NEW: Check if registration is open -->
+            
+            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
+                <button class="btnLogin-popup">Apply now</button>
+            </a>
+            
         {% endif %}
     </nav>
 </header>
@@ -259,12 +290,25 @@ header {
         <div class="login-panel">
             <!-- Left Welcome Panel -->
             <div class="welcome-panel">
-                <div>
-                    <h1>WELCOME BACK</h1>
-                    <p class="text-lg mb-4">PGPC Student Portal</p>
-                    <p>Access your academic records, course materials, and connect with the campus community.</p>
-                </div>
-            </div>
+    <!-- Inner wrapper for better alignment control -->
+    <div class="flex flex-col items-center md:items-start justify-center text-center md:text-left h-full w-full">
+        <div class="relative z-10">
+            <!-- Fluid Typography: text-2xl on mobile, text-4xl on desktop -->
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-2 leading-tight">
+                WELCOME BACK
+            </h1>
+            
+            <p class="text-base sm:text-lg font-semibold text-blue-100 mb-4 opacity-90">
+                PGPC Student Portal
+            </p>
+            
+            <!-- max-w-sm ensures the text doesn't span the whole screen on mobile -->
+            <p class="text-sm sm:text-base text-blue-50/80 leading-relaxed max-w-xs sm:max-w-sm md:max-w-full mx-auto md:mx-0">
+                Access your academic records, course materials, and connect with the campus community.
+            </p>
+        </div>
+    </div>
+</div>
 
             <!-- Right Form Panel -->
             <div class="form-panel">
@@ -296,11 +340,11 @@ header {
                     </div>
                 </form>
                 <div class="form-links">
-                    {% if global_content.registration_open == 'true' %}
+                    <!-- CHANGED: Updated links logic -->
+                    {% if global_content.enable_account_creation == 'true' %}
                         <p>Don't have an account? <a href="{{ url_for('auth.create_student_account_page') }}">Create one</a></p>
-                    {% else %}
-                        <p class="text-gray-400">Account creation is currently closed.</p>
                     {% endif %}
+                    
                     <p class="mt-2"><a href="{{ url_for('auth.forgot_password_request_page') }}">Forgot Password?</a></p>
                 </div>
             </div>
@@ -308,47 +352,7 @@ header {
     </div>
 </div>
 
-<footer class="footer">
-    <!-- Dynamic Logo -->
-    <img src="{{ url_for('static', filename='images/uploads/' + global_content.footer_logo_image) if global_content.footer_logo_image else url_for('static', filename='logopgpc.png') }}" 
-         alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
-    
-    <!-- Dynamic Title & Slogan -->
-    <h1 class="footer-title">{{ global_content.footer_title or 'Padre Garcia Polytechnic College' }}</h1>
-    <h2 class="footer-subtitle">{{ global_content.footer_subtitle or 'THE FUTURE BEGINS HERE.' }}</h2>
-    
-    <!-- Dynamic Connect Text & Socials -->
-    <p class="footer-connect">{{ global_content.footer_connect_text or 'Connect with us' }}</p>
-    <div class="footer-socials">
-        {% if global_socials %}
-            {% for link in global_socials %}
-                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ link.platform_name }}">
-                    <i class="{{ link.icon_class }}"></i>
-                </a>
-            {% endfor %}
-        {% else %}
-            <!-- Fallback for old static link if no dynamic links exist -->
-            {% if global_content.footer_facebook_link %}
-                <a href="{{ global_content.footer_facebook_link }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-            {% endif %}
-        {% endif %}
-    </div>
 
-    <div class="footer-divider"></div>
-    
-    <!-- Dynamic Links & Contact Info -->
-    <div class="footer-bottom">
-      <p>
-          <a href="{{ url_for('views.about') }}">About</a> | 
-          <a href="{{ url_for('views.contact_page') }}">Contact us</a> | 
-          <a href="{{ url_for('views.home') }}#programs">Programs</a> | 
-          <a href="{{ url_for('views.home') }}">Admission</a> | 
-          <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7" target="_blank" rel="noopener noreferrer">{{ global_content.contact_address }}</a> | 
-          <a href="tel:{{ global_content.contact_phone }}">{{ global_content.contact_phone }}</a>
-      </p>
-      <p>© {{ current_year if current_year else '2025' }}. All Rights Reserved {{ global_content.footer_title }} | <a href="https://www.padregarcia.gov.ph/home" target="_blank" rel="noopener noreferrer">Padre Garcia PH</a></p>
-    </div>
-</footer>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {

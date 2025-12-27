@@ -20,7 +20,8 @@ def create_app():
     upload_folder = os.path.join(app.root_path, 'static', 'images', 'uploads')
     os.makedirs(upload_folder, exist_ok=True)
     app.config['UPLOAD_FOLDER'] = upload_folder
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16 MB max upload size
+    app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB limit
+
 
 
     # --- Email Configuration ---

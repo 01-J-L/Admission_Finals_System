@@ -21,11 +21,26 @@ from collections import defaultdict
 from flask import jsonify
 import datetime
 import calendar
+import openpyxl
+from openpyxl.styles import Font, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+from openpyxl import load_workbook
+import subprocess # Required for running system commands
+from flask import send_file, Response, current_app
+import tempfile
+import json
+import shutil
 
 
 # ----------------- BLUEPRINT SETUP -----------------
 auth = Blueprint('auth', __name__)
 
+auth = Blueprint('auth', __name__)
+
+# Register the filter
+@auth.app_template_filter('to_words')
+def to_words_filter(amount):
+    return amount_to_words(amount)
 # ----------------- DATABASE CONNECTION -----------------
 def get_db_connection():
     try:
@@ -160,6 +175,80 @@ def delete_image_from_uploads(filename):
         print(f"Error deleting file {filename}: {e}")
         traceback.print_exc()
 
+def save_file_to_uploads(file_storage, prefix='doc'):
+    """Saves a file (PDF/Image) to UPLOAD_FOLDER."""
+    if not file_storage or not file_storage.filename:
+        return None, "No file provided."
+
+    allowed_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.pdf'}
+    file_ext = os.path.splitext(file_storage.filename)[1].lower()
+
+    if file_ext not in allowed_extensions:
+        return None, f"Invalid file type. Allowed: PDF, JPG, PNG."
+    
+    timestamp = int(time.time())
+    secure_name = secure_filename(os.path.splitext(file_storage.filename)[0])
+    new_filename = f"{prefix}_{secure_name}_{timestamp}{file_ext}"
+    
+    try:
+        save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename)
+        file_storage.save(save_path)
+        return new_filename, None
+    except Exception as e:
+        return None, str(e)
+    
+# --- Helper: Amount to Words ---
+def amount_to_words(n):
+    """Converts a number to words (e.g., 500 -> Five Hundred)."""
+    try:
+        n = float(n)
+    except:
+        return "Invalid Amount"
+        
+    units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"]
+    teens = ["", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"]
+    tens = ["", "Ten", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
+    thousands = ["", "Thousand", "Million", "Billion"]
+
+    def num999(n):
+        c = n % 10
+        b = ((n % 100) - c) // 10
+        a = ((n % 1000) - (b * 10) - c) // 100
+        t = ""
+        if a != 0:
+            t += units[a] + " Hundred "
+        if b <= 1:
+            if n % 100 == 0: return t
+            if b == 0: t += units[c]
+            if b == 1:
+                if c == 0: t += "Ten"
+                else: t += teens[c]
+        else:
+            t += tens[b]
+            if c > 0: t += " " + units[c]
+        return t
+
+    if n == 0: return "Zero Pesos"
+    
+    parts = []
+    # Integer part
+    i = 0
+    int_part = int(n)
+    while int_part > 0:
+        if int_part % 1000 != 0:
+            parts.insert(0, num999(int_part % 1000) + " " + thousands[i])
+        int_part //= 1000
+        i += 1
+    
+    text = " ".join(parts).strip() + " Pesos"
+
+    # Decimal part (Centavos)
+    cents = int(round((n - int(n)) * 100))
+    if cents > 0:
+        text += f" and {cents}/100"
+    
+    return text
+
 # ----------------- EMAIL otp -----------------
 
 def send_otp_email(user_email, otp_code):
@@ -189,6 +278,531 @@ def send_otp_email(user_email, otp_code):
         
     # It goes straight to sending.
     return _send_email(subject, [user_email], html_body, sender_name_override=sender_name_from_config)
+
+
+@auth.route('/admin/student/statement/<int:applicant_id>')
+def admin_view_student_statement(applicant_id):
+    # Allow multiple roles to view statement
+    allowed_roles = ['admin', 'registrar', 'cashier', 'accounting', 'guidance', 'osa']
+    if session.get('user_role') not in allowed_roles:
+        return redirect(url_for('auth.admin'))
+
+    conn = None; cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # 1. Fetch Student Info
+        cursor.execute("""
+            SELECT applicant_id, first_name, last_name, old_student_id, control_number, 
+                   program_choice, application_status
+            FROM applicants 
+            WHERE applicant_id = %s
+        """, (applicant_id,))
+        student = cursor.fetchone()
+        
+        if not student:
+            flash("Student not found.", "danger")
+            return redirect(request.referrer)
+            
+        student['display_id'] = student['old_student_id'] or student['control_number'] or 'N/A'
+
+        # 2. Fetch Assessments (All, sorted by date)
+        cursor.execute("SELECT * FROM assessments WHERE student_id = %s ORDER BY created_at DESC", (applicant_id,))
+        assessments = cursor.fetchall()
+
+        # 3. Fetch Payments (All, sorted by date)
+        cursor.execute("SELECT * FROM payments WHERE student_id = %s ORDER BY payment_date DESC", (applicant_id,))
+        payments = cursor.fetchall()
+
+        # 4. Calculate Total Balance
+        total_balance = sum(item['balance'] for item in assessments)
+
+        return render_template('admin_view_statement.html',
+                               student=student,
+                               assessments=assessments,
+                               payments=payments,
+                               total_balance=total_balance,
+                               today_date=datetime.date.today().strftime('%B %d, %Y'))
+
+    except Exception as e:
+        print(f"Error viewing statement: {e}")
+        flash("An error occurred.", "danger")
+        return redirect(request.referrer)
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+# ----------------- BACKUP & RESTORE -----------------
+
+@auth.route('/admin/system/backup-restore')
+def admin_backup_restore_page():
+    if session.get('user_role') != 'admin': # Strictly Admin only
+        return redirect(url_for('auth.admin_dashboard'))
+    
+    _, stats = _get_all_applications_and_stats()
+    return render_template('admin_backup_restore.html', stats=stats, active_page='backup_restore')
+
+@auth.route('/admin/system/download-backup', methods=['POST'])
+def admin_download_backup():
+    if session.get('user_role') != 'admin': return redirect(url_for('auth.admin'))
+
+    # Get DB Credentials from Environment
+    db_host = os.getenv('DB_HOST') or 'localhost'
+    db_user = os.getenv('DB_USER') or 'root'
+    db_password = os.getenv('DB_PASSWORD') or ''
+    db_name = os.getenv('DB_NAME') or 'expired'
+    db_port = os.getenv('DB_PORT') or '3306'
+
+    # Create a temporary file to store the dump
+    with tempfile.NamedTemporaryFile(suffix='.sql', delete=False) as temp_file:
+        temp_file_path = temp_file.name
+
+    try:
+        # 1. Define the full path to mysqldump.exe for MySQL Workbench/Server users
+        # Default path for MySQL Server 8.0 on Windows
+        mysql_dump_exe = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe"
+
+        # Check if the file exists at that path. If not, fallback to just 'mysqldump'
+        if not os.path.exists(mysql_dump_exe):
+            if shutil.which('mysqldump'):
+                mysql_dump_exe = 'mysqldump'
+            else:
+                # Fallback for XAMPP users just in case
+                xampp_path = r"C:\xampp\mysql\bin\mysqldump.exe"
+                if os.path.exists(xampp_path):
+                    mysql_dump_exe = xampp_path
+                else:
+                    raise Exception("mysqldump.exe not found. Please add MySQL bin to System PATH or check auth.py paths.")
+
+        # 2. Prepare Environment Variables (Safest way to pass password)
+        env = os.environ.copy()
+        env['MYSQL_PWD'] = db_password
+
+        # 3. Construct Command
+        # We use quotes around the executable path in case of spaces in "Program Files"
+        dump_cmd = f'"{mysql_dump_exe}" -h {db_host} -P {db_port} -u {db_user} {db_name} > "{temp_file_path}"'
+
+        # 4. Run Subprocess
+        # shell=True is required for the '>' redirection to work on Windows
+        subprocess.run(dump_cmd, shell=True, env=env, check=True)
+
+        # 5. Send the file to the user
+        filename = f"backup_pgpc_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')}.sql"
+        
+        with open(temp_file_path, 'rb') as f:
+            data = f.read()
+            
+        # Clean up temp file immediately after reading
+        os.remove(temp_file_path)
+
+        return Response(
+            data,
+            mimetype="application/sql",
+            headers={"Content-Disposition": f"attachment;filename={filename}"}
+        )
+
+    except subprocess.CalledProcessError as e:
+        print(f"Backup Error: {e}")
+        flash(f"Error generating backup. Details: {e}", "danger")
+        return redirect(url_for('auth.admin_backup_restore_page'))
+    except Exception as e:
+        print(f"General Backup Error: {e}")
+        flash(f"An unexpected error occurred: {e}", "danger")
+        return redirect(url_for('auth.admin_backup_restore_page'))
+    
+@auth.route('/admin/system/restore-data', methods=['POST'])
+def admin_restore_data():
+    if session.get('user_role') != 'admin': return redirect(url_for('auth.admin'))
+
+    file = request.files.get('backup_file')
+    if not file or not file.filename:
+        flash("No file selected.", "warning")
+        return redirect(url_for('auth.admin_backup_restore_page'))
+
+    if not file.filename.endswith('.sql'):
+        flash("Invalid file type. Please upload a .sql file.", "danger")
+        return redirect(url_for('auth.admin_backup_restore_page'))
+
+    # Get DB Credentials
+    db_host = os.getenv('DB_HOST') or 'localhost'
+    db_user = os.getenv('DB_USER') or 'root'
+    db_password = os.getenv('DB_PASSWORD') or ''
+    db_name = os.getenv('DB_NAME') or 'expired'
+    db_port = os.getenv('DB_PORT') or '3306'
+
+    try:
+        # 1. Define the full path to mysql.exe
+        mysql_exe = r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
+
+        # Check path existence
+        if not os.path.exists(mysql_exe):
+            if shutil.which('mysql'):
+                mysql_exe = 'mysql'
+            else:
+                 # Fallback for XAMPP
+                xampp_path = r"C:\xampp\mysql\bin\mysql.exe"
+                if os.path.exists(xampp_path):
+                    mysql_exe = xampp_path
+                else:
+                    raise Exception("mysql.exe not found.")
+
+        # 2. Prepare environment
+        env = os.environ.copy()
+        env['MYSQL_PWD'] = db_password
+
+        # 3. Construct Command List
+        # Note: When using a list with subprocess.Popen, we don't need quotes around paths, Python handles it.
+        restore_cmd = [
+            mysql_exe, 
+            '-h', db_host, 
+            '-P', str(db_port), 
+            '-u', db_user, 
+            db_name
+        ]
+
+        # 4. Run Process
+        # We pipe the file content directly to standard input
+        process = subprocess.Popen(restore_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        stdout, stderr = process.communicate(input=file.read())
+
+        if process.returncode != 0:
+            error_msg = stderr.decode('utf-8')
+            print(f"Restore Error Output: {error_msg}")
+            flash(f"Restore failed: {error_msg}", "danger")
+        else:
+            flash("Database restored successfully! Please log in again if user credentials were changed.", "success")
+
+    except Exception as e:
+        print(f"General Restore Error: {e}")
+        flash(f"An error occurred during restore: {e}", "danger")
+
+    return redirect(url_for('auth.admin_backup_restore_page'))
+
+@auth.route('/admin/users/toggle-permission', methods=['POST'])
+def admin_toggle_user_permission():
+    # Only Main Admin can change permissions
+    if session.get('user_role') != 'admin':
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    data = request.get_json()
+    user_id = data.get('user_id')
+    can_edit = data.get('can_edit')
+
+    conn = None; cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Prevent disabling the main admin's own rights
+        cursor.execute("SELECT role FROM system_users WHERE id = %s", (user_id,))
+        target_user = cursor.fetchone()
+        if target_user and target_user['role'] == 'admin':
+             return jsonify({"success": False, "message": "Cannot restrict Administrator account."}), 403
+
+        # Update permission
+        cursor.execute("UPDATE system_users SET can_edit = %s WHERE id = %s", (can_edit, user_id))
+        conn.commit()
+        
+        status_text = "enabled" if can_edit else "disabled"
+        return jsonify({"success": True, "message": f"Edit privilege {status_text}."})
+
+    except Exception as e:
+        print(f"Error toggling permission: {e}")
+        return jsonify({"success": False, "message": "Database error"}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+@auth.route('/admin/manage-downloads', methods=['GET', 'POST'])
+def admin_manage_downloads():
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
+    
+    conn = None
+    cursor = None
+    
+    # Configuration for download folder
+    DOWNLOAD_FOLDER = os.path.join(current_app.static_folder, 'uploads', 'downloads')
+    os.makedirs(DOWNLOAD_FOLDER, exist_ok=True) 
+
+    try:
+        conn = get_db_connection()
+        
+        # --- HANDLE POST (Upload) ---
+        if request.method == 'POST':
+            title = request.form.get('title')
+            category = request.form.get('category')
+            
+            # New Targeting Fields
+            target_program = request.form.get('target_program') or 'All'
+            target_year_level = request.form.get('target_year_level') or 'All'
+            target_section = request.form.get('target_section') or 'All'
+            
+            file = request.files.get('file')
+
+            if not title or not category or not file:
+                flash("Title, Category, and File are required.", "danger")
+            else:
+                filename = secure_filename(file.filename)
+                timestamp = int(time.time())
+                save_name = f"{timestamp}_{filename}"
+                
+                try:
+                    file.save(os.path.join(DOWNLOAD_FOLDER, save_name))
+                    
+                    cursor = conn.cursor()
+                    # Updated Query to include targeting fields
+                    cursor.execute("""
+                        INSERT INTO student_downloads 
+                        (category, title, filename, target_program, target_year_level, target_section) 
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (category, title, save_name, target_program, target_year_level, target_section))
+                    conn.commit()
+                    flash("File uploaded successfully.", "success")
+                except Exception as e:
+                    print(f"Upload Error: {e}")
+                    flash("Error saving file.", "danger")
+            
+            return redirect(url_for('auth.admin_manage_downloads'))
+
+        # --- HANDLE GET (List Files & Filter Options) ---
+        cursor = conn.cursor(dictionary=True)
+        
+        # 1. Fetch Files
+        cursor.execute("SELECT * FROM student_downloads ORDER BY category, uploaded_at DESC")
+        files = cursor.fetchall()
+        
+        grouped_files = defaultdict(list)
+        for f in files:
+            grouped_files[f['category']].append(f)
+
+        # 2. Fetch Options for Dropdowns
+        cursor.execute("SELECT title FROM programs ORDER BY title")
+        programs = cursor.fetchall()
+        
+        cursor.execute("SELECT DISTINCT section_name FROM sections ORDER BY section_name")
+        sections = cursor.fetchall()
+
+        _, stats = _get_all_applications_and_stats()
+        
+        return render_template('admin_manage_downloads.html', 
+                               grouped_files=grouped_files, 
+                               programs=programs,
+                               sections=sections,
+                               stats=stats, 
+                               active_page='manage_content')
+
+    except Exception as e:
+        print(f"Error in manage downloads: {e}")
+        traceback.print_exc()
+        flash(f"Error: {e}", "danger")
+        return redirect(url_for('auth.admin_manage_content'))
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+@auth.route('/admin/downloads/edit/<int:file_id>', methods=['POST'])
+def admin_edit_download(file_id):
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
+    
+    conn = None
+    cursor = None
+    DOWNLOAD_FOLDER = os.path.join(current_app.static_folder, 'uploads', 'downloads')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Collect Form Data
+        title = request.form.get('title')
+        category = request.form.get('category')
+        target_program = request.form.get('target_program')
+        target_year_level = request.form.get('target_year_level')
+        target_section = request.form.get('target_section')
+        file = request.files.get('file') # Optional
+
+        if not title or not category:
+            flash("Title and Category are required.", "danger")
+            return redirect(url_for('auth.admin_manage_downloads'))
+
+        # 2. Handle File Replacement (if a new file is uploaded)
+        filename_update_sql = ""
+        params = [title, category, target_program, target_year_level, target_section]
+
+        if file and file.filename:
+            # Get old filename to delete
+            cursor.execute("SELECT filename FROM student_downloads WHERE id = %s", (file_id,))
+            old_record = cursor.fetchone()
+            
+            # Save new file
+            filename = secure_filename(file.filename)
+            timestamp = int(time.time())
+            save_name = f"{timestamp}_{filename}"
+            file.save(os.path.join(DOWNLOAD_FOLDER, save_name))
+            
+            # Delete old file
+            if old_record and old_record['filename']:
+                old_path = os.path.join(DOWNLOAD_FOLDER, old_record['filename'])
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            
+            filename_update_sql = ", filename = %s"
+            params.append(save_name)
+
+        # 3. Update Database
+        params.append(file_id) # Add ID for WHERE clause
+        
+        query = f"""
+            UPDATE student_downloads 
+            SET title = %s, category = %s, target_program = %s, target_year_level = %s, target_section = %s
+            {filename_update_sql}
+            WHERE id = %s
+        """
+        
+        cursor.execute(query, tuple(params))
+        conn.commit()
+        flash("Resource updated successfully.", "success")
+
+    except Exception as e:
+        print(f"Update Error: {e}")
+        flash("Error updating resource.", "danger")
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+    return redirect(url_for('auth.admin_manage_downloads'))
+
+@auth.route('/admin/downloads/delete/<int:file_id>', methods=['POST'])
+def admin_delete_download(file_id):
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
+    
+    conn = None
+    cursor = None
+    DOWNLOAD_FOLDER = os.path.join(current_app.static_folder, 'uploads', 'downloads')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get filename to delete from disk
+        cursor.execute("SELECT filename FROM student_downloads WHERE id = %s", (file_id,))
+        file_record = cursor.fetchone()
+        
+        if file_record:
+            # Delete from DB
+            cursor.execute("DELETE FROM student_downloads WHERE id = %s", (file_id,))
+            conn.commit()
+            
+            # Delete from Disk
+            file_path = os.path.join(DOWNLOAD_FOLDER, file_record['filename'])
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                
+            flash("Resource deleted.", "success")
+        else:
+            flash("File not found.", "warning")
+
+    except Exception as e:
+        flash(f"Error deleting file: {e}", "danger")
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+        
+    return redirect(url_for('auth.admin_manage_downloads'))
+
+@auth.route('/student/messenger', methods=['GET', 'POST'])
+def student_messenger():
+    if 'student_id' not in session: return redirect(url_for('auth.student_login_page'))
+    
+    # Get specific department from URL or default to registrar
+    dept = request.args.get('dept', 'registrar') 
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute("SELECT applicant_id, first_name, last_name FROM applicants WHERE student_user_id = %s", (session['student_id'],))
+    app = cursor.fetchone()
+    
+    if request.method == 'POST':
+        msg_text = request.form.get('message')
+        if msg_text and app:
+            cursor.execute("""
+                INSERT INTO application_messages (applicant_id, sender_type, sender_name, admin_role, message_text)
+                VALUES (%s, 'student', %s, %s, %s)
+            """, (app['applicant_id'], f"{app['first_name']} {app['last_name']}", dept, msg_text))
+            conn.commit()
+        return redirect(url_for('auth.student_messenger', dept=dept))
+
+    # Fetch ONLY messages for the selected department (The DM logic)
+    cursor.execute("""
+        SELECT * FROM application_messages 
+        WHERE applicant_id = %s AND admin_role = %s 
+        ORDER BY created_at ASC
+    """, (app['applicant_id'], dept))
+    messages = cursor.fetchall()
+    
+    # Mark as read
+    cursor.execute("UPDATE application_messages SET is_read = TRUE WHERE applicant_id = %s AND sender_type = 'admin' AND admin_role = %s", (app['applicant_id'], dept))
+    conn.commit()
+    
+    cursor.close()
+    conn.close()
+    return render_template('student_messenger.html', messages=messages, application=app, current_dept=dept, student_logged_in=True)
+
+
+@auth.route('/admin/messenger')
+def admin_messenger_list():
+    role = session.get('user_role')
+    if role not in ['admin', 'registrar', 'guidance', 'osa']: return redirect(url_for('auth.admin'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # ADMINS ONLY SEE MESSAGES TAGGED FOR THEIR ROLE
+    cursor.execute("""
+        SELECT a.applicant_id, a.first_name, a.last_name,
+        (SELECT message_text FROM application_messages WHERE applicant_id = a.applicant_id AND admin_role = %s ORDER BY created_at DESC LIMIT 1) as last_msg,
+        (SELECT COUNT(*) FROM application_messages WHERE applicant_id = a.applicant_id AND is_read = FALSE AND sender_type = 'student' AND admin_role = %s) as unread_count
+        FROM applicants a
+        WHERE EXISTS (SELECT 1 FROM application_messages WHERE applicant_id = a.applicant_id AND admin_role = %s)
+        ORDER BY unread_count DESC
+    """, (role, role, role))
+    chat_list = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    return render_template('admin_messenger.html', chat_list=chat_list, active_page='messenger')
+
+@auth.route('/admin/messenger/chat/<int:applicant_id>', methods=['GET', 'POST'])
+def admin_chat_view(applicant_id):
+    role = session.get('user_role')
+    if role not in ['admin', 'registrar', 'guidance', 'osa']: return redirect(url_for('auth.admin'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    if request.method == 'POST':
+        msg_text = request.form.get('message')
+        cursor.execute("""
+            INSERT INTO application_messages (applicant_id, sender_type, sender_name, admin_role, message_text)
+            VALUES (%s, 'admin', %s, %s, %s)
+        """, (applicant_id, session.get('user_name'), role, msg_text))
+        conn.commit()
+        return redirect(url_for('auth.admin_chat_view', applicant_id=applicant_id))
+
+    cursor.execute("SELECT first_name, last_name FROM applicants WHERE applicant_id = %s", (applicant_id,))
+    student = cursor.fetchone()
+    
+    cursor.execute("SELECT * FROM application_messages WHERE applicant_id = %s ORDER BY created_at ASC", (applicant_id,))
+    messages = cursor.fetchall()
+    
+    # Mark student messages as read
+    cursor.execute("UPDATE application_messages SET is_read = TRUE WHERE applicant_id = %s AND sender_type = 'student'", (applicant_id,))
+    conn.commit()
+    
+    cursor.close()
+    conn.close()
+    return render_template('admin_chat_window.html', messages=messages, student=student, applicant_id=applicant_id)
 
 # --- NEW/MODIFIED ACADEMIC TERM & SETTINGS MANAGEMENT ---
 @auth.route('/admin/manage-academic-term', methods=['GET', 'POST'])
@@ -361,8 +975,6 @@ def admin_toggle_academic_term(term_id):
 
     return redirect(url_for('auth.admin_manage_academic_term'))
 
-    return redirect(url_for('auth.admin_manage_academic_term'))
-
 @auth.route('/student/initiate-enrollment', methods=['POST'])
 def student_initiate_enrollment():
     if 'student_id' not in session:
@@ -374,32 +986,34 @@ def student_initiate_enrollment():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        student_id = session['student_id']
+        student_user_id = session['student_id']
         
         # Check if student is eligible
         cursor.execute("""
             SELECT applicant_id FROM applicants 
             WHERE student_user_id = %s AND application_status = 'Eligible for Enrollment'
-        """, (student_id,))
+        """, (student_user_id,))
         app = cursor.fetchone()
         
         if app:
-            # Move status to 'Enrolling'
-            cursor.execute("""
-                UPDATE applicants 
-                SET application_status = 'Enrolling', last_updated_at = NOW() 
-                WHERE applicant_id = %s
-            """, (app['applicant_id'],))
-            conn.commit()
-            flash("You have started the enrollment process. Please review your details.", "success")
-            return redirect(url_for('auth.enrollment_form_page', applicant_id=app['applicant_id']))
+            # REMOVED: status update query.
+            # We just send them to the form. Their status remains "Eligible for Enrollment"
+            return redirect(url_for('views.enrollment_form_page', applicant_id=app['applicant_id']))
         else:
+            # Fallback for those already in Enrolling status
+            cursor.execute("""
+                SELECT applicant_id FROM applicants 
+                WHERE student_user_id = %s AND application_status = 'Enrolling'
+            """, (student_user_id,))
+            already = cursor.fetchone()
+            if already:
+                return redirect(url_for('views.enrollment_form_page', applicant_id=already['applicant_id']))
+                
             flash("You are not currently eligible to initiate enrollment.", "warning")
             return redirect(url_for('views.application_status_page'))
             
     except Exception as e:
         print(f"Error initiating enrollment: {e}")
-        flash("An error occurred.", "danger")
         return redirect(url_for('views.application_status_page'))
     finally:
         if cursor: cursor.close()
@@ -714,6 +1328,91 @@ def send_admin_created_account_email(user_email, user_full_name, temporary_passw
         html_body = f"<p>Dear {user_full_name},</p><p>Account created. Email: {user_email}, Temp Pass: {temporary_password}</p>"
         
     return _send_email(subject, [user_email], html_body, sender_name_override=sender_name_from_config)
+
+def _prepare_print_transcript(student_user_id):
+    """
+    Helper to fetch and organize grades for printing Class Cards.
+    Returns: student_info, transcript_data (dict grouped by Term)
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # 1. Fetch Student Info
+    cursor.execute("""
+        SELECT a.first_name, a.last_name, a.old_student_id, a.control_number, a.program_choice 
+        FROM applicants a
+        WHERE a.student_user_id = %s 
+        ORDER BY a.submitted_at DESC LIMIT 1
+    """, (student_user_id,))
+    student_info = cursor.fetchone()
+    
+    if not student_info:
+        conn.close()
+        return None, None
+
+    # 2. Fetch All Grades
+    cursor.execute("""
+        SELECT 
+            sg.academic_year, 
+            sg.semester, 
+            s.subject_code, 
+            s.subject_title, 
+            s.units,
+            s.year_level,
+            sg.grade, 
+            sg.remarks
+        FROM student_grades sg
+        JOIN subjects s ON sg.subject_id = s.id
+        WHERE sg.student_user_id = %s
+        ORDER BY sg.academic_year DESC, sg.semester DESC, s.subject_code ASC
+    """, (student_user_id,))
+    
+    all_grades = cursor.fetchall()
+    conn.close()
+
+    # 3. Group by Term (Year + Sem) and Calculate GWA
+    transcript = {}
+    
+    for grade in all_grades:
+        term_key = f"{grade['academic_year']} - {grade['semester']}"
+        
+        if term_key not in transcript:
+            transcript[term_key] = {
+                'academic_year': grade['academic_year'],
+                'semester': grade['semester'],
+                'subjects': [],
+                'total_units': 0.0,
+                'weighted_sum': 0.0,
+                'gwa_units': 0.0
+            }
+        
+        # Add subject to list
+        transcript[term_key]['subjects'].append(grade)
+        
+        # Convert DB types to float to prevent TypeError (Decimal vs Float)
+        units_val = float(grade['units']) if grade['units'] is not None else 0.0
+        
+        # Add to total units
+        transcript[term_key]['total_units'] += units_val
+
+        # Calculate GWA (Only include subjects with numeric grades > 0)
+        # We explicitly cast to float here to fix the error
+        if grade['grade'] is not None:
+            grade_val = float(grade['grade'])
+            
+            if grade_val > 0:
+                transcript[term_key]['weighted_sum'] += (grade_val * units_val)
+                transcript[term_key]['gwa_units'] += units_val
+            
+    # Finalize GWA
+    for key, data in transcript.items():
+        if data['gwa_units'] > 0:
+            data['gwa'] = data['weighted_sum'] / data['gwa_units']
+        else:
+            data['gwa'] = 0.0
+            
+    return student_info, transcript
+
 # ----------------- ADMIN HELPERS -----------------
 # ----------------- Admission id -----------------
 def _generate_admission_id(cursor):
@@ -897,11 +1596,107 @@ def _get_all_school_years():
         if conn: conn.close()
     return school_years
 
+def _auto_assign_fees(cursor, applicant_id, student_data):
+    """
+    Appends new fees to the student's ledger based on their CURRENT Program, Year, and Semester.
+    Does not care about existing balances; simply adds new matching assessments.
+    """
+    try:
+        # 1. Fetch all active batch assessment rules
+        cursor.execute("SELECT * FROM batch_assessments_log")
+        batches = cursor.fetchall()
+        
+        assigned_count = 0
+        
+        # 2. Extract context from the student's record
+        stud_course = student_data.get('program_choice')
+        stud_year = student_data.get('enrollment_year_level')
+        stud_sem = student_data.get('enrollment_semester')   
+        
+        # 3. Residency check for local discounts/fees
+        address = (student_data.get('permanent_address_city_municipality') or '').lower()
+        is_garciano = 'padre garcia' in address
 
+        for batch in batches:
+            # --- MATCHING LOGIC ---
+            if batch.get('semester') and batch['semester'] != 'All' and batch['semester'] != stud_sem:
+                continue
+            if batch['course'] and batch['course'] != 'All' and batch['course'] != stud_course:
+                continue
+            if batch['year_level'] and batch['year_level'] != 'All' and batch['year_level'] != stud_year:
+                continue
+            if batch['scope'] == 'garciano' and not is_garciano:
+                continue
+            if batch['scope'] == 'non_garciano' and is_garciano:
+                continue
 
+            # 4. PREVENT DUPLICATES: Only add if this specific fee isn't already on the student's SOA
+            cursor.execute("""
+                SELECT id FROM assessments 
+                WHERE student_id = %s AND description = %s
+            """, (applicant_id, batch['description']))
+            
+            if not cursor.fetchone():
+                cursor.execute("""
+                    INSERT INTO assessments (student_id, description, total_amount, balance, amount_paid, status, created_at)
+                    VALUES (%s, %s, %s, %s, 0.00, 'unpaid', NOW())
+                """, (applicant_id, batch['description'], batch['amount'], batch['amount']))
+                assigned_count += 1
+        
+        return assigned_count
+    except Exception as e:
+        print(f"Error in _auto_assign_fees: {e}")
+        return 0
+
+# ----------------- HELPER: AUTO PROGRESSION LOGIC -----------------
+def _calculate_next_term(current_year_str, current_sem_str):
+    """
+    Calculates the next academic level based on current status.
+    Returns: (next_year_str, next_sem_str, is_graduating)
+    """
+    if not current_year_str or not current_sem_str:
+        return None, None, False
+
+    # 1. Parse Year (e.g., "1st Year" -> 1)
+    try:
+        year_int = int(current_year_str[0]) 
+    except:
+        return current_year_str, current_sem_str, False
+
+    # 2. Logic
+    next_year_int = year_int
+    next_sem_str = ""
+    is_graduating = False
+
+    if "1st" in current_sem_str:
+        # 1st Sem -> 2nd Sem (Same Year)
+        next_sem_str = "2nd Semester"
+    elif "2nd" in current_sem_str:
+        # 2nd Sem -> 1st Sem (Next Year)
+        if year_int < 4:
+            next_year_int = year_int + 1
+            next_sem_str = "1st Semester"
+        else:
+            # Already 4th Year 2nd Sem
+            return current_year_str, current_sem_str, True # Flag as graduating/done
+    elif "Summer" in current_sem_str:
+         # Summer -> Next Year 1st Sem (usually)
+         if year_int < 4:
+            next_year_int = year_int + 1
+            next_sem_str = "1st Semester"
+    
+    # Format Year String
+    suffix = "th"
+    if next_year_int == 1: suffix = "st"
+    elif next_year_int == 2: suffix = "nd"
+    elif next_year_int == 3: suffix = "rd"
+    
+    next_year_str = f"{next_year_int}{suffix} Year"
+
+    return next_year_str, next_sem_str, False
 
 def _get_all_applications_and_stats(school_year=None):
-    """Helper function to fetch all applications and calculate stats, optionally filtered by school year."""
+    """Helper function to fetch all applications, stats, AND financial data."""
     updated_count = _check_and_update_missed_exams()
     if updated_count > 0:
         flash(f"{updated_count} scheduled applicant(s) from past dates were automatically marked as 'Did Not Attend'.", "info")
@@ -922,9 +1717,11 @@ def _get_all_applications_and_stats(school_year=None):
 
         cursor = conn.cursor(dictionary=True)
         
-        # MODIFIED QUERY: Added LEFT JOIN sections and selected s.section_name
+        # MODIFIED QUERY: Added subqueries to calculate total_balance and total_paid from assessments table
         base_query = """
-            SELECT a.*, su.email as student_account_email, p.program_id, s.section_name
+            SELECT a.*, su.email as student_account_email, p.program_id, s.section_name,
+            (SELECT SUM(balance) FROM assessments WHERE student_id = a.applicant_id) as total_balance,
+            (SELECT SUM(amount_paid) FROM assessments WHERE student_id = a.applicant_id) as total_paid
             FROM applicants a 
             LEFT JOIN student_users su ON a.student_user_id = su.id 
             LEFT JOIN programs p ON TRIM(a.program_choice) = TRIM(p.title)
@@ -946,6 +1743,7 @@ def _get_all_applications_and_stats(school_year=None):
         not_taken_count = 0
 
         for app in applications:
+            # Decode bytes if necessary
             for key, value in app.items(): 
                 if isinstance(value, bytes):
                     try: 
@@ -955,7 +1753,27 @@ def _get_all_applications_and_stats(school_year=None):
             
             if app.get('average_family_income'):
                 app['average_family_income'] = app['average_family_income'].replace('_', ' ')
+
+            # --- FINANCIAL STATUS LOGIC ---
+            balance = app.get('total_balance')
+            paid = app.get('total_paid')
+
+            if balance is None:
+                # No assessments found
+                app['financial_status'] = 'No Assessment'
+                app['display_balance'] = 0.00
+            elif float(balance) <= 0:
+                app['financial_status'] = 'Fully Paid'
+                app['display_balance'] = 0.00
+            elif paid and float(paid) > 0:
+                app['financial_status'] = 'Partial'
+                app['display_balance'] = float(balance)
+            else:
+                app['financial_status'] = 'Unpaid'
+                app['display_balance'] = float(balance)
+            # -----------------------------
             
+            # Stats calculation (unchanged)
             if app.get('exam_status') == 'Not Taken':
                 not_taken_count += 1
 
@@ -974,7 +1792,7 @@ def _get_all_applications_and_stats(school_year=None):
                 approved_awaiting_schedule_count += 1
             
             status_key = app.get('application_status','').lower().replace(' ', '_')
-            if status_key in ['pending', 'rejected', 'passed', 'failed', 'enrolling', 'enrolled', 'dropped', 'not_enrolled', 'eligible_for_enrollment']:
+            if status_key in stats:
                  stats[status_key] += 1
         
         stats['approved'] = approved_awaiting_schedule_count
@@ -1079,6 +1897,50 @@ def _render_applications_page(template_name, active_page, applications, stats, p
             
     return render_template(template_name, applications=filtered_apps, stats=stats, active_page=active_page, page_title=page_title, programs=programs, all_school_years=all_school_years, selected_school_year=selected_school_year)
 
+def admin_print_grade_card(student_user_id):
+    # Check permissions
+    if session.get('user_role') not in ['admin', 'registrar', 'guidance', 'osa']:
+        return redirect(url_for('auth.admin'))
+        
+    student, transcript = _prepare_print_transcript(student_user_id)
+    
+    if not student:
+        flash("Student not found.", "danger")
+        return redirect(request.referrer)
+        
+    return render_template('printable_class_card.html', student=student, transcript=transcript)
+
+
+@auth.route('/admin/grades/<int:student_user_id>/print-card')
+def admin_print_grade_card(student_user_id):
+    # Check permissions
+    if session.get('user_role') not in ['admin', 'registrar', 'guidance', 'osa']:
+        return redirect(url_for('auth.admin'))
+        
+    student, transcript = _prepare_print_transcript(student_user_id)
+    
+    if not student:
+        flash("Student not found.", "danger")
+        return redirect(request.referrer)
+        
+    return render_template('printable_class_card.html', student=student, transcript=transcript)
+
+
+@auth.route('/my-grades/print-card')
+def student_print_grade_card():
+    # Check login
+    if 'student_id' not in session:
+        return redirect(url_for('auth.student_login_page'))
+        
+    student_user_id = session['student_id']
+    student, transcript = _prepare_print_transcript(student_user_id)
+    
+    if not student:
+        flash("Record not found.", "danger")
+        return redirect(url_for('views.application_status_page'))
+        
+    return render_template('printable_class_card.html', student=student, transcript=transcript)
+
 # ----------------- ACCOUNTING ROUTES -----------------
 
 @auth.route('/accounting/chart-of-accounts', methods=['GET'])
@@ -1177,150 +2039,551 @@ def journal_entries():
         
     return render_template('journal_entries.html', entries=entries, start_date=start_date, end_date=end_date)
 
-# ----------------- RETURN VOUCHER ROUTES -----------------
+# --- NEW: Save Receipt Layout via AJAX ---
+@auth.route('/admin/save-receipt-layout', methods=['POST'])
+def save_receipt_layout():
+    if session.get('user_role') not in ['admin', 'accounting', 'cashier']:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
 
-@auth.route('/return-voucher', methods=['GET'])
-def return_voucher():
-    # 1. Permission Check
-    if session.get('user_role') not in ['cashier', 'accounting']:
+    data = request.get_json() # JavaScript sends the 'layout' array here
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        for item in data['layout']:
+            # This updates each field (dragDate, dragName, etc) with its new position
+            cursor.execute("""
+                UPDATE receipt_layout_settings 
+                SET top_pos = %s, left_pos = %s, font_size = %s 
+                WHERE field_id = %s
+            """, (item['top'], item['left'], item['fontSize'], item['id']))
+        
+        conn.commit()
+        return jsonify({"success": True, "message": "Layout saved permanently!"})
+    except Exception as e:
+        print(f"Save Error: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+# --- NEW: Upload Receipt Background ---
+@auth.route('/admin/upload-receipt-bg', methods=['POST'])
+def upload_receipt_bg():
+    if session.get('user_role') not in ['admin', 'accounting', 'cashier']:
         return redirect(url_for('auth.admin_login'))
 
-    # 2. Determine Base Template
-    base_template = 'accounting_base.html' if session.get('user_role') == 'accounting' else 'cashier_base.html'
+    file = request.files.get('receipt_bg')
+    if file and file.filename:
+        # Re-use your existing helper save_image_to_uploads
+        filename, error = save_image_to_uploads(file, prefix='receipt_bg')
+        if not error:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE system_settings SET setting_value = %s WHERE setting_key = 'receipt_background_file'", (filename,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            flash("Receipt template background updated!", "success")
+        else:
+            flash(error, "danger")
+    return redirect(url_for('auth.receipt_layout_tool'))
 
-    # 3. Get Filter Parameters
-    school_year = request.args.get('school_year')
-    semester = request.args.get('semester')
-    course = request.args.get('course')
-    year_level = request.args.get('year_level')
-    section = request.args.get('section')
-    status_filter = request.args.get('status')
-    search_query = request.args.get('query', '')
+# --- MODIFIED: Print Receipt Route to fetch saved positions ---
+@auth.route('/cashier/print-receipt/<int:payment_id>')
+def print_receipt(payment_id):
+    if session.get('user_role') not in ['cashier', 'accounting']:
+        return redirect(url_for('auth.admin_login'))
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # 4. Base Query: Students from Padre Garcia (Garciano)
-    query = """
-        SELECT a.applicant_id as id, a.old_student_id as student_id, a.first_name, a.last_name,
-               a.program_choice as course, a.enrollment_year_level as year_level,
-               s.section_name as section
-        FROM applicants a
-        LEFT JOIN sections s ON a.section_id = s.id
-        WHERE a.application_status = 'Enrolled'
-        AND a.permanent_address_city_municipality LIKE '%Padre Garcia%'
-    """
-    params = []
+    try:
+        # 1. Fetch Payment Data (your existing query)
+        cursor.execute("SELECT p.*, a.first_name, a.last_name, asm.description as fee_description FROM payments p JOIN applicants a ON p.student_id = a.applicant_id LEFT JOIN assessments asm ON p.assessment_id = asm.id WHERE p.id = %s", (payment_id,))
+        payment = cursor.fetchone()
 
-    # 5. Apply Filters
-    if school_year:
-        query += " AND a.academic_year = %s"
-        params.append(school_year)
-    if semester:
-        query += " AND a.enrollment_semester = %s"
-        params.append(semester)
-    if course:
-        query += " AND a.program_choice = %s"
-        params.append(course)
-    if year_level:
-        query += " AND a.enrollment_year_level = %s"
-        params.append(year_level)
-    if section:
-        query += " AND s.section_name = %s"
-        params.append(section)
-    if search_query:
-        query += " AND (a.last_name LIKE %s OR a.first_name LIKE %s OR a.old_student_id LIKE %s)"
-        search_term = f"%{search_query}%"
-        params.extend([search_term, search_term, search_term])
+        # 2. Fetch Layout Settings
+        cursor.execute("SELECT * FROM receipt_layout_settings")
+        layout_list = cursor.fetchall()
+        # Convert list to dictionary for easy access: {'dragDate': {'top_pos': '10px', ...}}
+        layout = {item['field_id']: item for item in layout_list}
 
-    cursor.execute(query, tuple(params))
-    all_students = cursor.fetchall()
+        # 3. Fetch Background filename
+        cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = 'receipt_background_file'")
+        bg_row = cursor.fetchone()
+        bg_file = bg_row['setting_value'] if bg_row else 'receipt.jpg'
 
-    # 6. Fetch Returned IDs for current Context
-    # Default to current active term if filters not set, to check status accurately
-    check_sy = school_year
-    check_sem = semester
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template('print_receipt_movable.html', payment=payment, layout=layout, bg_file=bg_file)
+
+
+@auth.route('/cashier/receipt-layout-tool', methods=['GET'])
+def receipt_layout_tool():
+    if session.get('user_role') not in ['cashier', 'accounting', 'admin']:
+        return redirect(url_for('auth.admin_login'))
     
-    if not check_sy or not check_sem:
-        active = _get_active_term()
-        if active:
-            check_sy = check_sy or active['year_name']
-            check_sem = check_sem or active['semester']
-
-    cursor.execute("SELECT student_id FROM voucher_returns WHERE school_year = %s AND semester = %s", (check_sy, check_sem))
-    returned_rows = cursor.fetchall()
-    returned_ids = {row['student_id'] for row in returned_rows}
-
-    # 7. Process Status Filter & Counts
-    final_list = []
-    returned_count = 0
-    not_returned_count = 0
-
-    for stud in all_students:
-        is_returned = stud['id'] in returned_ids
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # 1. Fetch Layout Settings (Positions and Font Sizes)
+        cursor.execute("SELECT * FROM receipt_layout_settings")
+        layout_list = cursor.fetchall()
         
-        if is_returned: returned_count += 1
-        else: not_returned_count += 1
-
-        if status_filter == 'returned' and not is_returned: continue
-        if status_filter == 'not_returned' and is_returned: continue
+        # Convert list to dictionary: {'dragDate': {'top_pos': '15%', ...}, ...}
+        layout = {item['field_id']: item for item in layout_list}
         
-        final_list.append(stud)
+        # 2. Fetch Background filename from system_settings
+        cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = 'receipt_background_file'")
+        bg_row = cursor.fetchone()
+        bg_file = bg_row['setting_value'] if bg_row else 'receipt.jpg'
 
-    cursor.close()
-    conn.close()
+        # 3. Optional: Fetch payment data if a test ID is provided in URL
+        payment_id = request.args.get('payment_id')
+        payment_data = None
+        if payment_id:
+            cursor.execute("""
+                SELECT p.*, a.first_name, a.last_name, asm.description as fee_description
+                FROM payments p
+                JOIN applicants a ON p.student_id = a.applicant_id
+                LEFT JOIN assessments asm ON p.assessment_id = asm.id
+                WHERE p.id = %s
+            """, (payment_id,))
+            payment_data = cursor.fetchone()
 
-    return render_template('return_voucher.html', 
-                           students=final_list,
-                           returned_ids=returned_ids,
-                           returned_count=returned_count,
-                           not_returned_count=not_returned_count,
-                           all_school_years=_get_all_school_years(),
-                           # Pass back filters
-                           school_year=school_year, semester=semester,
-                           course=course, year_level=year_level,
-                           section=section, status_filter=status_filter,
-                           search_query=search_query,
+        return render_template('receipt_layout_tool.html', 
+                               layout=layout, 
+                               bg_file=bg_file, 
+                               payment=payment_data)
+
+    except Exception as e:
+        print(f"Error loading designer: {e}")
+        flash("Could not load layout settings. Ensure the database table exists.", "danger")
+        return redirect(url_for('auth.cashier_dashboard'))
+    finally:
+        cursor.close()
+        conn.close()
+# ----------------- STUDENT DISCOUNT ROUTES -----------------
+
+# --- IN auth.py ---
+
+@auth.route('/student/discount', methods=['GET', 'POST'])
+def student_discount():
+    if session.get('user_role') not in ['cashier', 'accounting']:
+        return redirect(url_for('auth.admin_login'))
+
+    base_template = 'accounting_base.html' 
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # --- HANDLE POST ACTIONS ---
+        if request.method == 'POST':
+            action = request.form.get('action')
+            
+            if action == 'add_org':
+                name = request.form.get('name')
+                amount = request.form.get('amount')
+                try:
+                    cursor.execute("INSERT INTO organization_discounts (name, discount_amount) VALUES (%s, %s)", (name, amount))
+                    conn.commit()
+                    flash(f"Discount rule for '{name}' added.", "success")
+                except mysql.connector.Error as err:
+                    flash(f"Error: {err}", "danger")
+
+            elif action == 'delete_org':
+                org_id = request.form.get('org_id')
+                cursor.execute("DELETE FROM organization_discounts WHERE id = %s", (org_id,))
+                conn.commit()
+                flash("Discount rule deleted.", "success")
+
+            # --- NEW: Manually Add Student to Org ---
+            elif action == 'add_student_to_org':
+                student_identifier = request.form.get('student_identifier') # ID or Name
+                org_name = request.form.get('org_name')
+                
+                # Find the student first
+                cursor.execute("""
+                    SELECT applicant_id, first_name, last_name 
+                    FROM applicants 
+                    WHERE (old_student_id = %s OR control_number = %s OR applicant_id = %s)
+                    AND application_status = 'Enrolled'
+                """, (student_identifier, student_identifier, student_identifier))
+                
+                student = cursor.fetchone()
+                
+                if student:
+                    # Update their organization field
+                    cursor.execute("UPDATE applicants SET organization = %s WHERE applicant_id = %s", (org_name, student['applicant_id']))
+                    conn.commit()
+                    flash(f"Added {student['first_name']} {student['last_name']} to {org_name}.", "success")
+                else:
+                    flash(f"Student not found with ID: {student_identifier}", "danger")
+            
+            return redirect(url_for('auth.student_discount'))
+
+        # --- HANDLE GET (View Data) ---
+        
+        # 1. Get Discount Rules
+        cursor.execute("SELECT * FROM organization_discounts ORDER BY name")
+        organizations = cursor.fetchall()
+        org_rules = {org['name']: org['discount_amount'] for org in organizations}
+        org_ids = {org['name']: org['id'] for org in organizations}
+
+        # 2. Get Students with Organizations
+        # Filters
+        course_filter = request.args.get('course')
+        year_filter = request.args.get('year_level')
+
+        query = """
+            SELECT applicant_id as id, old_student_id, first_name, last_name, program_choice as course, 
+                   enrollment_year_level as year_level, organization
+            FROM applicants 
+            WHERE application_status = 'Enrolled' 
+            AND organization IS NOT NULL 
+            AND organization != ''
+        """
+        params = []
+        
+        if course_filter:
+            query += " AND program_choice = %s"
+            params.append(course_filter)
+        if year_filter:
+            query += " AND enrollment_year_level = %s"
+            params.append(year_filter)
+            
+        cursor.execute(query, tuple(params))
+        students_raw = cursor.fetchall()
+
+        # 3. Get Applied Status
+        cursor.execute("SELECT student_id FROM student_discounts_applied")
+        applied_set = {row['student_id'] for row in cursor.fetchall()}
+
+        # 4. Merge Data
+        student_list = []
+        for s in students_raw:
+            org_name = s['organization']
+            discount = org_rules.get(org_name, 0)
+            is_applied = s['id'] in applied_set
+            
+            # Format display ID
+            s['display_id'] = s['old_student_id'] or s['id']
+
+            student_list.append({
+                'student': s,
+                'discount_amount': discount,
+                'is_applied': is_applied,
+                'org_id': org_ids.get(org_name)
+            })
+
+    except Exception as e:
+        print(f"Error in student discount: {e}")
+        flash("An error occurred loading the page.", "danger")
+        organizations = []
+        student_list = []
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template('student_discount.html', 
+                           organizations=organizations, 
+                           students=student_list,
+                           course=request.args.get('course'),
+                           year_level=request.args.get('year_level'),
                            base_template=base_template)
+
+@auth.route('/student/discount/apply/<int:student_id>', methods=['POST'])
+def apply_org_discount(student_id):
+    if session.get('user_role') not in ['cashier', 'accounting']:
+        return redirect(url_for('auth.admin_login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # 1. Get Student Org Info
+        cursor.execute("SELECT organization FROM applicants WHERE applicant_id = %s", (student_id,))
+        student = cursor.fetchone()
+        if not student or not student['organization']:
+            flash("Student does not belong to an organization.", "warning")
+            return redirect(url_for('auth.student_discount'))
+
+        # 2. Get Discount Rule
+        cursor.execute("SELECT id, discount_amount FROM organization_discounts WHERE name = %s", (student['organization'],))
+        rule = cursor.fetchone()
+        if not rule:
+            flash(f"No discount rule found for {student['organization']}.", "warning")
+            return redirect(url_for('auth.student_discount'))
+
+        discount_amount = float(rule['discount_amount'])
+
+        # 3. Check if already applied
+        cursor.execute("SELECT id FROM student_discounts_applied WHERE student_id = %s AND org_discount_id = %s", (student_id, rule['id']))
+        if cursor.fetchone():
+            flash("Discount already applied to this student.", "warning")
+            return redirect(url_for('auth.student_discount'))
+
+        # 4. Find a specific assessment to apply to (Prioritize 'Miscellaneous Fee', fallback to any unpaid)
+        # Note: Ideally, you apply this to a specific fee. Here we apply to the largest unpaid balance.
+        cursor.execute("SELECT id, balance FROM assessments WHERE student_id = %s AND status != 'paid' ORDER BY balance DESC LIMIT 1", (student_id,))
+        assessment = cursor.fetchone()
+
+        if not assessment:
+            flash("Student has no unpaid assessments to apply the discount to.", "warning")
+            return redirect(url_for('auth.student_discount'))
+
+        # 5. APPLY: Record as a "Payment" (Type: Discount) and Reduce Balance
+        # Update Assessment
+        new_balance = float(assessment['balance']) - discount_amount
+        new_status = 'paid' if new_balance <= 0 else 'partial'
+        # Ensure balance doesn't go below zero for logic, though technically a refund/credit
+        
+        cursor.execute("""
+            UPDATE assessments 
+            SET balance = balance - %s, 
+                amount_paid = amount_paid + %s,
+                status = %s 
+            WHERE id = %s
+        """, (discount_amount, discount_amount, new_status, assessment['id']))
+
+        # Insert Payment Record (Log as Discount)
+        cursor.execute("""
+            INSERT INTO payments (student_id, assessment_id, amount_paid, payment_date, payment_method, remark, cashier_username)
+            VALUES (%s, %s, %s, NOW(), 'Discount', %s, %s)
+        """, (student_id, assessment['id'], discount_amount, f"Org Discount: {student['organization']}", session.get('user_name')))
+
+        # Log Application
+        cursor.execute("""
+            INSERT INTO student_discounts_applied (student_id, org_discount_id, applied_by)
+            VALUES (%s, %s, %s)
+        """, (student_id, rule['id'], session.get('user_name')))
+
+        conn.commit()
+        flash(f"Discount of ₱{discount_amount} applied successfully.", "success")
+
+    except Exception as e:
+        print(f"Error applying discount: {e}")
+        flash("Error applying discount.", "danger")
+        if conn: conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('auth.student_discount'))
+
+# ----------------- RETURN VOUCHER ROUTES -----------------
+
+# --- IN auth.py ---
+
+@auth.route('/return-voucher', methods=['GET'])
+def return_voucher():
+    # 1. Permissions
+    if session.get('user_role') not in ['cashier', 'accounting']:
+        return redirect(url_for('auth.admin_login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # 2. Get Filters
+        school_year = request.args.get('school_year')
+        semester = request.args.get('semester')
+        course = request.args.get('course')
+        year_level = request.args.get('year_level')
+        section = request.args.get('section')
+        status_filter = request.args.get('status')
+        search_query = request.args.get('query', '')
+
+        # 3. Handle Defaults (Crucial for the "Update Term" logic)
+        # If the user hasn't selected a specific term, default to the Active Term.
+        # This ensures the UI always shows the status for *some* specific term.
+        active_term = _get_active_term()
+        if not school_year and active_term:
+            school_year = active_term['year_name']
+        if not semester and active_term:
+            semester = active_term['semester']
+
+        # 4. Fetch Students (Garciano only)
+        # We query students regardless of term history, but filter by current enrollment data
+        query = """
+            SELECT a.applicant_id as id, a.old_student_id as student_id, a.first_name, a.last_name,
+                   a.program_choice as course, a.enrollment_year_level as year_level,
+                   s.section_name as section
+            FROM applicants a
+            LEFT JOIN sections s ON a.section_id = s.id
+            WHERE a.application_status = 'Enrolled'
+            AND a.permanent_address_city_municipality LIKE '%Padre Garcia%'
+        """
+        params = []
+
+        if course:
+            query += " AND a.program_choice = %s"
+            params.append(course)
+        if year_level:
+            query += " AND a.enrollment_year_level = %s"
+            params.append(year_level)
+        if section:
+            query += " AND s.section_name = %s"
+            params.append(section)
+        if search_query:
+            query += " AND (a.last_name LIKE %s OR a.first_name LIKE %s OR a.old_student_id LIKE %s)"
+            search_term = f"%{search_query}%"
+            params.extend([search_term, search_term, search_term])
+        
+        query += " ORDER BY a.last_name ASC"
+
+        cursor.execute(query, tuple(params))
+        all_students = cursor.fetchall()
+
+        # 5. Fetch Returned IDs for the SPECIFIC Selected Term
+        # This is the logic that resets the button when you change the term.
+        # It only grabs IDs that have been marked returned for the filtered School Year & Semester.
+        cursor.execute("""
+            SELECT student_id 
+            FROM voucher_returns 
+            WHERE school_year = %s AND semester = %s
+        """, (school_year, semester))
+        
+        returned_rows = cursor.fetchall()
+        returned_ids = {row['student_id'] for row in returned_rows}
+
+        # 6. Process Final List & Counts
+        final_list = []
+        returned_count = 0
+        not_returned_count = 0
+
+        for stud in all_students:
+            is_returned = stud['id'] in returned_ids
+            
+            if is_returned: returned_count += 1
+            else: not_returned_count += 1
+
+            # Apply Status Filter (Returned vs Not Returned view)
+            if status_filter == 'returned' and not is_returned: continue
+            if status_filter == 'not_returned' and is_returned: continue
+            
+            final_list.append(stud)
+
+        # Fetch all school years for dropdown
+        all_sy = _get_all_school_years()
+
+        return render_template('return_voucher.html', 
+                               students=final_list,
+                               returned_ids=returned_ids,
+                               returned_count=returned_count,
+                               not_returned_count=not_returned_count,
+                               all_school_years=all_sy,
+                               # Pass back filters so they stick in the form
+                               school_year=school_year, semester=semester,
+                               course=course, year_level=year_level,
+                               section=section, status_filter=status_filter,
+                               search_query=search_query,
+                               base_template='accounting_base.html')
+
+    except Exception as e:
+        print(f"Error in return_voucher view: {e}")
+        traceback.print_exc()
+        flash("An error occurred loading the page.", "danger")
+        return redirect(url_for('auth.cashier_dashboard'))
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 @auth.route('/submit-voucher/<int:student_id_db>', methods=['POST'])
 def submit_voucher(student_id_db):
     if session.get('user_role') not in ['cashier', 'accounting']:
         return redirect(url_for('auth.admin_login'))
     
-    # Get context from form to ensure we mark it for the correct term
     school_year = request.form.get('school_year')
     semester = request.form.get('semester')
-    
-    # If not provided in form (e.g. "All" selected), fallback to active term
+    amount_str = request.form.get('amount') 
+
+    # Fallback to active term if filtering failed
     if not school_year or not semester:
         active = _get_active_term()
         if active:
             school_year = school_year or active['year_name']
             semester = semester or active['semester']
-            
+    
     if not school_year or not semester:
-        flash("Please select a specific School Year and Semester to mark voucher as returned.", "warning")
+        flash("Please select a specific School Year and Semester.", "warning")
+        return redirect(request.referrer)
+
+    # Validate amount
+    if not amount_str:
+        flash("Global voucher amount is invalid.", "danger")
+        return redirect(request.referrer)
+    try:
+        voucher_amount = float(amount_str)
+        if voucher_amount <= 0: raise ValueError
+    except ValueError:
+        flash("Invalid amount.", "danger")
         return redirect(request.referrer)
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    # FIX: Add buffered=True to handle nested queries and unread results safely
+    cursor = conn.cursor(dictionary=True, buffered=True)
     
     try:
+        # --- NEW CHECK: PREVENT DUPLICATE RETURN FOR SAME TERM ---
         cursor.execute("""
-            INSERT INTO voucher_returns (student_id, school_year, semester, returned_by)
-            VALUES (%s, %s, %s, %s)
-        """, (student_id_db, school_year, semester, session.get('user_name')))
+            SELECT id FROM voucher_returns 
+            WHERE student_id = %s AND school_year = %s AND semester = %s
+        """, (student_id_db, school_year, semester))
+        
+        existing_return = cursor.fetchone()
+        
+        if existing_return:
+            flash(f"Voucher already returned for {school_year} - {semester}.", "warning")
+            return redirect(request.referrer)
+        # ---------------------------------------------------------
+
+        # 1. Log the Return
+        cursor.execute("""
+            INSERT INTO voucher_returns (student_id, school_year, semester, returned_by, amount)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (student_id_db, school_year, semester, session.get('user_name'), voucher_amount))
+
+        # 2. Financial Deduction
+        cursor.execute("SELECT id, balance FROM assessments WHERE student_id = %s AND status != 'paid' ORDER BY balance DESC LIMIT 1", (student_id_db,))
+        assessment = cursor.fetchone()
+        assessment_id = assessment['id'] if assessment else None
+
+        cursor.execute("""
+            INSERT INTO payments (student_id, assessment_id, amount_paid, payment_date, payment_method, remark, cashier_username)
+            VALUES (%s, %s, %s, NOW(), 'Voucher', %s, %s)
+        """, (student_id_db, assessment_id, voucher_amount, f"Garciano Voucher", session.get('user_name')))
+
+        if assessment_id:
+            cursor.execute("""
+                UPDATE assessments 
+                SET balance = GREATEST(0, balance - %s), 
+                    amount_paid = amount_paid + %s
+                WHERE id = %s
+            """, (voucher_amount, voucher_amount, assessment_id))
+            
+            cursor.execute("SELECT total_amount, amount_paid FROM assessments WHERE id = %s", (assessment_id,))
+            chk = cursor.fetchone()
+            if chk and chk['amount_paid'] >= chk['total_amount']:
+                cursor.execute("UPDATE assessments SET status = 'paid' WHERE id = %s", (assessment_id,))
+            else:
+                cursor.execute("UPDATE assessments SET status = 'partial' WHERE id = %s", (assessment_id,))
+
         conn.commit()
-        flash("Voucher marked as returned.", "success")
+        flash(f"Voucher returned. ₱{voucher_amount:,.2f} deducted.", "success")
+
     except Exception as e:
         print(f"Error submitting voucher: {e}")
-        flash("Error marking voucher.", "danger")
+        flash(f"Error: {e}", "danger")
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
         
-    return redirect(request.referrer) # Stay on same page with filters
+    return redirect(request.referrer)
 
 @auth.route('/clear-filters')
 def clear_filters():
@@ -1338,7 +2601,7 @@ def cashier_dashboard():
         return redirect(url_for('auth.admin_login'))
 
     # 2. Determine correct base template
-    base_template = 'accounting_base.html' if session.get('user_role') == 'accounting' else 'cashier_base.html'
+    base_template = 'accounting_base.html'
 
     conn = None
     cursor = None
@@ -1401,125 +2664,417 @@ def cashier_dashboard():
                            base_template=base_template)
 
 # ----------------- CASHIER SUPPORTING ROUTES -----------------
-
 @auth.route('/cashier/student-records', methods=['GET'])
 def student_records():
-    if session.get('user_role') not in ['cashier', 'accounting']: return redirect(url_for('auth.admin_login'))
+    # 1. Security Check
+    if session.get('user_role') not in ['cashier', 'accounting']: 
+        return redirect(url_for('auth.admin_login'))
     
-    base_template = 'accounting_base.html' if session.get('user_role') == 'accounting' else 'cashier_base.html'
+    base_template = 'accounting_base.html'
     
-    query = request.args.get('query', '')
+    # 2. Fetch Filter Options for the UI
+    all_school_years = _get_all_school_years()
+    programs = _get_program_list()
+    sections = _get_all_sections()
     
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
+    # 3. Fetch Students who are/were in the enrollment process
+    # This includes current students, dropouts, and those awaiting re-enrollment
     sql = """
         SELECT a.applicant_id as id, a.old_student_id as student_id, a.first_name, a.last_name,
                a.program_choice as course, a.enrollment_year_level as year_level,
+               a.enrollment_semester as semester, a.academic_year, a.application_status,
                s.section_name as section
         FROM applicants a
         LEFT JOIN sections s ON a.section_id = s.id
-        WHERE a.application_status = 'Enrolled'
+        WHERE a.application_status IN ('Enrolled', 'Dropped', 'Not Enrolled', 'Eligible for Enrollment', 'Enrolling')
+        ORDER BY a.last_name ASC
     """
     
-    if query:
-        sql += f" AND (a.last_name LIKE '%{query}%' OR a.first_name LIKE '%{query}%' OR a.old_student_id LIKE '%{query}%')"
-        
     cursor.execute(sql)
     students = cursor.fetchall()
     
+    # 4. Calculate Financial Balances for each student
     for stud in students:
         cursor.execute("SELECT SUM(balance) as total_bal FROM assessments WHERE student_id = %s", (stud['id'],))
         bal_res = cursor.fetchone()
-        stud['total_balance'] = bal_res['total_bal'] or 0
+        stud['total_balance'] = float(bal_res['total_bal']) if bal_res['total_bal'] else 0.0
         
-        if stud['total_balance'] == 0: stud['payment_status'] = 'Fully Paid'
-        elif stud['total_balance'] > 0: stud['payment_status'] = 'Partial Payment'
-        else: stud['payment_status'] = 'Overpaid'
+        # Determine human-readable payment status
+        if stud['total_balance'] == 0: 
+            stud['payment_status'] = 'Paid'
+        elif stud['total_balance'] > 0: 
+            stud['payment_status'] = 'Partial'
+        else: 
+            stud['payment_status'] = 'Overpaid'
 
     cursor.close()
     conn.close()
     
-    return render_template('student_records.html', students=students, query=query, 
-                           all_school_years=_get_all_school_years(), base_template=base_template)
+    return render_template('student_records.html', 
+                           students=students, 
+                           all_school_years=all_school_years,
+                           programs=programs,
+                           sections=sections,
+                           base_template=base_template)
+
+@auth.route('/cashier/export-student-records')
+def export_student_records():
+    # 1. Security Check
+    if session.get('user_role') not in ['cashier', 'accounting']:
+        return redirect(url_for('auth.admin_login'))
+
+    # 2. Retrieve Filter Parameters from the URL
+    query_search = request.args.get('query', '').lower()
+    program_filter = request.args.get('program')
+    status_filter = request.args.get('status') # Admission Status (Enrolled, Dropped, etc.)
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # 3. Base SQL Query
+        # We select relevant student info and use a subquery to get the Total Balance
+        sql = """
+            SELECT a.applicant_id as id, 
+                   a.old_student_id as student_id, 
+                   a.first_name, 
+                   a.last_name,
+                   a.program_choice as course, 
+                   a.enrollment_year_level as year_level,
+                   s.section_name as section,
+                   a.application_status,
+                   (SELECT SUM(balance) FROM assessments WHERE student_id = a.applicant_id) as total_balance
+            FROM applicants a
+            LEFT JOIN sections s ON a.section_id = s.id
+            WHERE a.application_status IN ('Enrolled', 'Dropped', 'Not Enrolled', 'Eligible for Enrollment', 'Enrolling')
+        """
+        
+        cursor.execute(sql)
+        all_students = cursor.fetchall()
+
+        # 4. Filter Data in Python (to handle complex string matching and calculated statuses)
+        filtered_data = []
+
+        for stud in all_students:
+            # Handle Null balance
+            balance = float(stud['total_balance']) if stud['total_balance'] else 0.0
+            
+            # Determine Payment Status string for the Excel file
+            payment_status = 'Unpaid'
+            if balance == 0:
+                payment_status = 'Paid'
+            elif balance > 0:
+                payment_status = 'Partial'
+            else:
+                payment_status = 'Overpaid'
+
+            # --- Apply Filters ---
+            # A. Search Filter
+            if query_search:
+                search_pool = f"{stud['last_name']} {stud['first_name']} {stud['student_id']}".lower()
+                if query_search not in search_pool:
+                    continue
+            
+            # B. Program Filter
+            if program_filter and stud['course'] != program_filter:
+                continue
+            
+            # C. Admission Status Filter
+            if status_filter and stud['application_status'] != status_filter:
+                continue
+
+            # 5. Map Data to Excel Columns
+            filtered_data.append({
+                'Student ID': stud['student_id'] or 'N/A',
+                'Last Name': stud['last_name'].upper(),
+                'First Name': stud['first_name'].upper(),
+                'Program': stud['course'],
+                'Year Level': stud['year_level'],
+                'Section': stud['section'] or 'Unassigned',
+                'Admission Status': stud['application_status'],
+                'Total Balance': balance,
+                'Payment Status': payment_status
+            })
+
+        # 6. Check if data exists
+        if not filtered_data:
+            flash("No records found matching the current filters to export.", "warning")
+            return redirect(url_for('auth.student_records'))
+
+        # 7. Generate Excel using Pandas
+        df = pd.DataFrame(filtered_data)
+        output = io.BytesIO()
+        
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Student Financial Records')
+            
+            # Auto-adjust column widths for better readability
+            worksheet = writer.sheets['Student Financial Records']
+            for column_cells in worksheet.columns:
+                length = max(len(str(cell.value)) for cell in column_cells)
+                worksheet.column_dimensions[column_cells[0].column_letter].width = length + 2
+        
+        output.seek(0)
+        filename = f"Student_Records_Export_{datetime.date.today()}.xlsx"
+
+        return send_file(output, 
+                         as_attachment=True, 
+                         download_name=filename, 
+                         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+    except Exception as e:
+        print(f"Export Error: {e}")
+        flash("An error occurred while generating the Excel file.", "danger")
+        return redirect(url_for('auth.student_records'))
+    finally:
+        cursor.close()
+        conn.close()
+
+@auth.route('/my-payment-history')
+def student_view_payment_history():
+    if 'student_id' not in session:
+        flash("Please log in to view payment history.", "warning")
+        return redirect(url_for('auth.student_login_page'))
+
+    student_user_id = session['student_id']
+    conn = None
+    cursor = None
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # 1. FIX: Select ALL columns (*) so the template has access to names, photos, etc.
+        cursor.execute("SELECT * FROM applicants WHERE student_user_id = %s ORDER BY submitted_at DESC LIMIT 1", (student_user_id,))
+        student = cursor.fetchone()
+        
+        if not student:
+            flash("No student record found.", "danger")
+            return redirect(url_for('views.application_status_page'))
+            
+        applicant_id = student['applicant_id']
+
+        # Fetch Payments with Assessment Description
+        cursor.execute("""
+            SELECT p.*, a.description as assessment_description
+            FROM payments p
+            LEFT JOIN assessments a ON p.assessment_id = a.id
+            WHERE p.student_id = %s
+            ORDER BY p.payment_date DESC, p.id DESC
+        """, (applicant_id,))
+        payments = cursor.fetchall()
+        
+        total_paid = sum(p['amount_paid'] for p in payments)
+        
+        # 2. FIX: Pass 'application=student' to the template
+        return render_template('student_payment_history.html', 
+                               payments=payments, 
+                               total_paid=total_paid,
+                               application=student,  
+                               student_logged_in=True)
+
+    except Exception as e:
+        print(f"Error fetching payment history: {e}")
+        # traceback.print_exc() # Uncomment for more details in terminal
+        flash("An error occurred.", "danger")
+        return redirect(url_for('views.view_student_statement'))
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 
 @auth.route('/cashier/payment/<int:student_id_db>', methods=['GET', 'POST'])
 def update_payment(student_id_db):
-    if session.get('user_role') not in ['cashier', 'accounting']: return redirect(url_for('auth.admin_login'))
+    # 1. Security Check
+    if session.get('user_role') not in ['cashier', 'accounting']:
+        return redirect(url_for('auth.admin_login'))
     
-    base_template = 'accounting_base.html' if session.get('user_role') == 'accounting' else 'cashier_base.html'
+    base_template = 'accounting_base.html'
     
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
-    if request.method == 'POST':
-        assessment_id = request.form.get('assessment_id')
-        amount = float(request.form.get('amount'))
-        remark = request.form.get('remark')
-        payment_method = request.form.get('payment_method')
-        date_str = request.form.get('payment_date')
+    try:
+        # --- HANDLE POST (Record Payment) ---
+        if request.method == 'POST':
+            assessment_id = request.form.get('assessment_id')
+            amount = float(request.form.get('amount'))
+            remark = request.form.get('remark')
+            payment_method = request.form.get('payment_method')
+            date_str = request.form.get('payment_date')
+            
+            # A. Insert Payment Record
+            cursor.execute("""
+                INSERT INTO payments (student_id, assessment_id, amount_paid, payment_date, payment_method, remark, cashier_username)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (student_id_db, assessment_id, amount, date_str, payment_method, remark, session.get('user_name')))
+            
+            # Capture the new payment ID for the receipt
+            new_payment_id = cursor.lastrowid
+
+            # B. Update Assessment Balance (if linked to one)
+            if assessment_id:
+                # Deduct amount from balance, add to amount_paid
+                cursor.execute("UPDATE assessments SET amount_paid = amount_paid + %s, balance = balance - %s WHERE id = %s", 
+                               (amount, amount, assessment_id))
+                
+                # Check if fully paid to update status
+                cursor.execute("SELECT total_amount, amount_paid FROM assessments WHERE id = %s", (assessment_id,))
+                ass_data = cursor.fetchone()
+                if ass_data:
+                    new_status = 'paid' if ass_data['amount_paid'] >= ass_data['total_amount'] else 'partial'
+                    cursor.execute("UPDATE assessments SET status = %s WHERE id = %s", (new_status, assessment_id))
+
+            conn.commit()
+            
+            # C. Check System Setting for Receipt Issuance
+            cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = 'issuance_of_receipt'")
+            setting_row = cursor.fetchone()
+            
+            # Default to True (Print) if setting doesn't exist, otherwise check value
+            should_print = True
+            if setting_row and setting_row['setting_value'] == 'false':
+                should_print = False
+
+            # D. Redirect Logic
+            if should_print:
+                flash("Payment recorded successfully! Preparing receipt...", "success")
+                return redirect(url_for('auth.print_receipt', payment_id=new_payment_id))
+            else:
+                flash("Payment recorded successfully. (Receipt printing is disabled)", "success")
+                # Reload the same page to show updated balance and history
+                return redirect(url_for('auth.update_payment', student_id_db=student_id_db))
+
+        # --- HANDLE GET (View Page) ---
         
+        # 1. Fetch Student Details
         cursor.execute("""
-            INSERT INTO payments (student_id, assessment_id, amount_paid, payment_date, payment_method, remark, cashier_username)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (student_id_db, assessment_id, amount, date_str, payment_method, remark, session.get('user_name')))
+            SELECT a.applicant_id, a.old_student_id, a.control_number, 
+                   a.first_name, a.last_name, a.program_choice as course,
+                   a.enrollment_year_level as year_level, s.section_name as section, a.email_address as email
+            FROM applicants a
+            LEFT JOIN sections s ON a.section_id = s.id
+            WHERE a.applicant_id = %s
+        """, (student_id_db,))
+        student = cursor.fetchone()
         
-        if assessment_id:
-            cursor.execute("UPDATE assessments SET amount_paid = amount_paid + %s, balance = balance - %s WHERE id = %s", 
-                           (amount, amount, assessment_id))
-            cursor.execute("SELECT total_amount, amount_paid FROM assessments WHERE id = %s", (assessment_id,))
-            ass_data = cursor.fetchone()
-            if ass_data:
-                new_status = 'paid' if ass_data['amount_paid'] >= ass_data['total_amount'] else 'partial'
-                cursor.execute("UPDATE assessments SET status = %s WHERE id = %s", (new_status, assessment_id))
+        if student:
+            # Set display ID for UI
+            student['display_id'] = student['old_student_id'] or student['control_number'] or 'N/A'
 
-        conn.commit()
-        flash("Payment recorded successfully!", "success")
-        return redirect(url_for('auth.update_payment', student_id_db=student_id_db))
+        # 2. Fetch Assessments (Fees)
+        cursor.execute("SELECT * FROM assessments WHERE student_id = %s ORDER BY created_at DESC", (student_id_db,))
+        assessments = cursor.fetchall()
 
-    cursor.execute("""
-        SELECT a.applicant_id as student_id, a.first_name, a.last_name, a.program_choice as course,
-               a.enrollment_year_level as year_level, s.section_name as section, a.email_address as email
-        FROM applicants a
-        LEFT JOIN sections s ON a.section_id = s.id
-        WHERE a.applicant_id = %s
-    """, (student_id_db,))
-    student = cursor.fetchone()
+        # 3. Fetch Payment History
+        cursor.execute("""
+            SELECT p.*, a.description as assessment_description
+            FROM payments p
+            LEFT JOIN assessments a ON p.assessment_id = a.id
+            WHERE p.student_id = %s
+            ORDER BY p.payment_date DESC, p.id DESC
+        """, (student_id_db,))
+        payment_history = cursor.fetchall()
+        
+    except Exception as e:
+        print(f"Error in update_payment: {e}")
+        traceback.print_exc()
+        flash("An error occurred loading the payment page.", "danger")
+        student = None
+        assessments = []
+        payment_history = []
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
     
-    cursor.execute("SELECT * FROM assessments WHERE student_id = %s ORDER BY created_at DESC", (student_id_db,))
-    assessments = cursor.fetchall()
+    return render_template('update_payment.html', 
+                           student=student, 
+                           assessments=assessments, 
+                           payment_history=payment_history,
+                           today_date=datetime.date.today().strftime('%Y-%m-%d'), 
+                           base_template=base_template)
+
+# --- IN auth.py ---
+
+@auth.route('/cashier/student-history/<int:student_id>')
+def cashier_view_history(student_id):
+    if session.get('user_role') not in ['cashier', 'accounting']:
+        return redirect(url_for('auth.admin_login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
     
-    cursor.close()
-    conn.close()
-    
-    return render_template('update_payment.html', student=student, assessments=assessments, 
-                           today_date=datetime.date.today().strftime('%Y-%m-%d'), base_template=base_template)
+    try:
+        # 1. Fetch Student Basic Info
+        cursor.execute("""
+            SELECT applicant_id, old_student_id, control_number, first_name, last_name, 
+                   program_choice as course, enrollment_year_level as year_level
+            FROM applicants 
+            WHERE applicant_id = %s
+        """, (student_id,))
+        student = cursor.fetchone()
+        
+        if student:
+            student['display_id'] = student['old_student_id'] or student['control_number'] or 'N/A'
+
+        # 2. Fetch Detailed Payment History
+        # We join assessments to get the description
+        # We calculate total paid as well
+        cursor.execute("""
+            SELECT p.*, a.description as assessment_description, 
+                   # Generate a receipt number string if not exists (using ID)
+                   CONCAT('BTG-', LPAD(p.id, 6, '0')) as receipt_number
+            FROM payments p
+            LEFT JOIN assessments a ON p.assessment_id = a.id
+            WHERE p.student_id = %s
+            ORDER BY p.payment_date DESC, p.id DESC
+        """, (student_id,))
+        history = cursor.fetchall()
+
+        total_paid = sum(row['amount_paid'] for row in history)
+
+    except Exception as e:
+        print(f"Error fetching history: {e}")
+        student = None
+        history = []
+        total_paid = 0
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template('view_payment_history.html', 
+                           student=student, 
+                           history=history, 
+                           total_paid=total_paid,
+                           base_template='accounting_base.html')
 
 @auth.route('/cashier/batch-assessment', methods=['GET', 'POST'])
 def create_batch_assessment():
-    if session.get('user_role') not in ['cashier', 'accounting']: return redirect(url_for('auth.admin_login'))
+    # 1. Security Check: Allow Cashier and Accounting roles
+    if session.get('user_role') not in ['cashier', 'accounting']: 
+        return redirect(url_for('auth.admin_login'))
     
-    base_template = 'accounting_base.html' if session.get('user_role') == 'accounting' else 'cashier_base.html'
-    
+    base_template = 'accounting_base.html'
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
+    # 2. Handle POST Request (Creating a new Batch Assessment)
     if request.method == 'POST':
         desc = request.form.get('description')
         amount = request.form.get('total_amount')
-        target_year = request.form.get('target_year') 
         target_sem = request.form.get('semester')
         target_scope = request.form.get('scope')
         target_course = request.form.get('course')
         target_yl = request.form.get('year_level')
 
+        # Logic to apply immediately to currently enrolled students matching criteria
+        # We no longer filter by academic_year
         query = "SELECT applicant_id FROM applicants WHERE application_status = 'Enrolled'"
         params = []
         
-        if target_year: 
-            query += " AND academic_year = %s"
-            params.append(target_year)
         if target_sem:
             query += " AND enrollment_semester = %s"
             params.append(target_sem)
@@ -1530,41 +3085,146 @@ def create_batch_assessment():
             query += " AND enrollment_year_level = %s"
             params.append(target_yl)
         if target_scope == 'garciano':
-            query += " AND permanent_address_city_municipality LIKE '%Padre Garcia%'"
+            query += " AND LOWER(permanent_address_city_municipality) LIKE '%%padre garcia%%'"
         elif target_scope == 'non_garciano':
-            query += " AND permanent_address_city_municipality NOT LIKE '%Padre Garcia%'"
+            query += " AND LOWER(permanent_address_city_municipality) NOT LIKE '%%padre garcia%%'"
             
         cursor.execute(query, tuple(params))
         students = cursor.fetchall()
         
         count = 0
         for s in students:
-            cursor.execute("""
-                INSERT INTO assessments (student_id, description, total_amount, balance, status)
-                VALUES (%s, %s, %s, %s, 'unpaid')
-            """, (s['applicant_id'], desc, amount, amount))
-            count += 1
+            # Check for duplicates before inserting for each student
+            cursor.execute("SELECT id FROM assessments WHERE student_id = %s AND description = %s", (s['applicant_id'], desc))
+            if not cursor.fetchone():
+                cursor.execute("""
+                    INSERT INTO assessments (student_id, description, total_amount, balance, status, created_at)
+                    VALUES (%s, %s, %s, %s, 'unpaid', NOW())
+                """, (s['applicant_id'], desc, amount, amount))
+                count += 1
             
+        # Save this rule to the Log for future auto-assignment (target_year set to 'All')
         cursor.execute("""
-            INSERT INTO batch_assessments_log (description, amount, target_year, semester, course, year_level, scope, student_count)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (desc, amount, target_year or 'All', target_sem or 'All', target_course or 'All', target_yl or 'All', target_scope or 'All', count))
+            INSERT INTO batch_assessments_log (description, amount, target_year, semester, course, year_level, scope, student_count, created_at)
+            VALUES (%s, %s, 'All', %s, %s, %s, %s, %s, NOW())
+        """, (desc, amount, target_sem or 'All', target_course or 'All', target_yl or 'All', target_scope or 'All', count))
         
         conn.commit()
-        flash(f"Assessment '{desc}' applied to {count} students.", "success")
+        flash(f"Assessment '{desc}' created. Applied to {count} currently enrolled students.", "success")
         return redirect(url_for('auth.create_batch_assessment'))
     
+    # 3. Handle GET Request (Loading the page)
     cursor.execute("SELECT * FROM batch_assessments_log ORDER BY created_at DESC")
     history = cursor.fetchall()
+    
     active_term = _get_active_term()
+    active_sem = active_term['semester'] if active_term else ''
     
     cursor.close()
     conn.close()
     
-    return render_template('create_batch_assessment.html', history=history, 
-                           all_school_years=_get_all_school_years(), 
-                           active_school_year=active_term['year_name'] if active_term else '',
+    return render_template('create_batch_assessment.html', 
+                           history=history, 
+                           active_semester=active_sem,
                            base_template=base_template)
+
+@auth.route('/cashier/batch-assessment/edit/<int:batch_id>', methods=['POST'])
+def edit_batch_assessment(batch_id):
+    if session.get('user_role') not in ['cashier', 'accounting']:
+        return redirect(url_for('auth.admin_login'))
+
+    new_desc = request.form.get('description')
+    new_amount = request.form.get('amount')
+    new_sem = request.form.get('semester')
+    new_scope = request.form.get('scope')
+    new_course = request.form.get('course')
+    new_level = request.form.get('year_level')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("SELECT description FROM batch_assessments_log WHERE id = %s", (batch_id,))
+        old_batch = cursor.fetchone()
+
+        if not old_batch:
+            flash("Batch record not found.", "danger")
+            return redirect(url_for('auth.create_batch_assessment'))
+
+        old_desc = old_batch['description']
+
+        # REMOVED: updated_at = NOW() from the query below
+        cursor.execute("""
+            UPDATE batch_assessments_log 
+            SET description = %s, 
+                amount = %s, 
+                semester = %s,
+                scope = %s, 
+                course = %s, 
+                year_level = %s
+            WHERE id = %s
+        """, (new_desc, new_amount, new_sem, new_scope, new_course, new_level, batch_id))
+
+        # Cascade Update to individual Assessments (Description & Amount only)
+        cursor.execute("""
+            UPDATE assessments 
+            SET description = %s, 
+                total_amount = %s,
+                balance = %s - amount_paid
+            WHERE description = %s 
+            AND status != 'paid'
+        """, (new_desc, new_amount, new_amount, old_desc))
+
+        conn.commit()
+        flash(f"Batch log updated and student balances adjusted.", "success")
+
+    except Exception as e:
+        flash(f"Error: {e}", "danger")
+        if conn: conn.rollback()
+    finally:
+        cursor.close()
+        if conn: conn.close()
+
+    return redirect(url_for('auth.create_batch_assessment'))
+
+@auth.route('/cashier/batch-assessment/delete/<int:batch_id>', methods=['POST'])
+def delete_batch_assessment(batch_id):
+    if session.get('user_role') not in ['cashier', 'accounting']:
+        return redirect(url_for('auth.admin_login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # 1. Get details to delete linked assessments
+        cursor.execute("SELECT description FROM batch_assessments_log WHERE id = %s", (batch_id,))
+        batch = cursor.fetchone()
+
+        if batch:
+            # 2. Delete Log
+            cursor.execute("DELETE FROM batch_assessments_log WHERE id = %s", (batch_id,))
+            
+            # 3. Delete individual assessments (Optional: Only delete if no payment made?)
+            # Here we delete ONLY if no payments have been made (amount_paid = 0) to preserve financial history.
+            cursor.execute("""
+                DELETE FROM assessments 
+                WHERE description = %s AND amount_paid = 0
+            """, (batch['description'],))
+            
+            deleted_count = cursor.rowcount
+            conn.commit()
+            flash(f"Batch deleted. {deleted_count} unpaid student assessments were removed.", "success")
+        else:
+             flash("Batch not found.", "danger")
+
+    except Exception as e:
+        print(f"Error deleting batch: {e}")
+        flash("Error deleting batch.", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('auth.create_batch_assessment'))
 
 @auth.route('/cashier/generate-report', methods=['GET'])
 def generate_report():
@@ -1573,7 +3233,7 @@ def generate_report():
         return redirect(url_for('auth.admin_login'))
     
     # 2. Determine Base Template
-    base_template = 'accounting_base.html' if session.get('user_role') == 'accounting' else 'cashier_base.html'
+    base_template = 'accounting_base.html'
 
     # 3. Get Filter Parameters
     filter_type = request.args.get('filter_type')
@@ -1692,15 +3352,17 @@ def generate_report():
                            course=course,
                            base_template=base_template)
 
+# --- IN auth.py ---
+
 @auth.route('/cashier/activity-history', methods=['GET'])
 def activity_history():
     # 1. Permissions
     if session.get('user_role') not in ['cashier', 'accounting']:
         return redirect(url_for('auth.admin_login'))
     
-    base_template = 'accounting_base.html' if session.get('user_role') == 'accounting' else 'cashier_base.html'
+    base_template = 'accounting_base.html'
 
-    # 2. Get Filters
+    # 2. Get Filters & View Mode
     school_year = request.args.get('school_year')
     semester = request.args.get('semester')
     course = request.args.get('course')
@@ -1709,6 +3371,9 @@ def activity_history():
     remark = request.args.get('remark')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
+    
+    # Check if "View All" is requested
+    view_all = request.args.get('view_all') == 'true'
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -1752,7 +3417,11 @@ def activity_history():
         query += " AND DATE(p.payment_date) <= %s"
         params.append(end_date)
 
-    query += " ORDER BY p.payment_date DESC, p.id DESC LIMIT 500" # Limit for performance
+    query += " ORDER BY p.payment_date DESC, p.id DESC"
+    
+    # 4. Apply LIMIT if not viewing all
+    if not view_all:
+        query += " LIMIT 100"
 
     try:
         cursor.execute(query, tuple(params))
@@ -1774,10 +3443,16 @@ def activity_history():
                     'semester': row['semester']
                 }
             })
+            
+        # Check if there are more records than displayed (simple check)
+        cursor.execute("SELECT COUNT(*) as count FROM payments")
+        total_records = cursor.fetchone()['count']
+        has_more = total_records > 100 and not view_all
 
     except Exception as e:
         print(f"Error fetching activity history: {e}")
         history = []
+        has_more = False
     finally:
         cursor.close()
         conn.close()
@@ -1790,6 +3465,9 @@ def activity_history():
                            school_year=school_year, semester_filter=semester,
                            course_filter=course, year_level=year_level,
                            remark_filter=remark, start_date=start_date, end_date=end_date,
+                           # View state
+                           view_all=view_all,
+                           has_more=has_more,
                            base_template=base_template)
 
 @auth.route('/cashier/export-activity')
@@ -2120,30 +3798,54 @@ def admin_add_application_page():
 
 @auth.route('/admin/application/<int:applicant_id>/update-inventory', methods=['POST'])
 def admin_update_inventory(applicant_id):
-    # 1. Check Permissions
+    # 1. Check Role
     if session.get('user_role') not in ['admin', 'registrar', 'guidance', 'osa']:
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
+        return jsonify({"success": False, "message": "Unauthorized role."}), 401
 
-    conn = None
-    cursor = None
+    # 2. Check Permission
+    if not session.get('can_edit_student'):
+        return jsonify({"success": False, "message": "❌ Permission Denied: Edit privilege is disabled for your account."}), 403
+
+    conn = None; cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # 2. List of all Inventory Database Columns
+        # 3. Handle Address Unification (Address fields are often the cause of errors)
+        # We use .get() to avoid KeyErrors if field is missing in form
+        street = request.form.get('address_street', '').strip()
+        city = request.form.get('address_city', '').strip()
+        province = request.form.get('address_province', '').strip()
+
+        update_clauses = []
+        update_values = []
+
+        # Only update address if fields are present in the form submission
+        if 'address_city' in request.form:
+            update_clauses.append("permanent_address_street_barangay = %s")
+            update_values.append(street)
+            
+            update_clauses.append("permanent_address_city_municipality = %s")
+            update_values.append(city)
+            
+            update_clauses.append("permanent_address_province = %s")
+            update_values.append(province)
+
+            # Combined Inventory Address
+            full_address_parts = [part for part in [street, city, province] if part]
+            full_address_string = ", ".join(full_address_parts)
+            update_clauses.append("inventory_complete_address = %s")
+            update_values.append(full_address_string)
+
+        # 4. Standard Inventory Fields
         inventory_fields = [
             'inventory_gender', 'inventory_age', 'inventory_religion', 
-            'inventory_mobile_number', 'inventory_complete_address', 
-            'inventory_facebook_account', 'inventory_health_condition', 
-            'inventory_interest_hobbies',
-            
-            # Education
+            'inventory_mobile_number', 'inventory_facebook_account', 
+            'inventory_health_condition', 'inventory_interest_hobbies',
             'inventory_pre_elementary_school', 'inventory_pre_elementary_dates', 'inventory_pre_elementary_awards',
             'inventory_elementary_school', 'inventory_elementary_dates', 'inventory_elementary_awards',
             'inventory_secondary_school', 'inventory_secondary_dates', 'inventory_secondary_awards',
             'inventory_vocational_school', 'inventory_vocational_dates', 'inventory_vocational_awards',
-            
-            # Family
             'inventory_father_name', 'inventory_father_age', 'inventory_father_status', 
             'inventory_father_education', 'inventory_father_occupation', 'inventory_father_contact',
             'inventory_mother_name', 'inventory_mother_age', 'inventory_mother_status', 
@@ -2153,17 +3855,10 @@ def admin_update_inventory(applicant_id):
             'inventory_number_of_brothers', 'inventory_number_of_sisters', 
             'inventory_family_income', 'inventory_family_description',
             'inventory_favorite_colors', 'inventory_favorite_sports', 'inventory_favorite_foods',
-
-            # Emergency
             'inventory_emergency_contact_name', 'inventory_emergency_contact_number', 'inventory_emergency_contact_relationship'
         ]
 
-        # 3. Build Dynamic Update Query with Data Synchronization
-        update_clauses = []
-        update_values = []
-
-        # Map Inventory fields to Main Application fields for synchronization
-        # Key = Inventory DB Column, Value = Main Applicant DB Column
+        # Sync Map (Inventory -> Main Profile)
         sync_map = {
             'inventory_gender': 'sex',
             'inventory_religion': 'religion',
@@ -2180,49 +3875,118 @@ def admin_update_inventory(applicant_id):
         }
 
         for field in inventory_fields:
-            val = request.form.get(field)
-            
-            # Update the Inventory Field
-            update_clauses.append(f"{field} = %s")
-            update_values.append(val)
-
-            # --- SYNCHRONIZATION LOGIC ---
-            # If this field has a counterpart in the main info, update that too
-            if field in sync_map:
-                main_col = sync_map[field]
-                update_clauses.append(f"{main_col} = %s")
+            if field in request.form:
+                val = request.form.get(field)
+                
+                # Update Inventory Field
+                update_clauses.append(f"{field} = %s")
                 update_values.append(val)
+
+                # Sync to Main Profile
+                if field in sync_map:
+                    main_col = sync_map[field]
+                    update_clauses.append(f"{main_col} = %s")
+                    update_values.append(val)
+
+        # 5. Execute Update
+        if update_clauses:
+            update_clauses.append("last_updated_at = %s")
+            update_values.append(datetime.datetime.now())
             
-            # Special Handling for Address
-            # Inventory has 1 field (Complete Address), Main has 4 (Street, City, Prov, Zip)
-            # We sync Inventory Address to the 'Street/Barangay' field of main app to ensure data isn't lost,
-            # and we don't overwrite City/Province/Zip to avoid deleting granular data unless we can parse it.
-            if field == 'inventory_complete_address' and val:
-                update_clauses.append("permanent_address_street_barangay = %s")
-                update_values.append(val)
-                # Optional: Clear others if you want strict unification, but safer to just update the main text field.
+            update_values.append(applicant_id) # For WHERE clause
 
-        # Add Last Updated Timestamp
-        update_clauses.append("last_updated_at = %s")
-        update_values.append(datetime.datetime.now())
+            sql = f"UPDATE applicants SET {', '.join(update_clauses)} WHERE applicant_id = %s"
+            
+            # DEBUG PRINT: Check what is being sent to DB
+            # print(f"Executing SQL: {sql}")
+            # print(f"Values: {update_values}")
 
-        # Add Applicant ID for WHERE clause
-        update_values.append(applicant_id)
+            cursor.execute(sql, tuple(update_values))
+            conn.commit()
+            return jsonify({"success": True, "message": "Inventory updated successfully."})
+        else:
+            return jsonify({"success": True, "message": "No fields to update."})
 
-        sql = f"UPDATE applicants SET {', '.join(update_clauses)} WHERE applicant_id = %s"
-
-        cursor.execute(sql, tuple(update_values))
-        conn.commit()
-
-        return jsonify({"success": True, "message": "Student Inventory and Main Profile updated successfully."})
-
+    except mysql.connector.Error as db_err:
+        print(f"Database Error in admin_update_inventory: {db_err}")
+        return jsonify({"success": False, "message": f"Database Error: {db_err}"}), 500
     except Exception as e:
-        print(f"Error updating inventory: {e}")
+        print(f"General Error in admin_update_inventory: {e}")
         traceback.print_exc()
-        return jsonify({"success": False, "message": "Server error updating inventory."}), 500
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
+
+@auth.route('/admin/reports/grades', methods=['GET'])
+def admin_grade_reports():
+    if session.get('user_role') not in ['admin', 'registrar']:
+        return redirect(url_for('auth.admin'))
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Fetch options for dropdowns
+        cursor.execute("SELECT DISTINCT year_name FROM academic_terms ORDER BY year_name DESC")
+        school_years = cursor.fetchall()
+        
+        cursor.execute("SELECT program_id, title FROM programs ORDER BY title")
+        programs = cursor.fetchall()
+        
+        cursor.execute("SELECT id, section_name FROM sections WHERE is_active=TRUE ORDER BY section_name")
+        sections = cursor.fetchall()
+        
+        # Get active term for default selection
+        active_term = _get_active_term()
+        
+    except Exception as e:
+        print(f"Error loading report page: {e}")
+        flash("Error loading form data.", "danger")
+        return redirect(url_for('auth.admin_dashboard'))
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+    return render_template('admin_export_grade_sheet.html', 
+                           school_years=school_years, 
+                           programs=programs, 
+                           sections=sections,
+                           active_term=active_term)
+
+@auth.route('/api/get-program-subjects/<program_id>/<year>/<semester>')
+def api_get_program_subjects(program_id, year, semester):
+    # API to populate Subject dropdown dynamically
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Map string semester to int if necessary, or matches DB
+    sem_map = {'1st Semester': 1, '2nd Semester': 2, 'Summer': 3}
+    sem_int = sem_map.get(semester, 1)
+    
+    # Clean up year level (e.g., "1st Year" -> 1)
+    year_int = 1
+    if '1' in year: year_int = 1
+    elif '2' in year: year_int = 2
+    elif '3' in year: year_int = 3
+    elif '4' in year: year_int = 4
+    
+    query = """
+        SELECT id, subject_code, subject_title 
+        FROM subjects 
+        WHERE program_id = %s AND year_level = %s AND semester = %s
+        ORDER BY subject_code
+    """
+    cursor.execute(query, (program_id, year_int, sem_int))
+    subjects = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    return jsonify(subjects)
+
+
 
 @auth.route('/admin/enrollment-review/<int:applicant_id>')
 def admin_enrollment_review_page(applicant_id):
@@ -2463,17 +4227,21 @@ def admin_toggle_enrollment_approval(applicant_id):
         if conn and conn.is_connected(): conn.close()
 # --- END NEW ROUTE ---
 
-
 @auth.route('/admin/enrollment/<int:applicant_id>/action', methods=['POST'])
 def admin_enrollment_action(applicant_id):
+    # 1. Security Check: Restrict to authorized roles
     if session.get('user_role') not in ['admin', 'registrar']:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
     
     data = request.get_json()
-    action = data.get('action')
+    action = data.get('action') # 'approve', 'reject', or 'drop'
     rejection_reason = data.get('reason')
     academic_term_id = data.get('term_id')
-    manual_section_id = data.get('manual_section_id') # Get Admin Override ID
+    
+    # Clean manual_section_id (Ensures empty strings/None are handled for MySQL INT column)
+    manual_section_id = data.get('manual_section_id')
+    if manual_section_id == "" or manual_section_id == "None" or manual_section_id is None:
+        manual_section_id = None
 
     if not action or not academic_term_id:
         return jsonify({"success": False, "message": "Invalid action or missing term ID."}), 400
@@ -2484,134 +4252,117 @@ def admin_enrollment_action(applicant_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Fetch application data
+        # 2. Fetch the student's CURRENT data (Includes levels set by student during re-enrollment)
         cursor.execute("""
-            SELECT student_user_id, first_name, last_name, email_address, admin_notes, 
-                   program_choice, enrollment_year_level, enrollment_student_type, 
-                   section_id, old_student_id, control_number, academic_year 
+            SELECT student_user_id, first_name, last_name, email_address, 
+                   program_choice, enrollment_year_level, enrollment_semester, 
+                   enrollment_student_type, section_id, old_student_id, 
+                   control_number, academic_year, permanent_address_city_municipality,
+                   admin_notes
             FROM applicants WHERE applicant_id = %s
         """, (applicant_id,))
         app_data = cursor.fetchone()
 
-        if not app_data or not app_data.get('student_user_id'):
+        if not app_data:
             return jsonify({"success": False, "message": "Application not found."}), 404
         
         student_user_id = app_data['student_user_id']
-        new_status_record = ''
         generated_id_msg = "" 
-        section_msg = ""
+        fee_msg = ""
 
-        term_update_cursor = conn.cursor()
-
+        # ==========================================================
+        # ACTION: APPROVE (Finalize Enrollment & Balance)
+        # ==========================================================
         if action == 'approve':
             new_status_record = 'Enrolled'
             
-            # --- SECTION ASSIGNMENT LOGIC ---
-            
-            # 1. Check for Admin Override First
+            # A. SECTION FINALIZATION
             if manual_section_id:
-                 cursor.execute("SELECT section_name FROM sections WHERE id = %s", (manual_section_id,))
-                 sec_res = cursor.fetchone()
-                 if sec_res:
-                     term_update_cursor.execute("UPDATE applicants SET section_id = %s, is_section_permanent = TRUE WHERE applicant_id = %s", (manual_section_id, applicant_id))
-                     section_msg = f" Admin assigned Section: {sec_res['section_name']}."
-            
-            # 2. If no override, and student has NO section (New student or Shifter) -> Auto Assign
+                # Use Admin override
+                cursor.execute("UPDATE applicants SET section_id = %s, is_section_permanent = TRUE WHERE applicant_id = %s", 
+                               (manual_section_id, applicant_id))
             elif not app_data['section_id']:
+                # Attempt auto-assign if no section exists (New students or shifters)
                 cursor.execute("SELECT program_id FROM programs WHERE title = %s", (app_data['program_choice'],))
                 prog_res = cursor.fetchone()
-                
                 if prog_res:
-                    program_code = prog_res['program_id']
-                    year_level = app_data['enrollment_year_level']
-                    
-                    assigned_section_id = _assign_section_automatically(term_update_cursor, applicant_id, program_code, year_level)
-                    
-                    if assigned_section_id:
-                        cursor.execute("SELECT section_name FROM sections WHERE id = %s", (assigned_section_id,))
-                        sec_name = cursor.fetchone()['section_name']
-                        section_msg = f" Auto-assigned to Section: {sec_name}."
+                    _assign_section_automatically(cursor, applicant_id, prog_res['program_id'], app_data['enrollment_year_level'])
             
-            # --------------------------------
+            # B. PERMANENT STUDENT ID GENERATION
+            # If New Student and ID still starts with 'A' (Temporary), generate a permanent 'P' ID.
+            if str(app_data.get('enrollment_student_type')).capitalize() == 'New':
+                current_id = str(app_data.get('old_student_id') or app_data.get('control_number') or "")
+                if not current_id.startswith('P'):
+                    try:
+                        new_permanent_id = _generate_student_id(cursor)
+                        cursor.execute("UPDATE applicants SET old_student_id = %s, control_number = %s WHERE applicant_id = %s", 
+                                       (new_permanent_id, new_permanent_id, applicant_id))
+                        cursor.execute("UPDATE student_users SET old_student_id = %s WHERE id = %s", 
+                                       (new_permanent_id, student_user_id))
+                        generated_id_msg = f" New ID: {new_permanent_id} assigned."
+                    except Exception as e:
+                        print(f"ID Generation Error: {e}")
 
-            # --- ID GENERATION LOGIC ---
-            current_control_no = app_data.get('control_number', '')
-            student_type = str(app_data.get('enrollment_student_type', '')).capitalize()
-            
-            if student_type == 'New' and (not current_control_no or current_control_no.startswith('A')):
-                try:
-                    new_permanent_id = _generate_student_id(term_update_cursor)
-                    term_update_cursor.execute("UPDATE applicants SET control_number = %s, old_student_id = %s WHERE applicant_id = %s", (new_permanent_id, new_permanent_id, applicant_id))
-                    term_update_cursor.execute("UPDATE student_users SET old_student_id = %s WHERE id = %s", (new_permanent_id, student_user_id))
-                    app_data['control_number'] = new_permanent_id
-                    app_data['old_student_id'] = new_permanent_id
-                    generated_id_msg = f" New Student ID: {new_permanent_id}."
-                except Exception as e:
-                    print(f"Error generating ID: {e}")
+            # C. CUMULATIVE FINANCIAL TRIGGER
+            # Assigns batch fees matching the student's CURRENT level.
+            # Adds rows to the ledger even if an old balance exists.
+            fees_added = _auto_assign_fees(cursor, applicant_id, app_data)
+            if fees_added > 0:
+                fee_msg = f" {fees_added} new assessments added to ledger."
 
+            # D. Finalize Applicant Status
+            cursor.execute("""
+                UPDATE applicants 
+                SET application_status = 'Enrolled', 
+                    original_enrollment_status = NULL, 
+                    last_updated_at = NOW() 
+                WHERE applicant_id = %s
+            """, (applicant_id,))
+
+        # ==========================================
+        # ACTION: DROP
+        # ==========================================
         elif action == 'drop':
             new_status_record = 'Dropped'
+            cursor.execute("UPDATE applicants SET application_status = 'Dropped', last_updated_at = NOW() WHERE applicant_id = %s", (applicant_id,))
+        
+        # ==========================================
+        # ACTION: REJECT (Send back to student)
+        # ==========================================
         elif action == 'reject':
-            new_status_record = 'Enrolling' 
-        else:
-            return jsonify({"success": False, "message": "Invalid action."}), 400
+            new_status_record = 'Enrolling' # Student can fix and re-submit
+            cursor.execute("UPDATE applicants SET application_status = 'Enrolling', last_updated_at = NOW() WHERE applicant_id = %s", (applicant_id,))
+            if rejection_reason:
+                current_notes = app_data.get('admin_notes', '') or ''
+                new_note = f"\n[{datetime.datetime.now().strftime('%Y-%m-%d')}] Enrollment Rejected: {rejection_reason}"
+                cursor.execute("UPDATE applicants SET admin_notes = %s WHERE applicant_id = %s", (current_notes + new_note, applicant_id))
 
-        # Update Enrollment Record
-        term_update_cursor.execute("""
-            UPDATE student_enrollment_records SET enrollment_status = %s WHERE student_user_id = %s AND academic_term_id = %s
+        # 3. Update the Official Term Record (History)
+        cursor.execute("""
+            UPDATE student_enrollment_records 
+            SET enrollment_status = %s 
+            WHERE student_user_id = %s AND academic_term_id = %s
         """, (new_status_record, student_user_id, academic_term_id))
-        
-        # Update Main Status
-        active_term = _get_active_term()
-        if active_term and int(academic_term_id) == active_term['id']:
-             main_status_to_set = new_status_record
-             
-             if action == 'approve':
-                 # Lock permanent flag on approval
-                 term_update_cursor.execute("""
-                    UPDATE applicants 
-                    SET application_status = %s, 
-                        original_enrollment_status = NULL, 
-                        original_academic_term = NULL, 
-                        last_updated_at = NOW(),
-                        is_section_permanent = TRUE 
-                    WHERE applicant_id = %s
-                 """, (main_status_to_set, applicant_id))
-             else:
-                 term_update_cursor.execute("UPDATE applicants SET application_status = %s, last_updated_at = NOW() WHERE applicant_id = %s", (main_status_to_set, applicant_id))
-        
-        if action == 'reject' and rejection_reason:
-            current_notes = app_data.get('admin_notes', '') or ''
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-            new_note = f"\n--- {timestamp} (Enrollment Rejected) ---\n{rejection_reason}"
-            updated_notes = current_notes + new_note
-            term_update_cursor.execute("UPDATE applicants SET admin_notes = %s WHERE applicant_id = %s", (updated_notes.strip(), applicant_id))
 
         conn.commit()
-        term_update_cursor.close()
         
-        # Email Logic
-        email_to_notify = app_data.get('email_address')
-        if email_to_notify:
-            applicant_name = f"{app_data.get('first_name', '')} {app_data.get('last_name', '')}".strip()
-            if action == 'reject':
-                send_enrollment_rejection_email(email_to_notify, applicant_name, applicant_id, rejection_reason, old_student_id=app_data.get('old_student_id'), control_number=app_data.get('control_number'), academic_year=app_data.get('academic_year'))
-            else:
-                send_application_status_email(email_to_notify, applicant_name, new_status_record, applicant_id, program_choice=app_data.get('program_choice'), old_student_id=app_data.get('old_student_id'), control_number=app_data.get('control_number'), academic_year=app_data.get('academic_year'))
+        # 4. Notify Student via Email (Asynchronous call recommended if setup)
+        applicant_name = f"{app_data['first_name']} {app_data['last_name']}"
+        send_application_status_email(app_data['email_address'], applicant_name, new_status_record, applicant_id)
         
-        display_id = app_data.get('old_student_id') or app_data.get('control_number') or f"App #{applicant_id}"
-        final_message = f"Action processed for {display_id}.{generated_id_msg}{section_msg}"
-        
-        return jsonify({"success": True, "message": final_message, "reload": True})
+        return jsonify({
+            "success": True, 
+            "message": f"Action '{action}' processed.{generated_id_msg}{fee_msg}",
+            "reload": True
+        })
 
     except Exception as e:
         if conn: conn.rollback()
-        print(f"Error processing enrollment action: {e}")
-        traceback.print_exc()
-        return jsonify({"success": False, "message": "A server error occurred."}), 500
+        print(f"CRITICAL ERROR in admin_enrollment_action: {e}")
+        return jsonify({"success": False, "message": f"Server Error: {str(e)}"}), 500
     finally:
         if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
+        if conn: conn.close()
 
 # NEW: Admin Document Upload Route
 @auth.route('/admin/enrollment/<int:applicant_id>/upload-doc', methods=['POST'])
@@ -2678,10 +4429,6 @@ def admin_upload_enrollment_doc(applicant_id):
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
-
-
-
-
 
 
 @auth.route('/admin/application/<int:applicant_id>/permit-details', methods=['POST'])
@@ -2857,7 +4604,7 @@ def admin_manage_grades_page(student_user_id):
             flash("Student not found or has no application.", "warning")
             return redirect(url_for('auth.admin_enrolled_applications'))
 
-        # 2. Get all subjects
+        # 2. Get all subjects for the student's program
         cursor.execute("""
             SELECT s.id, s.subject_code, s.subject_title, s.units, s.year_level, s.semester, s.prerequisite_subject_id, 
                    p.subject_code as prerequisite_code 
@@ -2868,13 +4615,15 @@ def admin_manage_grades_page(student_user_id):
         """, (student['program_id'],))
         all_subjects = cursor.fetchall()
 
-        # 3. Get existing grades
+        # 3. Get existing grades (Updated to include percentage)
         cursor.execute("""
-            SELECT subject_id, grade, remarks, academic_year, semester 
+            SELECT subject_id, grade, percentage, remarks, academic_year, semester 
             FROM student_grades 
             WHERE student_user_id = %s
         """, (student_user_id,))
         grades_list = cursor.fetchall()
+        
+        # Map grades by subject_id for easy lookup in template
         student_grades = {grade['subject_id']: grade for grade in grades_list}
         
         # 4. Determine academic status
@@ -2915,7 +4664,7 @@ def admin_manage_grades_page(student_user_id):
             if is_disabled:
                 disabled_subjects_info[subject['id']] = reason
 
-        # 7. Organize subjects
+        # 7. Organize subjects by Year and Semester
         subjects_by_year = {}
         for subject in all_subjects:
             year = subject['year_level']
@@ -2926,8 +4675,8 @@ def admin_manage_grades_page(student_user_id):
                 subjects_by_year[year][semester] = []
             subjects_by_year[year][semester].append(subject)
 
-        # --- NEW: Fetch Max Units Allowed ---
-        max_units_allowed = 26 # Default
+        # 8. Fetch Max Units Allowed
+        max_units_allowed = 26 
         if student.get('academic_year') and student.get('enrollment_semester'):
              cursor.execute("SELECT max_units FROM academic_terms WHERE year_name = %s AND semester = %s", 
                             (student['academic_year'], student['enrollment_semester']))
@@ -2945,7 +4694,7 @@ def admin_manage_grades_page(student_user_id):
                                student_academic_status=student_academic_status,
                                disabled_subjects_info=disabled_subjects_info,
                                active_school_year=student.get('academic_year'),
-                               max_units_allowed=max_units_allowed, # Pass this to template
+                               max_units_allowed=max_units_allowed, 
                                active_page='enrolling')
     except Exception as e:
         flash(f"Error loading grades page: {e}", "danger")
@@ -2954,7 +4703,7 @@ def admin_manage_grades_page(student_user_id):
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
-
+        
 @auth.route('/admin/application/<int:applicant_id>/update-level-section', methods=['POST'])
 def admin_update_student_level_section(applicant_id):
     # 1. Check Permissions
@@ -3101,37 +4850,49 @@ def admin_save_grades(student_user_id):
         
         cursor = conn.cursor()
         
+        # UPDATED SQL QUERY
         sql = """
-            INSERT INTO student_grades (student_user_id, subject_id, grade, remarks, academic_year, semester, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+            INSERT INTO student_grades (student_user_id, subject_id, grade, percentage, remarks, academic_year, semester, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
             ON DUPLICATE KEY UPDATE 
                 grade = VALUES(grade), 
+                percentage = VALUES(percentage),
                 remarks = VALUES(remarks),
                 updated_at = NOW()
         """
         
         records_to_insert = []
         for grade_info in grades_to_save:
-            grade_to_save = grade_info.get('grade') # Could be None
+            grade_to_save = grade_info.get('grade') 
+            
+            # --- PERCENTAGE HANDLING ---
+            percentage_to_save = grade_info.get('percentage')
+            # Convert to None if empty string or None, otherwise ensure Int
+            if percentage_to_save == '' or percentage_to_save is None:
+                percentage_to_save = None
+            else:
+                try:
+                    percentage_to_save = int(percentage_to_save)
+                except:
+                    percentage_to_save = None
+            # ---------------------------
+
             remarks_to_save = grade_info.get('remarks')
 
-            # --- MODIFIED: Automatic "Incomplete" Logic ---
-            # If grade is not entered, and remarks are not specified, it's 'Incomplete'.
+            # Auto "Incomplete" Logic
             if grade_to_save is None and not remarks_to_save:
                 remarks_to_save = 'Incomplete'
-            
-            # If grade IS entered, but remarks are not, it's also 'Incomplete' (pending verification)
             if grade_to_save is not None and not remarks_to_save:
                 remarks_to_save = 'Incomplete'
             
-            # DB requires a number, so if grade is None, use 0.00 as a placeholder.
-            # The 'Incomplete' remark is the important part.
             db_grade_value = grade_to_save if grade_to_save is not None else 0.00
             
+            # Ensure the order matches the SQL VALUES (%s...) above exactly
             records_to_insert.append((
                 student_user_id,
                 grade_info['subject_id'],
                 db_grade_value,
+                percentage_to_save, # <--- Passed here
                 remarks_to_save,
                 grade_info['academic_year'],
                 grade_info['semester']
@@ -3149,19 +4910,241 @@ def admin_save_grades(student_user_id):
         return jsonify({"success": False, "message": "A server error occurred while saving grades."}), 500
     finally:
         if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
+        if conn: conn.close()
 
 
 # ----------------- GRADE EXPORT/IMPORT ROUTES -----------------
 
-# ----------------- GRADE EXPORT/IMPORT ROUTES -----------------
+@auth.route('/admin/reports/generate-grade-sheet', methods=['POST'])
+def admin_generate_grade_sheet():
+    if session.get('user_role') not in ['admin', 'registrar']:
+        return redirect(url_for('auth.admin'))
+
+    # 1. Get Form Data
+    section_id = request.form.get('section_id')
+    subject_id = request.form.get('subject_id')
+    instructor_name = request.form.get('instructor_name', 'TBA') 
+    academic_year = request.form.get('academic_year')
+    semester = request.form.get('semester')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # 2. Fetch Metadata (Section Name, Subject Details)
+        cursor.execute("SELECT section_name FROM sections WHERE id = %s", (section_id,))
+        section_data = cursor.fetchone()
+        section_name = section_data['section_name'] if section_data else "Unknown"
+
+        cursor.execute("SELECT subject_code, subject_title, units FROM subjects WHERE id = %s", (subject_id,))
+        subject_data = cursor.fetchone()
+        
+        # 3. Fetch Students and Grades (Including Percentage)
+        query = """
+            SELECT a.last_name, a.first_name, a.middle_name, sg.grade, sg.percentage, sg.remarks
+            FROM applicants a
+            JOIN student_users su ON a.student_user_id = su.id
+            LEFT JOIN student_grades sg ON su.id = sg.student_user_id AND sg.subject_id = %s
+            WHERE a.section_id = %s 
+            AND a.application_status = 'Enrolled'
+            ORDER BY a.sex ASC, a.last_name ASC
+        """
+        cursor.execute(query, (subject_id, section_id))
+        students = cursor.fetchall()
+
+        # 4. Setup Excel using OpenPyXL
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Report on Grades"
+
+        # --- STYLING CONSTANTS ---
+        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+        center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        left_align = Alignment(horizontal='left', vertical='center')
+        bold_font = Font(bold=True, name='Arial', size=10)
+        regular_font = Font(name='Arial', size=10)
+
+        # --- HEADER ---
+        ws.merge_cells('A1:K1')
+        ws['A1'] = "PADRE GARCIA POLYTECHNIC COLLEGE"
+        ws['A1'].font = Font(bold=True, size=14, name='Arial')
+        ws['A1'].alignment = center_align
+        
+        ws.merge_cells('A2:K2')
+        ws['A2'] = "Brgy. Castillo, Padre Garcia, Batangas"
+        ws['A2'].alignment = center_align
+
+        ws.merge_cells('A3:K3')
+        ws['A3'] = "REPORT ON GRADES"
+        ws['A3'].font = Font(bold=True, size=12)
+        ws['A3'].alignment = center_align
+
+        ws.merge_cells('A4:K4')
+        ws['A4'] = "OVERALL GRADE"
+        ws['A4'].font = Font(bold=True, size=12)
+        ws['A4'].alignment = center_align
+
+        # --- METADATA ROW ---
+        ws['A6'] = "Name :"
+        ws.merge_cells('B6:E6')
+        ws['B6'] = instructor_name.upper()
+        ws['B6'].font = bold_font
+        ws['B6'].border = Border(bottom=Side(style='thin'))
+        
+        ws['F6'] = semester.upper()
+        ws['F6'].alignment = center_align
+        ws['F6'].border = Border(bottom=Side(style='thin'))
+        
+        ws['G6'] = "Semester / Academic Year:"
+        ws.merge_cells('H6:J6')
+        ws['H6'] = academic_year
+        ws['H6'].border = Border(bottom=Side(style='thin'))
+        ws['H6'].alignment = center_align
+
+        ws['A7'] = "Course/Code:"
+        ws.merge_cells('B7:E7')
+        ws['B7'] = f"{subject_data['subject_code']} - {subject_data['subject_title']}"
+        ws['B7'].font = bold_font
+        ws['B7'].border = Border(bottom=Side(style='thin'))
+        
+        ws['J7'] = "Units:"
+        ws['K7'] = subject_data['units']
+        ws['K7'].alignment = center_align
+        ws['K7'].border = Border(bottom=Side(style='thin'))
+
+        ws['A8'] = "Course/Sec:"
+        ws.merge_cells('B8:E8')
+        ws['B8'] = section_name
+        ws['B8'].font = bold_font
+        ws['B8'].border = Border(bottom=Side(style='thin'))
+
+        # --- TABLE COLUMNS SETUP ---
+        ws['A10'] = "No"
+        ws.merge_cells('B10:C10')
+        ws['B10'] = "Name of Student"
+        ws['D10'] = "PERCENTAGE"
+        ws['E10'] = "GRADE POINT"
+        
+        ws['G10'] = "No"
+        ws.merge_cells('H10:I10')
+        ws['H10'] = "Name of Student"
+        ws['J10'] = "PERCENTAGE"
+        ws['K10'] = "GRADE POINT"
+
+        for col in ['A', 'B', 'D', 'E', 'G', 'H', 'J', 'K']:
+            cell = ws[f'{col}10']
+            cell.border = thin_border
+            cell.font = Font(bold=True, size=8)
+            cell.alignment = center_align
+
+        # --- FILLING STUDENT DATA ---
+        row_start = 11
+        max_rows_per_col = 30 
+        
+        for i, student in enumerate(students):
+            if i < max_rows_per_col:
+                curr = row_start + i
+                c_no, c_name, c_perc, c_grade = 'A', 'B', 'D', 'E'
+                ws.merge_cells(f'B{curr}:C{curr}')
+            else:
+                curr = row_start + (i - max_rows_per_col)
+                c_no, c_name, c_perc, c_grade = 'G', 'H', 'J', 'K'
+                ws.merge_cells(f'H{curr}:I{curr}')
+
+            full_name = f"{student['last_name']}, {student['first_name']}"
+            if student['middle_name']:
+                full_name += f" {student['middle_name'][0]}."
+            
+            grade = student['grade']
+            percentage = student['percentage']
+            
+            disp_grade = f"{grade:.2f}" if grade is not None and grade > 0 else ""
+            disp_perc = str(percentage) if percentage else ""
+
+            is_red = False
+            if student['remarks'] == 'Failed' or (grade and grade > 3.0):
+                is_red = True
+            
+            font_style = Font(color="FF0000") if is_red else regular_font
+
+            ws[f'{c_no}{curr}'] = i + 1
+            ws[f'{c_name}{curr}'] = full_name.upper()
+            ws[f'{c_perc}{curr}'] = disp_perc
+            ws[f'{c_grade}{curr}'] = disp_grade
+
+            for c in [c_no, c_name, c_perc, c_grade]:
+                cell = ws[f'{c}{curr}']
+                cell.border = thin_border
+                cell.font = regular_font
+                cell.alignment = center_align
+            
+            ws[f'{c_name}{curr}'].alignment = Alignment(horizontal='left', vertical='center')
+            
+            if is_red:
+                ws[f'{c_perc}{curr}'].font = font_style
+                ws[f'{c_grade}{curr}'].font = font_style
+
+        # --- FOOTER SIGNATORIES ---
+        footer_row = row_start + max_rows_per_col + 2
+        ws[f'A{footer_row}'] = "Prepared by:"
+        ws[f'G{footer_row}'] = f"Date Submitted: {datetime.date.today().strftime('%B %d, %Y')}"
+        
+        sig_row = footer_row + 3
+        
+        ws.merge_cells(f'A{sig_row}:C{sig_row}')
+        ws[f'A{sig_row}'] = instructor_name.upper()
+        ws[f'A{sig_row}'].font = Font(bold=True, underline='single')
+        ws[f'A{sig_row}'].alignment = center_align
+        
+        ws.merge_cells(f'A{sig_row+1}:C{sig_row+1}')
+        ws[f'A{sig_row+1}'] = "Instructor"
+        ws[f'A{sig_row+1}'].alignment = center_align
+
+        ws[f'G{footer_row}'] = "Recommending Approval:"
+        ws.merge_cells(f'G{sig_row}:I{sig_row}')
+        ws[f'G{sig_row}'] = "_______________________"
+        ws[f'G{sig_row}'].alignment = center_align
+        
+        ws.merge_cells(f'G{sig_row+1}:I{sig_row+1}')
+        ws[f'G{sig_row+1}'] = "College Dean"
+        ws[f'G{sig_row+1}'].alignment = center_align
+
+        # Grading System Legend
+        legend_row = sig_row + 4
+        ws.merge_cells(f'A{legend_row}:K{legend_row+5}')
+        legend_cell = ws[f'A{legend_row}']
+        legend_cell.value = "GRADING SYSTEM\n1.00 - 96-100 Excellent  |  1.25 - 94-95 Very Good\n1.50 - 91-93 Very Good  |  1.75 - 88-90 Good\n2.00 - 85-87 Good  |  2.25 - 82-84 Good\n2.50 - 79-81 Satisfactory  |  2.75 - 76-78 Satisfactory\n3.00 - 75 Passing  |  5.00 - Failed\nINC - Incomplete  |  UD - Unofficially Dropped"
+        legend_cell.font = Font(size=8)
+        legend_cell.alignment = center_align
+        legend_cell.border = Border(top=Side(style='medium'), bottom=Side(style='medium'), left=Side(style='medium'), right=Side(style='medium'))
+
+        ws.column_dimensions['B'].width = 25
+        ws.column_dimensions['H'].width = 25
+        ws.column_dimensions['C'].width = 2
+        ws.column_dimensions['I'].width = 2
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        filename = f"Grades_{section_name.replace(' ', '_')}_{subject_data['subject_code']}.xlsx"
+        return send_file(output, as_attachment=True, download_name=filename, 
+                         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+    except Exception as e:
+        print(f"Error generating excel: {e}")
+        traceback.print_exc()
+        flash("An error occurred generating the report.", "danger")
+        return redirect(url_for('auth.admin_grade_reports'))
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 @auth.route('/admin/grades/<int:student_user_id>/export')
 def admin_export_grades(student_user_id):
     if session.get('user_role') not in ['admin', 'registrar', 'guidance', 'osa']:
         return redirect(url_for('auth.admin'))
 
-    # Get filter parameters
     year_filter = request.args.get('year')
     semester_filter = request.args.get('semester')
 
@@ -3190,11 +5173,12 @@ def admin_export_grades(student_user_id):
             flash("Student program not found.", "danger")
             return redirect(request.referrer)
 
-        # 3. Build Query - Only fetching necessary columns for the simplified template
+        # 3. Build Query - NOW INCLUDES PERCENTAGE
         base_query = """
             SELECT 
                 s.subject_code AS 'Code',
                 s.subject_title AS 'Subject Title',
+                sg.percentage AS 'Percentage',
                 sg.grade AS 'Grade'
             FROM subjects s
             LEFT JOIN student_grades sg ON s.id = sg.subject_id AND sg.student_user_id = %s
@@ -3202,7 +5186,6 @@ def admin_export_grades(student_user_id):
         """
         params = [student_user_id, program_data['program_id']]
 
-        # Apply filters
         if year_filter and year_filter != 'all':
             base_query += " AND s.year_level = %s"
             params.append(year_filter)
@@ -3216,11 +5199,14 @@ def admin_export_grades(student_user_id):
         cursor.execute(base_query, tuple(params))
         data = cursor.fetchall()
 
-        # 4. Process Data (Clean NULLs)
-        # If grade is 0.00, show as empty string in Excel so user knows to fill it
+        # 4. Process Data
         for row in data:
+            # Clean up Grade Point
             if row['Grade'] is None or row['Grade'] == 0.00:
                 row['Grade'] = ""
+            # Clean up Percentage
+            if row['Percentage'] is None or row['Percentage'] == 0:
+                row['Percentage'] = ""
         
         df = pd.DataFrame(data)
 
@@ -3229,7 +5215,6 @@ def admin_export_grades(student_user_id):
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='Grades')
             
-            # Auto-adjust column widths
             worksheet = writer.sheets['Grades']
             for column_cells in worksheet.columns:
                 length = max(len(str(cell.value)) if cell.value else 0 for cell in column_cells)
@@ -3237,7 +5222,6 @@ def admin_export_grades(student_user_id):
 
         output.seek(0)
         
-        # Filename
         filter_suffix = ""
         if year_filter and year_filter != 'all': filter_suffix += f"_Y{year_filter}"
         if semester_filter and semester_filter != 'all': filter_suffix += f"_S{semester_filter}"
@@ -3260,6 +5244,168 @@ def admin_export_grades(student_user_id):
         if cursor: cursor.close()
         if conn: conn.close()
 
+@auth.route('/admin/reports/import-grade-sheet', methods=['POST'])
+def admin_import_grade_sheet():
+    if session.get('user_role') not in ['admin', 'registrar']:
+        return redirect(url_for('auth.admin'))
+
+    section_id = request.form.get('section_id')
+    subject_id = request.form.get('subject_id')
+    academic_year = request.form.get('academic_year')
+    semester = request.form.get('semester')
+    file = request.files.get('file')
+
+    if not all([section_id, subject_id, file]):
+        flash("Missing required fields or file.", "danger")
+        return redirect(url_for('auth.admin_grade_reports'))
+
+    updated_count = 0
+    errors = []
+
+    try:
+        # 1. LOAD WORKBOOK WITH data_only=True
+        # This tells openpyxl to ignore formulas (e.g. =SUM(A1:A5)) and read the 
+        # last calculated value (e.g. 15) stored by Excel.
+        # Required for linked cells or formula-based grades.
+        wb = load_workbook(file, data_only=True)
+        ws = wb.active 
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Standard Layout: (Name Col, Percentage Col, Grade Col)
+        # Left Side: Name=B(2), Perc=D(4), Grade=E(5)
+        # Right Side: Name=H(8), Perc=J(10), Grade=K(11)
+        layout_cols = [(2, 4, 5), (8, 10, 11)]
+        
+        # We start reading from row 11 based on the template structure
+        for row_idx in range(11, 60): 
+            for name_col, perc_col, grade_col in layout_cols:
+                
+                # --- A. READ NAME ---
+                cell_name = ws.cell(row=row_idx, column=name_col).value
+                if not cell_name or str(cell_name).strip() == "":
+                    continue # Skip empty rows
+                
+                name_str = str(cell_name).strip()
+                
+                # Skip Headers/Garbage
+                invalid_starts = ["NAME", "GRADE", "PERCENTAGE", "NO", ":", "."]
+                if any(name_str.upper().startswith(x) for x in invalid_starts):
+                    continue
+                # Skip if name is just a number (row index)
+                try:
+                    float(name_str)
+                    continue
+                except ValueError:
+                    pass
+
+                # --- B. READ GRADE (With Flexible Column Logic) ---
+                raw_grade = ws.cell(row=row_idx, column=grade_col).value
+                raw_perc = ws.cell(row=row_idx, column=perc_col).value
+
+                # FIX: Handle "Colon" layout (Name | : | Grade) shown in user screenshot
+                # If we read a colon, assume the data is shifted one column to the right
+                if str(raw_grade).strip() == ":":
+                    raw_grade = ws.cell(row=row_idx, column=grade_col + 1).value
+                
+                if str(raw_perc).strip() == ":":
+                    raw_perc = ws.cell(row=row_idx, column=perc_col + 1).value
+
+                # --- C. VALIDATE EXCEL ERRORS ---
+                # data_only=True returns strings like '#REF!' if formula failed
+                excel_errors = ["#REF!", "#VALUE!", "#DIV/0!", "#NAME?", "#N/A", "#NUM!", "#NULL!"]
+                if str(raw_grade) in excel_errors:
+                    errors.append(f"Row {row_idx}: Grade for '{name_str}' has an Excel error ({raw_grade}). Please open file in Excel and fix formulas.")
+                    continue
+
+                # --- D. PROCESS NUMERIC VALUES ---
+                grade_val = 0.00
+                is_valid_grade = False
+
+                if raw_grade is not None and str(raw_grade).strip() not in ["", "-"]:
+                    try:
+                        grade_val = float(raw_grade)
+                        is_valid_grade = True
+                    except (ValueError, TypeError):
+                        # If value exists but isn't a number (and wasn't a colon/header), flag it
+                        # errors.append(f"Row {row_idx}: Invalid grade '{raw_grade}' for {name_str}")
+                        pass # Or ignore/treat as incomplete
+
+                percentage_val = None
+                try:
+                    if raw_perc is not None and str(raw_perc).strip() not in ["", "-", ":"]:
+                        percentage_val = int(float(raw_perc))
+                except:
+                    percentage_val = None
+
+                # Only process if we found a valid name format
+                if ',' not in name_str:
+                    continue
+
+                # --- E. SAVE TO DATABASE ---
+                parts = name_str.split(',')
+                last_name = parts[0].strip()
+                # Handle cases like "DELA CRUZ, JUAN" vs "DELA CRUZ, JUAN JR."
+                first_name_part = parts[1].strip().split(' ')[0] 
+
+                # Find student in THIS section
+                cursor.execute("""
+                    SELECT a.student_user_id 
+                    FROM applicants a
+                    WHERE a.section_id = %s 
+                    AND a.last_name LIKE %s 
+                    AND a.first_name LIKE %s
+                    AND a.application_status = 'Enrolled'
+                    LIMIT 1
+                """, (section_id, f"%{last_name}%", f"%{first_name_part}%"))
+                
+                student = cursor.fetchone()
+
+                if student:
+                    remarks = 'Passed'
+                    if grade_val > 3.0: remarks = 'Failed'
+                    elif grade_val == 0.0 or not is_valid_grade: remarks = 'Incomplete'
+                    elif grade_val == 5.0: remarks = 'Failed'
+
+                    cursor.execute("""
+                        INSERT INTO student_grades (student_user_id, subject_id, grade, percentage, remarks, academic_year, semester, created_at, updated_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                        ON DUPLICATE KEY UPDATE 
+                            grade = VALUES(grade), 
+                            percentage = VALUES(percentage),
+                            remarks = VALUES(remarks),
+                            updated_at = NOW()
+                    """, (student['student_user_id'], subject_id, grade_val, percentage_val, remarks, academic_year, semester))
+                    updated_count += 1
+                else:
+                    # Optional: log students not found in DB
+                    # errors.append(f"Student not found: {name_str}")
+                    pass
+
+        conn.commit()
+        
+        if updated_count > 0:
+            flash(f"✅ Successfully imported/updated {updated_count} grades.", "success")
+        else:
+            flash("⚠️ No valid student grades were found to import.", "warning")
+
+        if errors:
+            # Show first 3 errors to avoid clutter
+            error_html = "<br>".join(errors[:3])
+            if len(errors) > 3: error_html += f"<br>...and {len(errors)-3} more issues."
+            flash(f"Import completed with warnings:<br>{error_html}", "warning")
+
+    except Exception as e:
+        print(f"Import Error: {e}")
+        import traceback
+        traceback.print_exc()
+        flash("An error occurred during import. Ensure the file is not corrupted.", "danger")
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+    return redirect(url_for('auth.admin_grade_reports'))
 
 @auth.route('/admin/grades/<int:student_user_id>/import', methods=['POST'])
 def admin_import_grades(student_user_id):
@@ -3276,12 +5422,16 @@ def admin_import_grades(student_user_id):
         df = pd.read_excel(file)
         df.columns = df.columns.str.strip()
 
-        # Renaming for flexibility (in case user uploads old format)
-        df.rename(columns={'Subject Code': 'Code'}, inplace=True)
+        # Support flexible column names
+        df.rename(columns={
+            'Subject Code': 'Code', 
+            'Subject Title': 'Subject Title',
+            'Percentage': 'Percentage',
+            'Grade': 'Grade'
+        }, inplace=True)
 
-        # Validate minimal columns
-        if 'Code' not in df.columns or 'Grade' not in df.columns:
-             return jsonify({"success": False, "message": "Invalid format. Columns must be 'Code', 'Subject Title', 'Grade'."}), 400
+        if 'Code' not in df.columns:
+             return jsonify({"success": False, "message": "Invalid format. 'Code' column is missing."}), 400
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -3301,20 +5451,21 @@ def admin_import_grades(student_user_id):
             
         program_id = program_data['program_id']
 
-        # 2. Get Subject Map (Code -> ID & Semester)
-        # We need the semester from the subject table to auto-fill the record
+        # 2. Get Subject Map
         cursor.execute("SELECT id, subject_code, semester FROM subjects WHERE program_id = %s", (program_id,))
         subject_map = {row['subject_code'].strip().upper(): {'id': row['id'], 'sem_num': row['semester']} for row in cursor.fetchall()}
 
-        # 3. Get Active Academic Year (System Setting)
+        # 3. Get Active Year
         active_term = _get_active_term()
         default_ay = active_term['year_name'] if active_term else '2025-2026'
 
+        # UPDATED QUERY: Includes Percentage
         insert_query = """
-            INSERT INTO student_grades (student_user_id, subject_id, grade, remarks, academic_year, semester, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+            INSERT INTO student_grades (student_user_id, subject_id, grade, percentage, remarks, academic_year, semester, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
             ON DUPLICATE KEY UPDATE 
                 grade = VALUES(grade), 
+                percentage = VALUES(percentage),
                 remarks = VALUES(remarks),
                 academic_year = VALUES(academic_year),
                 semester = VALUES(semester),
@@ -3330,48 +5481,54 @@ def admin_import_grades(student_user_id):
                 subj_info = subject_map[code]
                 subject_id = subj_info['id']
                 
-                # Process Grade
+                # --- Parse Values ---
                 raw_grade = row.get('Grade')
+                raw_perc = row.get('Percentage')
                 
                 grade_to_save = 0.00
+                perc_to_save = None
                 remarks_to_save = ''
 
-                # Logic: If empty in Excel, clear DB. If present, auto-calc remarks.
+                # Percentage Logic
+                if not pd.isna(raw_perc) and str(raw_perc).strip() != '':
+                    try:
+                        perc_to_save = int(float(raw_perc))
+                    except:
+                        perc_to_save = None
+
+                # Grade Logic & Remarks
                 if pd.isna(raw_grade) or str(raw_grade).strip() == '':
                     grade_to_save = 0.00
-                    remarks_to_save = '' # Clear remarks if grade is removed
+                    # Only clear remarks if both are empty
+                    if perc_to_save is None:
+                         remarks_to_save = '' 
+                    else:
+                         # If we have percentage but no grade, infer 'Incomplete' or calculate grade?
+                         # For now, defaulting to Incomplete if grade is missing
+                         remarks_to_save = 'Incomplete' 
                 else:
                     try:
                         grade_val = float(raw_grade)
                         grade_to_save = grade_val
                         
-                        # AUTOMATIC REMARKS CALCULATION
-                        if 1.0 <= grade_val <= 3.0:
-                            remarks_to_save = "Passed"
-                        elif grade_val > 3.0:
-                            remarks_to_save = "Failed"
-                        elif grade_val == 0.0:
-                             remarks_to_save = "Incomplete" # Or empty
-                        else:
-                            # Handle specific codes if admin enters 5.0, 9.0 etc.
-                             remarks_to_save = "Failed" 
+                        if 1.0 <= grade_val <= 3.0: remarks_to_save = "Passed"
+                        elif grade_val > 3.0: remarks_to_save = "Failed"
+                        elif grade_val == 0.0: remarks_to_save = "Incomplete"
+                        else: remarks_to_save = "Failed"
 
                     except ValueError:
-                        # Not a number (e.g., 'INC', 'UD')
                         grade_to_save = 0.00
                         remarks_to_save = str(raw_grade).strip()
 
-                # Auto-Fill Context
+                # Semester Context
                 ay = default_ay
-                
-                # Map numeric semester from subjects table to string format for grades table
                 sem_num = subj_info['sem_num']
                 if sem_num == 1: sem_str = '1st Semester'
                 elif sem_num == 2: sem_str = '2nd Semester'
                 elif sem_num == 3: sem_str = 'Summer / Midyear'
-                else: sem_str = '1st Semester' # Fallback
+                else: sem_str = '1st Semester'
 
-                params_list.append((student_user_id, subject_id, grade_to_save, remarks_to_save, ay, sem_str))
+                params_list.append((student_user_id, subject_id, grade_to_save, perc_to_save, remarks_to_save, ay, sem_str))
 
         if params_list:
             insert_cursor = conn.cursor()
@@ -3495,14 +5652,15 @@ def admin_export_applications_list(export_type):
 # ----------------- ADMIN CONTENT MANAGEMENT -----------------
 @auth.route('/admin/manage-content')
 def admin_manage_content():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: 
+        return redirect(url_for('auth.admin'))
     _, stats = _get_all_applications_and_stats()
     return render_template('admin_manage_content.html', stats=stats, active_page='manage_content')
 
 # --- Programs ---
 @auth.route('/admin/manage-programs')
 def admin_manage_programs():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar','secretary']: return redirect(url_for('auth.admin'))
     _, stats = _get_all_applications_and_stats()
     programs = []
     conn = None
@@ -3526,7 +5684,7 @@ def admin_manage_programs():
 @auth.route('/admin/program/form', defaults={'program_id': None}, methods=['GET', 'POST'])
 @auth.route('/admin/program/form/<program_id>', methods=['GET', 'POST'])
 def admin_program_form(program_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']:  return redirect(url_for('auth.admin'))
     
     from .views import _get_program_details_from_db
 
@@ -3655,10 +5813,32 @@ def save_file_to_uploads(file_storage, prefix='doc'):
     except Exception as e:
         return None, str(e)
 
+def save_file_to_uploads(file_storage, prefix='hero'):
+    if not file_storage or not file_storage.filename:
+        return None, "No file provided."
+
+    # EXTENDED allowed list to include mp4
+    allowed_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.pdf', '.mp4', '.mov'}
+    file_ext = os.path.splitext(file_storage.filename)[1].lower()
+
+    if file_ext not in allowed_extensions:
+        return None, f"Invalid file type. Allowed: Photos or MP4 Video."
+    
+    timestamp = int(time.time())
+    secure_name = secure_filename(os.path.splitext(file_storage.filename)[0])
+    new_filename = f"{prefix}_{secure_name}_{timestamp}{file_ext}"
+    
+    try:
+        save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename)
+        file_storage.save(save_path)
+        return new_filename, None
+    except Exception as e:
+        return None, str(e)
+
 # --- ROUTE: Admin Manage Sidebar (Updated to fetch uploads & programs) ---
 @auth.route('/admin/manage-sidebar-content', methods=['GET', 'POST'])
 def admin_manage_sidebar_content():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     
     conn = None; cursor = None
     try:
@@ -3857,7 +6037,7 @@ def admin_delete_requirement(req_id):
 
 @auth.route('/admin/program/delete/<program_id>', methods=['POST'])
 def admin_delete_program(program_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -3893,7 +6073,7 @@ def admin_delete_program(program_id):
 # --- Subjects (Curriculum) ---
 @auth.route('/admin/program/<program_id>/subjects')
 def admin_manage_subjects(program_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     
     _, stats = _get_all_applications_and_stats()
     subjects = []
@@ -3933,7 +6113,7 @@ def admin_manage_subjects(program_id):
 
 @auth.route('/admin/program/<program_id>/update-units', methods=['POST'])
 def admin_update_program_units(program_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     
     total_units = request.form.get('total_units')
     
@@ -4070,22 +6250,27 @@ def edit_application_page(applicant_id):
         if conn and conn.is_connected(): conn.close()
 
 # --- Manage About Page Content ---
+# --- auth.py ---
+
 @auth.route('/admin/manage-about-content', methods=['GET', 'POST'])
 def admin_manage_about_content():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: 
+        return redirect(url_for('auth.admin'))
     
     conn = None; cursor = None
     try:
         conn = get_db_connection()
         if request.method == 'POST':
-            # 1. Handle Text Fields
-            text_fields = [
-                'community_title', 'community_text', 
-                'president_name', 'president_role', 'president_desc'
-            ]
             cursor = conn.cursor()
+
+            # 1. Update Text Fields
+            text_fields = [
+                'community_title', 'community_text', 'president_name', 'president_role', 'president_desc',
+                'about_identity_title', 'about_slogan', 'about_vision_text', 'about_mission_text', 'about_core_values',
+                # Hero Fields
+                'about_hero_title', 'about_hero_subtitle', 'about_hero_type' 
+            ]
             
-            # Upsert (Insert or Update) text data
             for key in text_fields:
                 value = request.form.get(key, '')
                 cursor.execute("""
@@ -4093,32 +6278,34 @@ def admin_manage_about_content():
                     ON DUPLICATE KEY UPDATE content_value = %s
                 """, (key, value, value))
 
-            # 2. Handle Image Uploads
-            image_fields = ['community_image', 'president_image']
-            for key in image_fields:
-                file = request.files.get(key)
-                if file and file.filename:
-                    # Generate new filename
-                    new_filename, error = save_image_to_uploads(file, prefix=key)
-                    if not error:
-                        # (Optional) Delete old image logic could go here if you track it
-                        cursor.execute("""
-                            INSERT INTO page_content (content_key, content_value) VALUES (%s, %s)
-                            ON DUPLICATE KEY UPDATE content_value = %s
-                        """, (key, new_filename, new_filename))
-            
+            # 2. Handle Media Upload (Image or Video)
+            file = request.files.get('about_hero_bg_file')
+            if file and file.filename != '':
+                # Use save_file_to_uploads (your generic helper) to allow .mp4
+                new_filename, error = save_file_to_uploads(file, prefix='hero')
+                if not error:
+                    cursor.execute("""
+                        INSERT INTO page_content (content_key, content_value) VALUES (%s, %s)
+                        ON DUPLICATE KEY UPDATE content_value = %s
+                    """, ('about_hero_bg_file', new_filename, new_filename))
+
+            # Handle other images (president, community, etc)
+            other_images = [('community_image', 'community'), ('president_image', 'president'), ('about_identity_image', 'identity')]
+            for form_key, prefix in other_images:
+                f = request.files.get(form_key)
+                if f and f.filename != '':
+                    fname, err = save_image_to_uploads(f, prefix=prefix)
+                    if not err:
+                        cursor.execute("INSERT INTO page_content (content_key, content_value) VALUES (%s, %s) ON DUPLICATE KEY UPDATE content_value = %s", (form_key, fname, fname))
+
             conn.commit()
-            flash("About page content updated successfully.", "success")
+            flash("✅ About page updated successfully!", "success")
             return redirect(url_for('auth.admin_manage_about_content'))
 
-        # GET Request - Fetch current values
+        # GET Logic
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM page_content")
-        rows = cursor.fetchall()
-        
-        # Convert list of rows to a dictionary: {'president_name': 'Dr. ...', ...}
-        content = {row['content_key']: row['content_value'] for row in rows}
-        
+        cursor.execute("SELECT content_key, content_value FROM page_content")
+        content = {row['content_key']: row['content_value'] for row in cursor.fetchall()}
         _, stats = _get_all_applications_and_stats()
         return render_template('admin_manage_about_content.html', content=content, stats=stats, active_page='manage_about_content')
 
@@ -4130,9 +6317,11 @@ def admin_manage_about_content():
         if conn: conn.close()
 
 # --- Manage Contact & General Content ---
+
 @auth.route('/admin/manage-contact-content', methods=['GET', 'POST'])
 def admin_manage_contact_content():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: 
+        return redirect(url_for('auth.admin'))
     
     conn = None; cursor = None
     try:
@@ -4146,7 +6335,14 @@ def admin_manage_contact_content():
                 'contact_email', 'contact_phone', 
                 'contact_address', 'contact_hours', 'contact_map_url',
                 'footer_title', 'footer_subtitle', 'footer_connect_text', 'footer_facebook_link',
-                'consent_title', 'consent_text', 'oath_title', 'oath_text'
+                'consent_title', 'consent_text', 'oath_title', 'oath_text',
+                'sidebar_info_title', 'sidebar_info_1', 'sidebar_info_2', 'sidebar_info_3',
+                'sidebar_contact_title', 'sidebar_phone_label', 'sidebar_email_label', 'sidebar_email_value', 
+                'sidebar_hours_label', 'sidebar_hours_value',
+                'requirements_header_text',
+                'status_msg_pending', 'status_msg_review', 'status_msg_approved', 'status_msg_scheduled', 
+                'status_msg_rejected', 'status_msg_passed', 'status_msg_failed', 'status_msg_enrolling', 
+                'status_msg_enrolled', 'status_msg_dropped', 'status_msg_not_enrolled'
             ]
             
             for key in text_fields:
@@ -4156,7 +6352,17 @@ def admin_manage_contact_content():
                     ON DUPLICATE KEY UPDATE content_value = %s
                 """, (key, value, value))
 
-            # 2. Handle Footer Logo Upload
+            # 2. Handle Toggles (Email Triggers & Finance)
+            # Checkboxes return 'true' if checked, nothing if unchecked. We map this to 'true'/'false' strings.
+            toggle_fields = ['email_trigger_student', 'email_trigger_admin', 'email_trigger_notes', 'email_trigger_announcements', 'issuance_of_receipt']
+            for tf in toggle_fields:
+                val = 'true' if tf in request.form else 'false'
+                cursor.execute("""
+                    INSERT INTO system_settings (setting_key, setting_value) VALUES (%s, %s)
+                    ON DUPLICATE KEY UPDATE setting_value = %s
+                """, (tf, val, val))
+
+            # 3. Handle Footer Logo Upload
             file = request.files.get('footer_logo_image')
             if file and file.filename:
                 new_filename, error = save_image_to_uploads(file, prefix='logo')
@@ -4165,31 +6371,12 @@ def admin_manage_contact_content():
                         INSERT INTO page_content (content_key, content_value) VALUES ('footer_logo_image', %s)
                         ON DUPLICATE KEY UPDATE content_value = %s
                     """, (new_filename, new_filename))
-            
-            # 3. Handle System Settings (Toggles)
-            # Helper to get 'true'/'false' string from checkbox presence
-            def get_toggle_val(key):
-                return 'true' if key in request.form else 'false'
-
-            settings_to_update = {
-                'registration_open': get_toggle_val('registration_open'),
-                'email_trigger_student': get_toggle_val('email_trigger_student'),
-                'email_trigger_admin': get_toggle_val('email_trigger_admin'),
-                'email_trigger_notes': get_toggle_val('email_trigger_notes'),
-                'email_trigger_announcements': get_toggle_val('email_trigger_announcements')
-            }
-
-            for key, val in settings_to_update.items():
-                cursor.execute("""
-                    INSERT INTO system_settings (setting_key, setting_value) VALUES (%s, %s)
-                    ON DUPLICATE KEY UPDATE setting_value = %s
-                """, (key, val, val))
 
             conn.commit()
-            flash("Website settings and system controls updated successfully.", "success")
+            flash("Website settings updated successfully.", "success")
             return redirect(url_for('auth.admin_manage_contact_content'))
 
-        # GET Request
+        # --- GET Request ---
         cursor = conn.cursor(dictionary=True)
         
         # 1. Fetch Page Content
@@ -4197,44 +6384,53 @@ def admin_manage_contact_content():
         rows = cursor.fetchall()
         content = {row['content_key']: row['content_value'] for row in rows}
         
-        # 2. Fetch System Settings
-        cursor.execute("""
-            SELECT setting_key, setting_value 
-            FROM system_settings 
-            WHERE setting_key IN (
-                'registration_open', 
-                'email_trigger_student', 
-                'email_trigger_admin', 
-                'email_trigger_notes', 
-                'email_trigger_announcements'
-            )
-        """)
+        # 2. Fetch System Settings (Admissions Toggles, Email Triggers, Finance)
+        cursor.execute("SELECT setting_key, setting_value FROM system_settings")
         settings_rows = cursor.fetchall()
-        
-        # Set Defaults
-        content['registration_open'] = True
-        content['email_trigger_student'] = True
-        content['email_trigger_admin'] = True
-        content['email_trigger_notes'] = False
-        content['email_trigger_announcements'] = False
-
-        # Map DB values to content dict (converting string 'true' to boolean True)
         for row in settings_rows:
-            key = row['setting_key']
-            val = row['setting_value'] == 'true'
-            if key in content: 
-                content[key] = val
+            content[row['setting_key']] = row['setting_value']
 
-        # 3. NEW: Fetch Social Media Links
+        # Set defaults if keys don't exist yet
+        content.setdefault('admission_open_new', 'true')
+        content.setdefault('admission_open_old', 'true')
+        content.setdefault('email_trigger_student', 'true')
+        content.setdefault('email_trigger_admin', 'true')
+        content.setdefault('email_trigger_notes', 'true')
+        content.setdefault('email_trigger_announcements', 'true')
+        content.setdefault('issuance_of_receipt', 'true')
+
+        # 3. Fetch Social Media Links & Requirements & Uploads (Existing logic)
         cursor.execute("SELECT * FROM social_media_links")
         social_links = cursor.fetchall()
+
+        cursor.execute("SELECT * FROM status_requirements ORDER BY id ASC")
+        requirements = defaultdict(list)
+        for row in cursor.fetchall():
+            requirements[row['status_key']].append(row)
+
+        cursor.execute("SELECT program_id, title FROM programs ORDER BY title")
+        programs = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT u.*, p.title as program_title 
+            FROM status_uploads u 
+            LEFT JOIN programs p ON u.program_id COLLATE utf8mb4_0900_ai_ci = p.program_id COLLATE utf8mb4_0900_ai_ci
+            ORDER BY u.uploaded_at DESC
+        """)
+        uploads_raw = cursor.fetchall()
+        uploads = defaultdict(list)
+        for row in uploads_raw:
+            uploads[row['status_key']].append(row)
 
         _, stats = _get_all_applications_and_stats()
         
         return render_template('admin_manage_contact_content.html', 
                                content=content, 
                                stats=stats, 
-                               social_links=social_links, # Pass the list of links
+                               social_links=social_links,
+                               requirements=requirements,
+                               programs=programs,
+                               uploads=uploads,
                                active_page='manage_contact_content')
 
     except Exception as e:
@@ -4245,10 +6441,61 @@ def admin_manage_contact_content():
         if cursor: cursor.close()
         if conn: conn.close()
 
+# --- OPEN FILE: auth.py ---
+
+@auth.route('/admin/toggle-registration', methods=['POST'])
+def admin_toggle_registration():
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: 
+        return redirect(url_for('auth.admin'))
+    
+    target_setting = request.form.get('setting_key')
+    
+    # UPDATED: Added 'enable_account_creation' to valid keys
+    if target_setting not in ['admission_open_new', 'admission_open_old', 'enable_account_creation']:
+        flash("Invalid setting key.", "danger")
+        return redirect(url_for('auth.admin_manage_contact_content'))
+
+    conn = None; cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = %s", (target_setting,))
+        row = cursor.fetchone()
+        
+        current_status = row['setting_value'] == 'true' if row else True
+        new_status = 'false' if current_status else 'true'
+        
+        cursor.execute("""
+            INSERT INTO system_settings (setting_key, setting_value) VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE setting_value = %s
+        """, (target_setting, new_status, new_status))
+        
+        conn.commit()
+        
+        # Determine readable name for flash message
+        names = {
+            'admission_open_new': "New Student Admission",
+            'admission_open_old': "Old Student Admission",
+            'enable_account_creation': "Global Account Creation"
+        }
+        
+        status_text = "OPEN/VISIBLE" if new_status == 'true' else "CLOSED/HIDDEN"
+        flash(f"{names.get(target_setting)} is now {status_text}.", "success" if new_status == 'true' else "warning")
+        
+    except Exception as e:
+        print(f"Error toggling registration: {e}")
+        flash("Error updating status.", "danger")
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+    return redirect(url_for('auth.admin_manage_contact_content'))
+        
 # --- Hero Slider Management ---
 @auth.route('/admin/manage-slider')
 def admin_manage_slider():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     _, stats = _get_all_applications_and_stats()
     slides = []
     conn = None; cursor = None
@@ -4267,7 +6514,7 @@ def admin_manage_slider():
 @auth.route('/admin/slider/form', defaults={'slide_id': None}, methods=['GET', 'POST'])
 @auth.route('/admin/slider/form/<int:slide_id>', methods=['GET', 'POST'])
 def admin_slider_form(slide_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -4337,7 +6584,7 @@ def admin_slider_form(slide_id):
 
 @auth.route('/admin/slider/delete/<int:slide_id>', methods=['POST'])
 def admin_delete_slide(slide_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -4360,7 +6607,7 @@ def admin_delete_slide(slide_id):
 # --- Admission Steps Management ---
 @auth.route('/admin/manage-admission')
 def admin_manage_admission():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     _, stats = _get_all_applications_and_stats()
     steps = []
     conn = None; cursor = None
@@ -4377,7 +6624,7 @@ def admin_manage_admission():
 @auth.route('/admin/admission/form', defaults={'step_id': None}, methods=['GET', 'POST'])
 @auth.route('/admin/admission/form/<int:step_id>', methods=['GET', 'POST'])
 def admin_admission_form(step_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -4412,7 +6659,7 @@ def admin_admission_form(step_id):
 
 @auth.route('/admin/admission/delete/<int:step_id>', methods=['POST'])
 def admin_delete_admission(step_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM admission_steps WHERE id=%s", (step_id,))
@@ -4425,7 +6672,7 @@ def admin_delete_admission(step_id):
 # --- FAQ Management ---
 @auth.route('/admin/manage-faqs')
 def admin_manage_faqs():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     _, stats = _get_all_applications_and_stats()
     faqs = []
     conn = None; cursor = None
@@ -4442,7 +6689,8 @@ def admin_manage_faqs():
 
 @auth.route('/admin/social-media/add', methods=['POST'])
 def admin_add_social_media():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar']: 
+        return redirect(url_for('auth.admin'))
     
     platform = request.form.get('platform')
     url = request.form.get('url')
@@ -4451,21 +6699,23 @@ def admin_add_social_media():
         flash("Platform and URL are required.", "danger")
         return redirect(url_for('auth.admin_manage_contact_content'))
 
-    # Map Platform to FontAwesome Icon Class
+    # Map Platform to RemixIcon classes (used in your index/base footers)
     icons = {
-        'Facebook': 'fab fa-facebook-f',
-        'Twitter': 'fab fa-twitter',
-        'Instagram': 'fab fa-instagram',
-        'YouTube': 'fab fa-youtube',
-        'LinkedIn': 'fab fa-linkedin-in',
-        'TikTok': 'fab fa-tiktok',
-        'Website': 'fas fa-globe'
+        'Facebook': 'ri-facebook-box-fill',
+        'Twitter': 'ri-twitter-x-fill',
+        'Instagram': 'ri-instagram-line',
+        'YouTube': 'ri-youtube-fill',
+        'LinkedIn': 'ri-linkedin-box-fill',
+        'TikTok': 'ri-tiktok-fill',
+        'Website': 'ri-global-line'
     }
-    icon_class = icons.get(platform, 'fas fa-link')
+    icon_class = icons.get(platform, 'ri-link')
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    conn = None
+    cursor = None
     try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
         cursor.execute("INSERT INTO social_media_links (platform_name, url, icon_class) VALUES (%s, %s, %s)", 
                        (platform, url, icon_class))
         conn.commit()
@@ -4473,8 +6723,8 @@ def admin_add_social_media():
     except Exception as e:
         flash(f"Error adding link: {e}", "danger")
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
         
     return redirect(url_for('auth.admin_manage_contact_content'))
 
@@ -4499,7 +6749,7 @@ def admin_delete_social_media(link_id):
 @auth.route('/admin/faq/form', defaults={'faq_id': None}, methods=['GET', 'POST'])
 @auth.route('/admin/faq/form/<int:faq_id>', methods=['GET', 'POST'])
 def admin_faq_form(faq_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -4534,7 +6784,7 @@ def admin_faq_form(faq_id):
 
 @auth.route('/admin/faq/delete/<int:faq_id>', methods=['POST'])
 def admin_delete_faq(faq_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM faqs WHERE id=%s", (faq_id,))
@@ -4723,7 +6973,7 @@ def admin_delete_subject(subject_id):
 # --- News ---
 @auth.route('/admin/manage-news')
 def admin_manage_news():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar','secretary']: return redirect(url_for('auth.admin'))
     _, stats = _get_all_applications_and_stats()
     articles = []
     conn = None; cursor = None
@@ -4742,7 +6992,7 @@ def admin_manage_news():
 @auth.route('/admin/news/form', defaults={'article_id': None}, methods=['GET', 'POST'])
 @auth.route('/admin/news/form/<int:article_id>', methods=['GET', 'POST'])
 def admin_news_form(article_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -4801,7 +7051,7 @@ def admin_news_form(article_id):
 
 @auth.route('/admin/news/delete/<int:article_id>', methods=['POST'])
 def admin_delete_news(article_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -4823,7 +7073,7 @@ def admin_delete_news(article_id):
 # --- Faculty ---
 @auth.route('/admin/manage-faculty')
 def admin_manage_faculty():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     _, stats = _get_all_applications_and_stats()
     faculty = []
     conn = None; cursor = None
@@ -4842,7 +7092,7 @@ def admin_manage_faculty():
 @auth.route('/admin/faculty/form', defaults={'member_id': None}, methods=['GET', 'POST'])
 @auth.route('/admin/faculty/form/<int:member_id>', methods=['GET', 'POST'])
 def admin_faculty_form(member_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -4899,7 +7149,7 @@ def admin_faculty_form(member_id):
 
 @auth.route('/admin/faculty/delete/<int:member_id>', methods=['POST'])
 def admin_delete_faculty(member_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -4921,7 +7171,7 @@ def admin_delete_faculty(member_id):
 # --- Announcements ---
 @auth.route('/admin/manage-announcements')
 def admin_manage_announcements():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     _, stats = _get_all_applications_and_stats()
     announcements = []
     conn = None; cursor = None
@@ -4940,7 +7190,7 @@ def admin_manage_announcements():
 @auth.route('/admin/announcement/form', defaults={'announcement_id': None}, methods=['GET', 'POST'])
 @auth.route('/admin/announcement/form/<int:announcement_id>', methods=['GET', 'POST'])
 def admin_announcement_form(announcement_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -5047,7 +7297,7 @@ def admin_announcement_form(announcement_id):
 
 @auth.route('/admin/announcement/delete/<int:announcement_id>', methods=['POST'])
 def admin_delete_announcement(announcement_id):
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']: return redirect(url_for('auth.admin'))
     conn = None; cursor = None
     try:
         conn = get_db_connection()
@@ -5072,7 +7322,7 @@ def admin_delete_announcement(announcement_id):
 
 @auth.route('/admin/announcement/toggle/<int:announcement_id>', methods=['POST'])
 def admin_toggle_announcement(announcement_id):
-    if session.get('user_role') not in ['admin', 'registrar']:
+    if session.get('user_role') not in ['admin', 'registrar', 'secretary']:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
     
     conn = None; cursor = None
@@ -5353,8 +7603,14 @@ def logout():
     flash("✅ You have been logged out.", "success")
     return redirect(url_for('views.home'))
 
-@auth.route('/admin_login', methods=['POST'])
+# --- IN auth.py ---
+
+@auth.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
+    # --- Handle GET requests ---
+    if request.method == 'GET':
+        return redirect(url_for('auth.admin'))
+
     username = request.form.get('username')
     password = request.form.get('password')
 
@@ -5368,39 +7624,56 @@ def admin_login():
         cursor.execute("SELECT * FROM system_users WHERE username = %s", (username,))
         user = cursor.fetchone()
 
-        # 2. FALLBACK / INITIAL SETUP (If admin doesn't exist in DB yet)
-        # This allows you to log in for the first time with the credentials you requested.
+        # 2. FALLBACK / INITIAL SETUP (For first-time deployment)
         if not user and username == 'admin' and password == 'adminpgpc@2025':
-             # Generate hash for the new password
              hashed = generate_password_hash('adminpgpc@2025', method='pbkdf2:sha256')
-             
-             # Automatically save this to the database so next time it logs in via the standard check below
              cursor.execute("INSERT INTO system_users (username, password, role, full_name) VALUES (%s, %s, %s, %s)", 
                            ('admin', hashed, 'admin', 'System Administrator'))
              conn.commit()
 
              session['user_role'] = 'admin'
              session['user_name'] = 'System Administrator'
+             session['user_id'] = cursor.lastrowid # Capture ID of new user
+             session['can_edit_student'] = True # Admin always has edit rights
+             
              flash("⚠️ Initial Admin account created successfully. You are logged in.", "success")
              return redirect(url_for('auth.admin_dashboard'))
 
-        # 3. STANDARD LOGIN (Checks hash from database)
+        # 3. STANDARD LOGIN
         if user and check_password_hash(user['password'], password):
             session['user_role'] = user['role']
             session['user_id'] = user['id']
             session['user_name'] = user['full_name']
             
-            flash(f"✅ Welcome back, {user['full_name']} ({user['role'].title()})!", "success")
+            # Store permission in session (Default True for Admin, others check DB)
+            if user['role'] == 'admin':
+                session['can_edit_student'] = True
+            else:
+                # 1 = True, 0 = False in MySQL
+                session['can_edit_student'] = bool(user.get('can_edit', 1)) 
+    
+            flash(f"✅ Welcome back, {user['full_name']}!", "success")
             
-            # Redirect based on Role
-            if user['role'] == 'cashier':
+            # --- REDIRECT LOGIC BASED ON ROLE ---
+            
+            # Cashier & Accounting -> Cashier Dashboard
+            if user['role'] in ['cashier', 'accounting']:
                 return redirect(url_for('auth.cashier_dashboard'))
-            elif user['role'] == 'accounting':
-                return redirect(url_for('auth.accounting_dashboard'))
+            
+            # Guidance & OSA -> Enrolled Students List
             elif user['role'] in ['guidance', 'osa']:
                 return redirect(url_for('auth.admin_enrolled_applications'))
+            
+            # Secretary -> Content Management (No access to student data)
+            elif user['role'] == 'secretary':
+                return redirect(url_for('auth.admin_manage_content'))
+            
+            # President -> President Dashboard
+            elif user['role'] == 'president':
+                return redirect(url_for('auth.president_dashboard'))
+                
+            # Admin & Registrar -> Main Admin Dashboard
             else:
-                # Admin and Registrar go to dashboard
                 return redirect(url_for('auth.admin_dashboard'))
         else:
             flash('Invalid credentials', "danger")
@@ -5408,7 +7681,7 @@ def admin_login():
             
     except Exception as e:
         flash(f"Login error: {e}", "danger")
-        print(f"Login Error: {e}") # Debug
+        print(f"Login Error: {e}") 
         return redirect(url_for('auth.admin'))
     finally:
         if cursor: cursor.close()
@@ -5422,12 +7695,18 @@ def admin_manage_users():
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT id, username, role, full_name, created_at FROM system_users ORDER BY role, username")
+    
+    # --- FIX IS HERE: Added ", can_edit" to the SELECT statement ---
+    cursor.execute("""
+        SELECT id, username, role, full_name, created_at, can_edit 
+        FROM system_users 
+        ORDER BY role, username
+    """)
+    
     users = cursor.fetchall()
     cursor.close()
     conn.close()
     
-    # We need stats for the sidebar (reusing your existing helper)
     _, stats = _get_all_applications_and_stats()
     
     return render_template('admin_manage_users.html', users=users, stats=stats, active_page='manage_users')
@@ -5829,27 +8108,45 @@ def check_student_id_exists():
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
-
 @auth.route('/create-student-account', methods=['GET', 'POST'])
 def create_student_account_page(): 
     if 'student_id' in session: return redirect(url_for('views.application_status_page'))
     
+    # 1. Check if Account Creation is Enabled (Global Switch)
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = 'registration_open'")
-    reg_setting = cursor.fetchone()
-    is_open = reg_setting['setting_value'] == 'true' if reg_setting else True
+    cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = 'enable_account_creation'")
+    acct_setting = cursor.fetchone()
+    # Default to True if not set
+    is_account_creation_open = acct_setting['setting_value'] == 'true' if acct_setting else True
+    
+    # Also check specific admission toggles for logic inside POST
+    cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = 'admission_open_new'")
+    new_open_row = cursor.fetchone()
+    is_new_open = new_open_row['setting_value'] == 'true' if new_open_row else True
+    
     cursor.close()
     conn.close()
 
-    if not is_open:
-        flash("Account creation is currently disabled by the administrator.", "warning")
-        return redirect(url_for('auth.student_login_page'))
+    # If Global switch is OFF, block POST actions
+    if not is_account_creation_open:
+        if request.method == 'POST':
+             flash("Account creation is currently disabled by the administrator.", "danger")
+             return redirect(url_for('views.home'))
+        # If GET, the template will render the "Closed" message instead of the form
 
     if request.method == 'POST':
-        email, password, confirm_password = request.form.get('email'), request.form.get('password'), request.form.get('confirm_password')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
         student_type = request.form.get('student_type')
         old_student_id = request.form.get('old_student_id')
+
+        # --- LOGIC: Block specific types if closed ---
+        if not is_new_open and student_type == 'new':
+            flash("New student admission is currently closed. Only old/existing students can register at this time.", "warning")
+            return redirect(url_for('auth.create_student_account_page'))
+        # ---------------------------------------------
 
         if not all([email, password, confirm_password, student_type]):
             flash('Please fill out all fields.', 'warning')
@@ -5861,7 +8158,7 @@ def create_student_account_page():
             if not conn: flash("Database error.", "danger"); return redirect(url_for('auth.create_student_account_page'))
             cursor = conn.cursor(dictionary=True)
 
-            # --- MODIFIED: OLD STUDENT ID LOGIC ---
+            # --- OLD STUDENT ID LOGIC ---
             if student_type == 'old':
                 if not old_student_id or not old_student_id.strip():
                     flash('Please provide your Old Student ID.', 'danger')
@@ -5873,20 +8170,14 @@ def create_student_account_page():
 
                 if id_holder:
                     if id_holder['is_verified']:
-                        # Case 1: ID is already permanently registered to a verified account. BLOCK.
+                        # Case 1: ID is already permanently registered. BLOCK.
                         flash('This Old Student ID is already registered and verified. Please log in.', 'danger')
                         return redirect(url_for('auth.create_student_account_page'))
                     elif id_holder['email'] != email:
-                        # Case 2: ID is held by an UNVERIFIED account with a DIFFERENT email.
-                        # This implies a stale/abandoned registration. Delete it so the new user can claim the ID.
+                        # Case 2: ID is held by an UNVERIFIED account with a DIFFERENT email. (Stale record)
                         cursor.execute("DELETE FROM student_users WHERE id = %s", (id_holder['id'],))
                         conn.commit()
-                        # We proceed below to create the new account.
-                    else:
-                        # Case 3: ID is held by an UNVERIFIED account with the SAME email.
-                        # We proceed below, and the "existing_user" logic will handle the update/OTP resend.
-                        pass 
-
+            
             if password != confirm_password: flash('Passwords do not match.', 'danger'); return redirect(url_for('auth.create_student_account_page'))
             if len(password) < 8: flash('Password must be at least 8 characters long.', 'danger'); return redirect(url_for('auth.create_student_account_page'))
             
@@ -5902,7 +8193,7 @@ def create_student_account_page():
                     flash('Email already registered and verified. Please log in.', 'danger')
                     return redirect(url_for('auth.student_login_page'))
                 else:
-                    # Account exists but not verified. Update details (including potentially the ID if it was null before)
+                    # Account exists but not verified. Update details.
                     cursor.execute("""
                         UPDATE student_users 
                         SET password = %s, otp_code = %s, otp_expiry = %s, student_type = %s, old_student_id = %s, updated_at = NOW()
@@ -5911,9 +8202,9 @@ def create_student_account_page():
                     conn.commit()
                     email_sent = send_otp_email(email, otp_code)
                     if email_sent:
-                        flash('Account existed but was not verified. A new OTP has been sent to your email. Please verify to continue.', 'info')
+                        flash('Account existed but was not verified. A new OTP has been sent. Please verify.', 'info')
                     else:
-                        flash('Failed to send OTP email. Please try again later.', 'danger')
+                        flash('Failed to send OTP email.', 'danger')
                     session['pending_verification_email'] = email 
                     return redirect(url_for('auth.verify_otp_page'))
             
@@ -5927,15 +8218,14 @@ def create_student_account_page():
             
             email_sent = send_otp_email(email, otp_code)
             if email_sent:
-                flash('✅ Account created! Please check your email for an OTP to verify your account.', 'success')
+                flash('✅ Account created! Please check your email for an OTP.', 'success')
             else:
-                flash('Account created, but failed to send OTP email. Please try verifying later or contact support.', 'warning')
+                flash('Account created, but failed to send OTP.', 'warning')
             
             session['pending_verification_email'] = email 
             return redirect(url_for('auth.verify_otp_page'))
 
         except mysql.connector.Error as db_err:
-            # Handle unique constraint violations (just in case race conditions occur)
             if db_err.errno == 1062: 
                  flash('Email or Student ID already registered. Please try logging in.', 'danger')
             else:
@@ -5948,6 +8238,7 @@ def create_student_account_page():
         finally:
             if cursor: cursor.close()
             if conn and conn.is_connected(): conn.close()
+            
     return render_template('create_account.html')
 
 @auth.route('/verify-otp', methods=['GET', 'POST'])
@@ -6096,10 +8387,13 @@ def resend_otp_action():
 
 @auth.route('/student-login', methods=['GET', 'POST'])
 def student_login_page(): 
+    # If already logged in, let the views controller decide where to go
     if 'student_id' in session: return redirect(url_for('views.application_status_page'))
+
     if request.method == 'POST':
         email, password = request.form.get('email'), request.form.get('password')
         if not email or not password: flash('Please fill out all fields.', 'warning'); return redirect(url_for('auth.student_login_page'))
+        
         conn = None; cursor = None
         try:
             conn = get_db_connection()
@@ -6110,16 +8404,40 @@ def student_login_page():
 
             if user:
                 if not user['is_verified']:
-                    flash('Your account is not verified. Please check your email for an OTP or request a new one on the verification page.', 'warning')
+                    flash('Your account is not verified. Please check your email for an OTP.', 'warning')
                     session['pending_verification_email'] = email 
                     return redirect(url_for('auth.verify_otp_page')) 
 
                 if check_password_hash(user['password'], password):
                     session['student_id'] = user['id']
                     session['student_email'] = user['email']
-                    flash('✅ Login successful!', 'success')
                     session.pop('pending_verification_email', None) 
-                    return redirect(url_for('views.application_status_page'))
+                    
+                    flash('✅ Login successful!', 'success')
+
+                    # --- MODIFIED REDIRECT LOGIC ---
+                    # Check Application Status to determine destination
+                    cursor.execute("""
+                        SELECT applicant_id, application_status 
+                        FROM applicants 
+                        WHERE student_user_id = %s 
+                        ORDER BY submitted_at DESC LIMIT 1
+                    """, (user['id'],))
+                    app = cursor.fetchone()
+
+                    if not app:
+                        # Case 1: No application yet -> Go to New Student Form
+                        return redirect(url_for('views.new_student'))
+                    
+                    elif app['application_status'] == 'Passed':
+                        # Case 2: Passed (Exam passed OR Old Student initial registration) -> Go to Enrollment Form
+                        return redirect(url_for('views.enrollment_form_page', applicant_id=app['applicant_id']))
+                    
+                    else:
+                        # Case 3: Standard Status (Pending, Enrolled, etc.) -> Go to Dashboard
+                        return redirect(url_for('views.application_status_page'))
+                    # -------------------------------
+
                 else:
                     flash('Invalid email or password.', 'danger')
                     return redirect(url_for('auth.student_login_page'))
@@ -6218,12 +8536,26 @@ def change_password_page():
         flash("⚠️ Please log in to change your password.", "warning")
         return redirect(url_for('auth.student_login_page'))
 
+    student_id = session['student_id']
+    conn = None
+    cursor = None
+    
+    # --- FIX START: Fetch Student Info for Sidebar ---
+    student_app = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM applicants WHERE student_user_id = %s ORDER BY submitted_at DESC LIMIT 1", (student_id,))
+        student_app = cursor.fetchone()
+    except Exception as e:
+        print(f"Error fetching student info for sidebar: {e}")
+    # --- FIX END ---
+
     if request.method == 'POST':
         current_password = request.form.get('current_password')
         new_password = request.form.get('new_password')
         confirm_new_password = request.form.get('confirm_new_password')
 
-        # Validation
         if not all([current_password, new_password, confirm_new_password]):
             flash("Please fill out all fields.", "danger")
             return redirect(url_for('auth.change_password_page'))
@@ -6236,16 +8568,8 @@ def change_password_page():
             flash("New password must be at least 8 characters long.", "danger")
             return redirect(url_for('auth.change_password_page'))
 
-        student_id = session['student_id']
-        conn = None
-        cursor = None
         try:
-            conn = get_db_connection()
-            if not conn:
-                flash("Database connection error.", "danger")
-                return redirect(url_for('auth.change_password_page'))
-            
-            cursor = conn.cursor(dictionary=True)
+            # Re-using existing connection
             cursor.execute("SELECT password FROM student_users WHERE id = %s", (student_id,))
             user = cursor.fetchone()
 
@@ -6253,7 +8577,6 @@ def change_password_page():
                 flash("Incorrect current password.", "danger")
                 return redirect(url_for('auth.change_password_page'))
 
-            # If current password is correct, update to new password
             hashed_new_password = generate_password_hash(new_password, method='pbkdf2:sha256')
             cursor.execute("UPDATE student_users SET password = %s, updated_at = NOW() WHERE id = %s", (hashed_new_password, student_id))
             conn.commit()
@@ -6267,10 +8590,12 @@ def change_password_page():
             return redirect(url_for('auth.change_password_page'))
         finally:
             if cursor: cursor.close()
-            if conn and conn.is_connected(): conn.close()
+            if conn: conn.close()
     
-    # For GET request
-    return render_template('change_password.html', student_logged_in=True)
+    # GET request: Render template with application data
+    return render_template('change_password.html', 
+                           student_logged_in=True, 
+                           application=student_app)
 
 
 # ----------------- APPLICATION FORM SUBMISSION (NEW STUDENT) -----------------
@@ -6634,44 +8959,42 @@ def _assign_section_automatically(cursor, applicant_id, program_id, year_level):
     print(f"All sections full for {program_id} {year_level}")
     return None
 
-# --- NEW ROUTE: Admin Manage Sections ---
 @auth.route('/admin/manage-sections', methods=['GET', 'POST'])
 def admin_manage_sections():
-    if session.get('user_role') not in ['admin', 'registrar']: return redirect(url_for('auth.admin'))
+    if session.get('user_role') not in ['admin', 'registrar']: 
+        return redirect(url_for('auth.admin'))
 
-    conn = None; cursor = None
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # --- HANDLE POST REQUESTS ---
         if request.method == 'POST':
             action = request.form.get('action')
             
+            # 1. GENERATE SECTIONS
             if action == 'generate':
                 program_id = request.form.get('program_id')
-                year_level = request.form.get('year_level') # e.g., "1st Year"
+                year_level = request.form.get('year_level')
                 num_sections = int(request.form.get('num_sections'))
                 max_students = int(request.form.get('max_students'))
                 
                 import string
                 letters = string.ascii_uppercase[:num_sections]
-
                 for letter in letters:
                     year_digit = year_level[0] 
                     section_name = f"{program_id} {year_digit}{letter}"
-                    
-                    try:
-                        cursor.execute("""
-                            INSERT INTO sections (program_id, year_level, section_name, section_letter, max_students)
-                            VALUES (%s, %s, %s, %s, %s)
-                            ON DUPLICATE KEY UPDATE max_students = %s, is_active = TRUE
-                        """, (program_id, year_level, section_name, letter, max_students, max_students))
-                    except Exception as e:
-                        print(f"Error generating section {section_name}: {e}")
-                
+                    cursor.execute("""
+                        INSERT INTO sections (program_id, year_level, section_name, section_letter, max_students)
+                        VALUES (%s, %s, %s, %s, %s)
+                        ON DUPLICATE KEY UPDATE max_students = %s, is_active = TRUE
+                    """, (program_id, year_level, section_name, letter, max_students, max_students))
                 conn.commit()
-                flash(f"Generated {num_sections} sections for {program_id} {year_level}.", "success")
+                flash(f"Generated {num_sections} sections.", "success")
 
+            # 2. EDIT SECTION
             elif action == 'edit_section':
                 section_id = request.form.get('section_id')
                 max_students = request.form.get('max_students_edit')
@@ -6680,108 +9003,61 @@ def admin_manage_sections():
                 conn.commit()
                 flash("Section updated.", "success")
 
+            # 3. DELETE SECTION
             elif action == 'delete_section':
                 section_id = request.form.get('section_id')
                 cursor.execute("SELECT COUNT(*) as count FROM applicants WHERE section_id = %s", (section_id,))
-                res = cursor.fetchone()
-                count = res['count'] if isinstance(res, dict) else res[0]
-                
-                if count > 0:
-                    flash(f"Cannot delete section. It has {count} student(s) assigned.", "danger")
+                if cursor.fetchone()['count'] > 0:
+                    flash("Cannot delete section with assigned students.", "danger")
                 else:
                     cursor.execute("DELETE FROM sections WHERE id = %s", (section_id,))
                     conn.commit()
                     flash("Section deleted.", "success")
 
-            # --- NEW ACTION: Distribute for SPECIFIC Year Level ---
+            # 4. EQUALIZE / DISTRIBUTE STUDENTS
             elif action == 'distribute_year_level':
                 program_title = request.form.get('program_title')
                 year_str = request.form.get('year_level')
-                
-                year_map = {
-                    '1': '1st Year', '2': '2nd Year', '3': '3rd Year', '4': '4th Year', '5': '5th Year',
-                    '1st Year': '1st Year', '2nd Year': '2nd Year', '3rd Year': '3rd Year', '4th Year': '4th Year'
-                }
-                db_year_level = year_map.get(str(year_str), year_str)
-
                 cursor.execute("SELECT program_id FROM programs WHERE title = %s", (program_title,))
                 prog_row = cursor.fetchone()
-                
                 if prog_row:
                     program_id = prog_row['program_id']
-                    total_reassigned = 0
-
-                    # 1. Get Active Sections
-                    cursor.execute("""
-                        SELECT id, max_students, section_name
-                        FROM sections 
-                        WHERE program_id = %s AND year_level = %s AND is_active = TRUE 
-                        ORDER BY section_letter ASC
-                    """, (program_id, db_year_level))
+                    cursor.execute("SELECT id, max_students FROM sections WHERE program_id = %s AND year_level = %s AND is_active = TRUE ORDER BY section_letter", (program_id, year_str))
                     sections = cursor.fetchall()
-                    
-                    # 2. Get ALL Students to Rebalance
-                    cursor.execute("""
-                        SELECT applicant_id FROM applicants 
-                        WHERE program_choice = %s 
-                        AND enrollment_year_level = %s 
-                        AND application_status IN ('Enrolling', 'Enrolled')
-                        ORDER BY last_name ASC
-                    """, (program_title, db_year_level))
+                    cursor.execute("SELECT applicant_id FROM applicants WHERE program_choice = %s AND enrollment_year_level = %s AND application_status IN ('Enrolling', 'Enrolled') ORDER BY last_name", (program_title, year_str))
                     all_students = cursor.fetchall()
-                    
-                    total_students = len(all_students)
-                    num_sections = len(sections)
-
-                    if sections and total_students > 0:
-                        # --- CALCULATION FOR EQUAL DISTRIBUTION ---
-                        # e.g. 150 students / 3 sections = 50 per section
-                        base_count = total_students // num_sections
-                        remainder = total_students % num_sections
-                        
-                        student_idx = 0
-                        
-                        for i, section in enumerate(sections):
-                            # Calculate how many students THIS section should get
-                            # If there's a remainder, distribute it one by one to the first few sections
-                            target_count = base_count + (1 if i < remainder else 0)
-                            
-                            # Ensure we don't exceed max capacity set by admin
-                            target_count = min(target_count, section['max_students'])
-                            
-                            # Assign students to this section
-                            for _ in range(target_count):
-                                if student_idx < total_students:
-                                    student = all_students[student_idx]
-                                    cursor.execute("""
-                                        UPDATE applicants 
-                                        SET section_id = %s, is_section_permanent = TRUE 
-                                        WHERE applicant_id = %s
-                                    """, (section['id'], student['applicant_id']))
-                                    
-                                    total_reassigned += 1
-                                    student_idx += 1
-                        
-                        # Handle overflow (if total students > total max capacity of all sections)
-                        if student_idx < total_students:
-                             flash(f"Warning: Not all students could be assigned. Capacity reached. {total_students - student_idx} students remaining.", "warning")
-
+                    if sections and all_students:
+                        base_count = len(all_students) // len(sections)
+                        remainder = len(all_students) % len(sections)
+                        idx = 0
+                        for i, sec in enumerate(sections):
+                            target = base_count + (1 if i < remainder else 0)
+                            for _ in range(target):
+                                if idx < len(all_students):
+                                    cursor.execute("UPDATE applicants SET section_id = %s WHERE applicant_id = %s", (sec['id'], all_students[idx]['applicant_id']))
+                                    idx += 1
                     conn.commit()
-                    
-                    if total_reassigned > 0:
-                        flash(f"Successfully equalized {total_reassigned} students in {program_title} - {db_year_level}.", "success")
-                    else:
-                        flash(f"No students found to distribute for {program_title} - {db_year_level}.", "warning")
-                else:
-                     flash("Program not found.", "danger")
-
+                    flash("Students distributed equally.", "success")
+            
             return redirect(url_for('auth.admin_manage_sections'))
+
+        # --- HANDLE GET REQUEST (THE FIX IS HERE) ---
         
-        # GET Request - View Data
+        # 1. Fetch Page Content & System Settings (This fixes the 'content' undefined error)
+        content = {}
+        cursor.execute("SELECT content_key, content_value FROM page_content")
+        for row in cursor.fetchall():
+            content[row['content_key']] = row['content_value']
+            
+        cursor.execute("SELECT setting_key, setting_value FROM system_settings")
+        for row in cursor.fetchall():
+            content[row['setting_key']] = row['setting_value']
+
+        # 2. Fetch Programs for Dropdown
         cursor.execute("SELECT program_id, title FROM programs ORDER BY title")
         programs = cursor.fetchall()
         
-        # Fetch all sections
+        # 3. Fetch All Sections with Student Counts
         cursor.execute("""
             SELECT s.*, p.title as program_title,
             (SELECT COUNT(*) FROM applicants a WHERE a.section_id = s.id) as current_students
@@ -6791,30 +9067,25 @@ def admin_manage_sections():
         """)
         all_sections = cursor.fetchall()
         
-        # Organize data for the template: { "BSCS": { "1st Year": [sections...], "2nd Year": [...] } }
-        # Note: The key for year_level comes directly from DB (e.g., "1st Year").
-        # If you want to sort keys numerically in template, ensure jinja logic handles it.
-        # Here we just group them.
+        # 4. Group Data for UI
         sections_by_program_year = defaultdict(lambda: defaultdict(list))
-        
-        # Helper to sort year keys? The template does `| sort`.
-        # We just pass the raw string.
         for sec in all_sections:
-            # Simplify Year Level for grouping key if needed, or keep full string
-            # Let's keep full string "1st Year" as key
             sections_by_program_year[sec['program_title']][sec['year_level']].append(sec)
 
+        # 5. Get Sidebar Stats
         _, stats = _get_all_applications_and_stats() 
 
         return render_template('admin_manage_sections.html', 
                                programs=programs, 
                                sections_by_program_year=sections_by_program_year,
+                               content=content, # <--- Passing the dictionary to the template
                                stats=stats, 
                                active_page='manage_sections')
 
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        print(f"Error in manage sections: {e}")
         traceback.print_exc()
+        flash(f"Error: {e}", "danger")
         return redirect(url_for('auth.admin_dashboard'))
     finally:
         if cursor: cursor.close()
@@ -6995,7 +9266,7 @@ def submit_enrollment(applicant_id):
             "enrollment_year_level = %s",
             "enrollment_semester = %s",
             "program_choice = %s", 
-            "application_status = 'Enrolling'",
+            "application_status = 'Enrolling'", # STATUS SET TO ENROLLING ON SUBMIT
             "last_updated_at = %s"
         ])
         
@@ -7030,133 +9301,164 @@ def submit_enrollment(applicant_id):
         if cursor: cursor.close()
         if conn: conn.close()
 
-
-# NEW: Route for handling re-enrollment submission
 @auth.route('/submit-re-enrollment/<int:applicant_id>', methods=['POST'])
 def submit_re_enrollment(applicant_id):
     if 'student_id' not in session:
-        flash("⚠️ Please log in to submit your re-enrollment.", "warning")
         return redirect(url_for('auth.student_login_page'))
 
     student_user_id = session['student_id']
-    conn = None
-    cursor = None
+    conn = None; cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Fetch Current Application Data (to compare)
-        cursor.execute("""
-            SELECT applicant_id, program_choice, section_id, is_section_permanent 
-            FROM applicants 
-            WHERE applicant_id = %s AND student_user_id = %s
-        """, (applicant_id, student_user_id))
+        cursor.execute("SELECT * FROM applicants WHERE applicant_id = %s AND student_user_id = %s", (applicant_id, student_user_id))
         app_data = cursor.fetchone()
-        
-        if not app_data:
-            flash("Invalid application.", "danger")
+        active_term = _get_active_term()
+
+        if not app_data or not active_term:
+            flash("System error: Enrollment is currently unavailable.", "danger")
             return redirect(url_for('views.application_status_page'))
 
-        # Get Form Data
-        year_level = request.form.get('year_level')
-        semester = request.form.get('semester')
-        new_program = request.form.get('program_choice')
-        manual_section_id = request.form.get('section_id') # From dropdown (Rule #5)
+        # --- SHIFTING & PROGRESSION LOGIC ---
+        submitted_program = request.form.get('program_choice')
+        is_first_sem = active_term['semester'] == '1st Semester'
         
-        active_term = _get_active_term() # Helper from auth.py
-        
-        if not all([year_level, semester, new_program, active_term]):
-            flash("Missing required fields or no active term.", "danger")
-            return redirect(url_for('auth.enrollment_form_page', applicant_id=applicant_id))
-
-        # --- SECTIONING LOGIC ---
+        final_program = app_data['program_choice']
+        final_year = ""
         final_section_id = None
-        final_is_permanent = app_data['is_section_permanent'] # Default to existing state
-        
-        # Get Program Code (ID) for the NEW program
-        cursor.execute("SELECT program_id FROM programs WHERE title = %s", (new_program,))
-        prog_res = cursor.fetchone()
-        program_code = prog_res['program_id'] if prog_res else None
-        
-        is_shifting = app_data['program_choice'] != new_program
 
-        if is_shifting:
-            # Rule #4: Shifting Course -> Reset to 1st Year (enforced by frontend logic too)
-            # If they shift, we clear the section ID so Admin or Auto-assign handles it later upon approval.
-            # OR we can auto-assign immediately if it's open. Let's clear it for Admin review/auto-assign on approval.
-            year_level = '1st Year' 
-            final_section_id = None 
-            final_is_permanent = False 
+        # Scenario A: Shifting Program (Allowed only in 1st Semester)
+        if is_first_sem and submitted_program != app_data['program_choice']:
+            final_program = submitted_program
+            final_year = "1st Year" # Shifters reset to 1st Year
+            final_section_id = None # Shifters need new section assignment
         
-        elif manual_section_id:
-            # Rule #5: Existing student manually choosing section for the first time
-            final_section_id = manual_section_id
-            final_is_permanent = True
+        # Scenario B: Standard Progression
+        else:
+            final_program = app_data['program_choice']
+            final_year, _, _ = _calculate_next_term(app_data['enrollment_year_level'], app_data['enrollment_semester'])
             
-        elif app_data['section_id']:
-            # Rule #3: Regular Progression (Section stays same letter, year increments)
-            # 1. Get current letter
-            cursor.execute("SELECT section_letter FROM sections WHERE id = %s", (app_data['section_id'],))
-            current_sec_details = cursor.fetchone()
-            
-            if current_sec_details and program_code:
-                letter = current_sec_details['section_letter']
-                
-                # 2. Find corresponding section for the NEW year level
-                cursor.execute("""
-                    SELECT id FROM sections 
-                    WHERE program_id = %s AND year_level = %s AND section_letter = %s
-                """, (program_code, year_level, letter))
-                
-                next_section = cursor.fetchone()
-                if next_section:
-                    final_section_id = next_section['id']
-                    final_is_permanent = True
-                else:
-                    # Fallback: If next year's section doesn't exist (e.g., 3A not created yet),
-                    # Keep old ID? Or set to None?
-                    # Best practice: Set to None so Admin sees they need assignment.
-                    final_section_id = None 
-                    final_is_permanent = False
+            # --- SECTION PROGRESSION (e.g., 1A -> 2A) ---
+            if app_data['section_id']:
+                cursor.execute("SELECT section_letter, program_id FROM sections WHERE id = %s", (app_data['section_id'],))
+                sec_info = cursor.fetchone()
+                if sec_info:
+                    # Find the section in the NEXT year level with the same letter
+                    cursor.execute("""
+                        SELECT id FROM sections 
+                        WHERE program_id = %s AND year_level = %s AND section_letter = %s AND is_active = TRUE
+                    """, (sec_info['program_id'], final_year, sec_info['section_letter']))
+                    match = cursor.fetchone()
+                    if match: final_section_id = match['id']
 
-        # --- UPDATE QUERY ---
-        update_sql = """
+        # 1. Update Database (New Level and Status: Enrolling)
+        cursor.execute("""
             UPDATE applicants SET
+                program_choice = %s,
                 enrollment_year_level = %s,
                 enrollment_semester = %s,
-                program_choice = %s,
+                section_id = %s,
                 academic_year = %s,
                 application_status = 'Enrolling',
                 last_updated_at = NOW()
-        """
-        params = [year_level, semester, new_program, active_term['year_name']]
-
-        # If we determined a new section ID (or explicitly set to None/Null due to shifting)
-        if final_section_id is not None or is_shifting:
-            update_sql += ", section_id = %s, is_section_permanent = %s"
-            params.extend([final_section_id, final_is_permanent])
+            WHERE applicant_id = %s
+        """, (final_program, final_year, active_term['semester'], final_section_id, active_term['year_name'], applicant_id))
         
-        update_sql += " WHERE applicant_id = %s"
-        params.append(applicant_id)
+        # 2. IMMEDIATE CUMULATIVE FEE INJECTION
+        # Re-fetch data to get the newly updated year/sem for accurate matching
+        cursor.execute("SELECT * FROM applicants WHERE applicant_id = %s", (applicant_id,))
+        updated_student = cursor.fetchone()
+        fees_added = _auto_assign_fees(cursor, applicant_id, updated_student)
 
-        update_cursor = conn.cursor()
-        update_cursor.execute(update_sql, tuple(params))
         conn.commit()
-        update_cursor.close()
-
-        flash(f"✅ Re-enrollment submitted successfully! Please await verification.", "success")
+        flash(f"✅ Submission successful. {fees_added} new fees added to your ledger.", "success")
         return redirect(url_for('views.application_status_page'))
 
     except Exception as e:
-        flash(f"Error submitting re-enrollment: {e}", "danger")
-        traceback.print_exc()
+        if conn: conn.rollback()
+        flash(f"Error: {e}", "danger")
         return redirect(url_for('views.application_status_page'))
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
 
+@auth.route('/student/change-section', methods=['POST'])
+def student_change_section():
+    if 'student_id' not in session:
+        flash("Please log in.", "warning")
+        return redirect(url_for('auth.student_login_page'))
 
+    student_user_id = session['student_id']
+    new_section_id = request.form.get('new_section_id')
 
+    if not new_section_id:
+        flash("Please select a valid section.", "warning")
+        return redirect(url_for('views.application_status_page'))
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Get Current Student Details
+        cursor.execute("""
+            SELECT applicant_id, program_choice, enrollment_year_level, section_id, application_status
+            FROM applicants 
+            WHERE student_user_id = %s
+            ORDER BY submitted_at DESC LIMIT 1
+        """, (student_user_id,))
+        student = cursor.fetchone()
+
+        if not student or student['application_status'] != 'Enrolled':
+            flash("You must be enrolled to change sections.", "danger")
+            return redirect(url_for('views.application_status_page'))
+
+        # 2. Get Target Section Details
+        cursor.execute("SELECT * FROM sections WHERE id = %s", (new_section_id,))
+        target_section = cursor.fetchone()
+
+        if not target_section:
+            flash("Section not found.", "danger")
+            return redirect(url_for('views.application_status_page'))
+
+        # 3. Security Check: Does Section match Student's Program & Year?
+        # We need the program_id for the student's program title
+        cursor.execute("SELECT program_id FROM programs WHERE title = %s", (student['program_choice'],))
+        prog_data = cursor.fetchone()
+        
+        if not prog_data or target_section['program_id'] != prog_data['program_id'] or target_section['year_level'] != student['enrollment_year_level']:
+            flash("Invalid section selection for your course/year.", "danger")
+            return redirect(url_for('views.application_status_page'))
+
+        # 4. Capacity Check
+        cursor.execute("SELECT COUNT(*) as count FROM applicants WHERE section_id = %s", (new_section_id,))
+        current_count = cursor.fetchone()['count']
+
+        if current_count >= target_section['max_students']:
+            flash(f"Section {target_section['section_name']} is full.", "danger")
+            return redirect(url_for('views.application_status_page'))
+
+        # 5. Update
+        cursor = conn.cursor() # Switch to non-dictionary cursor for update if needed, or stick to dict
+        cursor.execute("""
+            UPDATE applicants 
+            SET section_id = %s, is_section_permanent = TRUE 
+            WHERE applicant_id = %s
+        """, (new_section_id, student['applicant_id']))
+        
+        conn.commit()
+        flash(f"Successfully transferred to section {target_section['section_name']}.", "success")
+
+    except Exception as e:
+        print(f"Error changing section: {e}")
+        flash("An error occurred while changing sections.", "danger")
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+    return redirect(url_for('views.application_status_page'))
 
 # ----------------- ADMIN APPLICATION MANAGEMENT API ROUTES -----------------
 @auth.route('/admin/application/<int:applicant_id>/status', methods=['POST'])
@@ -7728,7 +10030,6 @@ def get_applicant_document(applicant_id, doc_type):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
-# NEW ROUTE FOR STUDENT TO VIEW THEIR GRADES
 @auth.route('/my-grades')
 def view_student_grades():
     if 'student_id' not in session:
@@ -7746,9 +10047,9 @@ def view_student_grades():
         
         cursor = conn.cursor(dictionary=True)
         
-        # MODIFIED: Get student info, including student_user_id for the template.
+        # MODIFIED: Select * so that applicant_id and other sidebar data are available
         cursor.execute("""
-            SELECT first_name, last_name, old_student_id, program_choice, student_user_id
+            SELECT *
             FROM applicants 
             WHERE student_user_id = %s
             ORDER BY submitted_at DESC
@@ -7785,7 +10086,8 @@ def view_student_grades():
 
         return render_template('student_grades.html',
                                student=student_info,
-                               grades_by_term=grades_by_term,  # Pass the grouped dictionary
+                               application=student_info, # <--- FIX: Added this line
+                               grades_by_term=grades_by_term,
                                student_logged_in=True)
 
     except Exception as e:

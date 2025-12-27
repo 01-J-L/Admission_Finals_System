@@ -1,3 +1,5 @@
+
+
 {% extends 'admin_base.html' %}
 
 {% block title %}Manage Website Content{% endblock %}
@@ -149,7 +151,7 @@
             </div>
         </div>
     </a>
-    <!-- Add this card inside the grid in admin_manage_content.html -->
+    
     <a href="{{ url_for('auth.admin_manage_sidebar_content') }}"
         class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
         <div class="flex items-center space-x-4">
@@ -162,6 +164,22 @@
                 <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Student Portal Sidebar</h5>
                 <p class="font-normal text-gray-700">Edit 'Important Info' and 'Contact Admissions' on the status page.
                 </p>
+            </div>
+        </div>
+    </a>
+
+    <!-- Manage Downloads Card -->
+    <a href="{{ url_for('auth.admin_manage_downloads') }}"
+        class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition-colors">
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-cyan-100 text-cyan-600">
+                    <i class="ri-folder-download-line ri-lg"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1 text-xl font-bold tracking-tight text-gray-900">Student Resources</h5>
+                <p class="font-normal text-gray-700">Upload forms, handbooks, and memos for students.</p>
             </div>
         </div>
     </a>

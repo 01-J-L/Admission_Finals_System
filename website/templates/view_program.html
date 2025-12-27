@@ -1,305 +1,325 @@
-
 {% extends 'base.html' %}
 
 {% block head %}
-    {{ super() }}
-    <title>{{ program.title if program else "Program Details" }} - Padre Garcia Polytechnic College</title>
-    <script src="https://cdn.tailwindcss.com/3.4.1"></script> {# <-- Tailwind CSS added #}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+{{ super() }}
+<title>{{ program.title if program else "Program Details" }} - PGPC</title>
+<script src="https://cdn.tailwindcss.com/3.4.1"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
 {% endblock %}
 
 {% block style %}
 <style>
-/* --- General Styles & Theme Variables (from original) --- */
-:root {
-    --primary: #1e40af;
-    --secondary: #3b82f6;
-    --text-dark: #111827;
-    --text-medium: #4b5563;
-    --text-light: #6b7280;
-    --bg-light-gray: #f9fafb;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
-html { scroll-behavior: smooth; }
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-light-gray);
-    color: var(--text-medium);
-}
+    :root {
+        --primary: #1e40af;
+        --secondary: #3b82f6;
+        --bg-light-gray: #f9fafb;
+    }
 
-/* --- Header Styles (Original) --- */
-header {
-    position: sticky;
-    top: 0;
-    width: 100%;
-    padding: 15px 5%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 1000;
-    background-color: #162938; /* Always dark */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.header-left { display: flex; align-items: center; }
-.header-left .logo { font-size: 1.4em; color: #fff; margin-left: 15px; white-space: nowrap; }
-.navigation a { position: relative; font-size: 1.1em; color: #fff; text-decoration: none; font-weight: 500; margin-left: 30px; }
-.menu-toggle { display: none; flex-direction: column; justify-content: space-around; width: 30px; height: 25px; background: transparent; border: none; cursor: pointer; padding: 0; z-index: 1100; margin-left: 20px; }
-.menu-toggle span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 3px; transition: all 0.3s ease-in-out; }
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-light-gray);
+    }
 
-/* --- Mobile Navigation (Original) --- */
-@media (max-width: 992px) {
-    header { padding: 10px 3%; }
-    .header-left img { width: 60px; height: auto; }
-    .header-left .logo { font-size: 0.9em; margin-left: 8px; }
-    .navigation { position: absolute; top: 100%; right: 0; width: 250px; background-color: #162938; box-shadow: 0 8px 16px rgba(0,0,0,0.15); flex-direction: column; align-items: stretch; display: none; z-index: 1050; border-top: 1px solid #2a3f54; max-height: calc(100vh - 80px); overflow-y: auto; }
-    .navigation.active { display: flex; }
-    .navigation a { display: block; padding: 12px 20px; margin-left: 0; text-align: left; color: #f0f0f0; border-bottom: 1px solid #2a3f54; }
-    .menu-toggle { display: flex; }
-    .menu-toggle.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
-    .menu-toggle.active span:nth-child(2) { opacity: 0; }
-    .menu-toggle.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
-}
+    /* Header Styles */
+    header {
+        position: sticky;
+        top: 0;
+        width: 100%;
+        padding: 12px 5%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        background-color: #162938;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
 
-/* --- Go Top & Animate (Original) --- */
-.go-top-btn { position: fixed; bottom: 24px; right: 24px; width: 48px; height: 48px; background-color: var(--primary); color: white; border-radius: 50%; border: none; cursor: pointer; display: none; justify-content: center; align-items: center; z-index: 1000; box-shadow: var(--shadow-lg); transition: all 0.3s ease; }
-.go-top-btn:hover { background-color: var(--secondary); transform: scale(1.1); }
-.go-top-btn i { font-size: 1.5rem; }
-.reveal-on-scroll { opacity: 0; transform: translateY(50px); transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1); will-change: opacity, transform; }
-.reveal-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
+    .header-left .logo {
+        font-size: 1.2em;
+        color: #fff;
+        margin-left: 10px;
+        font-weight: 700;
+    }
 
-/* --- Footer (Original) --- */
-.footer { position: relative; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; text-align: center; color: white; overflow: hidden; }
-.footer::before { content: ""; position: absolute; inset: 0; background: url("{{ url_for('static', filename='images/pgpcbuild.jpg') }}") center/cover no-repeat fixed; z-index: 0; opacity: 0.3; }
-.footer::after { content: ""; position: absolute; inset: 0; background: rgba(22, 41, 56, 0.442); z-index: 1; }
-.footer * { position: relative; z-index: 2; }
-.footer-logo { width: 100px; height: 100px; margin-bottom: 1rem; }
-.footer-title { font-size: 1.5rem; font-weight: bold; }
-.footer-subtitle { font-size: 1.25rem; font-weight: bold; margin-top: 0.5rem; }
-.footer-connect { margin-top: 1rem; font-size: 1rem; }
-.footer-socials { display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 1.25rem; }
-.footer-socials a { color: white; text-decoration: none; transition: color 0.3s ease; }
-.footer-socials a:hover { color: #0987d0; }
-.footer-divider { border-top: 1px solid white; width: 25%; margin: 2rem 0; }
-.footer-bottom { font-size: 0.875rem; line-height: 1.6; max-width: 700px; }
-.footer-bottom p { margin-bottom: 0.5rem; }
-.footer-bottom a { color: white; text-decoration: none; }
-.footer-bottom a:hover { text-decoration: underline; }
+    .navigation a {
+        font-size: 1em;
+        color: #fff;
+        text-decoration: none;
+        margin-left: 20px;
+        font-weight: 500;
+    }
+
+    .btnLogin-popup {
+        background-color: #fff;
+        color: #162938;
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    /* --- Go Top & Animate (Original) --- */
+    .go-top-btn {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 48px;
+        height: 48px;
+        background-color: var(--primary);
+        color: white;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s ease;
+    }
+
+    .go-top-btn:hover {
+        background-color: var(--secondary);
+        transform: scale(1.1);
+    }
+
+    .go-top-btn i {
+        font-size: 1.5rem;
+    }
+
+    .reveal-on-scroll {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1);
+        will-change: opacity, transform;
+    }
+
+    .reveal-on-scroll.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Mobile Nav */
+    .menu-toggle {
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    .menu-toggle span {
+        display: block;
+        width: 25px;
+        height: 3px;
+        background: white;
+        border-radius: 2px;
+    }
+
+    @media (max-width: 992px) {
+        .navigation {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 200px;
+            background: #162938;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .navigation.active {
+            display: flex;
+        }
+
+        .navigation a {
+            margin: 10px 0;
+        }
+
+        .menu-toggle {
+            display: flex;
+        }
+    }
+
+    /* Animations */
+    .reveal-on-scroll {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease-out;
+    }
+
+    .reveal-on-scroll.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
 </style>
 {% endblock %}
 
-
 {% block body %}
-{# --- ORIGINAL HEADER --- #}
 <header>
-    <div class="header-left">
-        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Padre Garcia Polytechnic College Logo" width="80" height="auto" ></a>
-        <h2 class="logo">Padre Garcia Polytechnic College</h2>
+    <div class="header-left flex items-center">
+        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Logo"
+                class="h-10 w-auto"></a>
+        <h2 class="logo hidden sm:block">PGPC</h2>
     </div>
-    <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-navigation">
+    <div class="menu-toggle" id="mobile-menu">
         <span></span><span></span><span></span>
-    </button>
-    <nav class="navigation" id="main-navigation">
+    </div>
+    <nav class="navigation" id="nav-links">
         <a href="{{ url_for('views.home') }}">Home</a>
-        <a href="{{ url_for('views.about') }}">About</a>
         <a href="{{ url_for('views.home') }}#programs">Programs</a>
-        <a href="{{ url_for('views.home') }}#news">News</a>
         <a href="{{ url_for('views.contact_page') }}">Contact</a>
         {% if student_logged_in %}
-            <a href="{{ url_for('views.application_status_page') }}"><button class="btnLogin-popup">My Application</button></a>
-            <a href="{{ url_for('auth.logout') }}"><button class="btnLogin-popup" style="background-color: #d9534f;">Logout</button></a>
+        <a href="{{ url_for('views.application_status_page') }}" class="btnLogin-popup">Portal</a>
         {% else %}
-            <a href="{{ url_for('views.existing_or_not') }}" class="no-underline"><button class="btnLogin-popup">Apply now</button></a>
+        <a href="{{ url_for('auth.student_login_page') }}" class="btnLogin-popup">Login</a>
         {% endif %}
     </nav>
 </header>
 
-{# --- NEW TAILWIND-BASED HERO BANNER --- #}
-<section class="relative min-h-[50vh] flex items-center justify-center text-center text-white bg-cover bg-center bg-fixed" style="background-image: url('{{ program.hero_image_url }}');">
-    <div class="absolute inset-0 bg-slate-800/70 z-0"></div>
-    <div class="relative z-10 p-4 reveal-on-scroll">
-         <h1 class="text-4xl md:text-6xl font-extrabold text-white leading-tight">
+<!-- Hero Section -->
+<section
+    class="relative h-[40vh] md:h-[60vh] flex items-center justify-center text-center text-white bg-cover bg-center bg-fixed"
+    style="background-image: url('{{ program.hero_image_url }}');">
+    <div class="absolute inset-0 bg-black/60 z-0"></div>
+    <div class="relative z-10 px-4">
+        <h1 class="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight">
             {{ program.title }}
         </h1>
+        <div class="w-24 h-1.5 bg-blue-500 mx-auto mt-6 rounded-full"></div>
     </div>
 </section>
 
-{# --- NEW TAILWIND-BASED MAIN CONTENT --- #}
-<main class="max-w-6xl mx-auto px-4 sm:px-6 py-12 -mt-20 relative z-10">
-    <div class="mb-8">
-        <a href="{{ url_for('views.home') }}#programs" class="inline-flex items-center px-5 py-2 bg-white shadow-lg rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 font-semibold text-sm">
-            <i class="ri-arrow-left-line mr-2"></i>
-            Back to All Programs
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 -mt-16 relative z-10">
+
+    <!-- Back Navigation -->
+    <div class="mb-6">
+        <a href="{{ url_for('views.home') }}#programs"
+            class="inline-flex items-center text-sm font-bold text-blue-700 bg-white px-4 py-2 rounded-full shadow-md hover:text-blue-900 transition-all">
+            <i class="ri-arrow-left-s-line mr-1"></i> Back to Programs
         </a>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 md:p-12 mb-12 reveal-on-scroll">
-        <section class="mb-12">
-            <div class="flex items-center mb-6">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                    <i class="ri-information-line text-blue-800 text-2xl"></i>
-                </div>
-                <h2 class="text-3xl font-bold text-gray-900">Program Overview</h2>
-            </div>
-            <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                <p>{{ program.description }}</p>
-            </div>
-        </section>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <section class="mb-12">
-            <div class="flex items-center mb-6">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                    <i class="ri-target-line text-blue-800 text-2xl"></i>
-                </div>
-                <h2 class="text-3xl font-bold text-gray-900">Program Objectives</h2>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {% for objective in program.objectives %}
-                <div class="flex items-start space-x-4 bg-gray-50 p-5 rounded-xl border border-gray-200">
-                    <i class="ri-checkbox-circle-fill text-blue-600 text-2xl mt-1"></i>
-                    <p class="text-gray-700">{{ objective }}</p>
-                </div>
-                {% endfor %}
-            </div>
-        </section>
+        <!-- Left Content (Overview & Details) -->
+        <div class="lg:col-span-2 space-y-8">
 
-        <section class="mb-12">
-            <div class="flex items-center mb-6">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                    <i class="ri-briefcase-line text-blue-800 text-2xl"></i>
+            <!-- Overview Card -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 reveal-on-scroll">
+                <div class="flex items-center gap-3 mb-6">
+                    <i class="ri-information-fill text-3xl text-blue-600"></i>
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900">About the Program</h2>
                 </div>
-                <h2 class="text-3xl font-bold text-gray-900">Career Opportunities</h2>
+                <p class="text-gray-600 leading-relaxed text-base md:text-lg">
+                    {{ program.description }}
+                </p>
             </div>
-            <p class="text-gray-600 mb-8">Graduates are prepared for a wide range of exciting careers, including:</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {% for career in program.career_opportunities %}
-                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200 border border-gray-200">
-                    <div class="flex items-center">
-                        <i class="ri-arrow-right-up-line text-blue-600 mr-3"></i>
-                        <span class="font-medium text-gray-800">{{ career }}</span>
+
+            <!-- Objectives Grid -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 reveal-on-scroll">
+                <div class="flex items-center gap-3 mb-8">
+                    <i class="ri-focus-3-fill text-3xl text-blue-600"></i>
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Learning Objectives</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for objective in program.objectives %}
+                    <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <i class="ri-checkbox-circle-fill text-blue-600 text-xl mt-1"></i>
+                        <span class="text-gray-700 font-medium">{{ objective }}</span>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
-        </section>
 
-        <section class="mb-12">
-            <div class="flex items-center mb-6">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                    <i class="ri-book-open-line text-blue-800 text-2xl"></i>
+            <!-- Core Courses -->
+            <div class="reveal-on-scroll">
+                <div class="flex items-center gap-3 mb-8 px-2">
+                    <i class="ri-book-open-fill text-3xl text-blue-600"></i>
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Major Curriculum</h2>
                 </div>
-                <h2 class="text-3xl font-bold text-gray-900">Core Courses</h2>
-            </div>
-            <p class="text-gray-600 mb-8">Our curriculum includes a comprehensive set of courses to build a strong foundation. Below is a selection of key subjects:</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for course in program.core_courses %}
-                <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                    <span class="bg-blue-800 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4 inline-block">{{ course.course_code }}</span>
-                    <h3 class="font-semibold text-gray-900 text-lg mb-2">{{ course.course_name }}</h3>
-                    <p class="text-gray-600 text-sm">{{ course.desc }}</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% for course in program.core_courses %}
+                    <div
+                        class="bg-white p-6 rounded-2xl border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all duration-300">
+                        <span
+                            class="text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-1 rounded">{{
+                            course.course_code }}</span>
+                        <h3 class="font-bold text-gray-900 mt-3 text-lg">{{ course.course_name }}</h3>
+                        <p class="text-gray-500 text-sm mt-2 line-clamp-3">{{ course.desc }}</p>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
-        </section>
+        </div>
 
-        <section class="bg-gradient-to-r from-blue-700 to-blue-500 rounded-2xl p-8 sm:p-12 text-center text-white mt-8">
-            <h2 class="text-3xl font-bold mb-4">Ready to Shape Your Future?</h2>
-            <p class="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
-                Join Padre Garcia Polytechnic College and start your journey towards a rewarding career.
-            </p>
-            <a href="{{ program.admission_link }}" class="bg-white text-blue-800 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-200 whitespace-nowrap text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                Apply Now
-            </a>
-        </section>
+        <!-- Right Sidebar (Careers & Action) -->
+        <div class="space-y-8">
+
+            <!-- Quick Apply Card -->
+            
+
+            <!-- Career Path Card -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 reveal-on-scroll">
+                <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <i class="ri-briefcase-4-fill text-blue-600"></i> Career Paths
+                </h3>
+                <div class="space-y-3">
+                    {% for career in program.career_opportunities %}
+                    <div
+                        class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg group hover:bg-blue-600 transition-colors">
+                        <i class="ri-arrow-right-s-line text-blue-500 group-hover:text-white"></i>
+                        <span class="text-sm font-semibold text-gray-700 group-hover:text-white">{{ career }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div
+                class="bg-gradient-to-br from-blue-700 to-indigo-900 rounded-2xl p-8 text-white shadow-2xl reveal-on-scroll">
+                <h3 class="text-xl font-bold mb-2">Interested?</h3>
+                <p class="text-blue-100 text-sm mb-6">Enroll today and become part of our globally competitive
+                    professionals.</p>
+                <a href="{{ program.admission_link }}"
+                    class="block w-full text-center bg-white text-blue-700 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-lg">
+                    Apply Now
+                </a>
+                <div class="mt-6 pt-6 border-t border-white/20 text-xs text-blue-200">
+                    <p class="flex items-center gap-2"><i class="ri-check-line"></i> Accredited Curriculum</p>
+                    <p class="flex items-center gap-2 mt-2"><i class="ri-check-line"></i> Industry-Ready Training</p>
+                </div>
+            </div>
+
+        </div>
     </div>
 </main>
 
-
-{# --- ORIGINAL GO-TOP BUTTON --- #}
-<button class="go-top-btn" id="goTopBtn" title="Go to top">
+<button class="go-top-btn" id="goTopBtn">
     <i class="ri-arrow-up-line"></i>
 </button>
 
-<footer class="footer">
-    <!-- Dynamic Logo -->
-    <img src="{{ url_for('static', filename='images/uploads/' + global_content.footer_logo_image) if global_content.footer_logo_image else url_for('static', filename='logopgpc.png') }}" 
-         alt="Padre Garcia Polytechnic College logo" class="footer-logo" />
-    
-    <!-- Dynamic Title & Slogan -->
-    <h1 class="footer-title">{{ global_content.footer_title or 'Padre Garcia Polytechnic College' }}</h1>
-    <h2 class="footer-subtitle">{{ global_content.footer_subtitle or 'THE FUTURE BEGINS HERE.' }}</h2>
-    
-    <!-- Dynamic Connect Text & Socials -->
-    <p class="footer-connect">{{ global_content.footer_connect_text or 'Connect with us' }}</p>
-    <div class="footer-socials">
-        {% if global_socials %}
-            {% for link in global_socials %}
-                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ link.platform_name }}">
-                    <i class="{{ link.icon_class }}"></i>
-                </a>
-            {% endfor %}
-        {% else %}
-            <!-- Fallback for old static link if no dynamic links exist -->
-            {% if global_content.footer_facebook_link %}
-                <a href="{{ global_content.footer_facebook_link }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-            {% endif %}
-        {% endif %}
-    </div>
-    <div class="footer-divider"></div>
-    
-    <!-- Dynamic Links & Contact Info -->
-    <div class="footer-bottom">
-      <p>
-          <a href="{{ url_for('views.about') }}">About</a> | 
-          <a href="{{ url_for('views.contact_page') }}">Contact us</a> | 
-          <a href="{{ url_for('views.home') }}#programs">Programs</a> | 
-          <a href="{{ url_for('views.home') }}">Admission</a> | 
-          <a href="https://maps.app.goo.gl/od3hUBTfTZ1uNNvn7" target="_blank" rel="noopener noreferrer">{{ global_content.contact_address }}</a> | 
-          <a href="tel:{{ global_content.contact_phone }}">{{ global_content.contact_phone }}</a>
-      </p>
-      <p>© {{ current_year if current_year else '2025' }}. All Rights Reserved {{ global_content.footer_title }} | <a href="https://www.padregarcia.gov.ph/home" target="_blank" rel="noopener noreferrer">Padre Garcia PH</a></p>
-    </div>
-</footer>
-
-{# --- ORIGINAL SCRIPT --- #}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Mobile Menu Toggle
-        const menuToggle = document.querySelector('.menu-toggle');
-        const navigation = document.getElementById('main-navigation');
-        if (menuToggle && navigation) {
-            menuToggle.addEventListener('click', function() {
-                navigation.classList.toggle('active');
-                menuToggle.classList.toggle('active');
-            });
-        }
-        
-        // Go Top Button
-        const goTopBtn = document.getElementById('goTopBtn');
-        if(goTopBtn) {
-            window.addEventListener('scroll', () => {
-              if (window.scrollY > 200) { goTopBtn.style.display = "flex"; } else { goTopBtn.style.display = "none"; }
-            });
-            goTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: "smooth" }); });
-        }
+        // Mobile Toggle
+        const menuBtn = document.getElementById('mobile-menu');
+        const nav = document.getElementById('nav-links');
+        menuBtn.addEventListener('click', () => nav.classList.toggle('active'));
 
-        // Animate on Scroll
+        // Scroll Animation
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                }
+                if (entry.isIntersecting) entry.target.classList.add('is-visible');
             });
         }, { threshold: 0.1 });
-        document.querySelectorAll('.reveal-on-scroll').forEach(el => { observer.observe(el); });
+        document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+
+        // Go Top Button
+        const goTopBtn = document.getElementById('goTopBtn');
+        window.addEventListener('scroll', () => {
+            goTopBtn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+        });
+        goTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     });
 </script>
-
 {% endblock %}

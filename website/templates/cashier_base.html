@@ -1,7 +1,8 @@
-
+<!-- --- START OF FILE cashier_base.html --- -->
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,13 +23,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
         @media print {
-            .no-print, aside, header { display: none !important; }
-            .main-content { margin: 0 !important; padding: 0 !important; }
+            .no-print,
+            aside,
+            header {
+                display: none !important;
+            }
+
+            .main-content {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
         }
     </style>
 </head>
+
 <body class="flex h-screen overflow-hidden">
 
     <!-- Sidebar -->
@@ -36,38 +50,50 @@
         <div class="h-16 flex items-center px-6 border-b border-gray-100">
             <span class="text-xl font-bold text-primary tracking-tight">PGPC Cashier</span>
         </div>
-        
+
         <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
             <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu</div>
-            
-            <a href="{{ url_for('auth.cashier_dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
+
+            <a href="{{ url_for('auth.cashier_dashboard') }}"
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
                 <i class="ri-dashboard-line text-lg"></i> <span class="font-medium text-sm">Dashboard</span>
             </a>
-            
-            <a href="{{ url_for('auth.student_records') }}" class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
+
+            <a href="{{ url_for('auth.student_records') }}"
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
                 <i class="ri-user-search-line text-lg"></i> <span class="font-medium text-sm">Student Payments</span>
             </a>
 
-            <a href="{{ url_for('auth.create_batch_assessment') }}" class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
+            <a href="{{ url_for('auth.create_batch_assessment') }}"
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
                 <i class="ri-group-line text-lg"></i> <span class="font-medium text-sm">Batch Assessment</span>
             </a>
 
-            <a href="{{ url_for('auth.return_voucher') }}" class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
+            <a href="{{ url_for('auth.return_voucher') }}"
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
                 <i class="ri-coupon-3-line text-lg"></i> <span class="font-medium text-sm">Return Voucher</span>
             </a>
 
-            <div class="px-4 py-2 mt-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Reports</div>
-
-            <a href="{{ url_for('auth.generate_report') }}" class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
-                <i class="ri-file-list-3-line text-lg"></i> <span class="font-medium text-sm">Financial Report</span>
+            <a href="{{ url_for('auth.student_discount') }}"
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
+                <i class="ri-price-tag-3-line text-lg"></i> <span class="font-medium text-sm">Student Discounts</span>
             </a>
 
-            <a href="{{ url_for('auth.activity_history') }}" class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
+            <div class="px-4 py-2 mt-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Tools & Reports</div>
+
+            <a href="{{ url_for('auth.receipt_layout_tool') }}"
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
+                <i class="ri-printer-line text-lg"></i> <span class="font-medium text-sm">Receipt Layout Tool</span>
+            </a>
+
+            <a href="{{ url_for('auth.activity_history') }}"
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-600 rounded-btn hover:bg-blue-50 hover:text-primary transition-colors">
                 <i class="ri-history-line text-lg"></i> <span class="font-medium text-sm">Activity Log</span>
             </a>
 
-             <div class="px-4 py-2 mt-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Account</div>
-             <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-3 px-4 py-2.5 text-red-600 rounded-btn hover:bg-red-50 transition-colors">
+            <div class="px-4 py-2 mt-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Account</div>
+            <a href="{{ url_for('auth.logout') }}"
+                class="flex items-center gap-3 px-4 py-2.5 text-red-600 rounded-btn hover:bg-red-50 transition-colors">
                 <i class="ri-logout-box-line text-lg"></i> <span class="font-medium text-sm">Sign Out</span>
             </a>
         </nav>
@@ -84,23 +110,24 @@
 
         <main class="flex-1 overflow-y-auto bg-slate-50 p-4 lg:p-8">
             {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="mb-6 space-y-2">
-                        {% for category, message in messages %}
-                            <div class="p-4 rounded-lg text-sm font-medium border-l-4 shadow-sm 
-                                {% if category == 'success' %}border-green-500 text-green-700
-                                {% elif category == 'danger' %}border-red-500 text-red-700
-                                {% else %}border-blue-500 text-blue-700{% endif %}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+            {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for category, message in messages %}
+                <div class="p-4 rounded-lg text-sm font-medium border-l-4 shadow-sm 
+                                {% if category == 'success' %}border-green-500 text-green-700 bg-green-50
+                                {% elif category == 'danger' %}border-red-500 text-red-700 bg-red-50
+                                {% else %}border-blue-500 text-blue-700 bg-blue-50{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             {% endwith %}
-            
+
             {% block content %}{% endblock %}
         </main>
     </div>
     {% block extra_scripts %}{% endblock %}
 </body>
+
 </html>

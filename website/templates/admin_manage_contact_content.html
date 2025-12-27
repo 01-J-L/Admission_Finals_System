@@ -1,3 +1,5 @@
+<!-- --- START OF FILE templates/admin_manage_contact_content.html --- -->
+
 {% extends 'admin_base.html' %}
 
 {% block title %}General & Contact Settings{% endblock %}
@@ -10,251 +12,626 @@
 {% endblock %}
 
 {% block content %}
-<form method="POST" enctype="multipart/form-data" class="space-y-8 max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto space-y-8">
 
-    <!-- System Controls Section -->
-    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 border-l-blue-500">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">System Controls</h3>
-        
-        <!-- Account Creation Toggle -->
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-900">Student Account Creation</label>
-                <p class="text-sm text-gray-500">Toggle whether new students can create accounts.</p>
+    <!-- 1. ADMISSION STATUS CONTROLS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- MASTER TOGGLE: Global Account Creation -->
+        <div
+            class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 {% if content.enable_account_creation == 'true' %}border-l-blue-500{% else %}border-l-gray-500{% endif %}">
+            <div class="flex flex-col h-full justify-between">
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Create Account Page</h3>
+                    <p class="text-xs text-gray-500 mb-2">Master switch for the registration form.</p>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-gray-700">Status:</span>
+                        {% if content.enable_account_creation == 'true' %}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span> VISIBLE
+                        </span>
+                        {% else %}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
+                            <i class="ri-eye-off-line mr-1"></i> HIDDEN
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form action="{{ url_for('auth.admin_toggle_registration') }}" method="POST">
+                    <input type="hidden" name="setting_key" value="enable_account_creation">
+                    {% if content.enable_account_creation == 'true' %}
+                    <button type="submit"
+                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 shadow-sm transition-colors">
+                        <i class="ri-eye-off-line mr-2"></i> Hide Form
+                    </button>
+                    {% else %}
+                    <button type="submit"
+                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+                        <i class="ri-eye-line mr-2"></i> Show Form
+                    </button>
+                    {% endif %}
+                </form>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="registration_open" value="true" class="sr-only peer" {% if content.registration_open %}checked{% endif %}>
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                <span class="ml-3 text-sm font-medium text-gray-900 status-label">
-                    {% if content.registration_open %}Enabled{% else %}Disabled{% endif %}
-                </span>
-            </label>
         </div>
 
-        <!-- Student Email Trigger Toggle -->
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-900">Student Email Notifications</label>
-                <p class="text-sm text-gray-500">Send automatic emails to students (Status updates, Grades, etc).</p>
+        <!-- New Student Toggle -->
+        <div
+            class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 {% if content.admission_open_new == 'true' %}border-l-green-500{% else %}border-l-red-500{% endif %}">
+            <div class="flex flex-col h-full justify-between">
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">New Students</h3>
+                    <p class="text-xs text-gray-500 mb-2">Incoming Freshmen</p>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-gray-700">Status:</span>
+                        {% if content.admission_open_new == 'true' %}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span> OPEN
+                        </span>
+                        {% else %}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">
+                            <i class="ri-close-circle-fill mr-1"></i> CLOSED
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form action="{{ url_for('auth.admin_toggle_registration') }}" method="POST">
+                    <input type="hidden" name="setting_key" value="admission_open_new">
+                    {% if content.admission_open_new == 'true' %}
+                    <button type="submit"
+                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors">
+                        <i class="ri-lock-2-line mr-2"></i> Close
+                    </button>
+                    {% else %}
+                    <button type="submit"
+                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 shadow-sm transition-colors">
+                        <i class="ri-lock-unlock-line mr-2"></i> Open
+                    </button>
+                    {% endif %}
+                </form>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="email_trigger_student" value="true" class="sr-only peer" {% if content.email_trigger_student %}checked{% endif %}>
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
         </div>
 
-        <!-- Admin Email Trigger Toggle -->
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-900">Admin Email Notifications</label>
-                <p class="text-sm text-gray-500">Receive emails when new students apply (Pending).</p>
+        <!-- Old Student Toggle -->
+        <div
+            class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 {% if content.admission_open_old == 'true' %}border-l-green-500{% else %}border-l-red-500{% endif %}">
+            <div class="flex flex-col h-full justify-between">
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Old / Transferees</h3>
+                    <p class="text-xs text-gray-500 mb-2">Existing Students</p>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-gray-700">Status:</span>
+                        {% if content.admission_open_old == 'true' %}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span> OPEN
+                        </span>
+                        {% else %}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">
+                            <i class="ri-close-circle-fill mr-1"></i> CLOSED
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form action="{{ url_for('auth.admin_toggle_registration') }}" method="POST">
+                    <input type="hidden" name="setting_key" value="admission_open_old">
+                    {% if content.admission_open_old == 'true' %}
+                    <button type="submit"
+                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors">
+                        <i class="ri-lock-2-line mr-2"></i> Close
+                    </button>
+                    {% else %}
+                    <button type="submit"
+                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 shadow-sm transition-colors">
+                        <i class="ri-lock-unlock-line mr-2"></i> Open
+                    </button>
+                    {% endif %}
+                </form>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="email_trigger_admin" value="true" class="sr-only peer" {% if content.email_trigger_admin %}checked{% endif %}>
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
         </div>
 
-        <!-- Admin Note Email Trigger Toggle -->
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-900">Admin Note Notifications</label>
-                <p class="text-sm text-gray-500">Send an email to the student when you add a note to their application.</p>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="email_trigger_notes" value="true" class="sr-only peer" {% if content.email_trigger_notes %}checked{% endif %}>
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-        </div>
-
-        <!-- Announcement Email Trigger Toggle -->
-        <div class="flex items-center justify-between">
-            <div>
-                <label class="block text-sm font-medium text-gray-900">Announcement Notifications</label>
-                <p class="text-sm text-gray-500">Blast an email to ALL students when a new announcement is posted.</p>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="email_trigger_announcements" value="true" class="sr-only peer" {% if content.email_trigger_announcements %}checked{% endif %}>
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-        </div>
     </div>
 
-    <!-- Social Media Links Section -->
-    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Social Media Links</h3>
-        
-        <!-- List Existing Links -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Active Links</label>
-            {% if social_links %}
-            <div class="space-y-2">
-                {% for link in social_links %}
-                <div class="flex items-center justify-between bg-gray-50 p-3 rounded border">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-                            <i class="{{ link.icon_class }}"></i>
+    <!-- 2. MAIN CONTENT FORM -->
+    <form method="POST" enctype="multipart/form-data" class="space-y-8">
+
+        <!-- Email Triggers & Settings -->
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">System Notifications</h3>
+
+            <!-- Student Email Trigger Toggle -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-900">Student Email Notifications</label>
+                    <p class="text-sm text-gray-500">Send automatic emails to students (Status updates, Grades, etc).
+                    </p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="email_trigger_student" value="true" class="sr-only peer" {% if
+                        content.email_trigger_student=='true' %}checked{% endif %}>
+                    <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
+                </label>
+            </div>
+
+            <!-- Admin Email Trigger Toggle -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-900">Admin Email Notifications</label>
+                    <p class="text-sm text-gray-500">Receive emails when new students apply (Pending).</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="email_trigger_admin" value="true" class="sr-only peer" {% if
+                        content.email_trigger_admin=='true' %}checked{% endif %}>
+                    <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
+                </label>
+            </div>
+
+            <!-- Admin Note Email Trigger Toggle -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-900">Admin Note Notifications</label>
+                    <p class="text-sm text-gray-500">Send an email to the student when you add a note to their
+                        application.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="email_trigger_notes" value="true" class="sr-only peer" {% if
+                        content.email_trigger_notes=='true' %}checked{% endif %}>
+                    <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
+                </label>
+            </div>
+
+            <!-- Announcement Email Trigger Toggle -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <label class="block text-sm font-medium text-gray-900">Announcement Notifications</label>
+                    <p class="text-sm text-gray-500">Blast an email to ALL students when a new announcement is posted.
+                    </p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="email_trigger_announcements" value="true" class="sr-only peer" {% if
+                        content.email_trigger_announcements=='true' %}checked{% endif %}>
+                    <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
+                </label>
+            </div>
+
+            <!-- Finance Settings Section -->
+            <div class="border-t border-gray-200 my-4 pt-4 mt-6">
+                <h4 class="text-md font-bold text-gray-700 mb-4 uppercase text-xs tracking-wider">Finance Settings</h4>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-900">Issue Receipts</label>
+                        <p class="text-sm text-gray-500">
+                            If <strong>Enabled</strong>: Automatically opens the receipt print page after payment.<br>
+                            If <strong>Disabled</strong>: Records payment but skips the receipt printing step.
+                        </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="issuance_of_receipt" value="true" class="sr-only peer" {% if
+                            content.issuance_of_receipt=='true' %}checked{% endif %}>
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
                         </div>
-                        <div>
-                            <span class="block text-sm font-bold text-gray-800">{{ link.platform_name }}</span>
-                            <a href="{{ link.url }}" target="_blank" class="text-xs text-gray-500 hover:underline">{{ link.url }}</a>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Media Links Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Social Media Links</h3>
+
+            <!-- List Existing Links -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Active Links</label>
+                {% if social_links %}
+                <div class="space-y-2">
+                    {% for link in social_links %}
+                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded border">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                                <i class="{{ link.icon_class }}"></i>
+                            </div>
+                            <div>
+                                <span class="block text-sm font-bold text-gray-800">{{ link.platform_name }}</span>
+                                <a href="{{ link.url }}" target="_blank"
+                                    class="text-xs text-gray-500 hover:underline">{{ link.url }}</a>
+                            </div>
+                        </div>
+                        <button type="submit"
+                            formaction="{{ url_for('auth.admin_delete_social_media', link_id=link.id) }}"
+                            class="text-red-500 hover:text-red-700 p-1" onclick="return confirm('Delete this link?');"
+                            title="Delete Link">
+                            <i class="ri-delete-bin-line text-xl"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500 italic">No social media links added yet.</p>
+                {% endif %}
+            </div>
+
+            <!-- Add New Link Form -->
+            <div class="bg-blue-50 p-4 rounded-md border border-blue-100">
+                <h4 class="text-sm font-bold text-blue-800 mb-3">Add New Link</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Platform</label>
+                        <select name="platform" class="w-full rounded-md border-gray-300 shadow-sm text-sm h-10">
+                            <option value="" disabled selected>Select Platform</option>
+                            <option value="Facebook">Facebook</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Twitter">Twitter / X</option>
+                            <option value="YouTube">YouTube</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="TikTok">TikTok</option>
+                            <option value="Website">Website</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">URL</label>
+                        <input type="url" name="url" placeholder="https://..."
+                            class="w-full rounded-md border-gray-300 shadow-sm text-sm h-10">
+                    </div>
+                    <div>
+                        <button type="submit" formaction="{{ url_for('auth.admin_add_social_media') }}"
+                            class="w-full bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700 text-sm h-10">
+                            <i class="ri-add-line mr-1"></i> Add Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Branding Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Footer Branding</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">College Name (Footer Title)</label>
+                    <input type="text" name="footer_title"
+                        value="{{ content.footer_title or 'Padre Garcia Polytechnic College' }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Slogan (Subtitle)</label>
+                    <input type="text" name="footer_subtitle"
+                        value="{{ content.footer_subtitle or 'THE FUTURE BEGINS HERE.' }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Connect Text</label>
+                    <input type="text" name="footer_connect_text"
+                        value="{{ content.footer_connect_text or 'Connect with us' }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Footer Logo</label>
+                    <div class="mt-2 flex items-center gap-4">
+                        {% if content.footer_logo_image %}
+                        <img src="{{ url_for('static', filename='images/uploads/' + content.footer_logo_image) }}"
+                            class="h-16 w-16 object-contain bg-gray-800 rounded p-1">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='logopgpc.png') }}"
+                            class="h-16 w-16 object-contain bg-gray-800 rounded p-1">
+                        {% endif %}
+                        <input type="file" name="footer_logo_image" accept="image/png, image/jpeg"
+                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Upload a transparent PNG for best results.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Info Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Contact Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input type="email" name="contact_email" value="{{ content.contact_email or '' }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="text" name="contact_phone" value="{{ content.contact_phone or '' }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Complete Address</label>
+                    <input type="text" name="contact_address" value="{{ content.contact_address or '' }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Office Hours</label>
+                    <input type="text" name="contact_hours" value="{{ content.contact_hours or '' }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+            </div>
+        </div>
+
+        
+
+        <!-- Google Map Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Google Map</h3>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Map Embed URL</label>
+                <textarea name="contact_map_url" rows="3"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm font-mono text-xs">{{ content.contact_map_url or '' }}</textarea>
+            </div>
+        </div>
+
+        <!-- Application Form Settings Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Application Form Settings</h3>
+
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Consent -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Consent Title</label>
+                    <input type="text" name="consent_title" value="{{ content.consent_title or 'CONSENT' }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Consent Text</label>
+                    <textarea name="consent_text" rows="6"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.consent_text or '' }}</textarea>
+                </div>
+
+                <!-- Oath -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Oath Title</label>
+                    <input type="text" name="oath_title" value="{{ content.oath_title or 'OATH' }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Oath Text</label>
+                    <textarea name="oath_text" rows="3"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.oath_text or '' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Messages & Requirements Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Status Messages, Requirements & Files
+            </h3>
+
+            <!-- Global Header for Requirements -->
+            <div class="mb-6 bg-gray-50 p-4 rounded border">
+                <label class="block text-sm font-medium text-gray-700">Requirements Header Text</label>
+                <input type="text" name="requirements_header_text"
+                    value="{{ content.requirements_header_text or 'Please prepare the following:' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary sm:text-sm">
+                <p class="text-xs text-gray-500 mt-1">This bold text appears above the bullet list (e.g., "Please
+                    prepare:", "Things to bring:").</p>
+            </div>
+
+            <div class="space-y-8">
+                {% set statuses = [
+                ('status_msg_pending', 'Pending'),
+                ('status_msg_review', 'In Review'),
+                ('status_msg_approved', 'Approved'),
+                ('status_msg_scheduled', 'Scheduled'),
+                ('status_msg_passed', 'Passed'),
+                ('status_msg_rejected', 'Rejected'),
+                ('status_msg_failed', 'Failed'),
+                ('status_msg_enrolling', 'Enrolling'),
+                ('status_msg_enrolled', 'Enrolled'),
+                ('status_msg_dropped', 'Dropped'),
+                ('status_msg_not_enrolled', 'Not Enrolled')
+                ] %}
+
+                {% for key, label in statuses %}
+                <div class="border-b pb-6 last:border-0">
+                    <div class="mb-3">
+                        <label class="block text-base font-medium text-gray-800">{{ label }} Message</label>
+                        <textarea name="{{ key }}" rows="2"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary sm:text-sm">{{ content[key] or '' }}</textarea>
+                    </div>
+
+                    <!-- Requirements Management for this Status -->
+                    <div class="bg-gray-50 p-3 rounded-md border border-gray-200 mb-4">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Bulleted Requirements for {{
+                            label }}</label>
+
+                        <!-- List Existing -->
+                        <ul class="list-disc list-inside space-y-1 mb-3">
+                            {% if requirements[key] %}
+                            {% for req in requirements[key] %}
+                            <li class="text-sm text-gray-700 flex justify-between items-center group">
+                                <span>{{ req.requirement_text }}</span>
+                                <!-- Delete button uses formaction to override main form action -->
+                                <button type="submit"
+                                    formaction="{{ url_for('auth.admin_delete_requirement', req_id=req.id) }}"
+                                    class="text-red-400 hover:text-red-600 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Delete Item">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </li>
+                            {% endfor %}
+                            {% else %}
+                            <li class="text-sm text-gray-400 italic">No requirements added yet.</li>
+                            {% endif %}
+                        </ul>
+
+                        <!-- Add New -->
+                        <div class="flex gap-2">
+                            <input type="text" name="new_req_{{ key }}" id="new_req_{{ key }}"
+                                placeholder="Add new requirement..."
+                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary sm:text-xs h-8">
+                            <!-- We use a type="button" here to trigger JS -->
+                            <button type="button" onclick="submitRequirement('{{ key }}')"
+                                class="bg-green-600 text-white px-3 py-1 rounded-md text-xs hover:bg-green-700">Add</button>
                         </div>
                     </div>
-                    <!-- Delete button needs its own form context or formaction -->
-                    <button type="submit" formaction="{{ url_for('auth.admin_delete_social_media', link_id=link.id) }}" class="text-red-500 hover:text-red-700 p-1" onclick="return confirm('Delete this link?');" title="Delete Link">
-                        <i class="ri-delete-bin-line text-xl"></i>
-                    </button>
+
+                    <!-- File Uploads Section for this Status -->
+                    <div class="bg-blue-50 p-3 rounded-md border border-blue-100">
+                        <label class="block text-xs font-bold text-blue-600 uppercase mb-2">Attachments / Downloads for
+                            {{ label }}</label>
+
+                        <!-- List Existing Files -->
+                        <ul class="space-y-2 mb-3">
+                            {% if uploads[key] %}
+                            {% for file in uploads[key] %}
+                            <li
+                                class="text-sm text-gray-700 flex items-center justify-between bg-white p-2 rounded border">
+                                <div class="flex items-center gap-2">
+                                    <i
+                                        class="ri-{{ 'image' if file.file_type == 'image' else 'file-pdf' }}-line text-gray-500"></i>
+                                    <span class="font-medium">{{ file.display_name }}</span>
+                                    <span class="text-xs text-gray-400">
+                                        ({{ 'All Programs' if not file.program_id else file.program_title }})
+                                    </span>
+                                    <a href="{{ url_for('auth.download_status_file', filename=file.file_filename) }}"
+                                        class="text-blue-500 hover:underline text-xs" target="_blank">View</a>
+                                </div>
+                                <button type="button" onclick="deleteFile({{ file.id }})"
+                                    class="text-red-400 hover:text-red-600" title="Delete File">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </li>
+                            {% endfor %}
+                            {% else %}
+                            <li class="text-xs text-gray-400 italic">No files uploaded.</li>
+                            {% endif %}
+                        </ul>
+
+                        <!-- Upload Form -->
+                        <div class="border-t border-blue-200 pt-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+                                <!-- Display Name -->
+                                <div class="sm:col-span-4">
+                                    <input type="text" id="name_{{ key }}" placeholder="Label (e.g. Download Form)"
+                                        class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8">
+                                </div>
+
+                                <!-- Program Filter -->
+                                <div class="sm:col-span-3">
+                                    <select id="prog_{{ key }}"
+                                        class="w-full rounded-md border-gray-300 shadow-sm text-xs h-8 p-1">
+                                        <option value="">All Programs</option>
+                                        {% for prog in programs %}
+                                        <option value="{{ prog.program_id }}">{{ prog.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- File Input -->
+                                <div class="sm:col-span-4">
+                                    <input type="file" id="file_{{ key }}"
+                                        class="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-white file:text-blue-700 hover:file:bg-blue-50">
+                                </div>
+
+                                <!-- Add Button -->
+                                <div class="sm:col-span-1">
+                                    <button type="button" onclick="uploadFile('{{ key }}')"
+                                        class="w-full bg-blue-600 text-white px-2 py-1 rounded-md text-xs hover:bg-blue-700 h-8">
+                                        <i class="ri-upload-2-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 {% endfor %}
             </div>
-            {% else %}
-            <p class="text-sm text-gray-500 italic">No social media links added yet.</p>
-            {% endif %}
         </div>
 
-        <!-- Add New Link Form -->
-        <div class="bg-blue-50 p-4 rounded-md border border-blue-100">
-            <h4 class="text-sm font-bold text-blue-800 mb-3">Add New Link</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Platform</label>
-                    <select name="platform" class="w-full rounded-md border-gray-300 shadow-sm text-sm h-10">
-                        <option value="" disabled selected>Select Platform</option>
-                        <option value="Facebook">Facebook</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="Twitter">Twitter / X</option>
-                        <option value="YouTube">YouTube</option>
-                        <option value="LinkedIn">LinkedIn</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="Website">Website</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">URL</label>
-                    <input type="url" name="url" placeholder="https://..." class="w-full rounded-md border-gray-300 shadow-sm text-sm h-10">
-                </div>
-                <div>
-                    <!-- This button triggers a different route -->
-                    <button type="submit" formaction="{{ url_for('auth.admin_add_social_media') }}" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700 text-sm h-10">
-                        <i class="ri-add-line mr-1"></i> Add Link
-                    </button>
-                </div>
-            </div>
+        <div class="flex justify-end">
+            <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md shadow-sm hover:bg-primary/90">Save
+                All Settings</button>
         </div>
-    </div>
+    </form>
+</div>
 
-    <!-- Footer Branding Section -->
-    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Footer Branding</h3>
+<!-- 3. Hidden Forms for JS Actions -->
+<div class="hidden">
+    <form id="addReqForm" method="POST" action="{{ url_for('auth.admin_add_requirement') }}">
+        <input type="hidden" name="status_key" id="hidden_status_key">
+        <input type="hidden" name="requirement_text" id="hidden_req_text">
+    </form>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">College Name (Footer Title)</label>
-                <input type="text" name="footer_title"
-                    value="{{ content.footer_title or 'Padre Garcia Polytechnic College' }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-            </div>
+    <form id="uploadFileForm" method="POST" action="{{ url_for('auth.admin_upload_status_file') }}"
+        enctype="multipart/form-data">
+        <input type="hidden" name="status_key" id="upload_status_key">
+        <input type="hidden" name="display_name" id="upload_display_name">
+        <input type="hidden" name="program_id" id="upload_program_id">
+        <input type="file" name="file" id="upload_file_input">
+    </form>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Slogan (Subtitle)</label>
-                <input type="text" name="footer_subtitle"
-                    value="{{ content.footer_subtitle or 'THE FUTURE BEGINS HERE.' }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-            </div>
+    <form id="deleteFileForm" method="POST" action="">
+        <!-- Action URL set by JS -->
+    </form>
+</div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Connect Text</label>
-                <input type="text" name="footer_connect_text"
-                    value="{{ content.footer_connect_text or 'Connect with us' }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-            </div>
+<script>
+    function submitRequirement(statusKey) {
+        const input = document.getElementById('new_req_' + statusKey);
+        const val = input.value.trim();
+        if (!val) return;
 
-            <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700">Footer Logo</label>
-                <div class="mt-2 flex items-center gap-4">
-                    {% if content.footer_logo_image %}
-                    <img src="{{ url_for('static', filename='images/uploads/' + content.footer_logo_image) }}"
-                        class="h-16 w-16 object-contain bg-gray-800 rounded p-1">
-                    {% else %}
-                    <img src="{{ url_for('static', filename='logopgpc.png') }}"
-                        class="h-16 w-16 object-contain bg-gray-800 rounded p-1">
-                    {% endif %}
-                    <input type="file" name="footer_logo_image" accept="image/png, image/jpeg"
-                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                </div>
-                <p class="text-xs text-gray-500 mt-1">Upload a transparent PNG for best results.</p>
-            </div>
-        </div>
-    </div>
+        document.getElementById('hidden_status_key').value = statusKey;
+        document.getElementById('hidden_req_text').value = val;
+        document.getElementById('addReqForm').submit();
+    }
 
-    <!-- Contact Info Section -->
-    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Contact Information</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                <input type="email" name="contact_email" value="{{ content.contact_email or '' }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                <input type="text" name="contact_phone" value="{{ content.contact_phone or '' }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-            </div>
-            <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700">Complete Address</label>
-                <input type="text" name="contact_address" value="{{ content.contact_address or '' }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Office Hours</label>
-                <input type="text" name="contact_hours" value="{{ content.contact_hours or '' }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-            </div>
-        </div>
-    </div>
+    function uploadFile(statusKey) {
+        const nameVal = document.getElementById('name_' + statusKey).value;
+        const progVal = document.getElementById('prog_' + statusKey).value;
+        const fileInput = document.getElementById('file_' + statusKey);
 
-    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Google Map</h3>
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Map Embed URL</label>
-            <textarea name="contact_map_url" rows="3"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm font-mono text-xs">{{ content.contact_map_url or '' }}</textarea>
-        </div>
-    </div>
+        if (!nameVal || !fileInput.files.length) {
+            alert("Please provide a label and select a file.");
+            return;
+        }
 
-    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Application Form Settings</h3>
+        // Transfer data to hidden form
+        document.getElementById('upload_status_key').value = statusKey;
+        document.getElementById('upload_display_name').value = nameVal;
+        document.getElementById('upload_program_id').value = progVal;
 
-        <div class="grid grid-cols-1 gap-6">
-            <!-- Consent -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Consent Title</label>
-                <input type="text" name="consent_title" value="{{ content.consent_title or 'CONSENT' }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Consent Text</label>
-                <textarea name="consent_text" rows="6"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.consent_text or '' }}</textarea>
-            </div>
+        // Transfer file (Using DataTransfer to simulate drop)
+        const hiddenInput = document.getElementById('upload_file_input');
+        const dt = new DataTransfer();
+        dt.items.add(fileInput.files[0]);
+        hiddenInput.files = dt.files;
 
-            <!-- Oath -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Oath Title</label>
-                <input type="text" name="oath_title" value="{{ content.oath_title or 'OATH' }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Oath Text</label>
-                <textarea name="oath_text" rows="3"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">{{ content.oath_text or '' }}</textarea>
-            </div>
-        </div>
-    </div>
+        document.getElementById('uploadFileForm').submit();
+    }
 
-    <div class="flex justify-end">
-        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md shadow-sm hover:bg-primary/90">Save All Settings</button>
-    </div>
-</form>
+    function deleteFile(fileId) {
+        if (confirm("Delete this file?")) {
+            const form = document.getElementById('deleteFileForm');
+            form.action = `/admin/status-file/delete/${fileId}`;
+            form.submit();
+        }
+    }
+</script>
 {% endblock %}

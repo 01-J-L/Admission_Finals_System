@@ -1,0 +1,29 @@
+{% extends 'admin_base.html' %}
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-bold mb-6">Messenger Inbox</h2>
+    <div class="divide-y">
+        {% for chat in chat_list %}
+        <a href="{{ url_for('auth.admin_chat_view', applicant_id=chat.applicant_id) }}" class="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                    {{ chat.first_name[0] }}{{ chat.last_name[0] }}
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-900">{{ chat.last_name }}, {{ chat.first_name }}</h4>
+                    <p class="text-sm text-gray-500 truncate max-w-xs">{{ chat.last_msg }}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                {% if chat.unread_count > 0 %}
+                <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ chat.unread_count }} New</span>
+                {% endif %}
+                <p class="text-[10px] text-gray-400 mt-1">{{ chat.application_status }}</p>
+            </div>
+        </a>
+        {% else %}
+        <p class="text-center py-10 text-gray-400">No active conversations found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

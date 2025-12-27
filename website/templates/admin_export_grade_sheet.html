@@ -1,0 +1,272 @@
+<!-- --- START OF FILE templates/admin_export_grade_sheet.html --- -->
+
+{% extends "admin_base.html" %}
+
+{% block title %}Manage Grade Sheets{% endblock %}
+{% block page_title %}Grade Sheets (Export & Import){% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ url_for('auth.admin_manage_grades_page', student_user_id=0) }}" class="text-gray-500 hover:text-primary">Grades</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<span>Reports</span>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    
+    <!-- TABS HEADER -->
+    <div class="flex border-b border-gray-200 mb-6">
+        <button onclick="switchTab('export')" id="tab-export" class="py-2 px-4 font-medium text-primary border-b-2 border-primary focus:outline-none">
+            <i class="ri-download-2-line mr-1"></i> Export Sheet
+        </button>
+        <button onclick="switchTab('import')" id="tab-import" class="py-2 px-4 font-medium text-gray-500 hover:text-gray-700 focus:outline-none">
+            <i class="ri-upload-2-line mr-1"></i> Import Grades
+        </button>
+    </div>
+
+    <!-- EXPORT SECTION (Unchanged) -->
+    <div id="content-export" class="bg-white p-8 rounded-lg shadow-md border border-gray-200">
+        <div class="flex items-center gap-4 mb-6 border-b pb-4">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="ri-file-excel-2-fill text-green-600 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">Generate Grade Sheet</h2>
+                <p class="text-sm text-gray-500">Download a pre-formatted Excel file for a specific section.</p>
+            </div>
+        </div>
+
+        <form action="{{ url_for('auth.admin_generate_grade_sheet') }}" method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Context -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+                    <select name="academic_year" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary">
+                        {% for year in school_years %}
+                        <option value="{{ year.year_name }}" {% if active_term and active_term.year_name == year.year_name %}selected{% endif %}>{{ year.year_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+                    <select name="semester" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary">
+                        <option value="1st Semester">1st Semester</option>
+                        <option value="2nd Semester">2nd Semester</option>
+                        <option value="Summer">Summer</option>
+                    </select>
+                </div>
+                <!-- Program & Level for filtering -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Program</label>
+                    <select id="ex_program_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" onchange="fetchSubjects('ex')" required>
+                        <option value="">Select Program</option>
+                        {% for prog in programs %}
+                        <option value="{{ prog.program_id }}">{{ prog.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Year Level</label>
+                    <select id="ex_year_level" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" onchange="fetchSubjects('ex')">
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                    </select>
+                </div>
+                <!-- Target -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                    <select name="section_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" required>
+                        {% for sec in sections %}
+                        <option value="{{ sec.id }}">{{ sec.section_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                    <select name="subject_id" id="ex_subject_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" required>
+                        <option value="">Select Program & Year first...</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Instructor Name</label>
+                    <input type="text" name="instructor_name" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" required>
+                </div>
+            </div>
+            <div class="pt-4 border-t flex justify-end">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-md shadow-sm font-medium flex items-center">
+                    <i class="ri-download-2-line mr-2"></i> Download Excel
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- IMPORT SECTION -->
+    <div id="content-import" class="hidden bg-white p-8 rounded-lg shadow-md border border-gray-200">
+        <div class="flex items-center gap-4 mb-6 border-b pb-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <i class="ri-upload-cloud-2-fill text-blue-600 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">Import Grades</h2>
+                <p class="text-sm text-gray-500">Upload the filled Excel sheet to update student grades.</p>
+            </div>
+        </div>
+
+        <form action="{{ url_for('auth.admin_import_grade_sheet') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            
+            <!-- NEW: Formulas/Links Warning -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="ri-information-line text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-bold text-blue-800">Importing Linked Files or Formulas</h3>
+                        <div class="text-sm text-blue-700 mt-1">
+                            <p>If your Excel file uses formulas (e.g., <code>=AVERAGE()</code>, <code>=VLOOKUP()</code>) or links to other files:</p>
+                            <ul class="list-disc list-inside mt-1">
+                                <li>Please <strong>Open</strong> and <strong>Save</strong> the Excel file before uploading.</li>
+                                <li>This ensures the calculated numbers are saved so the system can read them correctly.</li>
+                                <li>Uncalculated formulas (showing <code>#REF!</code> or empty) will be skipped.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Context Match Warning -->
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-sm text-yellow-700">
+                <strong>Important:</strong> Ensure you select the exact same <strong>Section</strong> and <strong>Subject</strong> that matches the file you are uploading.
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <!-- Context Inputs -->
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+                    <select name="academic_year" class="w-full border-gray-300 rounded-md shadow-sm">
+                        {% for year in school_years %}
+                        <option value="{{ year.year_name }}" {% if active_term and active_term.year_name == year.year_name %}selected{% endif %}>{{ year.year_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+                    <select name="semester" class="w-full border-gray-300 rounded-md shadow-sm">
+                        <option value="1st Semester">1st Semester</option>
+                        <option value="2nd Semester">2nd Semester</option>
+                        <option value="Summer">Summer</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Program</label>
+                    <select id="im_program_id" class="w-full border-gray-300 rounded-md shadow-sm" onchange="fetchSubjects('im')" required>
+                        <option value="">Select Program</option>
+                        {% for prog in programs %}
+                        <option value="{{ prog.program_id }}">{{ prog.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Year Level</label>
+                    <select id="im_year_level" class="w-full border-gray-300 rounded-md shadow-sm" onchange="fetchSubjects('im')">
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                    <select name="section_id" class="w-full border-gray-300 rounded-md shadow-sm" required>
+                        {% for sec in sections %}
+                        <option value="{{ sec.id }}">{{ sec.section_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                    <select name="subject_id" id="im_subject_id" class="w-full border-gray-300 rounded-md shadow-sm" required>
+                        <option value="">Select Program & Year first...</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Excel File</label>
+                    <input type="file" name="file" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t flex justify-end">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-md shadow-sm font-medium flex items-center transition-colors">
+                    <i class="ri-upload-cloud-2-line mr-2"></i> Import Grades
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Tab switching logic
+    function switchTab(tab) {
+        const exportBtn = document.getElementById('tab-export');
+        const importBtn = document.getElementById('tab-import');
+        const exportContent = document.getElementById('content-export');
+        const importContent = document.getElementById('content-import');
+
+        if (tab === 'export') {
+            exportBtn.classList.add('text-primary', 'border-b-2', 'border-primary');
+            exportBtn.classList.remove('text-gray-500');
+            importBtn.classList.remove('text-primary', 'border-b-2', 'border-primary');
+            importBtn.classList.add('text-gray-500');
+            
+            exportContent.classList.remove('hidden');
+            importContent.classList.add('hidden');
+        } else {
+            importBtn.classList.add('text-primary', 'border-b-2', 'border-primary');
+            importBtn.classList.remove('text-gray-500');
+            exportBtn.classList.remove('text-primary', 'border-b-2', 'border-primary');
+            exportBtn.classList.add('text-gray-500');
+            
+            importContent.classList.remove('hidden');
+            exportContent.classList.add('hidden');
+        }
+    }
+
+    // API Call for Subjects
+    async function fetchSubjects(prefix) {
+        const programId = document.getElementById(prefix + '_program_id').value;
+        const year = document.getElementById(prefix + '_year_level').value;
+        const sem = document.querySelector(`select[name="semester"]`).value; 
+        const subjectSelect = document.getElementById(prefix + '_subject_id');
+
+        if (!programId) return;
+
+        subjectSelect.innerHTML = '<option>Loading...</option>';
+        subjectSelect.disabled = true;
+
+        try {
+            const response = await fetch(`/api/get-program-subjects/${programId}/${encodeURIComponent(year)}/${encodeURIComponent(sem)}`);
+            const subjects = await response.json();
+
+            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+            subjects.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.id;
+                option.textContent = `${sub.subject_code} - ${sub.subject_title}`;
+                subjectSelect.appendChild(option);
+            });
+            subjectSelect.disabled = false;
+        } catch (error) {
+            console.error('Error fetching subjects:', error);
+            subjectSelect.innerHTML = '<option>Error loading subjects</option>';
+        }
+    }
+</script>
+{% endblock %}

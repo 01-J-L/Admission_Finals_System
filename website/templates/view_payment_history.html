@@ -1,0 +1,88 @@
+<!-- --- START OF FILE templates/view_payment_history.html --- -->
+
+{% extends base_template %}
+{% block title %}Transaction History{% endblock %}
+{% block page_title %}Student Transaction History{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    
+    <!-- Student Header -->
+    <div class="bg-white rounded-card shadow-sm p-6 border border-gray-100 mb-6 flex justify-between items-center">
+        <div>
+            <h2 class="text-xl font-bold text-gray-800">{{ student.last_name }}, {{ student.first_name }}</h2>
+            <p class="text-sm text-gray-500">ID: <span class="font-mono text-gray-700">{{ student.display_id }}</span></p>
+            <p class="text-sm text-gray-500">{{ student.course }} | {{ student.year_level }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('auth.update_payment', student_id_db=student.applicant_id) }}" 
+               class="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                <i class="ri-arrow-left-line"></i> Back to Payment
+            </a>
+        </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="bg-white rounded-card shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h3 class="font-bold text-gray-800">History Log</h3>
+            <button onclick="window.print()" class="text-gray-500 hover:text-gray-700">
+                <i class="ri-printer-line text-lg"></i>
+            </button>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 uppercase bg-white border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-3">Date</th>
+                        <th class="px-6 py-3">Ref No.</th>
+                        <th class="px-6 py-3">Description</th>
+                        <th class="px-6 py-3 text-right">Amount Paid</th>
+                        <th class="px-6 py-3">Payment Method</th>
+                        <th class="px-6 py-3">Processed By</th>
+                        <th class="px-6 py-3 text-center">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% for pay in history %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">{{ pay.payment_date.strftime('%b %d, %Y') }}</td>
+                        <td class="px-6 py-4 font-mono text-xs text-gray-500">
+                             {{ pay.receipt_number or ("%06d" | format(pay.id)) }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="block font-medium text-gray-800">{{ pay.assessment_description or 'General Payment' }}</span>
+                            {% if pay.remark %}
+                                <span class="text-xs text-gray-500 italic">({{ pay.remark }})</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right font-bold text-green-600">
+                            ₱{{ "{:,.2f}".format(pay.amount_paid) }}
+                        </td>
+                        <td class="px-6 py-4 text-gray-600">{{ pay.payment_method }}</td>
+                        <td class="px-6 py-4 text-xs text-gray-500">{{ pay.cashier_username }}</td>
+                        <td class="px-6 py-4 text-center">
+                            <a href="{{ url_for('auth.print_receipt', payment_id=pay.id) }}" target="_blank" class="text-blue-600 hover:text-blue-800" title="Reprint Receipt">
+                                <i class="ri-printer-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-10 text-center text-gray-500 italic">No transaction history found for this student.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+            <div class="text-right">
+                <p class="text-xs text-gray-500 uppercase font-bold">Total Paid</p>
+                <p class="text-xl font-bold text-gray-900">₱{{ "{:,.2f}".format(total_paid) }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

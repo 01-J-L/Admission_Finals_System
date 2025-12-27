@@ -1,4 +1,4 @@
-
+<!-- --- START OF FILE enrollment_form.html --- -->
 
 {% extends 'base.html' %}
 
@@ -70,6 +70,40 @@
         border-radius: 4px;
         padding: 6px;
     }
+
+    /* Validation Error Message Style */
+    .validation-error {
+        color: #ef4444;
+        /* Red-500 */
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .input-error {
+        border-color: #ef4444 !important;
+        --tw-ring-color: #ef4444 !important;
+    }
+
+    /* Signature Warning */
+    #sig-warning {
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+    }
+
+    .sig-error {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #f87171;
+    }
+
+    .sig-success {
+        background-color: #dcfce7;
+        color: #166534;
+        border: 1px solid #4ade80;
+    }
 </style>
 {% endblock %}
 
@@ -95,12 +129,17 @@
                     <div>
                         <h2 class="text-lg font-semibold text-gray-800 mb-3">Applicant Summary</h2>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 bg-gray-50 p-4 rounded-md border">
-                            <p><strong>Applicant Name:</strong> {% if application.old_student_id %}{{
-                                application.old_student_id }}
-                                {% elif application.control_number %}{{ application.control_number }}
-                                {% elif application %}P{{ application.academic_year[:4] if application.academic_year
-                                else '2025' }}{{ "%04d" | format(application.applicant_id) }}
-                                {% else %}N/A{% endif %}</p>
+                            <p><strong>Applicant Name:</strong> {{ application.first_name }} {{ application.last_name }}
+                            </p>
+                            <p><strong>Student ID:</strong>
+                                {% if application.old_student_id %}
+                                {{ application.old_student_id }}
+                                {% elif application.control_number %}
+                                {{ application.control_number }}
+                                {% else %}
+                                S-{{ "%05d" | format(application.student_user_id) }}
+                                {% endif %}
+                            </p>
                             <p><strong>Email:</strong> {{ application.email_address }}</p>
                         </div>
                     </div>
@@ -131,49 +170,54 @@
                         <div>
                             <label for="year_level" class="block text-sm font-medium text-gray-700 mb-1">2. Year
                                 Level</label>
-                            
+
                             {% if application.enrollment_student_type == 'New' %}
-                                <!-- NEW STUDENT LOGIC: Locked to 1st Year -->
-                                <input type="text" value="1st Year" readonly 
-                                    class="w-full border-gray-300 rounded-md shadow-sm text-sm bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-0 focus:border-gray-300">
-                                <input type="hidden" name="year_level" value="1st Year">
-                                <p class="text-xs text-blue-600 mt-1">New students automatically start at 1st Year.</p>
-                            
+                            <!-- NEW STUDENT LOGIC: Locked to 1st Year -->
+                            <input type="text" value="1st Year" readonly
+                                class="w-full border-gray-300 rounded-md shadow-sm text-sm bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-0 focus:border-gray-300">
+                            <input type="hidden" name="year_level" value="1st Year">
+                            <p class="text-xs text-blue-600 mt-1">New students automatically start at 1st Year.</p>
+
                             {% else %}
-                                <!-- EXISTING STUDENT LOGIC: Dropdown -->
-                                <select id="year_level" name="year_level" required
-                                    class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-primary focus:border-primary transition-colors">
-                                    <option value="" disabled selected>Choose year...</option>
-                                    <option value="1st Year">1st Year</option>
-                                    <option value="2nd Year">2nd Year</option>
-                                    <option value="3rd Year">3rd Year</option>
-                                    <option value="4th Year">4th Year</option>
-                                    <option value="5th Year">5th Year</option>
-                                </select>
-                                <p id="year_level_note" class="text-xs text-orange-600 mt-1 hidden">Changing program resets Year Level to 1st Year.</p>
+                            <!-- EXISTING STUDENT LOGIC: Dropdown -->
+                            <select id="year_level" name="year_level" required
+                                class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-primary focus:border-primary transition-colors">
+                                <option value="" disabled selected>Choose year...</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                                <option value="5th Year">5th Year</option>
+                            </select>
+                            <p id="year_level_note" class="text-xs text-orange-600 mt-1 hidden">Changing program resets
+                                Year Level to 1st Year.</p>
                             {% endif %}
                         </div>
                         <div>
-                            <label for="semester" class="block text-sm font-medium text-gray-700 mb-1">3. Semester</label>
-                            <input type="text" id="semester" name="semester" 
-                                   value="{{ active_term.semester if active_term else '' }}" 
-                                   readonly 
-                                   class="w-full border-gray-300 rounded-md shadow-sm text-sm bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-0 focus:border-gray-300">
-                            <p class="text-xs text-gray-500 mt-1">Automatically set based on the active academic term.</p>
+                            <label for="semester" class="block text-sm font-medium text-gray-700 mb-1">3.
+                                Semester</label>
+                            <input type="text" id="semester" name="semester"
+                                value="{{ active_term.semester if active_term else '' }}" readonly
+                                class="w-full border-gray-300 rounded-md shadow-sm text-sm bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-0 focus:border-gray-300">
+                            <p class="text-xs text-gray-500 mt-1">Automatically set based on the active academic term.
+                            </p>
                         </div>
                     </div>
 
                     <!-- SECTION SELECTION (Only for Existing Students without Section) -->
-                    {% if (application.enrollment_student_type == 'Existing' or application.old_student_id) and not application.section_id %}
+                    {% if (application.enrollment_student_type == 'Existing' or application.old_student_id) and not
+                    application.section_id %}
                     <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md" id="section_selection_container">
                         <h3 class="text-sm font-bold text-blue-800 mb-2">4. Select Your Section</h3>
                         <p class="text-xs text-blue-600 mb-3">
-                            As an existing student entering the new system, please select your assigned section. 
+                            As an existing student entering the new system, please select your assigned section.
                             <strong>This selection will become permanent.</strong>
                         </p>
-                        
-                        <label for="section_id" class="block text-sm font-medium text-gray-700 mb-1">Select Section <span class="text-red-500">*</span></label>
-                        <select id="section_id" name="section_id" required class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-primary focus:border-primary">
+
+                        <label for="section_id" class="block text-sm font-medium text-gray-700 mb-1">Select Section
+                            <span class="text-red-500">*</span></label>
+                        <select id="section_id" name="section_id" required
+                            class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-primary focus:border-primary">
                             <option value="" disabled selected>Select Program & Year first...</option>
                             <!-- Options populated via JS -->
                         </select>
@@ -208,16 +252,18 @@
 
                             <!-- Signature File Upload -->
                             <div class="mt-4 pt-4 border-t border-gray-200">
-                                <label for="enrollment_entrance_fee_proof_file_input" class="block text-sm font-medium text-gray-700 mb-2">
-                                    b. Upload Signature <span class="text-red-500">*</span>
+                                <label for="enrollment_entrance_fee_proof_file_input"
+                                    class="block text-sm font-medium text-gray-700 mb-2">
+                                    b. Upload Signature (White BG, Black/Blue Ink) <span class="text-red-500">*</span>
                                 </label>
-                                <input type="file" 
-                                    name="enrollment_entrance_fee_proof_file_input" 
-                                    id="enrollment_entrance_fee_proof_file_input" 
-                                    accept=".pdf,.jpg,.jpeg,.png"
+                                <input type="file" name="enrollment_entrance_fee_proof_file_input"
+                                    id="enrollment_entrance_fee_proof_file_input" accept=".jpg,.jpeg,.png"
                                     class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100"
                                     required>
-                                <p class="text-xs text-gray-500 mt-1">Please sign on a white paper, take a photo or scan it, and upload here.</p>
+                                <div id="sig-warning" class="hidden"></div>
+                                <canvas id="sig-canvas" style="display:none;"></canvas>
+                                <p class="text-xs text-gray-500 mt-1">Please sign on white paper with black/blue ink.
+                                    Only images allowed for signature check.</p>
                             </div>
 
                         </div>
@@ -230,32 +276,65 @@
                     <div class="form-section">
                         <h3>I. PERSONAL INFORMATION</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-sm">
+
+                            <!-- Gender: Pulls from Main Profile -->
                             <div class="md:col-span-2"><label class="font-medium">Gender *</label>
-                                <div class="flex gap-4 mt-2"><label class="flex items-center"><input type="radio"
-                                            name="gender" value="Female" class="custom-radio" required> <span
-                                            class="ml-2">Female</span></label><label class="flex items-center"><input
-                                            type="radio" name="gender" value="Male" class="custom-radio"> <span
-                                            class="ml-2">Male</span></label></div>
+                                <div class="flex gap-4 mt-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="gender" value="Female" class="custom-radio" required
+                                            {% if application.sex=='Female' %}checked{% endif %}>
+                                        <span class="ml-2">Female</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="gender" value="Male" class="custom-radio" {% if
+                                            application.sex=='Male' %}checked{% endif %}>
+                                        <span class="ml-2">Male</span>
+                                    </label>
+                                </div>
                             </div>
-                            <div><label class="font-medium">Age</label><input type="number" name="age"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
-                            <div><label class="font-medium">Religion *</label><input type="text" name="religion"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></div>
-                            <div class="md:col-span-2"><label class="font-medium">Complete Address *</label><input
-                                    type="text" name="complete_address"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></div>
-                            <div><label class="font-medium">Mobile Number *</label><input type="tel"
-                                    name="mobile_number" value="{{ application.mobile_number or '' }}"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></div>
+
+                            <!-- Age: Calculated in views.py -->
+                            <div><label class="font-medium">Age</label>
+                                <input type="number" name="age" value="{{ calculated_age }}" class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " />
+                            </div>
+
+                            <!-- Religion: Pulls from Main Profile -->
+                            <div><label class="font-medium">Religion *</label>
+                                <input type="text" name="religion" value="{{ application.religion or '' }}"
+                                    autocomplete="off" class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " required>
+                            </div>
+
+                            <!-- Complete Address: Concatenates Main Profile Address Fields -->
+                            <div class="md:col-span-2"><label class="font-medium">Complete Address *</label>
+                                {% set full_addr = (application.permanent_address_street_barangay or '') ~ ', ' ~
+                                (application.permanent_address_city_municipality or '') ~ ', ' ~
+                                (application.permanent_address_province or '') %}
+                                <input type="text" name="complete_address" value="{{ full_addr }}" autocomplete="off"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " required>
+                            </div>
+
+                            <!-- Mobile Number: Pulls from Main Profile (VALIDATION ADDED) -->
+                            <div><label class="font-medium">Mobile Number *</label>
+                                <input type="tel" name="mobile_number" value="{{ application.mobile_number or '' }}"
+                                    autocomplete="off" maxlength="11"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
+                                    placeholder="09xxxxxxxxx" class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " required>
+                            </div>
+
+                            <!-- Inventory Specific Fields -->
                             <div><label class="font-medium">Facebook Account</label><input type="text"
-                                    name="facebook_account"
+                                    name="facebook_account" value="{{ application.inventory_facebook_account or '' }}"
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
                             <div><label class="font-medium">Interests/Hobbies</label><input type="text"
-                                    name="interest_hobbies"
+                                    name="interest_hobbies" value="{{ application.inventory_interest_hobbies or '' }}"
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
-                            <div><label class="font-medium">Health Condition</label><input type="text"
-                                    name="health_condition"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+
+                            <!-- Health Condition: Checks Disability Status -->
+                            <div><label class="font-medium">Health Condition</label>
+                                <input type="text" name="health_condition"
+                                    value="{{ application.inventory_health_condition or ('None' if application.physical_disability == 'No' else application.physical_disability) }}"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            </div>
                         </div>
                     </div>
 
@@ -274,30 +353,44 @@
                                 <tbody>
                                     <tr>
                                         <td>Pre-Elementary</td>
-                                        <td><input type="text" name="pre_elementary_school"></td>
-                                        <td><input type="text" name="pre_elementary_dates"></td>
-                                        <td><input type="text" name="pre_elementary_awards"></td>
+                                        <td><input type="text" name="pre_elementary_school"
+                                                value="{{ application.inventory_pre_elementary_school or '' }}"></td>
+                                        <td><input type="text" name="pre_elementary_dates"
+                                                value="{{ application.inventory_pre_elementary_dates or '' }}"></td>
+                                        <td><input type="text" name="pre_elementary_awards"
+                                                value="{{ application.inventory_pre_elementary_awards or '' }}"></td>
                                     </tr>
                                     <tr>
                                         <td>Elementary</td>
-                                        <td><input type="text" name="elementary_school"></td>
-                                        <td><input type="text" name="elementary_dates"></td>
-                                        <td><input type="text" name="elementary_awards"></td>
+                                        <td><input type="text" name="elementary_school"
+                                                value="{{ application.inventory_elementary_school or '' }}"></td>
+                                        <td><input type="text" name="elementary_dates"
+                                                value="{{ application.inventory_elementary_dates or '' }}"></td>
+                                        <td><input type="text" name="elementary_awards"
+                                                value="{{ application.inventory_elementary_awards or '' }}"></td>
                                     </tr>
+                                    <!-- Secondary: Pulls from Main Profile -->
                                     <tr>
                                         <td>Secondary</td>
                                         <td><input type="text" name="secondary_school"
-                                                value="{{ application.senior_high_school or '' }}"></td>
+                                                value="{{ application.senior_high_school or '' }}" autocomplete="off">
+                                        </td>
                                         <td><input type="text" name="secondary_dates"
                                                 value="{{ (application.senior_high_school_year_from ~ ' - ' ~ application.senior_high_school_year_to) if application.senior_high_school_year_from else '' }}">
                                         </td>
-                                        <td><input type="text" name="secondary_awards"></td>
+                                        <td><input type="text" name="secondary_awards"
+                                                value="{{ application.inventory_secondary_awards or '' }}"></td>
                                     </tr>
+                                    <!-- Vocational: Pulls from Main Profile -->
                                     <tr>
                                         <td>Vocational</td>
-                                        <td><input type="text" name="vocational_school"></td>
-                                        <td><input type="text" name="vocational_dates"></td>
-                                        <td><input type="text" name="vocational_awards"></td>
+                                        <td><input type="text" name="vocational_school"
+                                                value="{{ application.tertiary_school or '' }}" autocomplete="off"></td>
+                                        <td><input type="text" name="vocational_dates"
+                                                value="{{ (application.tertiary_year_from ~ ' - ' ~ application.tertiary_year_to) if application.tertiary_year_from else '' }}">
+                                        </td>
+                                        <td><input type="text" name="vocational_awards"
+                                                value="{{ application.inventory_vocational_awards or '' }}"></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -307,115 +400,193 @@
                     <div class="form-section">
                         <h3>III. HOME AND FAMILY BACKGROUND</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mt-4 text-sm">
+
+                            <!-- Father's Info: Force Pull from Main Profile -->
                             <div>
-                                <h4 class="font-semibold text-gray-800 mb-2">Father's Info</h4><label
-                                    class="font-medium">Name *</label><input type="text" name="father_name"
-                                    value="{{ application.father_name or '' }}"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required><label
-                                    class="font-medium mt-2 block">Age</label><input type="number" name="father_age"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"><label
-                                    class="font-medium mt-2 block">Status *</label>
-                                <div class="flex gap-4 mt-1"><label class="flex items-center"><input type="radio"
-                                            name="father_status" value="Living" class="custom-radio" checked required>
-                                        <span class="ml-2">Living</span></label><label class="flex items-center"><input
-                                            type="radio" name="father_status" value="Deceased" class="custom-radio">
-                                        <span class="ml-2">Deceased</span></label></div><label
-                                    class="font-medium mt-2 block">Education</label><input type="text"
-                                    name="father_education"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"><label
-                                    class="font-medium mt-2 block">Occupation *</label><input type="text"
-                                    name="father_occupation" value="{{ application.father_occupation or '' }}"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required><label
-                                    class="font-medium mt-2 block">Contact</label><input type="tel"
-                                    name="father_contact" value="{{ application.father_contact_number or '' }}"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                <h4 class="font-semibold text-gray-800 mb-2">Father's Info</h4>
+                                <label class="font-medium">Name *</label>
+                                <input type="text" name="father_name" value="{{ application.father_name or '' }}"
+                                    autocomplete="off" class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 "
+                                    required>
+
+                                <label class="font-medium mt-2 block">Age (Must be higher than 25)</label>
+                                <input type="number" name="father_age" min="26"
+                                    value="{{ application.inventory_father_age or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 ">
+
+                                <label class="font-medium mt-2 block">Status *</label>
+                                <div class="flex gap-4 mt-1">
+                                    <label class="flex items-center"><input type="radio" name="father_status"
+                                            value="Living" class="custom-radio" {% if
+                                            application.inventory_father_status !='Deceased' %}checked{% endif %}
+                                            required> <span class="ml-2">Living</span></label>
+                                    <label class="flex items-center"><input type="radio" name="father_status"
+                                            value="Deceased" class="custom-radio" {% if
+                                            application.inventory_father_status=='Deceased' %}checked{% endif %}> <span
+                                            class="ml-2">Deceased</span></label>
+                                </div>
+
+                                <label class="font-medium mt-2 block">Education</label>
+                                <input type="text" name="father_education"
+                                    value="{{ application.inventory_father_education or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 ">
+
+                                <label class="font-medium mt-2 block">Occupation *</label>
+                                <input type="text" name="father_occupation"
+                                    value="{{ application.father_occupation or '' }}" autocomplete="off"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " required>
+
+                                <label class="font-medium mt-2 block">Contact</label>
+                                <input type="tel" name="father_contact"
+                                    value="{{ application.father_contact_number or '' }}" autocomplete="off"
+                                    maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
+                                    placeholder="09xxxxxxxxx"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 "">
                             </div>
+
+                            <!-- Mother's Info: Force Pull from Main Profile -->
                             <div>
-                                <h4 class="font-semibold text-gray-800 mb-2">Mother's Info</h4><label
-                                    class="font-medium">Name *</label><input type="text" name="mother_name"
-                                    value="{{ application.mother_maiden_name or '' }}"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required><label
-                                    class="font-medium mt-2 block">Age</label><input type="number" name="mother_age"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"><label
-                                    class="font-medium mt-2 block">Status *</label>
-                                <div class="flex gap-4 mt-1"><label class="flex items-center"><input type="radio"
-                                            name="mother_status" value="Living" class="custom-radio" checked required>
-                                        <span class="ml-2">Living</span></label><label class="flex items-center"><input
-                                            type="radio" name="mother_status" value="Deceased" class="custom-radio">
-                                        <span class="ml-2">Deceased</span></label></div><label
-                                    class="font-medium mt-2 block">Education</label><input type="text"
-                                    name="mother_education"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"><label
-                                    class="font-medium mt-2 block">Occupation *</label><input type="text"
-                                    name="mother_occupation" value="{{ application.mother_occupation or '' }}"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required><label
-                                    class="font-medium mt-2 block">Contact</label><input type="tel"
-                                    name="mother_contact" value="{{ application.mother_contact_number or '' }}"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                <h4 class="font-semibold text-gray-800 mb-2">Mother's Info</h4>
+                                <label class="font-medium">Name *</label>
+                                <input type="text" name="mother_name" value="{{ application.mother_maiden_name or '' }}"
+                                    autocomplete="off" class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 "
+                                    required>
+
+                                <label class="font-medium mt-2 block">Age (Must be higher than 25)</label>
+                                <input type="number" name="mother_age" min="26"
+                                    value="{{ application.inventory_mother_age or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 ">
+
+                                <label class="font-medium mt-2 block">Status *</label>
+                                <div class="flex gap-4 mt-1">
+                                    <label class="flex items-center"><input type="radio" name="mother_status"
+                                            value="Living" class="custom-radio" {% if
+                                            application.inventory_mother_status !='Deceased' %}checked{% endif %}
+                                            required> <span class="ml-2">Living</span></label>
+                                    <label class="flex items-center"><input type="radio" name="mother_status"
+                                            value="Deceased" class="custom-radio" {% if
+                                            application.inventory_mother_status=='Deceased' %}checked{% endif %}> <span
+                                            class="ml-2">Deceased</span></label>
+                                </div>
+
+                                <label class="font-medium mt-2 block">Education</label>
+                                <input type="text" name="mother_education"
+                                    value="{{ application.inventory_mother_education or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 ">
+
+                                <label class="font-medium mt-2 block">Occupation *</label>
+                                <input type="text" name="mother_occupation"
+                                    value="{{ application.mother_occupation or '' }}" autocomplete="off"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " required>
+
+                                <label class="font-medium mt-2 block">Contact</label>
+                                <input type="tel" name="mother_contact"
+                                    value="{{ application.mother_contact_number or '' }}" autocomplete="off"
+                                    maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
+                                    placeholder="09xxxxxxxxx"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 ">
                             </div>
-                            <div class="md:col-span-2"><label class="font-medium">Parents' Marital Status *</label>
-                                <div class="flex flex-wrap gap-4 mt-2"><label class="flex items-center"><input
-                                            type="radio" name="parents_marital_status" value="Single Parent"
-                                            class="custom-radio" required> <span class="ml-2">Single
-                                            Parent</span></label><label class="flex items-center"><input type="radio"
-                                            name="parents_marital_status" value="Married but Separated"
-                                            class="custom-radio"> <span class="ml-2">Married but
-                                            Separated</span></label><label class="flex items-center"><input type="radio"
-                                            name="parents_marital_status" value="Married and staying together"
-                                            class="custom-radio"> <span class="ml-2">Married & Together</span></label>
+
+                            <!-- Marital Status: Pulls from Main Profile -->
+                            <div class="md:col-span-2">
+                                <label class="font-medium">Parents' Marital Status *</label>
+                                <div class="flex flex-wrap gap-4 mt-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="parents_marital_status" value="Single Parent"
+                                            class="custom-radio" required {% if application.civil_status=='Single'
+                                            %}checked{% endif %}>
+                                        <span class="ml-2">Single Parent</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="parents_marital_status" value="Married but Separated"
+                                            class="custom-radio" {% if application.civil_status=='Separated' %}checked{%
+                                            endif %}>
+                                        <span class="ml-2">Married but Separated</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="parents_marital_status"
+                                            value="Married and staying together" class="custom-radio" {% if
+                                            application.civil_status=='Married' %}checked{% endif %}>
+                                        <span class="ml-2">Married & Together</span>
+                                    </label>
                                 </div>
                             </div>
+
                             <div><label class="font-medium"># of Children *</label><input type="number"
                                     name="number_of_children"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></div>
+                                    value="{{ application.inventory_number_of_children or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " required></div>
                             <div><label class="font-medium"># of Brothers</label><input type="number"
                                     name="number_of_brothers"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                                    value="{{ application.inventory_number_of_brothers or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 "></div>
                             <div><label class="font-medium"># of Sisters</label><input type="number"
-                                    name="number_of_sisters"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
-                            <div><label class="font-medium">Guardian Name (if any)</label><input type="text"
-                                    name="guardian_name" value="{{ application.guardian_name or '' }}"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
-                            <div><label class="font-medium">Guardian Relationship</label><input type="text"
-                                    name="guardian_relationship"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
-                            <div><label class="font-medium">Guardian Contact</label><input type="tel"
-                                    name="guardian_contact" value="{{ application.guardian_contact_number or '' }}"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
-                            <div class="md:col-span-2"><label class="font-medium">Family Income *</label>
-                                <div class="flex flex-wrap gap-4 mt-2"><label class="flex items-center"><input
-                                            type="radio" name="family_income" value="P 10,000.00 Below"
-                                            class="custom-radio" checked required> <span class="ml-2">Below
-                                            ₱10k</span></label><label class="flex items-center"><input type="radio"
-                                            name="family_income" value="P 10,000.00 - P 20,000.00" class="custom-radio">
-                                        <span class="ml-2">₱10k - ₱20k</span></label><label
-                                        class="flex items-center"><input type="radio" name="family_income"
-                                            value="Above P 20,000.00" class="custom-radio"> <span class="ml-2">Above
-                                            ₱20k</span></label></div>
+                                    name="number_of_sisters" value="{{ application.inventory_number_of_sisters or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 "></div>
+
+                            <!-- Guardian Info: Force Pull from Main Profile -->
+                            <div><label class="font-medium">Guardian Name (if any)</label>
+                                <input type="text" name="guardian_name" value="{{ application.guardian_name or '' }}"
+                                    autocomplete="off" class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 ">
                             </div>
+                            <div><label class="font-medium">Guardian Relationship</label>
+                                <input type="text" name="guardian_relationship"
+                                    value="{{ application.inventory_guardian_relationship or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 ">
+                            </div>
+                            <div><label class="font-medium">Guardian Contact</label>
+                                <input type="tel" name="guardian_contact"
+                                    value="{{ application.guardian_contact_number or '' }}" autocomplete="off"
+                                    maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
+                                    placeholder="09xxxxxxxxx"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 ">
+                            </div>
+
+                            <!-- Family Income: Pulls from Main Profile -->
+                            <div class="md:col-span-2">
+                                <label class="font-medium">Family Income * (Selected in Step 1: {{
+                                    application.average_family_income }})</label>
+                                <div class="flex flex-wrap gap-4 mt-2">
+                                    <label class="flex items-center"><input type="radio" name="family_income"
+                                            value="P 10,000.00 Below" class="custom-radio" required {% if
+                                            application.average_family_income=='10000_below' %}checked{% endif %}> <span
+                                            class="ml-2">Below ₱10k</span></label>
+                                    <label class="flex items-center"><input type="radio" name="family_income"
+                                            value="P 10,000.00 - P 20,000.00" class="custom-radio" {% if
+                                            application.average_family_income=='10001_to_20000' %}checked{% endif %}>
+                                        <span class="ml-2">₱10k - ₱20k</span></label>
+                                    <label class="flex items-center"><input type="radio" name="family_income"
+                                            value="Above P 20,000.00" class="custom-radio" {% if
+                                            application.average_family_income not in ['10000_below', '10001_to_20000'
+                                            , '' ] %}checked{% endif %}> <span class="ml-2">Above ₱20k</span></label>
+                                </div>
+                            </div>
+
                             <div><label class="font-medium">Favorite Colors</label><input type="text"
-                                    name="favorite_colors"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                                    name="favorite_colors" value="{{ application.inventory_favorite_colors or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 "></div>
                             <div><label class="font-medium">Favorite Sports</label><input type="text"
-                                    name="favorite_sports"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                                    name="favorite_sports" value="{{ application.inventory_favorite_sports or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 "></div>
                             <div><label class="font-medium">Favorite Foods</label><input type="text"
-                                    name="favorite_foods"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                                    name="favorite_foods" value="{{ application.inventory_favorite_foods or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 "></div>
+
                             <div class="md:col-span-2"><label class="font-medium">Family Description *</label>
                                 <div class="flex flex-wrap gap-4 mt-2">
+                                    {% set fd = application.inventory_family_description %}
                                     <label class="flex items-center"><input type="radio" name="family_description"
-                                            value="Broken Family" class="custom-radio"> <span class="ml-2">Broken
-                                            Family</span></label>
+                                            value="Broken Family" class="custom-radio" {% if fd=='Broken Family'
+                                            %}checked{% endif %}> <span class="ml-2">Broken Family</span></label>
                                     <label class="flex items-center"><input type="radio" name="family_description"
-                                            value="OFW" class="custom-radio"> <span class="ml-2">OFW</span></label>
+                                            value="OFW" class="custom-radio" {% if fd=='OFW' %}checked{% endif %}> <span
+                                            class="ml-2">OFW</span></label>
                                     <label class="flex items-center"><input type="radio" name="family_description"
-                                            value="Separated" class="custom-radio"> <span
-                                            class="ml-2">Separated</span></label>
+                                            value="Separated" class="custom-radio" {% if fd=='Separated' %}checked{%
+                                            endif %}> <span class="ml-2">Separated</span></label>
                                     <label class="flex items-center"><input type="radio" name="family_description"
-                                            value="Single Parent" class="custom-radio"> <span class="ml-2">Single
-                                            Parent</span></label>
+                                            value="Single Parent" class="custom-radio" {% if fd=='Single Parent'
+                                            %}checked{% endif %}> <span class="ml-2">Single Parent</span></label>
                                 </div>
                             </div>
                         </div>
@@ -426,13 +597,18 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
                             <div><label class="font-medium">Name *</label><input type="text"
                                     name="emergency_contact_name"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></div>
+                                    value="{{ application.inventory_emergency_contact_name or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " required></div>
                             <div><label class="font-medium">Number *</label><input type="tel"
                                     name="emergency_contact_number"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></div>
+                                    value="{{ application.inventory_emergency_contact_number or '' }}" maxlength="11"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
+                                    placeholder="09xxxxxxxxx"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " required></div>
                             <div><label class="font-medium">Relationship *</label><input type="text"
                                     name="emergency_contact_relationship"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></div>
+                                    value="{{ application.inventory_emergency_contact_relationship or '' }}"
+                                    class=" mt-1 block w-full rounded-lg border border-red-500 bg-white px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 " required></div>
                         </div>
                     </div>
                 </div>
@@ -448,13 +624,32 @@
                                 successful submission of all documents and payment of fees.</p>
                         </div>
                     </div>
-                    <div class="mt-8 flex justify-end items-center gap-4">
+                    <div class="mt-10 flex flex-row items-center justify-between gap-2 border-t pt-6">
+
+                        <!-- LEFT SIDE: Cancel -->
+                        {% if application.enrollment_student_type == 'Existing' or application.old_student_id %}
+                        <a href="{{ url_for('views.new_student') }}"
+                            class="text-xs sm:text-sm font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center">
+                            <i class="ri-arrow-left-s-line text-lg"></i>
+                            <span class="hidden xs:inline">Cancel & Go Back</span>
+                            <span class="xs:hidden">Cancel</span>
+                        </a>
+                        {% else %}
                         <a href="{{ url_for('views.application_status_page') }}"
-                            class="text-sm font-medium text-gray-600 hover:text-primary">Cancel and Go Back</a>
+                            class="text-xs sm:text-sm font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center">
+                            <i class="ri-arrow-left-s-line text-lg"></i>
+                            <span class="hidden xs:inline">Cancel & Go Back</span>
+                            <span class="xs:hidden">Cancel</span>
+                        </a>
+                        {% endif %}
+
+                        <!-- RIGHT SIDE: Submit -->
                         <button type="submit"
-                            class="bg-primary text-white px-6 py-3 rounded-button font-medium whitespace-nowrap flex items-center text-sm hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                            <i class="ri-checkbox-circle-line mr-2"></i> Submit Enrollment
+                            class="bg-primary text-white px-4 sm:px-10 py-3 rounded-xl font-bold flex items-center shadow-lg hover:bg-primary/90 transition-all active:scale-95 text-xs sm:text-sm">
+                            <span>Submit Enrollment</span>
+                            <i class="ri-checkbox-circle-line ml-2 text-base"></i>
                         </button>
+
                     </div>
                 </div>
             </form>
@@ -473,48 +668,48 @@
             const programSelect = document.getElementById('program_choice');
             const yearSelect = document.getElementById('year_level');
             const yearNote = document.getElementById('year_level_note');
-            
+
             // For Section Logic
             const sectionSelect = document.getElementById('section_id');
             const sectionContainer = document.getElementById('section_selection_container');
-            
+
             // Store the original program provided by the backend
             const originalProgram = "{{ application.program_choice }}";
-        
+
             function checkProgramChange() {
                 const selectedProgram = programSelect.value;
-        
+
                 if (selectedProgram !== originalProgram) {
                     // User changed program -> Reset to 1st Year
-                    if(yearSelect) {
+                    if (yearSelect) {
                         yearSelect.value = "1st Year";
                         // Lock visually but keep value submittable
-                        yearSelect.style.pointerEvents = 'none'; 
-                        yearSelect.style.backgroundColor = '#f3f4f6'; 
-                        yearSelect.style.color = '#6b7280'; 
+                        yearSelect.style.pointerEvents = 'none';
+                        yearSelect.style.backgroundColor = '#f3f4f6';
+                        yearSelect.style.color = '#6b7280';
                     }
-                    
-                    if(yearNote) yearNote.classList.remove('hidden');
+
+                    if (yearNote) yearNote.classList.remove('hidden');
 
                     // Hide Section Selection (Auto-assign for shifters/new program)
-                    if(sectionContainer) {
+                    if (sectionContainer) {
                         sectionContainer.classList.add('hidden');
-                        if(sectionSelect) sectionSelect.removeAttribute('required');
+                        if (sectionSelect) sectionSelect.removeAttribute('required');
                     }
                 } else {
                     // User reverted to original program
-                    if(yearSelect) {
+                    if (yearSelect) {
                         yearSelect.style.pointerEvents = 'auto';
                         yearSelect.style.backgroundColor = '';
                         yearSelect.style.color = '';
                     }
-                    
-                    if(yearNote) yearNote.classList.add('hidden');
+
+                    if (yearNote) yearNote.classList.add('hidden');
 
                     // Show Section Selection if applicable (Existing Student)
-                    if(sectionContainer) {
+                    if (sectionContainer) {
                         sectionContainer.classList.remove('hidden');
-                        if(sectionSelect) sectionSelect.setAttribute('required', 'required');
+                        if (sectionSelect) sectionSelect.setAttribute('required', 'required');
                         fetchSections(); // Load sections
                     }
                 }
@@ -522,22 +717,22 @@
 
             // Fetch sections dynamically
             async function fetchSections() {
-                if (!sectionSelect) return; 
+                if (!sectionSelect) return;
 
                 const prog = programSelect.value;
                 const year = yearSelect.value;
-                
-                if(prog && year) {
+
+                if (prog && year) {
                     sectionSelect.innerHTML = '<option value="" disabled>Loading...</option>';
                     sectionSelect.disabled = true;
-                    
+
                     try {
                         const response = await fetch(`/api/get-sections?program=${encodeURIComponent(prog)}&year=${encodeURIComponent(year)}`);
                         const sections = await response.json();
-                        
+
                         sectionSelect.innerHTML = '<option value="" disabled selected>Choose Section...</option>';
-                        
-                        if(sections.length === 0) {
+
+                        if (sections.length === 0) {
                             const option = document.createElement('option');
                             option.text = "No sections available";
                             option.disabled = true;
@@ -546,7 +741,7 @@
                             sections.forEach(sec => {
                                 const option = document.createElement('option');
                                 option.value = sec.id;
-                                option.textContent = sec.section_name; 
+                                option.textContent = sec.section_name;
                                 sectionSelect.appendChild(option);
                             });
                         }
@@ -557,19 +752,19 @@
                     }
                 }
             }
-            
+
             // Init checks
             checkProgramChange();
-        
+
             // Listeners
             programSelect.addEventListener('change', () => {
                 checkProgramChange();
             });
 
-            if(yearSelect) {
+            if (yearSelect) {
                 yearSelect.addEventListener('change', () => {
                     // Re-fetch sections if year changes (only for original program flow)
-                    if(programSelect.value === originalProgram) {
+                    if (programSelect.value === originalProgram) {
                         fetchSections();
                     }
                 });
@@ -592,6 +787,170 @@
 
             const checked = document.querySelector('input[name="family_description"]:checked');
             if (checked) lastCheckedRadio = checked;
+
+            // --- SIGNATURE VALIDATION LOGIC ---
+            const sigInput = document.getElementById('enrollment_entrance_fee_proof_file_input');
+            const sigWarning = document.getElementById('sig-warning');
+
+            if (sigInput) {
+                sigInput.addEventListener('change', function (e) {
+                    const file = e.target.files[0];
+                    if (!file) { sigWarning.classList.add('hidden'); return; }
+
+                    if (!file.type.startsWith('image/')) {
+                        // PDF can't be easily analyzed in JS, so just warn
+                        sigWarning.textContent = "Please ensure the uploaded signature is on a white background.";
+                        sigWarning.className = "sig-error block";
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        const img = new Image();
+                        img.onload = function () {
+                            // Analyze
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+
+                            // Sample pixels (center area usually has ink, corners usually bg)
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const data = imageData.data;
+
+                            let darkPixels = 0;
+                            let lightPixels = 0;
+                            let colorPixels = 0;
+                            const totalPixels = data.length / 4;
+
+                            for (let i = 0; i < data.length; i += 4) {
+                                const r = data[i];
+                                const g = data[i + 1];
+                                const b = data[i + 2];
+
+                                const brightness = (r + g + b) / 3;
+
+                                // Check for color (saturation)
+                                const max = Math.max(r, g, b);
+                                const min = Math.min(r, g, b);
+                                if ((max - min) > 40) { // Arbitrary threshold for color
+                                    colorPixels++;
+                                }
+
+                                if (brightness > 200) {
+                                    lightPixels++;
+                                } else if (brightness < 100) {
+                                    darkPixels++;
+                                }
+                            }
+
+                            const whiteRatio = lightPixels / totalPixels;
+                            const colorRatio = colorPixels / totalPixels;
+
+                            if (whiteRatio < 0.6) {
+                                sigWarning.textContent = "⚠️ Background seems dark or cluttered. Please use plain white paper.";
+                                sigWarning.className = "sig-error block";
+                            } else if (colorRatio > 0.1) {
+                                sigWarning.textContent = "⚠️ Detected colored ink. Please use Black or Dark Blue ink.";
+                                sigWarning.className = "sig-error block";
+                            } else {
+                                sigWarning.textContent = "✅ Signature image looks good.";
+                                sigWarning.className = "sig-success block";
+                            }
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+
+            // --- FORM VALIDATION LOGIC ---
+            const form = document.getElementById('enrollmentForm');
+
+            function showError(input, message) {
+                input.classList.add('input-error');
+                // Remove existing error message if any
+                const parent = input.parentElement;
+                const existingErr = parent.querySelector('.validation-error');
+                if (existingErr) existingErr.remove();
+
+                const errorMsg = document.createElement('span');
+                errorMsg.className = 'validation-error';
+                errorMsg.textContent = message;
+                parent.appendChild(errorMsg);
+            }
+
+            function clearError(input) {
+                input.classList.remove('input-error');
+                const parent = input.parentElement;
+                const existingErr = parent.querySelector('.validation-error');
+                if (existingErr) existingErr.remove();
+            }
+
+            // 1. Validate Phone Numbers (Exactly 11 digits)
+            const phoneInputs = document.querySelectorAll('input[name="mobile_number"], input[name="father_contact"], input[name="mother_contact"], input[name="guardian_contact"]');
+            phoneInputs.forEach(input => {
+                // Clear error on input
+                input.addEventListener('input', function () {
+                    if (this.value.length === 11) clearError(this);
+                });
+            });
+
+            // 2. Validate Parent Ages (> 25)
+            const ageInputs = document.querySelectorAll('input[name="father_age"], input[name="mother_age"]');
+            ageInputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    if (this.value && parseInt(this.value) > 25) clearError(this);
+                });
+            });
+
+            form.addEventListener('submit', function (e) {
+                let isValid = true;
+                let firstInvalidField = null;
+
+                // Clear previous errors first (optional strategy, or rely on individual clearError)
+
+                // Validate Phones
+                phoneInputs.forEach(input => {
+                    // Only validate if value is present (for optional fields like guardian, though mobile is required)
+                    if (input.value && input.value.length !== 11) {
+                        isValid = false;
+                        showError(input, "Must be exactly 11 digits.");
+                        if (!firstInvalidField) firstInvalidField = input;
+                    }
+                });
+
+                // Validate Father's Age
+                const fatherAgeInput = document.querySelector('input[name="father_age"]');
+                if (fatherAgeInput && fatherAgeInput.value) {
+                    if (parseInt(fatherAgeInput.value) <= 25) {
+                        isValid = false;
+                        showError(fatherAgeInput, "Age must be higher than 25.");
+                        if (!firstInvalidField) firstInvalidField = fatherAgeInput;
+                    }
+                }
+
+                // Validate Mother's Age
+                const motherAgeInput = document.querySelector('input[name="mother_age"]');
+                if (motherAgeInput && motherAgeInput.value) {
+                    if (parseInt(motherAgeInput.value) <= 25) {
+                        isValid = false;
+                        showError(motherAgeInput, "Age must be higher than 25.");
+                        if (!firstInvalidField) firstInvalidField = motherAgeInput;
+                    }
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    if (firstInvalidField) {
+                        firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstInvalidField.focus();
+                    }
+                }
+            });
+
         });
     </script>
 </body>

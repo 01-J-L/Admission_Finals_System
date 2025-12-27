@@ -1,0 +1,140 @@
+<!-- --- START OF FILE templates/admin_view_statement.html --- -->
+
+{% extends 'admin_base.html' %}
+
+{% block title %}Statement of Account - {{ student.last_name }}{% endblock %}
+{% block page_title %}Statement of Account{% endblock %}
+
+{% block breadcrumb %}
+<a href="{{ request.referrer or url_for('auth.admin_dashboard') }}" class="text-gray-500 hover:text-primary">Back</a>
+<i class="ri-arrow-right-s-line mx-1 text-gray-400"></i>
+<span>Statement</span>
+{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .no-print, header, aside, .breadcrumb { display: none !important; }
+        .main-content { margin: 0 !important; width: 100% !important; }
+        .bg-white { box-shadow: none !important; border: none !important; }
+    }
+</style>
+
+<div class="max-w-5xl mx-auto space-y-6">
+    
+    <!-- Student Header Card -->
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">{{ student.last_name }}, {{ student.first_name }}</h2>
+            <div class="text-sm text-gray-500 mt-1">
+                <span class="font-mono bg-gray-100 px-2 py-0.5 rounded">{{ student.display_id }}</span>
+                <span class="mx-2">•</span>
+                <span>{{ student.program_choice }}</span>
+                <span class="mx-2">•</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold 
+                    {% if student.application_status == 'Enrolled' %}bg-green-100 text-green-700
+                    {% elif student.application_status == 'Dropped' %}bg-red-100 text-red-700
+                    {% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ student.application_status }}
+                </span>
+            </div>
+        </div>
+        <div class="flex gap-2 no-print">
+            <button onclick="window.print()" class="px-4 py-2 bg-gray-600 text-white rounded-md text-sm font-medium hover:bg-gray-700 transition-colors flex items-center">
+                <i class="ri-printer-line mr-2"></i> Print
+            </button>
+             {% if session.user_role in ['cashier', 'accounting'] %}
+            <a href="{{ url_for('auth.update_payment', student_id_db=student.applicant_id) }}" class="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary-dark transition-colors flex items-center">
+                <i class="ri-bank-card-line mr-2"></i> Go to Payment
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Total Balance Card -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-lg shadow-md flex justify-between items-center">
+        <div>
+            <p class="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1">Total Outstanding Balance</p>
+            <h1 class="text-4xl font-bold">₱{{ "{:,.2f}".format(total_balance) }}</h1>
+        </div>
+        <div class="text-right text-blue-200 text-xs">
+            <p>Generated on</p>
+            <p class="font-medium text-white">{{ today_date }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Assessments -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="font-bold text-gray-800 flex items-center">
+                    <i class="ri-file-list-3-line mr-2 text-primary"></i> Assessment History
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-3">Description</th>
+                            <th class="px-4 py-3 text-right">Amount</th>
+                            <th class="px-4 py-3 text-right">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        {% for item in assessments %}
+                        <tr>
+                            <td class="px-4 py-3">
+                                <div class="font-medium text-gray-900">{{ item.description }}</div>
+                                <div class="text-xs text-gray-500">{{ item.created_at.strftime('%Y-%m-%d') }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-right text-gray-600">₱{{ "{:,.2f}".format(item.total_amount) }}</td>
+                            <td class="px-4 py-3 text-right font-bold {{ 'text-red-600' if item.balance > 0 else 'text-green-600' }}">
+                                ₱{{ "{:,.2f}".format(item.balance) }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400">No assessments found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payments -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="font-bold text-gray-800 flex items-center">
+                    <i class="ri-history-line mr-2 text-green-600"></i> Payment History
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-3">Date</th>
+                            <th class="px-4 py-3">Reference</th>
+                            <th class="px-4 py-3 text-right">Paid</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        {% for pay in payments %}
+                        <tr>
+                            <td class="px-4 py-3 text-gray-900">{{ pay.payment_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="px-4 py-3">
+                                <span class="block text-gray-600">{{ pay.payment_method }}</span>
+                                {% if pay.remark %}<span class="text-xs text-gray-400 italic">{{ pay.remark }}</span>{% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-right font-bold text-green-600">-₱{{ "{:,.2f}".format(pay.amount_paid) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400">No payments found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,212 @@
+<!-- --- START OF FILE student_statement.html --- -->
+
+{% extends 'base.html' %}
+
+{% block title %}My Statement of Account{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+tailwind.config = {
+    theme: {
+        extend: {
+            colors: {
+                primary: '#1e40af', 
+                secondary: '#3b82f6',
+                pgpc_blue: '#1e40af'
+            },
+            borderRadius: { DEFAULT: '8px', 'xl': '12px' }
+        }
+    }
+}
+</script>
+<style>
+    :where([class^="ri-"])::before { content: "\f3c2"; }
+    .balance-card { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; }
+    @media print {
+        body, html { background-color: white !important; }
+        aside, header, .no-print, #sidebar, #sidebar-overlay { display: none !important; }
+        .main-content-wrapper { margin: 0 !important; overflow: visible !important; }
+        .balance-card { background: white !important; color: black !important; border: 1px solid #000; }
+        .bg-white { box-shadow: none !important; border: none !important; }
+    }
+    .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="flex h-screen bg-gray-50 overflow-hidden">
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed lg:static inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 sidebar-scroll overflow-y-auto flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-gray-200">
+            <a href="{{ url_for('views.home') }}" class="flex items-center gap-2">
+                <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Logo" class="w-8 h-8 object-contain">
+                <span class="text-blue-900 font-['Georgia'] text-lg">PGPC Dashboard</span>
+            </a>
+        </div>
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="{{ url_for('views.application_status_page') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-dashboard-line text-lg"></i><span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('views.view_student_statement') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors bg-blue-50 text-blue-700">
+                <i class="ri-wallet-3-line text-lg"></i><span>Statement of Account</span>
+            </a>
+            <a href="{{ url_for('auth.view_student_grades') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-book-read-line text-lg"></i><span>My Grades</span>
+            </a>
+            <a href="{{ url_for('views.student_resources') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-download-cloud-2-line text-lg"></i><span>Downloads</span>
+            </a>
+            <a href="{{ url_for('auth.student_messenger') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-messenger-line text-lg"></i><span>Messenger</span>
+            </a>
+             <a href="{{ url_for('auth.change_password_page') }}" class="flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="ri-lock-password-line text-lg"></i><span>Change Password</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-200">
+            <a href="{{ url_for('auth.logout') }}" class="flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200 w-full">
+                <i class="ri-logout-box-line"></i><span>Sign Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-wrapper bg-gray-50">
+        <header class="bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b border-gray-200 shadow-sm z-10 sticky top-0">
+            <div class="flex items-center gap-4">
+                <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-blue-600"><i class="ri-menu-2-line text-2xl"></i></button>
+                <h2 class="text-lg font-bold text-gray-800">Statement of Account</h2>
+            </div>
+             <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3 pl-4 border-l border-gray-200">
+                    <div class="text-right hidden sm:block">
+                        <div class="text-sm font-bold text-gray-800">{{ application.first_name }} {{ application.last_name }}</div>
+                        <div class="text-xs text-gray-500">{{ application.program_choice }}</div>
+                    </div>
+                    <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}?t={{ application.last_updated_at.timestamp() if application.last_updated_at else '' }}"
+                         onerror="this.src='{{ url_for('static', filename='images/default_avatar.png') }}'"
+                         alt="Avatar" class="w-9 h-9 rounded-full object-cover border border-gray-300">
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 relative z-0">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex justify-end mb-6 no-print">
+                    <button onclick="window.print()" class="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors shadow-sm">
+                        <i class="ri-printer-line"></i> <span>Print Statement</span>
+                    </button>
+                    <a href="{{ url_for('auth.student_view_payment_history') }}" class="ml-3 flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
+                        <i class="ri-history-line"></i> <span>View Full History</span>
+                    </a>
+                </div>
+
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-gray-100 pb-6">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">Statement of Account</h1>
+                            <p class="text-gray-600 text-sm mt-1">Student: <span class="font-semibold">{{ student.first_name }} {{ student.last_name }}</span></p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ student.program_choice }}</p>
+                        </div>
+                        <div class="text-right">
+                             <p class="text-xs text-gray-400 uppercase tracking-wide font-semibold">Date Generated</p>
+                             <p class="text-sm font-medium text-gray-800">{{ now.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="balance-card p-6 rounded-lg shadow-md mb-8 relative overflow-hidden">
+                        <div class="relative z-10">
+                            <p class="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1">Total Outstanding Balance</p>
+                            <h2 class="text-4xl font-bold">₱ {{ "{:,.2f}".format(total_balance) }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Assessments -->
+                        <div>
+                            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Assessment Details</h3>
+                            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                                <table class="min-w-full text-sm text-left">
+                                    <thead class="bg-gray-50 text-gray-500 uppercase font-semibold text-xs border-b border-gray-200">
+                                        <tr>
+                                            <th class="px-4 py-3">Description</th>
+                                            <th class="px-4 py-3 text-right">Total</th>
+                                            <th class="px-4 py-3 text-right">Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        {% for item in assessments %}
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3 font-medium text-gray-800">
+                                                {{ item.description }}
+                                                <div class="text-[10px] text-gray-400 font-normal">{{ item.created_at.strftime('%Y-%m-%d') }}</div>
+                                            </td>
+                                            <td class="px-4 py-3 text-right text-gray-500">₱{{ "{:,.2f}".format(item.total_amount) }}</td>
+                                            <td class="px-4 py-3 text-right font-bold {{ 'text-red-600' if item.balance > 0 else 'text-green-600' }}">
+                                                ₱{{ "{:,.2f}".format(item.balance) }}
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400 text-xs italic">No assessments found.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Payments -->
+                        <div>
+                            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Recent Payments</h3>
+                            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                                <table class="min-w-full text-sm text-left">
+                                    <thead class="bg-gray-50 text-gray-500 uppercase font-semibold text-xs border-b border-gray-200">
+                                        <tr>
+                                            <th class="px-4 py-3">Date</th>
+                                            <th class="px-4 py-3">Ref</th>
+                                            <th class="px-4 py-3 text-right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        {% for pay in payments %}
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3 text-gray-700">{{ pay.payment_date.strftime('%b %d, %Y') }}</td>
+                                            <td class="px-4 py-3 text-gray-500">
+                                                {{ pay.payment_method }}
+                                                {% if pay.remark %}<span class="block text-[10px] text-gray-400 truncate max-w-[100px]">{{ pay.remark }}</span>{% endif %}
+                                            </td>
+                                            <td class="px-4 py-3 text-right font-bold text-green-600">-₱{{ "{:,.2f}".format(pay.amount_paid) }}</td>
+                                        </tr>
+                                        {% else %}
+                                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400 text-xs italic">No payments recorded yet.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        function toggleSidebar() { sidebar.classList.toggle('-translate-x-full'); sidebarOverlay.classList.toggle('hidden'); }
+        if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+    });
+</script>
+{% endblock %}

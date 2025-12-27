@@ -1,8 +1,30 @@
+<!-- --- START OF FILE templates/return_voucher.html --- -->
+
 {% extends base_template %}
 {% block title %}Return Voucher{% endblock %}
 {% block page_title %}Return Voucher - Padre Garcia Students{% endblock %}
 
 {% block content %}
+
+<!-- Global Voucher Setting -->
+<div class="bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between ">
+    <div class="flex items-center gap-3">
+        <div class="p-2 bg-blue-100 rounded-full text-blue-600">
+            <i class="ri-settings-4-line text-xl"></i>
+        </div>
+        <div>
+            <h3 class="text-sm font-bold text-blue-900">Current View: {{ school_year }} - {{ semester }}</h3>
+            <p class="text-xs text-blue-700">Set the amount below. Actions apply to the academic term shown above.</p>
+        </div>
+    </div>
+    <div class="mt-3 md:mt-0 flex items-center gap-2">
+        <span class="text-sm font-bold text-gray-700">Amount to Deduct: ₱</span>
+        <input type="number" id="globalVoucherInput" step="0.01" 
+               class="w-32 px-3 py-2 border border-blue-300 rounded-md font-bold text-gray-800 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+               placeholder="0.00">
+    </div>
+</div>
+
 <!-- Stats Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div class="bg-white rounded-card p-6 border border-gray-100 shadow-sm">
@@ -10,14 +32,14 @@
             <i class="ri-check-double-line text-green-600 text-xl"></i>
         </div>
         <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ returned_count }}</h3>
-        <p class="text-gray-600 text-sm">Returned (In Current View)</p>
+        <p class="text-gray-600 text-sm">Returned ({{ school_year }} {{ semester }})</p>
     </div>
     <div class="bg-white rounded-card p-6 border border-gray-100 shadow-sm">
         <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-2">
             <i class="ri-close-line text-danger text-xl"></i>
         </div>
         <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ not_returned_count }}</h3>
-        <p class="text-gray-600 text-sm">Not Returned (In Current View)</p>
+        <p class="text-gray-600 text-sm">Not Returned ({{ school_year }} {{ semester }})</p>
     </div>
 </div>
 
@@ -26,39 +48,28 @@
     <!-- Filter Form -->
     <form method="GET" action="{{ url_for('auth.return_voucher') }}"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-end bg-gray-50 p-4 rounded-lg border border-gray-200">
-
-        <!-- Term Selection -->
-        <select name="school_year"
-            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
-            <option value="">Select School Year</option>
+        
+        <!-- School Year and Semester are REQUIRED to define the "Bucket" for returns -->
+        <select name="school_year" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary font-bold">
             {% for year in all_school_years %}
-            <option value="{{ year }}" {% if school_year==year %}selected{% endif %}>{{ year }}</option>
+            <option value="{{ year.year_name }}" {% if school_year==year.year_name %}selected{% endif %}>{{ year.year_name }}</option>
             {% endfor %}
         </select>
-        <select name="semester"
-            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
-            <option value="">Select Semester</option>
-            <option value="1st Sem" {% if semester=='1st Sem' %}selected{% endif %}>1st Sem</option>
-            <option value="2nd Sem" {% if semester=='2nd Sem' %}selected{% endif %}>2nd Sem</option>
+        <select name="semester" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary font-bold">
+            <option value="1st Semester" {% if semester=='1st Semester' %}selected{% endif %}>1st Semester</option>
+            <option value="2nd Semester" {% if semester=='2nd Semester' %}selected{% endif %}>2nd Semester</option>
             <option value="Summer" {% if semester=='Summer' %}selected{% endif %}>Summer</option>
         </select>
 
-        <!-- Student Filters -->
-        <select name="course" id="courseSelect" onchange="updateSections()"
-            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+        <select name="course" id="courseSelect" onchange="updateSections()" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
             <option value="">All Courses</option>
-            <option value="Bachelor of Science in Computer Science" {% if
-                course=='Bachelor of Science in Computer Science' %}selected{% endif %}>BSCS</option>
-            <option value="Bachelor of Science in Criminology" {% if course=='Bachelor of Science in Criminology'
-                %}selected{% endif %}>BSCrim</option>
-            <option value="Bachelor of Science in Public Administration" {% if
-                course=='Bachelor of Science in Public Administration' %}selected{% endif %}>BSPA</option>
-            <option value="Bachelor of Science in Management Accountancy" {% if
-                course=='Bachelor of Science in Management Accountancy' %}selected{% endif %}>BSMA</option>
+            <option value="Bachelor of Science in Computer Science" {% if course=='Bachelor of Science in Computer Science' %}selected{% endif %}>BSCS</option>
+            <option value="Bachelor of Science in Criminology" {% if course=='Bachelor of Science in Criminology' %}selected{% endif %}>BSCrim</option>
+            <option value="Bachelor of Science in Public Administration" {% if course=='Bachelor of Science in Public Administration' %}selected{% endif %}>BSPA</option>
+            <option value="Bachelor of Science in Management Accountancy" {% if course=='Bachelor of Science in Management Accountancy' %}selected{% endif %}>BSMA</option>
         </select>
 
-        <select name="year_level"
-            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+        <select name="year_level" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
             <option value="">All Years</option>
             <option value="1st Year" {% if year_level=='1st Year' %}selected{% endif %}>1st Year</option>
             <option value="2nd Year" {% if year_level=='2nd Year' %}selected{% endif %}>2nd Year</option>
@@ -66,14 +77,11 @@
             <option value="4th Year" {% if year_level=='4th Year' %}selected{% endif %}>4th Year</option>
         </select>
 
-        <select name="section" id="sectionSelect"
-            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+        <select name="section" id="sectionSelect" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
             <option value="">All Sections</option>
-            <!-- JS Populated -->
         </select>
 
-        <select name="status"
-            class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+        <select name="status" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
             <option value="">All Statuses</option>
             <option value="returned" {% if status_filter=='returned' %}selected{% endif %}>Returned</option>
             <option value="not_returned" {% if status_filter=='not_returned' %}selected{% endif %}>Not Returned</option>
@@ -84,15 +92,11 @@
                 class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
         </div>
 
-        <!-- Actions -->
         <div class="flex gap-2 lg:col-span-4 mt-2">
-            <button type="submit"
-                class="flex-1 bg-primary text-white p-2.5 rounded-lg font-medium hover:bg-primary-dark flex items-center justify-center gap-2">
-                <i class="ri-filter-3-line"></i> Apply Filters
+            <button type="submit" class="flex-1 bg-primary text-white p-2.5 rounded-lg font-medium hover:bg-primary-dark flex items-center justify-center gap-2">
+                <i class="ri-filter-3-line"></i> Update View / Change Term
             </button>
-            <a href="{{ url_for('auth.clear_filters') }}"
-                class="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 hover:text-red-600"
-                title="Clear Filters">
+            <a href="{{ url_for('auth.clear_filters') }}" class="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 hover:text-red-600" title="Clear Filters">
                 <i class="ri-refresh-line"></i>
             </a>
         </div>
@@ -106,15 +110,14 @@
                     <th scope="col" class="px-6 py-3">Name</th>
                     <th scope="col" class="px-6 py-3">Course & Sec</th>
                     <th scope="col" class="px-6 py-3">Student ID</th>
-                    <th scope="col" class="px-6 py-3 text-center">Action</th>
+                    <th scope="col" class="px-6 py-3 text-right">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% if students %}
                 {% for student in students %}
                 <tr class="bg-white border-b hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900">{{ student.last_name }}, {{ student.first_name }}
-                    </td>
+                    <td class="px-6 py-4 font-medium text-gray-900">{{ student.last_name }}, {{ student.first_name }}</td>
                     <td class="px-6 py-4">
                         <div class="text-xs">
                             {{ student.course }}<br>
@@ -122,31 +125,32 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">{{ student.student_id }}</td>
-                    <td class="px-6 py-4 text-center">
+                    <td class="px-6 py-4 text-right">
                         {% if student.id in returned_ids %}
-                        <span
-                            class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <i class="ri-check-line"></i> Returned
-                        </span>
+                            <!-- ALREADY RETURNED FOR THE SELECTED TERM -->
+                            <span class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 cursor-default" 
+                                  title="Voucher already returned for {{ school_year }} {{ semester }}">
+                                <i class="ri-check-double-line"></i> Returned
+                            </span>
                         {% else %}
-                        <form method="POST"
-                            action="{{ url_for('auth.submit_voucher', student_id_db=student.id) }}?status={{ status_filter }}&search={{ search_query }}">
-                            <!-- Pass filters in hidden fields to maintain state after POST -->
-                            <input type="hidden" name="school_year" value="{{ school_year }}">
-                            <input type="hidden" name="semester" value="{{ semester }}">
-                            <button type="submit"
-                                class="font-medium text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-md text-xs shadow-sm transition-colors">
-                                Mark as Returned
-                            </button>
-                        </form>
+                            <!-- NOT RETURNED FOR THIS TERM YET -->
+                            <form method="POST" action="{{ url_for('auth.submit_voucher', student_id_db=student.id) }}?status={{ status_filter }}&search={{ search_query }}" class="inline-block submit-voucher-form">
+                                <!-- Pass the CURRENT view's term to the backend -->
+                                <input type="hidden" name="school_year" value="{{ school_year }}">
+                                <input type="hidden" name="semester" value="{{ semester }}">
+                                <input type="hidden" name="amount" class="row-voucher-amount" value="0">
+
+                                <button type="submit" class="font-medium text-white bg-green-500 hover:bg-green-600 px-4 py-2 rounded-md text-xs shadow-sm transition-colors whitespace-nowrap btn-mark-returned">
+                                    Mark Returned
+                                </button>
+                            </form>
                         {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
                 {% else %}
                 <tr>
-                    <td colspan="4" class="px-6 py-10 text-center text-gray-500">No Padre Garcia students found matching
-                        these filters.</td>
+                    <td colspan="4" class="px-6 py-10 text-center text-gray-500">No Padre Garcia students found matching these filters.</td>
                 </tr>
                 {% endif %}
             </tbody>
@@ -157,6 +161,40 @@
 
 {% block extra_scripts %}
 <script>
+    // --- 1. Global Voucher Amount Logic ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const globalInput = document.getElementById('globalVoucherInput');
+        const hiddenInputs = document.querySelectorAll('.row-voucher-amount');
+        const submitButtons = document.querySelectorAll('.btn-mark-returned');
+
+        function syncVoucherAmount() {
+            const val = globalInput.value;
+            hiddenInputs.forEach(input => input.value = val);
+
+            const isValid = val && parseFloat(val) > 0;
+            submitButtons.forEach(btn => {
+                if(!isValid) {
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    btn.disabled = true;
+                    btn.title = "Set Global Amount first";
+                } else {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.disabled = false;
+                    btn.title = `Deduct ₱${val} from balance`;
+                }
+            });
+
+            localStorage.setItem('pgpc_voucher_amount', val);
+        }
+
+        const savedAmount = localStorage.getItem('pgpc_voucher_amount');
+        if (savedAmount) globalInput.value = savedAmount;
+
+        syncVoucherAmount();
+        globalInput.addEventListener('input', syncVoucherAmount);
+    });
+
+    // --- 2. Filter Logic ---
     const sectionMap = {
         "Bachelor of Science in Computer Science": ["A", "B", "C"],
         "Bachelor of Science in Criminology": ["A", "B", "C", "D", "E"],
@@ -182,17 +220,17 @@
                 sectionSelect.appendChild(option);
             });
         } else if (selectedCourse) {
-            ["A", "B", "C", "D", "E", "1", "2", "3"].forEach(section => {
+             ["A", "B", "C", "D", "E", "1", "2", "3"].forEach(section => {
                 const option = document.createElement("option");
                 option.value = section;
                 option.text = "Section " + section;
-                if (section === currentSection) option.selected = true;
+                 if (section === currentSection) option.selected = true;
                 sectionSelect.appendChild(option);
             });
         } else {
             sectionSelect.disabled = true;
         }
     }
-    document.addEventListener('DOMContentLoaded', function () { updateSections(); });
+    document.addEventListener('DOMContentLoaded', function() { updateSections(); });
 </script>
 {% endblock %}

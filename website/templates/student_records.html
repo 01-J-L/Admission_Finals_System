@@ -1,74 +1,240 @@
+<!-- --- START OF FILE templates/student_records.html --- -->
+
 {% extends base_template %}
-{% block title %}Student Records{% endblock %}
+{% block title %}Student Payment Records{% endblock %}
 {% block page_title %}Student Records{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-card shadow-soft p-6">
+<div class="bg-white rounded-card shadow-soft p-6 border border-gray-100">
     
-    <!-- Filters -->
-    <form method="GET" action="{{ url_for('auth.student_records') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div class="relative">
-            <i class="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
-            <input type="text" name="query" placeholder="Search Name or Student ID..." value="{{ query or '' }}" class="w-full bg-gray-50 border-none text-gray-600 text-sm rounded-lg pl-9 p-2.5">
+    <!-- Header with Actions -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 no-print">
+        <h3 class="text-lg font-bold text-gray-800">Financial Records Log</h3>
+        <div class="flex flex-wrap gap-2">
+            <!-- EXPORT BUTTON -->
+            <button id="exportBtn" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm">
+                <i class="ri-file-excel-2-line"></i> <span>Export Excel</span>
+            </button>
+            
+            <!-- PRINT BUTTON -->
+            <button onclick="window.print()" class="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors shadow-sm">
+                <i class="ri-printer-line"></i> <span>Print List</span>
+            </button>
+
+            <button id="resetFiltersBtn" class="text-sm text-primary hover:underline cursor-pointer ml-2">
+                <i class="ri-refresh-line"></i> Reset
+            </button>
         </div>
-        <div class="flex">
-            <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark">Search</button>
-        </div>
-    </form>
+    </div>
+
+    <!-- Print Header (Only visible when printing) -->
+    <div class="hidden print-header mb-6 text-center">
+        <h2 class="text-xl font-bold text-gray-900">Padre Garcia Polytechnic College</h2>
+        <h3 class="text-lg">Student Payment Records</h3>
+        <p class="text-sm text-gray-500">Generated on: <span id="printDate"></span></p>
+    </div>
+
+    <!-- FILTER BAR (Hidden on Print) -->
+    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 no-print">
+        <form id="filterForm" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            
+            <!-- Search -->
+            <div class="col-span-1 md:col-span-3 lg:col-span-1">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Search Student</label>
+                <div class="relative">
+                    <i class="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
+                    <input type="text" id="searchInput" name="query" placeholder="Name or ID..." class="w-full bg-white border border-gray-300 text-gray-700 text-sm rounded-lg pl-9 p-2.5 focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+
+            <!-- Enrollment Status Filter -->
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Admission Status</label>
+                <select id="enrollStatusFilter" name="enroll_status" class="w-full bg-white border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+                    <option value="">All Statuses</option>
+                    <option value="Enrolled">Currently Enrolled</option>
+                    <option value="Dropped">Dropped Students</option>
+                    <option value="Eligible for Enrollment">Awaiting Re-enrollment</option>
+                    <option value="Enrolling">Processing Enrollment</option>
+                    <option value="Not Enrolled">Not Enrolled</option>
+                </select>
+            </div>
+
+            <!-- Program -->
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Program</label>
+                <select id="programFilter" name="program" class="w-full bg-white border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+                    <option value="">All Programs</option>
+                    {% for prog in programs %}
+                    <option value="{{ prog.title }}">{{ prog.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Payment Status -->
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Payment Status</label>
+                <select id="paymentStatusFilter" name="status" class="w-full bg-white border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+                    <option value="">All (Paid/Unpaid)</option>
+                    <option value="Paid">Fully Paid</option>
+                    <option value="Partial">Partial / Unpaid</option>
+                </select>
+            </div>
+        </form>
+    </div>
 
     <!-- Table -->
     <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm" id="recordsTable">
             <thead>
-                <tr class="bg-blue-50/50 text-left">
+                <tr class="bg-blue-50/50 text-left border-b border-blue-100">
                     <th class="px-6 py-3 text-primary font-semibold rounded-l-lg">Student Name</th>
                     <th class="px-6 py-3 text-primary font-semibold">Course Details</th>
-                    <th class="px-6 py-3 text-primary font-semibold">Status</th>
+                    <th class="px-6 py-3 text-primary font-semibold">Admission Status</th>
                     <th class="px-6 py-3 text-primary font-semibold">Balance</th>
-                    <th class="px-6 py-3 text-primary font-semibold text-center rounded-r-lg">Action</th>
+                    <th class="px-6 py-3 text-primary font-semibold text-center rounded-r-lg no-print">Action</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
                 {% for student in students %}
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-gray-50 transition-colors record-row"
+                    data-search="{{ student.last_name }} {{ student.first_name }} {{ student.student_id }}"
+                    data-program="{{ student.course }}"
+                    data-year="{{ student.year_level }}"
+                    data-enroll-status="{{ student.application_status }}"
+                    data-payment-status="{{ student.payment_status }}">
+                    
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs no-print">
                                 {{ student.first_name[0] }}{{ student.last_name[0] }}
                             </div>
                             <div>
                                 <div class="font-medium text-gray-800">{{ student.last_name }}, {{ student.first_name }}</div>
-                                <div class="text-xs text-gray-400">{{ student.student_id }}</div>
+                                <div class="text-xs text-gray-400 font-mono">{{ student.student_id or 'No ID' }}</div>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-gray-600">
-                        <div>{{ student.course }}</div>
-                        <div class="text-xs text-gray-400">{{ student.year_level }} - {{ student.section }}</div>
+                        <div class="text-xs">{{ student.course }}</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase">{{ student.year_level }} - {{ student.section or 'Unassigned' }}</div>
                     </td>
                     <td class="px-6 py-4">
-                        {% if student.payment_status == 'Fully Paid' %}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Paid</span>
-                        {% elif student.payment_status == 'Partial Payment' %}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Partial</span>
-                        {% else %}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Unpaid</span>
-                        {% endif %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border
+                            {% if student.application_status == 'Enrolled' %}bg-green-50 text-green-700 border-green-200
+                            {% elif student.application_status == 'Dropped' %}bg-red-50 text-red-700 border-red-200
+                            {% elif student.application_status == 'Enrolling' %}bg-purple-50 text-purple-700 border-purple-200
+                            {% else %}bg-gray-50 text-gray-600 border-gray-200{% endif %}">
+                            {{ student.application_status }}
+                        </span>
                     </td>
-                    <td class="px-6 py-4 font-semibold {% if student.total_balance > 0 %}text-red-500{% else %}text-green-500{% endif %}">
+                    <td class="px-6 py-4 font-bold {% if student.total_balance > 0 %}text-red-600{% else %}text-green-600{% endif %}">
                         ₱{{ "{:,.2f}".format(student.total_balance) }}
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <a href="{{ url_for('auth.update_payment', student_id_db=student.id) }}" class="text-white bg-primary hover:bg-blue-600 px-3 py-1.5 rounded text-xs font-medium transition-colors">
-                            <i class="ri-bank-card-line mr-1"></i> Pay
+                    <td class="px-6 py-4 text-center no-print">
+                        <a href="{{ url_for('auth.update_payment', student_id_db=student.id) }}" class="text-white bg-primary hover:bg-primary-dark px-3 py-1.5 rounded text-xs font-medium transition-colors shadow-sm inline-flex items-center gap-1">
+                            <i class="ri-bank-card-line"></i> Pay / Record
                         </a>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="px-6 py-10 text-center text-gray-400">No enrolled students found matching search.</td></tr>
+                <tr><td colspan="5" class="px-6 py-10 text-center text-gray-400 italic">No records found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
+        
+        <!-- No Results Message -->
+        <div id="noResultsMsg" class="hidden px-6 py-10 text-center text-gray-400 bg-gray-50 mt-2 rounded-lg border border-dashed border-gray-200">
+            No students match the current filters.
+        </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set Print Date
+        const dateEl = document.getElementById('printDate');
+        if(dateEl) dateEl.textContent = new Date().toLocaleDateString();
+
+        const rows = document.querySelectorAll('.record-row');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+        
+        const inputs = {
+            search: document.getElementById('searchInput'),
+            enrollStatus: document.getElementById('enrollStatusFilter'),
+            program: document.getElementById('programFilter'),
+            paymentStatus: document.getElementById('paymentStatusFilter')
+        };
+
+        function filterTable() {
+            const filters = {
+                search: inputs.search.value.toLowerCase(),
+                enrollStatus: inputs.enrollStatus.value,
+                program: inputs.program.value,
+                paymentStatus: inputs.paymentStatus.value
+            };
+
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const data = row.dataset;
+                let isVisible = true;
+
+                // 1. Search Filter (Name or ID)
+                if (filters.search && !data.search.toLowerCase().includes(filters.search)) isVisible = false;
+                
+                // 2. Admission Status Filter
+                if (isVisible && filters.enrollStatus && data.enrollStatus !== filters.enrollStatus) isVisible = false;
+                
+                // 3. Program Filter
+                if (isVisible && filters.program && data.program !== filters.program) isVisible = false;
+                
+                // 4. Payment Status Filter
+                if (isVisible && filters.paymentStatus && data.paymentStatus !== filters.paymentStatus) isVisible = false;
+
+                row.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount++;
+            });
+
+            noResultsMsg.classList.toggle('hidden', visibleCount > 0);
+        }
+
+        // Attach listeners
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', filterTable);
+            input.addEventListener('change', filterTable);
+        });
+
+        // Reset Button
+        document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+            Object.values(inputs).forEach(input => input.value = '');
+            filterTable();
+        });
+
+        // Export Logic
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const params = new URLSearchParams();
+            if (inputs.search.value) params.append('query', inputs.search.value);
+            if (inputs.enrollStatus.value) params.append('status', inputs.enrollStatus.value);
+            if (inputs.program.value) params.append('program', inputs.program.value);
+            
+            window.location.href = `/cashier/export-student-records?${params.toString()}`;
+        });
+    });
+</script>
+
+<style>
+    @media print {
+        body * { visibility: hidden; }
+        .bg-white, .shadow-soft, .border { box-shadow: none !important; border: none !important; }
+        .no-print { display: none !important; }
+        .print-header { display: block !important; margin-bottom: 20px; }
+        .overflow-x-auto { overflow: visible !important; }
+        #recordsTable, #recordsTable * { visibility: visible; }
+        #recordsTable { position: absolute; left: 0; top: 120px; width: 100%; border: 1px solid #eee; }
+        .print-header * { visibility: visible; }
+        .print-header { position: absolute; top: 0; left: 0; width: 100%; }
+        tr[style*="display: none"] { display: none !important; }
+    }
+</style>
 {% endblock %}
