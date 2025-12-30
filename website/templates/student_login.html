@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 {% endblock%}
 
 {% block style %}
@@ -86,7 +85,7 @@ header {
 
 .login-panel-wrapper {
     width: 100%;
-    max-width: 900px; /* Adjust max width as needed */
+    max-width: 900px;
     margin: 0 auto;
 }
 
@@ -106,14 +105,13 @@ header {
     width: 100%;
     background: linear-gradient(135deg, var(--secondary), var(--primary));
     color: white;
-    /* Adaptive padding: 2rem on mobile, 3.5rem on desktop */
     padding: 2rem; 
     display: flex;
     flex-direction: column;
     justify-content: center;
     position: relative;
     overflow: hidden;
-    min-height: 200px; /* Ensures it doesn't collapse on small heights */
+    min-height: 200px;
 }
 
 @media (min-width: 768px) {
@@ -123,7 +121,6 @@ header {
     }
 }
 
-/* Decorative circles - Scaled down for mobile so they don't overlap text */
 .welcome-panel::before, .welcome-panel::after {
     content: '';
     position: absolute;
@@ -132,12 +129,8 @@ header {
     z-index: 0;
 }
 
-.welcome-panel::before { 
-    width: 120px; height: 120px; bottom: -40px; left: -40px; 
-}
-.welcome-panel::after { 
-    width: 80px; height: 80px; top: -30px; right: -30px; 
-}
+.welcome-panel::before { width: 120px; height: 120px; bottom: -40px; left: -40px; }
+.welcome-panel::after { width: 80px; height: 80px; top: -30px; right: -30px; }
 
 @media (min-width: 768px) {
     .welcome-panel::before { width: 200px; height: 200px; bottom: -80px; left: -80px; }
@@ -221,15 +214,76 @@ header {
     text-decoration: none;
 }
 .form-links a:hover { text-decoration: underline; }
-@media (max-width: 480px) {
-  .g-recaptcha {
-    transform: scale(0.85);
-    transform-origin: center;
-  }
+
+/* Custom Captcha Styles - Responsive */
+.captcha-container {
+    display: flex;
+    flex-wrap: wrap; /* Allows wrapping on very small screens */
+    flex-direction: row; 
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 5px;
+    margin-top: 10px;
+}
+
+.captcha-box {
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    /* Fixed width for the image to prevent distortion */
+    flex: 0 0 auto; 
+    width: 160px;
+    height: 48px;
+}
+
+#captchaCanvas {
+    background-color: white;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.refresh-captcha {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    background: rgba(255,255,255,0.8);
+    border-radius: 50%;
+    padding: 2px;
+    transition: transform 0.2s, background 0.2s;
+}
+.refresh-captcha:hover { 
+    transform: translateY(-50%) rotate(180deg); 
+    background: white;
+}
+
+.captcha-input-wrapper {
+    /* Takes remaining space, but wraps if less than 120px available */
+    flex: 1 1 120px;
+    width: 100%;
+}
+
+.captcha-input-wrapper input {
+    margin: 0;
+    width: 100%;
+    height: 48px; /* Match height of captcha box */
+    text-align: center;
+    letter-spacing: 2px;
+    font-weight: 600;
 }
 
 
-/* --- Animate on Scroll & Go Top Button --- */
+/* --- Animate on Scroll --- */
 .reveal-on-scroll { opacity: 0; transform: translateY(50px); transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1); will-change: opacity, transform; }
 .reveal-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
 
@@ -276,11 +330,9 @@ header {
             <a href="{{ url_for('auth.logout') }}"><button class="btnLogin-popup" style="background-color: #d9534f;">Logout</button></a>
         {% else %}
             <!-- NEW: Check if registration is open -->
-            
             <a href="{{ url_for('views.existing_or_not') }}" class="no-underline">
                 <button class="btnLogin-popup">Apply now</button>
             </a>
-            
         {% endif %}
     </nav>
 </header>
@@ -290,25 +342,20 @@ header {
         <div class="login-panel">
             <!-- Left Welcome Panel -->
             <div class="welcome-panel">
-    <!-- Inner wrapper for better alignment control -->
-    <div class="flex flex-col items-center md:items-start justify-center text-center md:text-left h-full w-full">
-        <div class="relative z-10">
-            <!-- Fluid Typography: text-2xl on mobile, text-4xl on desktop -->
-            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-2 leading-tight">
-                WELCOME BACK
-            </h1>
-            
-            <p class="text-base sm:text-lg font-semibold text-blue-100 mb-4 opacity-90">
-                PGPC Student Portal
-            </p>
-            
-            <!-- max-w-sm ensures the text doesn't span the whole screen on mobile -->
-            <p class="text-sm sm:text-base text-blue-50/80 leading-relaxed max-w-xs sm:max-w-sm md:max-w-full mx-auto md:mx-0">
-                Access your academic records, course materials, and connect with the campus community.
-            </p>
-        </div>
-    </div>
-</div>
+                <div class="flex flex-col items-center md:items-start justify-center text-center md:text-left h-full w-full">
+                    <div class="relative z-10">
+                        <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-2 leading-tight">
+                            WELCOME BACK
+                        </h1>
+                        <p class="text-base sm:text-lg font-semibold text-blue-100 mb-4 opacity-90">
+                            PGPC Student Portal
+                        </p>
+                        <p class="text-sm sm:text-base text-blue-50/80 leading-relaxed max-w-xs sm:max-w-sm md:max-w-full mx-auto md:mx-0">
+                            Access your academic records, course materials, and connect with the campus community.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             <!-- Right Form Panel -->
             <div class="form-panel">
@@ -328,31 +375,34 @@ header {
                         <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Password">
                     </div>
 
-                    <div class="flex justify-center">
-                        <div class="g-recaptcha"
-                             data-sitekey="6LdoLe0rAAAAAEcxi8Z8jxZh3Hkrt7PpioiyzPEs"
-                             data-callback="onRecaptchaSuccess"
-                             data-expired-callback="onRecaptchaExpired"></div>
+                    <!-- Custom JS CAPTCHA (Responsive Horizontal Layout) -->
+                    <div class="captcha-container">
+                        <!-- Left: Image -->
+                        <div class="captcha-box">
+                            <canvas id="captchaCanvas" width="180" height="48"></canvas>
+                            <i class="ri-refresh-line refresh-captcha" id="refreshCaptcha" title="Refresh Code"></i>
+                        </div>
+                        <!-- Right: Input -->
+                        <div class="captcha-input-wrapper">
+                            <input type="text" id="captchaInput" placeholder="Enter code" required autocomplete="off">
+                        </div>
                     </div>
+                    <p id="captchaError" class="text-xs text-red-500 hidden" style="margin-top: -10px; margin-bottom: 10px;">Incorrect code. Please try again.</p>
 
                     <div>
                         <button id="submit-btn" type="submit" disabled>Sign in</button>
                     </div>
                 </form>
                 <div class="form-links">
-                    <!-- CHANGED: Updated links logic -->
                     {% if global_content.enable_account_creation == 'true' %}
                         <p>Don't have an account? <a href="{{ url_for('auth.create_student_account_page') }}">Create one</a></p>
                     {% endif %}
-                    
                     <p class="mt-2"><a href="{{ url_for('auth.forgot_password_request_page') }}">Forgot Password?</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -367,27 +417,101 @@ header {
 
     const emailInput = document.getElementById('email-address');
     const passwordInput = document.getElementById('password');
+    const captchaInput = document.getElementById('captchaInput');
     const submitBtn = document.getElementById('submit-btn');
-    let isRecaptchaCompleted = false;
+    const refreshCaptchaBtn = document.getElementById('refreshCaptcha');
+    const captchaError = document.getElementById('captchaError');
+    
+    // Captcha Variables
+    let captchaCode = '';
+    const canvas = document.getElementById('captchaCanvas');
+    const ctx = canvas.getContext('2d');
 
+    // Generate Random Captcha
+    function generateCaptcha() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluded confusing chars like I, 1, O, 0
+        let uniqueChar = "";
+        for (let i = 0; i < 5; i++) {
+            uniqueChar += chars.charAt(Math.random() * chars.length);
+        }
+        captchaCode = uniqueChar;
+        drawCaptcha();
+        captchaInput.value = '';
+        validateForm();
+        captchaError.classList.add('hidden');
+    }
+
+    // Draw Captcha on Canvas
+    function drawCaptcha() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Background
+        ctx.fillStyle = '#f3f4f6';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Add Noise (Lines)
+        for(let i=0; i<7; i++) {
+            ctx.beginPath();
+            ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+            ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.stroke();
+        }
+
+        // Add Noise (Dots)
+        for(let i=0; i<30; i++) {
+            ctx.beginPath();
+            ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 1, 0, 2 * Math.PI);
+            ctx.fillStyle = '#9ca3af';
+            ctx.fill();
+        }
+
+        // Draw Text
+        const fontSize = 24;
+        ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        
+        // Adjust spacing for new 160px width
+        const startX = 30;
+        const letterSpacing = 25; 
+
+        for (let i = 0; i < captchaCode.length; i++) {
+            const x = startX + (i * letterSpacing);
+            const y = canvas.height / 2;
+            const angle = (Math.random() - 0.5) * 0.4; // Slight rotation
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.fillStyle = '#1e40af'; // Primary color
+            ctx.fillText(captchaCode[i], 0, 0);
+            ctx.restore();
+        }
+    }
+
+    // Validation Logic
     const validateForm = () => {
       const allFieldsFilled = emailInput.value.trim() !== '' && passwordInput.value.trim() !== '';
-      submitBtn.disabled = !(allFieldsFilled && isRecaptchaCompleted);
+      const isCaptchaCorrect = captchaInput.value.trim().toUpperCase() === captchaCode;
+      
+      if(captchaInput.value.trim().length === 5 && !isCaptchaCorrect) {
+          captchaError.classList.remove('hidden');
+      } else {
+          captchaError.classList.add('hidden');
+      }
+
+      submitBtn.disabled = !(allFieldsFilled && isCaptchaCorrect);
     };
 
-    window.onRecaptchaSuccess = function() {
-      isRecaptchaCompleted = true;
-      validateForm();
-    };
-
-    window.onRecaptchaExpired = function() {
-      isRecaptchaCompleted = false;
-      validateForm();
-    };
-
+    // Event Listeners
+    refreshCaptchaBtn.addEventListener('click', generateCaptcha);
     emailInput.addEventListener('input', validateForm);
     passwordInput.addEventListener('input', validateForm);
-    validateForm();
+    captchaInput.addEventListener('input', validateForm);
+
+    // Initial Load
+    generateCaptcha();
 
     // Animate on Scroll
     const observer = new IntersectionObserver((entries) => {

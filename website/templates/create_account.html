@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 {% endblock %}
 
 {% block style %}
@@ -77,12 +76,6 @@ header {
 @media (max-width: 480px) {
     .header-left .logo { font-size: 0.8em; }
 }
-@media (max-width: 480px) {
-  .g-recaptcha {
-    transform: scale(0.85);
-    transform-origin: center;
-  }
-}
 
 
 /* --- Main Content Area --- */
@@ -115,17 +108,15 @@ header {
     width: 100%;
     background: linear-gradient(135deg, var(--secondary), var(--primary));
     color: white;
-    /* Mobile-first padding */
     padding: 2.5rem 1.5rem; 
     display: flex;
     flex-direction: column;
     justify-content: center;
     position: relative;
     overflow: hidden;
-    min-height: 220px; /* Prevents the panel from being too small on mobile */
+    min-height: 220px; 
 }
 
-/* Desktop Overrides */
 @media (min-width: 768px) {
     .welcome-panel { 
         width: 40%; 
@@ -134,7 +125,6 @@ header {
     }
 }
 
-/* Scalable Decorative Circles */
 .welcome-panel::before, .welcome-panel::after {
     content: '';
     position: absolute;
@@ -143,11 +133,9 @@ header {
     z-index: 0;
 }
 
-/* Mobile Decoration Sizes */
 .welcome-panel::before { width: 120px; height: 120px; bottom: -40px; left: -40px; }
 .welcome-panel::after { width: 80px; height: 80px; top: -30px; right: -30px; }
 
-/* Desktop Decoration Sizes */
 @media (min-width: 768px) {
     .welcome-panel::before { width: 220px; height: 220px; bottom: -80px; left: -80px; }
     .welcome-panel::after { width: 160px; height: 160px; top: -60px; right: -60px; }
@@ -236,6 +224,73 @@ header {
 /* Student Type Selection */
 .student-type-selection label { font-size: 0.9rem; }
 .student-type-selection input[type="radio"] { accent-color: var(--primary); }
+
+/* Custom Captcha Styles - Responsive */
+.captcha-container {
+    display: flex;
+    flex-wrap: wrap; /* Allows wrapping on very small screens */
+    flex-direction: row; 
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 5px;
+    margin-top: 10px;
+}
+
+.captcha-box {
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    /* Fixed width for the image to prevent distortion */
+    flex: 0 0 auto; 
+    width: 160px;
+    height: 48px;
+}
+
+#captchaCanvas {
+    background-color: white;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.refresh-captcha {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    background: rgba(255,255,255,0.8);
+    border-radius: 50%;
+    padding: 2px;
+    transition: transform 0.2s, background 0.2s;
+}
+.refresh-captcha:hover { 
+    transform: translateY(-50%) rotate(180deg); 
+    background: white;
+}
+
+.captcha-input-wrapper {
+    /* Takes remaining space, but wraps if less than 120px available */
+    flex: 1 1 120px;
+    width: 100%;
+}
+
+.captcha-input-wrapper input {
+    margin: 0;
+    width: 100%;
+    height: 48px; /* Match height of captcha box */
+    text-align: center;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
 
 /* --- Animate on Scroll & Go Top Button --- */
 .reveal-on-scroll { opacity: 0; transform: translateY(50px); transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1); will-change: opacity, transform; }
@@ -387,9 +442,19 @@ header {
                             <input id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" required placeholder="Confirm Password">
                         </div>
 
-                        <div class="flex justify-center">
-                            <div class="g-recaptcha" data-sitekey="6LdoLe0rAAAAAEcxi8Z8jxZh3Hkrt7PpioiyzPEs" data-callback="onRecaptchaSuccess" data-expired-callback="onRecaptchaExpired"></div>
+                        <!-- Custom JS CAPTCHA (Responsive Horizontal Layout) -->
+                        <div class="captcha-container">
+                            <!-- Left: Image -->
+                            <div class="captcha-box">
+                                <canvas id="captchaCanvas" width="180" height="48"></canvas>
+                                <i class="ri-refresh-line refresh-captcha" id="refreshCaptcha" title="Refresh Code"></i>
+                            </div>
+                            <!-- Right: Input -->
+                            <div class="captcha-input-wrapper">
+                                <input type="text" id="captchaInput" placeholder="Enter code" required autocomplete="off">
+                            </div>
                         </div>
+                        <p id="captchaError" class="text-xs text-red-500 hidden" style="margin-top: -10px; margin-bottom: 10px;">Incorrect code.</p>
 
                         <div>
                             <button id="submit-btn" type="submit" disabled>Create Account</button>
@@ -433,6 +498,13 @@ header {
         const confirmPasswordInput = document.getElementById('confirm-password');
         const submitBtn = document.getElementById('submit-btn');
 
+        // Captcha Elements
+        const captchaInput = document.getElementById('captchaInput');
+        const refreshCaptchaBtn = document.getElementById('refreshCaptcha');
+        const captchaError = document.getElementById('captchaError');
+        const canvas = document.getElementById('captchaCanvas');
+        const ctx = canvas.getContext('2d');
+        let captchaCode = '';
         let isRecaptchaCompleted = false;
         let isStudentIdValid = true;
 
@@ -490,6 +562,57 @@ header {
             });
         }
 
+        // Generate Random Captcha
+        function generateCaptcha() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let uniqueChar = "";
+            for (let i = 0; i < 5; i++) {
+                uniqueChar += chars.charAt(Math.random() * chars.length);
+            }
+            captchaCode = uniqueChar;
+            drawCaptcha();
+            captchaInput.value = '';
+            captchaError.classList.add('hidden');
+            validateForm();
+        }
+
+        // Draw Captcha
+        function drawCaptcha() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Noise (Lines)
+            for(let i=0; i<7; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.stroke();
+            }
+
+            // Text
+            const fontSize = 24;
+            ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            
+            const startX = 30;
+            const letterSpacing = 25;
+
+            for (let i = 0; i < captchaCode.length; i++) {
+                const x = startX + (i * letterSpacing);
+                const y = canvas.height / 2;
+                const angle = (Math.random() - 0.5) * 0.4;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.fillStyle = '#1e40af';
+                ctx.fillText(captchaCode[i], 0, 0);
+                ctx.restore();
+            }
+        }
+
         const validateForm = () => {
             if (!emailInput || !passwordInput || !confirmPasswordInput) return;
 
@@ -504,14 +627,23 @@ header {
                 allFieldsFilled = false;
             }
             
+             const isCaptchaCorrect = captchaInput.value.trim().toUpperCase() === captchaCode;
+            
+            if(captchaInput.value.trim().length === 5 && !isCaptchaCorrect) {
+                captchaError.classList.remove('hidden');
+            } else {
+                captchaError.classList.add('hidden');
+            }
+
             // Disable if no type selected, fields empty, captcha incomplete, or invalid ID
             if (submitBtn) {
-                submitBtn.disabled = !(anyChecked && allFieldsFilled && isRecaptchaCompleted && isStudentIdValid);
+                submitBtn.disabled = !(anyChecked && allFieldsFilled && isCaptchaCorrect && isStudentIdValid);
             }
         };
 
-        window.onRecaptchaSuccess = function () { isRecaptchaCompleted = true; validateForm(); };
-        window.onRecaptchaExpired = function () { isRecaptchaCompleted = false; validateForm(); };
+        // Event Listeners for Captcha
+        refreshCaptchaBtn.addEventListener('click', generateCaptcha);
+        captchaInput.addEventListener('input', validateForm);
 
         [emailInput, passwordInput, confirmPasswordInput, oldStudentIdInput].forEach(input => {
             if (input) {
@@ -526,6 +658,7 @@ header {
         });
 
         // Initialize state
+        generateCaptcha();
         handleStudentTypeChange();
 
         const observer = new IntersectionObserver((entries) => {

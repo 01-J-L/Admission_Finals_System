@@ -8384,7 +8384,6 @@ def resend_otp_action():
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
-
 @auth.route('/student-login', methods=['GET', 'POST'])
 def student_login_page(): 
     # If already logged in, let the views controller decide where to go
