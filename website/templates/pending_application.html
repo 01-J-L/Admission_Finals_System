@@ -12,12 +12,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<!-- html2pdf Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <script>
 tailwind.config = {
     theme: {
         extend: {
             colors: {
-                primary: '#1e40af', // Reverted to Blue
+                primary: '#1e40af', 
                 secondary: '#3b82f6',
                 pgpc_blue: '#1e40af'
             },
@@ -32,12 +35,107 @@ tailwind.config = {
 </script>
 <style>
     :where([class^="ri-"])::before { content: "\f3c2"; }
+    
+    /* --- Custom Print Layout Styles --- */
+    .permit-layout {
+        font-family: Arial, sans-serif;
+        color: #000;
+        background: #fff;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 10px;
+        box-sizing: border-box; /* Ensure padding doesn't add to width */
+    }
+    .permit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 0 10px;
+    }
+    .permit-logo img {
+        height: 80px;
+        width: auto;
+        flex-shrink: 0;
+    }
+    .permit-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 14pt;
+        text-transform: uppercase;
+        flex-grow: 1;
+        padding: 0 10px;
+    }
+    .permit-photo {
+        width: 100px;
+        height: 100px;
+        border: 1px solid #000;
+        object-fit: cover;
+        flex-shrink: 0; /* Prevent photo from squishing */
+    }
+    .permit-main-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 12pt;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+    .permit-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 2px solid #000;
+        font-size: 10pt;
+    }
+    .permit-table td {
+        border: 1px solid #000;
+        padding: 5px 8px;
+        vertical-align: top;
+    }
+    .permit-label {
+        font-size: 8pt;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        color: #333;
+    }
+    .permit-value {
+        font-weight: bold;
+        font-size: 10pt;
+        text-transform: uppercase;
+    }
+    .permit-footer {
+        display: none;
+    }
+
     @media print {
         body, html { background-color: white !important; margin: 0 !important; padding: 0 !important; }
-        aside, header, .no-print, #sidebar, #sidebar-overlay { display: none !important; }
+        
+        /* Hide UI elements */
+        aside, header, .no-print, #sidebar, #sidebar-overlay, .bg-gray-50, .status-card-ui { display: none !important; }
+        
         .main-content-wrapper { margin: 0 !important; padding: 0 !important; }
-        #printable-content, #printable-content-passed { margin: 0; padding: 0; }
-        .permit-stub-value { border: 1px solid #000 !important; color: #000 !important; }
+        
+        /* Force Modal Content Visibility */
+        #permitStubModal { position: static !important; display: block !important; background: white !important; padding: 0 !important; width: 100%; height: auto; }
+        .modal-content-wrapper { 
+            box-shadow: none !important; 
+            max-width: 100% !important; 
+            height: auto !important; 
+            border: none !important; 
+            max-height: none !important; 
+            overflow: visible !important;
+            display: block !important;
+        }
+        
+        /* HIDE Screen Layout, SHOW Print Layout */
+        #screen-permit-layout { display: none !important; }
+        #hidden-print-layout { display: block !important; }
+        
+        /* Hide modal header/footer in print */
+        .modal-header-print-hidden, .modal-footer-print-hidden { display: none !important; }
+
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
     .sidebar-scroll::-webkit-scrollbar { width: 4px; }
     .sidebar-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
@@ -118,14 +216,14 @@ tailwind.config = {
                 {% set status = application.application_status %}
 
                 <!-- Welcome Banner -->
-                <div class="bg-white rounded-xl p-6 mb-8 border border-gray-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="bg-white rounded-xl p-6 mb-8 border border-gray-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 status-card-ui">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-800">Welcome, {{ application.first_name }}!</h1>
                         <p class="text-gray-600 mt-1">Academic Year: <span class="font-semibold text-blue-600">{{ active_term.year_name if active_term else '2025-2026' }}</span></p>
                     </div>
-                    <div class="text-right hidden md:block">
+                    <div class="text-left md:text-right w-full md:w-auto bg-gray-50 md:bg-transparent p-3 md:p-0 rounded-lg">
                         <p class="text-xs text-gray-400 uppercase font-bold">Student ID</p>
-                        <p class="text-lg font-mono font-bold text-gray-800">
+                        <p class="text-lg font-mono font-bold text-gray-800 break-all">
                             {% if application.old_student_id %}{{ application.old_student_id }}
                             {% elif application.control_number %}{{ application.control_number }}
                             {% else %}P{{ application.academic_year[:4] if application.academic_year else '2025' }}{{ "%04d" | format(application.applicant_id) }}
@@ -134,11 +232,11 @@ tailwind.config = {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 status-card-ui">
                     <!-- Left Column -->
                     <div class="lg:col-span-2 space-y-6">
                         
-                        <!-- Progress -->
+                        <!-- Progress Tracker -->
                         {% set hide_tracker = status in ['Rejected', 'Failed', 'Enrolling', 'Enrolled', 'Dropped', 'Not Enrolled', 'Eligible for Enrollment'] %}
                         {% if not hide_tracker %}
                             {% set current_step = 1 %}
@@ -146,18 +244,18 @@ tailwind.config = {
                             {% if status == 'Scheduled' %}{% set current_step = 3 %}{% endif %}
                             {% if status == 'Passed' %}{% set current_step = 4 %}{% endif %}
                             
-                            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">Application Progress</h3>
-                                <div class="relative px-4">
+                            <div class="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+                                <h3 class="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">Application Progress</h3>
+                                <div class="relative px-2 sm:px-4">
                                     <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 rounded -z-10"></div>
                                     <div class="absolute top-1/2 left-0 h-1 bg-blue-600 -translate-y-1/2 rounded -z-10 transition-all duration-500" style="width: {{ ((current_step - 1) / 3 * 100) }}%;"></div>
                                     <div class="flex justify-between w-full">
                                         {% for step in range(1, 5) %}
-                                        <div class="flex flex-col items-center bg-white px-2">
-                                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 {{ 'bg-blue-600 border-blue-600 text-white' if current_step >= step else 'bg-white border-gray-300 text-gray-400' }}">
+                                        <div class="flex flex-col items-center bg-white px-1 sm:px-2">
+                                            <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm border-2 transition-all duration-300 {{ 'bg-blue-600 border-blue-600 text-white' if current_step >= step else 'bg-white border-gray-300 text-gray-400' }}">
                                                 {% if current_step > step %}<i class="ri-check-line"></i>{% else %}{{ step }}{% endif %}
                                             </div>
-                                            <span class="mt-2 text-[10px] uppercase font-bold {{ 'text-blue-700' if current_step >= step else 'text-gray-400' }}">
+                                            <span class="mt-2 text-[9px] sm:text-[10px] uppercase font-bold {{ 'text-blue-700' if current_step >= step else 'text-gray-400' }}">
                                                 {% if step == 1 %}Submitted{% elif step == 2 %}Approved{% elif step == 3 %}Exam{% else %}Passed{% endif %}
                                             </span>
                                         </div>
@@ -303,53 +401,127 @@ tailwind.config = {
                     </div>
                 </div>
 
-                <!-- Modals (Permit, Passed) - Same logic, updated classes -->
-                <div id="permitStubModal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4">
-                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
-                         <div class="flex justify-between items-center p-5 border-b border-gray-200">
+                <!-- 1. PERMIT MODAL (UPDATED LAYOUT - RESPONSIVE & FIXED HEADER) -->
+                <div id="permitStubModal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 overflow-y-auto">
+                    <!-- Modal Wrapper: Flex Column + Max Height -->
+                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] modal-content-wrapper">
+                         
+                         <!-- Modal Header: Sticky Logic Removed (Uses Flexbox order now) -->
+                         <div class="flex justify-between items-center p-4 sm:p-5 border-b border-gray-200 no-print flex-shrink-0 bg-white rounded-t-xl modal-header-print-hidden">
                             <h3 class="text-lg font-bold text-gray-900">Admission Test Permit</h3>
-                            <button id="closePermitStubModalBtn" class="text-gray-500 hover:text-gray-800"><i class="ri-close-line text-2xl"></i></button>
+                            <button id="closePermitStubModalBtn" class="text-gray-500 hover:text-gray-800 p-2 rounded hover:bg-gray-100"><i class="ri-close-line text-2xl"></i></button>
                         </div>
-                        <div id="printable-content" class="p-6 overflow-y-auto">
-                            <!-- Permit Content (Same as before) -->
+                        
+                        <!-- Printable Content Area: Scrollable -->
+                        <div id="printable-content" class="p-4 sm:p-8 overflow-y-auto flex-1">
                              {% if application %}
-                            <div class="border-2 border-dashed border-gray-300 p-6 rounded-lg">
-                                <div class="flex justify-between mb-4">
+                             <!-- A. ON-SCREEN LAYOUT (Modern Dashed Card - Responsive) -->
+                             <div id="screen-permit-layout" class="border-2 border-dashed border-gray-300 p-4 sm:p-8 rounded-xl bg-white relative">
+                                <div class="flex flex-col sm:flex-row justify-between items-start mb-6 sm:mb-8 gap-4 sm:gap-0">
                                     <div>
-                                        <p class="text-xs text-gray-500 uppercase">Control Number</p>
-                                        <p class="font-mono font-bold text-xl">{{ application.permit_control_no or 'N/A' }}</p>
+                                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">APPLICATION NO.</p>
+                                        <p class="text-xl sm:text-2xl font-bold text-gray-900 font-mono">{{ application.old_student_id or application.control_number or 'N/A' }}</p>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="text-xs text-gray-500 uppercase">Exam Date</p>
-                                        <p class="font-bold">{{ application.permit_exam_date.strftime('%B %d, %Y') if application.permit_exam_date else 'TBA' }}</p>
+                                    <div class="text-left sm:text-right">
+                                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">EXAM DATE</p>
+                                        <p class="text-lg sm:text-xl font-bold text-gray-900">{{ application.permit_exam_date.strftime('%B %d, %Y') if application.permit_exam_date else 'TBA' }}</p>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <p class="text-xs text-gray-500 uppercase">Time</p>
-                                        <p class="font-semibold">{{ application.permit_exam_time or 'TBA' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500 uppercase">Room</p>
-                                        <p class="font-semibold">{{ application.permit_testing_room or 'TBA' }}</p>
-                                    </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
+                                     <div>
+                                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">TIME</p>
+                                        <p class="text-lg font-bold text-gray-900">{{ application.permit_exam_time or 'TBA' }}</p>
+                                     </div>
+                                     <div>
+                                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">ROOM</p>
+                                        <p class="text-lg font-bold text-gray-900">{{ application.permit_testing_room or 'TBA' }}</p>
+                                     </div>
                                 </div>
-                                <div class="flex items-center gap-4 border-t border-gray-200 pt-4">
-                                    <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}" class="w-16 h-16 rounded object-cover border">
-                                    <div>
-                                        <p class="font-bold text-gray-900 uppercase">{{ application.last_name }}, {{ application.first_name }}</p>
-                                        <p class="text-sm text-gray-600">{{ application.program_choice }}</p>
-                                    </div>
+
+                                <div class="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 text-center sm:text-left">
+                                     <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}" class="w-20 h-20 sm:w-16 sm:h-16 rounded-lg object-cover border border-gray-200">
+                                     <div>
+                                         <h4 class="text-lg sm:text-lg font-black text-gray-900 uppercase leading-tight">{{ application.last_name }}, {{ application.first_name }}</h4>
+                                         <p class="text-sm text-gray-600 font-medium mt-1 sm:mt-0">{{ application.program_choice }}</p>
+                                     </div>
                                 </div>
                             </div>
-                            {% endif %}
+
+                            <!-- B. HIDDEN PRINT LAYOUT (Formal Table - Matches 1st Screenshot) -->
+                             <div id="hidden-print-layout" class="hidden">
+                                 <div class="permit-layout">
+                                    <div class="permit-header">
+                                        <div class="permit-logo">
+                                            <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="PGPC Logo">
+                                        </div>
+                                        <div class="permit-title">OFFICE OF ADMISSIONS</div>
+                                        <img src="{{ url_for('auth.get_applicant_photo', applicant_id=application.applicant_id) }}" class="permit-photo" alt="Photo">
+                                    </div>
+
+                                    <div class="permit-main-title">ADMISSION TEST PERMIT</div>
+
+                                    <table class="permit-table">
+                                        <tr>
+                                            <td width="33%">
+                                                <div class="permit-label">DATE OF APPLICATION:</div>
+                                                <div class="permit-value">
+                                                    {{ application.submitted_at.strftime('%B %d, %Y') if application.submitted_at else (application.date_of_application.strftime('%B %d, %Y') if application.date_of_application else 'N/A') }}
+                                                </div>
+                                            </td>
+                                            <td width="33%">
+                                                <div class="permit-label">SCHEDULE OF TEST AND TIME:</div>
+                                                <div class="permit-value">
+                                                    {{ application.permit_exam_date.strftime('%B %d, %Y') if application.permit_exam_date else 'TBA' }}
+                                                    <br>
+                                                    {{ application.permit_exam_time or 'TBA' }}
+                                                    <br>
+                                                    <!-- Explicitly showing Room here as requested -->
+                                                    ROOM: {{ application.permit_testing_room or 'TBA' }}
+                                                </div>
+                                            </td>
+                                            <td width="33%">
+                                                <div class="permit-label">APPLICATION NO.:</div>
+                                                <div class="permit-value">{{ application.old_student_id or application.control_number or 'N/A' }}</div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="permit-label">LAST NAME:</div>
+                                                <div class="permit-value">{{ application.last_name | upper }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="permit-label">FIRST NAME:</div>
+                                                <div class="permit-value">{{ application.first_name | upper }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="permit-label">MIDDLE NAME:</div>
+                                                <div class="permit-value">{{ application.middle_name | upper if application.middle_name else '' }}</div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">
+                                                <div class="permit-label">COURSE APPLIED FOR:</div>
+                                                <div class="permit-value">{{ application.program_choice | upper }}</div>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <!-- Footer Instructions REMOVED as requested -->
+                                 </div>
+                             </div>
+                             {% endif %}
                         </div>
-                        <div class="p-4 border-t border-gray-200 flex justify-end no-print">
-                            <button id="printPermitBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Print</button>
+
+                        <!-- Modal Footer -->
+                        <div class="p-4 border-t border-gray-200 flex justify-end no-print bg-gray-50 rounded-b-xl flex-shrink-0 modal-footer-print-hidden">
+                            <button id="printPermitBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 w-full sm:w-auto shadow-sm">Print Permit</button>
+                            <button id="downloadPermitBtn" class="ml-2 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 w-full sm:w-auto shadow-sm">Download PDF</button>
                         </div>
                     </div>
                 </div>
 
+                <!-- 2. PASSED CONFIRMATION MODAL -->
                 <div id="passedConfirmationModal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4">
                      <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg">
                         <div class="flex justify-between items-center p-5 border-b border-gray-200 no-print">
@@ -403,7 +575,6 @@ tailwind.config = {
             sidebarOverlay.addEventListener('click', toggleSidebar);
         }
 
-        // Modal & Print Logic (Same as before)
         const openModal = (modal) => {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -422,11 +593,48 @@ tailwind.config = {
         document.getElementById('viewPassedConfirmationBtn')?.addEventListener('click', () => openModal(passedModal));
         document.getElementById('closePassedModalBtn')?.addEventListener('click', () => closeModal(passedModal));
 
+        // Enhanced Printing Function
         const printContent = (modalId) => {
-            const content = document.getElementById(modalId === 'permitStubModal' ? 'printable-content' : 'printable-content-passed');
+            let content;
+            // logic to choose content
+            if (modalId === 'permitStubModal') {
+                // For permit, grab the HIDDEN formal layout
+                const hiddenEl = document.getElementById('hidden-print-layout');
+                content = hiddenEl ? hiddenEl.innerHTML : '';
+            } else {
+                // For passed modal, grab the standard printable area
+                const visibleEl = document.getElementById('printable-content-passed');
+                content = visibleEl ? visibleEl.innerHTML : '';
+            }
+
             const printWindow = window.open('', '_blank');
-            printWindow.document.write('<html><head><title>Print</title><style>body{font-family:sans-serif; padding: 20px;} .border{border:1px solid #ccc;} .p-6{padding:1.5rem;} .text-center{text-align:center;} .font-bold{font-weight:bold;}</style></head><body>');
-            printWindow.document.write(content.innerHTML);
+            printWindow.document.write('<html><head><title>Print</title>');
+            // Add CSS directly to print window
+            printWindow.document.write(`
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                    .permit-layout { width: 100%; max-width: 800px; margin: 0 auto; display: block !important; }
+                    .permit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+                    .permit-logo img { height: 80px; }
+                    .permit-title { text-align: center; font-weight: bold; font-size: 14pt; flex-grow: 1; }
+                    .permit-photo { width: 100px; height: 100px; border: 1px solid #000; object-fit: cover; }
+                    .permit-main-title { text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 5px; text-transform: uppercase; }
+                    .permit-table { width: 100%; border-collapse: collapse; border: 2px solid #000; font-size: 10pt; }
+                    .permit-table td { border: 1px solid #000; padding: 5px 8px; vertical-align: top; }
+                    .permit-label { font-size: 8pt; text-transform: uppercase; margin-bottom: 2px; }
+                    .permit-value { font-weight: bold; font-size: 10pt; text-transform: uppercase; }
+                    .permit-footer { display: none; }
+                    ul { list-style-type: none; padding-left: 10px; margin: 0; }
+                    /* Passed Message Styles */
+                    .text-center { text-align: center; }
+                    .font-bold { font-weight: bold; }
+                    .text-2xl { font-size: 1.5rem; }
+                    .mb-4 { margin-bottom: 1rem; }
+                    .text-green-700 { color: #15803d; }
+                </style>
+            `);
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(content);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             setTimeout(() => { printWindow.focus(); printWindow.print(); printWindow.close(); }, 500);
@@ -434,6 +642,42 @@ tailwind.config = {
 
         document.getElementById('printPermitBtn')?.addEventListener('click', () => printContent('permitStubModal'));
         document.getElementById('printPassedBtn')?.addEventListener('click', () => printContent('passedConfirmationModal'));
+        
+        // PDF Download logic
+        document.getElementById('downloadPermitBtn')?.addEventListener('click', function () {
+            // 1. Get the content
+            const element = document.getElementById('hidden-print-layout');
+    
+            // 2. Options for html2pdf
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5], // Top, Left, Bottom, Right
+                filename:     'Admission_Permit.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, // Important for images
+                    scrollY: 0 
+                },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+    
+            // 3. Clone and styling
+            const clone = element.cloneNode(true);
+            clone.classList.remove('hidden');
+            clone.style.display = 'block';
+            // Set specific width that fits within Letter (8.5") minus margins (1") = 7.5" ~ 720px
+            clone.style.width = '700px'; 
+            clone.style.margin = '0 auto';
+            clone.style.backgroundColor = 'white';
+
+            // Append to body temporarily to render
+            document.body.appendChild(clone);
+    
+            // 4. Generate
+            html2pdf().set(opt).from(clone).save().then(() => {
+                document.body.removeChild(clone); // Cleanup
+            });
+        });
     });
 </script>
 {% endblock %}

@@ -41,29 +41,75 @@
     border-radius: 50%; background-color: #1e40af;
   }
 
-  /* Header & Navigation */
-  header {
-    position: relative; top: 0; left: 0; width: 100%; padding: 15px 5%;
-    display: flex; justify-content: space-between; align-items: center;
-    z-index: 1000; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    background-color: #162938; transition: background-color 0.3s ease;
-  }
-  .header-left { display: flex; align-items: center; }
-  .header-left img { width: 80px; height: auto; }
-  .header-left .logo { font-size: 1.4em; color: #fff; margin-left: 15px; white-space: nowrap; text-shadow: none; }
-  .navigation a { position: relative; font-size: 1.1em; color: #fff; text-decoration: none; font-weight: 500; margin-left: 30px; }
-  .navigation .btnLogin-popup {
-    background-color: #fff; color: #162938; padding: 8px 15px; border-radius: 5px;
-    border: 1px solid transparent; cursor: pointer; font-weight: 500; transition: background-color 0.3s;
-  }
-  .navigation .btnLogin-popup:hover { background-color: #f0f0f0; }
-  .navigation .btnLogin-popup.btn-logout { background-color: #d9534f; color: #fff; border-color: #d9534f; }
-  .navigation .btnLogin-popup.btn-logout:hover { background-color: #c9302c; border-color: #c9302c; }
+   /* --- Header & Footer Styles (Maintained from original index.html) --- */
+    header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 15px 5%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        transition: background-color 0.3s ease;
+    }
 
-  /* Mobile Responsive */
-  .menu-toggle { display: none; flex-direction: column; justify-content: space-around; width: 30px; height: 25px; background: transparent; border: none; cursor: pointer; z-index: 1100; margin-left: 20px; }
-  .menu-toggle span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 3px; transition: all 0.3s ease-in-out; }
+    .header-left {
+        display: flex;
+        align-items: center;
+    }
 
+    .header-left .logo {
+        font-size: 1.4em;
+        color: #fff;
+        margin-left: 15px;
+        white-space: nowrap;
+        transition: color 0.3s ease;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-left img {
+        filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
+    }
+
+    .navigation a {
+        position: relative;
+        font-size: 1.1em;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 30px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .navigation a.no-underline {
+        text-decoration: none;
+    }
+
+    .menu-toggle {
+        display: none;
+        flex-direction: column;
+        justify-content: space-around;
+        width: 30px;
+        height: 25px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        z-index: 1100;
+        margin-left: 20px;
+    }
+
+    .menu-toggle span {
+        display: block;
+        width: 100%;
+        height: 3px;
+        background-color: #fff;
+        border-radius: 3px;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    }
   @media (max-width: 992px) {
     header { padding: 10px 3%; }
     .header-left img { width: 60px; }
@@ -141,13 +187,16 @@
 <link rel="icon" href="{{ url_for('static', filename='logopgpc.png') }}" type="image/x-icon">
 <header>
   <div class="header-left">
-    <img src="{{ url_for('static', filename='logopgpc.png') }}" alt="Company Logo">
-    <h2 class="logo">Padre Garcia Polytechnic College</h2>
-  </div>
+        <a href="{{ url_for('views.home') }}"><img src="{{ url_for('static', filename='logopgpc.png') }}"
+                alt="Padre Garcia Polytechnic College Logo" width="80" height="auto"></a>
+        <h2 class="logo">Padre Garcia Polytechnic College</h2>
+    </div>
 
   <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-navigation">
-    <span></span><span></span><span></span>
-  </button>
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
 
   <nav class="navigation" id="main-navigation">
     {% if student_logged_in %}
@@ -625,6 +674,15 @@
         if (photoPlaceholder) { photoPlaceholder.classList.remove("hidden"); }
         isPhotoValid = false;
     }
+
+    const menuToggle = document.querySelector('.menu-toggle');
+        const navigation = document.getElementById('main-navigation');
+        if (menuToggle && navigation) {
+            menuToggle.addEventListener('click', function () {
+                navigation.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+        }
 
     // --- FORM ELEMENTS ---
     const step1 = document.getElementById("step1");
